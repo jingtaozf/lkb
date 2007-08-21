@@ -5,9 +5,1609 @@
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
+U customize/TODO
+U customize/choices.py
+cvs update: customize/choices_file_022 is no longer in the repository
+U customize/customize.py
+U customize/def_check.py
+U customize/deffile.py
+U customize/matrix.cgi
+U customize/matrix.css
+U customize/matrixdef
+U customize/profiles.py
+U customize/randgram.py
+U customize/tdl.py
+U customize/test.py
+U customize/tolive
+U customize/utils.py
+U customize/validate.py
+U customize/sql_profiles/add_permutes.py
+U customize/sql_profiles/clean_data_notes
+U customize/sql_profiles/debug_filter.py
+U customize/sql_profiles/dump_ffg.py
+U customize/sql_profiles/dump_fg.py
+U customize/sql_profiles/fancy_permute_notes
+U customize/sql_profiles/filters.py
+U customize/sql_profiles/g.py
+cvs update: customize/sql_profiles/harv_grammar.tgz is no longer in the repository
+U customize/sql_profiles/import_from_itsdb.py
+U customize/sql_profiles/index_notes
+U customize/sql_profiles/matrixtdb.py
+U customize/sql_profiles/notes
+U customize/sql_profiles/permute.py
+U customize/sql_profiles/run_specific_filters.py
+U customize/sql_profiles/run_u_filters.py
+U customize/sql_profiles/s_filters.py
+U customize/sql_profiles/sql_lg_type.py
+U customize/sql_profiles/status_for_choices.py
+U customize/sql_profiles/stringmod.py
+U customize/sql_profiles/test_u_filters.py
+U customize/sql_profiles/u_filters.py
+U customize/sql_profiles/update_for_choices
+U customize/sql_profiles/update_for_choices.py
+U customize/sql_profiles/useful_queries
+cvs update: customize/sql_profiles/wo_filters.py is no longer in the repository
+U customize/sql_profiles/harv_str/choices1
+U customize/sql_profiles/harv_str/harv1
+U customize/sql_profiles/harv_str/harv_mrs_1
+U customize/sql_profiles/harv_str/profile1/analysis
+U customize/sql_profiles/harv_str/profile1/daughter
+U customize/sql_profiles/harv_str/profile1/decision
+U customize/sql_profiles/harv_str/profile1/edge
+U customize/sql_profiles/harv_str/profile1/fold
+U customize/sql_profiles/harv_str/profile1/item
+U customize/sql_profiles/harv_str/profile1/item-phenomenon
+U customize/sql_profiles/harv_str/profile1/item-set
+U customize/sql_profiles/harv_str/profile1/output
+U customize/sql_profiles/harv_str/profile1/parameter
+U customize/sql_profiles/harv_str/profile1/parse
+U customize/sql_profiles/harv_str/profile1/phenomenon
+U customize/sql_profiles/harv_str/profile1/preference
+U customize/sql_profiles/harv_str/profile1/relations
+U customize/sql_profiles/harv_str/profile1/result
+U customize/sql_profiles/harv_str/profile1/rule
+U customize/sql_profiles/harv_str/profile1/run
+U customize/sql_profiles/harv_str/profile1/score
+U customize/sql_profiles/harv_str/profile1/set
+U customize/sql_profiles/harv_str/profile1/tree
+U customize/sql_profiles/harv_str/profile1/update
+U customize/sql_profiles/test_grammars/pseudo_english/README
+U customize/sql_profiles/test_grammars/pseudo_english/Version.lsp
+U customize/sql_profiles/test_grammars/pseudo_english/head-types.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/irregs.tab
+U customize/sql_profiles/test_grammars/pseudo_english/irules.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/labels.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/lexicon.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/licence.txt
+U customize/sql_profiles/test_grammars/pseudo_english/lrules.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/matrix.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/pet.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/pseudo_english.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/pseudo_english_choices
+U customize/sql_profiles/test_grammars/pseudo_english/roots.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/rules.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/base-script
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/globals.lsp
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/mrsglobals.lisp
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/mrsmunge.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/mt.lsp
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/script
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/transfer.tdl
+U customize/sql_profiles/test_grammars/pseudo_english/lkb/user-fns.lsp
+U customize/sql_profiles/test_grammars/pseudo_english/pet/flop.set
+U customize/sql_profiles/test_grammars/pseudo_english/pet/global.set
+U customize/sql_profiles/test_grammars/pseudo_english/pet/pet.set
+U customize/sql_profiles/test_grammars/pseudo_japanese/README
+U customize/sql_profiles/test_grammars/pseudo_japanese/Version.lsp
+U customize/sql_profiles/test_grammars/pseudo_japanese/choices_j_lex
+U customize/sql_profiles/test_grammars/pseudo_japanese/head-types.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/irregs.tab
+U customize/sql_profiles/test_grammars/pseudo_japanese/irules.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/labels.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/lexicon.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/licence.txt
+U customize/sql_profiles/test_grammars/pseudo_japanese/lrules.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/matrix.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/pet.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/pseudo_japanese.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/pseudo_japanese_choices
+U customize/sql_profiles/test_grammars/pseudo_japanese/roots.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/rules.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/base-script
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/globals.lsp
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/mrsglobals.lisp
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/mrsmunge.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/mt.lsp
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/script
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/transfer.tdl
+U customize/sql_profiles/test_grammars/pseudo_japanese/lkb/user-fns.lsp
+U customize/sql_profiles/test_grammars/pseudo_japanese/pet/flop.set
+U customize/sql_profiles/test_grammars/pseudo_japanese/pet/global.set
+U customize/sql_profiles/test_grammars/pseudo_japanese/pet/pet.set
+U customize/string_lists/README
+cvs update: doc/userguide.bib is no longer in the repository
+cvs update: doc/userguide.tex is no longer in the repository
+cvs update: doc/userguide_notes is no longer in the repository
+U doc/ACL07-WS7/acl07.bib
+U doc/ACL07-WS7/matrx_regr_test.pdf
+U doc/ACL07-WS7/matrx_regr_test.tex
+U doc/userguide/notes
+U doc/userguide/old_notes
+U doc/userguide/userguide.bib
+U doc/userguide/userguide.tex
+U gmmt/README
+U gmmt/acm.tdl
+U gmmt/all_lgs_test
+U gmmt/create_bitexts.py
+U gmmt/formatresults.py
+U gmmt/mrs.tdl
+U gmmt/mtr.tdl
+U gmmt/setup.lisp
+U gmmt/status
+U gmmt/summary.2007-07-03
+U gmmt/alt/summary.2007-06-29
+U gmmt/alt/summary.2007-07-03.5
+U gmmt/alt/summary.2007-07-05.2
+U gmmt/alt/summary.2007-07-13
+U gmmt/arb/README
+U gmmt/arb/Version.lsp
+U gmmt/arb/choices
+U gmmt/arb/head-types.tdl
+U gmmt/arb/irregs.tab
+U gmmt/arb/irules.tdl
+U gmmt/arb/labels.tdl
+U gmmt/arb/lexicon.tdl
+U gmmt/arb/licence.txt
+U gmmt/arb/lrules.tdl
+U gmmt/arb/matrix.tdl
+U gmmt/arb/modern_standard_arabic.tdl
+U gmmt/arb/pet.tdl
+U gmmt/arb/roots.tdl
+U gmmt/arb/rules.tdl
+U gmmt/arb/semi.vpm
+U gmmt/arb/doc/Lab3-Writeup.txt
+U gmmt/arb/doc/Lab9-Writeup.txt
+U gmmt/arb/doc/arabic-writeup.txt
+U gmmt/arb/doc/lab4-writeup.txt
+U gmmt/arb/doc/lab5-writeup.txt
+U gmmt/arb/doc/lab6-writeup.txt
+U gmmt/arb/doc/lab7-writeup.txt
+U gmmt/arb/doc/lab8-writeup.txt
+U gmmt/arb/doc/rubric2
+U gmmt/arb/doc/rubric3
+U gmmt/arb/doc/rubric4
+U gmmt/arb/doc/rubric5
+U gmmt/arb/doc/rubric6
+U gmmt/arb/doc/rubric7
+U gmmt/arb/doc/rubric8
+U gmmt/arb/doc/rubric9
+U gmmt/arb/lkb/567.mtr
+U gmmt/arb/lkb/base-script
+U gmmt/arb/lkb/globals.lsp
+U gmmt/arb/lkb/mrsglobals.lisp
+U gmmt/arb/lkb/mrsmunge.tdl
+U gmmt/arb/lkb/mt.lsp
+U gmmt/arb/lkb/script
+U gmmt/arb/lkb/transfer.tdl
+U gmmt/arb/lkb/trigger.mtr
+U gmmt/arb/lkb/user-fns.lsp
+U gmmt/arb/pet/flop.set
+U gmmt/arb/pet/global.set
+U gmmt/arb/pet/pet.set
+U gmmt/arb/tsdb/baseline/analysis
+U gmmt/arb/tsdb/baseline/daughter
+U gmmt/arb/tsdb/baseline/decision
+U gmmt/arb/tsdb/baseline/edge
+U gmmt/arb/tsdb/baseline/fold
+U gmmt/arb/tsdb/baseline/item
+U gmmt/arb/tsdb/baseline/item-phenomenon
+U gmmt/arb/tsdb/baseline/item-set
+U gmmt/arb/tsdb/baseline/output
+U gmmt/arb/tsdb/baseline/parameter
+U gmmt/arb/tsdb/baseline/parse
+U gmmt/arb/tsdb/baseline/phenomenon
+U gmmt/arb/tsdb/baseline/preference
+U gmmt/arb/tsdb/baseline/relations
+U gmmt/arb/tsdb/baseline/result
+U gmmt/arb/tsdb/baseline/rule
+U gmmt/arb/tsdb/baseline/run
+U gmmt/arb/tsdb/baseline/score
+U gmmt/arb/tsdb/baseline/set
+U gmmt/arb/tsdb/baseline/tree
+U gmmt/arb/tsdb/baseline/update
+U gmmt/arb-acm/arb-acm.mtr
+U gmmt/arb-acm/filter.mtr
+U gmmt/arb-acm/globals.lsp
+U gmmt/arb-acm/mrs.tdl
+U gmmt/arb-acm/mrsglobals.lsp
+U gmmt/arb-acm/mt.lsp
+U gmmt/arb-acm/mtr.tdl
+U gmmt/arb-acm/norgram.mtr
+U gmmt/arb-acm/script
+U gmmt/arb-acm/user-fns.lsp
+U gmmt/eng/Version.lsp
+U gmmt/eng/choices
+U gmmt/eng/english.tdl
+U gmmt/eng/head-types.tdl
+U gmmt/eng/irregs.tab
+U gmmt/eng/irules.tdl
+U gmmt/eng/labels.tdl
+U gmmt/eng/lexicon.tdl
+U gmmt/eng/lrules.tdl
+U gmmt/eng/matrix.tdl
+U gmmt/eng/pet.tdl
+U gmmt/eng/roots.tdl
+U gmmt/eng/rules.tdl
+U gmmt/eng/semi.vpm
+U gmmt/eng/lkb/checkpaths.lsp
+U gmmt/eng/lkb/globals.lsp
+U gmmt/eng/lkb/mrsglobals.lisp
+U gmmt/eng/lkb/mrsmunge.tdl
+U gmmt/eng/lkb/mt.lsp
+U gmmt/eng/lkb/script
+U gmmt/eng/lkb/transfer.tdl
+U gmmt/eng/lkb/user-fns.lsp
+U gmmt/eng/pet/flop.set
+U gmmt/eng/pet/global.set
+U gmmt/eng/pet/pet.set
+U gmmt/eng-acm/eng-acm.mtr
+U gmmt/eng-acm/filter.mtr
+U gmmt/eng-acm/globals.lsp
+U gmmt/eng-acm/mrs.tdl
+U gmmt/eng-acm/mrsglobals.lsp
+U gmmt/eng-acm/mt.lsp
+U gmmt/eng-acm/mtr.tdl
+U gmmt/eng-acm/norgram.mtr
+U gmmt/eng-acm/script
+U gmmt/eng-acm/user-fns.lsp
+U gmmt/epo/Version.lsp
+U gmmt/epo/esperanto.tdl
+U gmmt/epo/head-types.tdl
+U gmmt/epo/irregs.tab
+U gmmt/epo/irules.tdl
+U gmmt/epo/labels.tdl
+U gmmt/epo/lexicon.tdl
+U gmmt/epo/lrules.tdl
+U gmmt/epo/matrix.tdl
+U gmmt/epo/pet.tdl
+U gmmt/epo/roots.tdl
+U gmmt/epo/rules.tdl
+U gmmt/epo/semi.vpm
+U gmmt/epo/test-lex.tdl
+U gmmt/epo/doc/commented_testsuite
+U gmmt/epo/doc/lab2_writeup.pdf
+U gmmt/epo/doc/lab3_writeup.pdf
+U gmmt/epo/doc/lab3_writeup.txt
+U gmmt/epo/doc/lab4_writeup.pdf
+U gmmt/epo/doc/lab4_writeup.txt
+U gmmt/epo/doc/lab6_writeup.pdf
+U gmmt/epo/doc/lab6_writeup.txt
+U gmmt/epo/doc/lab7_writeup.pdf
+U gmmt/epo/doc/lab7_writeup.txt
+U gmmt/epo/doc/lab8_writeup.pdf
+U gmmt/epo/doc/lab8_writeup.txt
+U gmmt/epo/doc/rubric2
+U gmmt/epo/doc/rubric3
+U gmmt/epo/doc/rubric4
+U gmmt/epo/doc/rubric6
+U gmmt/epo/doc/rubric7
+U gmmt/epo/doc/rubric8
+U gmmt/epo/lkb/567.mtr
+U gmmt/epo/lkb/checkpaths.lsp
+U gmmt/epo/lkb/globals.lsp
+U gmmt/epo/lkb/globals.lsp.fasl
+U gmmt/epo/lkb/mrsglobals.lisp
+U gmmt/epo/lkb/mrsglobals.lisp.fasl
+U gmmt/epo/lkb/mrsmunge.tdl
+U gmmt/epo/lkb/mt.lsp
+U gmmt/epo/lkb/mt.lsp.fasl
+U gmmt/epo/lkb/script
+U gmmt/epo/lkb/transfer.tdl
+U gmmt/epo/lkb/user-fns.lsp
+U gmmt/epo/lkb/user-fns.lsp.fasl
+U gmmt/epo/pet/flop.set
+U gmmt/epo/pet/global.set
+U gmmt/epo/pet/pet.set
+U gmmt/epo-acm/epo-acm.mtr
+U gmmt/epo-acm/filter.mtr
+U gmmt/epo-acm/globals.lsp
+U gmmt/epo-acm/mrs.tdl
+U gmmt/epo-acm/mrsglobals.lsp
+U gmmt/epo-acm/mt.lsp
+U gmmt/epo-acm/mtr.tdl
+U gmmt/epo-acm/norgram.mtr
+U gmmt/epo-acm/script
+U gmmt/epo-acm/user-fns.lsp
+U gmmt/fas/Version.lsp
+U gmmt/fas/farsi.tdl
+U gmmt/fas/head-types.tdl
+U gmmt/fas/irregs.tab
+U gmmt/fas/irules.tdl
+U gmmt/fas/labels.tdl
+U gmmt/fas/lexicon.tdl
+U gmmt/fas/lrules.tdl
+U gmmt/fas/matrix.tdl
+U gmmt/fas/pet.tdl
+U gmmt/fas/roots.tdl
+U gmmt/fas/rules.tdl
+U gmmt/fas/semi.vpm
+U gmmt/fas/doc/lab2_writeup.pdf
+U gmmt/fas/doc/lab3_writeup.pdf
+U gmmt/fas/doc/lab4_writeup.pdf
+U gmmt/fas/doc/lab5_writeup.pdf
+U gmmt/fas/doc/lab6_writeup.pdf
+U gmmt/fas/lkb/checkpaths.lsp
+U gmmt/fas/lkb/globals.lsp
+U gmmt/fas/lkb/globals.lsp.fasl
+U gmmt/fas/lkb/mrsglobals.lisp
+U gmmt/fas/lkb/mrsglobals.lisp.fasl
+U gmmt/fas/lkb/mrsmunge.tdl
+U gmmt/fas/lkb/mt.lsp
+U gmmt/fas/lkb/mt.lsp.fasl
+U gmmt/fas/lkb/script
+U gmmt/fas/lkb/trigger.mtr
+U gmmt/fas/lkb/trigger.tdl
+U gmmt/fas/lkb/user-fns.lsp
+U gmmt/fas/lkb/user-fns.lsp.fasl
+U gmmt/fas-acm/fas-acm.mtr
+U gmmt/fas-acm/filter.mtr
+U gmmt/fas-acm/globals.lsp
+U gmmt/fas-acm/mrs.tdl
+U gmmt/fas-acm/mrsglobals.lsp
+U gmmt/fas-acm/mt.lsp
+U gmmt/fas-acm/mtr.tdl
+U gmmt/fas-acm/norgram.mtr
+U gmmt/fas-acm/script
+U gmmt/fas-acm/user-fns.lsp
+U gmmt/fin/Version.lsp
+U gmmt/fin/coord.tdl
+U gmmt/fin/finnish.tdl
+U gmmt/fin/head-types.tdl
+U gmmt/fin/irregs.tab
+U gmmt/fin/irules.tdl
+U gmmt/fin/labels.tdl
+U gmmt/fin/lexicon.tdl
+U gmmt/fin/lrules.tdl
+U gmmt/fin/matrix.tdl
+U gmmt/fin/pet.tdl
+U gmmt/fin/roots.tdl
+U gmmt/fin/rules.tdl
+U gmmt/fin/semi.vpm
+U gmmt/fin/doc/lab2_writeup.pdf
+U gmmt/fin/doc/lab3_writeup.pdf
+U gmmt/fin/doc/lab4_writeup.txt
+U gmmt/fin/doc/lab5_writeup.txt
+U gmmt/fin/doc/lab6_writeup.txt
+U gmmt/fin/doc/lab7_writeup.txt
+U gmmt/fin/doc/lab8_writeup.txt
+U gmmt/fin/doc/rubric2
+U gmmt/fin/doc/rubric3
+U gmmt/fin/doc/rubric4
+U gmmt/fin/doc/rubric6
+U gmmt/fin/doc/rubric7
+U gmmt/fin/doc/rubric8
+U gmmt/fin/lkb/567.mtr
+U gmmt/fin/lkb/checkpaths.lsp
+U gmmt/fin/lkb/globals.lsp
+U gmmt/fin/lkb/globals.lsp.fasl
+U gmmt/fin/lkb/mrsglobals.lisp
+U gmmt/fin/lkb/mrsglobals.lisp.fasl
+U gmmt/fin/lkb/mrsmunge.tdl
+U gmmt/fin/lkb/mt.lsp
+U gmmt/fin/lkb/mt.lsp.fasl
+U gmmt/fin/lkb/script
+U gmmt/fin/lkb/tduce.lsp
+U gmmt/fin/lkb/transfer.tdl
+U gmmt/fin/lkb/user-fns-xfst.lsp
+U gmmt/fin/lkb/user-fns-xfst.lsp.fasl
+U gmmt/fin/lkb/user-fns.lsp
+U gmmt/fin/pet/flop.set
+U gmmt/fin/pet/global.set
+U gmmt/fin/pet/pet.set
+U gmmt/fin-acm/filter.mtr
+U gmmt/fin-acm/fin-acm.mtr
+U gmmt/fin-acm/globals.lsp
+U gmmt/fin-acm/mrs.tdl
+U gmmt/fin-acm/mrsglobals.lsp
+U gmmt/fin-acm/mt.lsp
+U gmmt/fin-acm/mtr.tdl
+U gmmt/fin-acm/norgram.mtr
+U gmmt/fin-acm/script
+U gmmt/fin-acm/user-fns.lsp
+U gmmt/hai/Version.lsp
+U gmmt/hai/haida.tdl
+U gmmt/hai/head-types.tdl
+U gmmt/hai/irregs.tab
+U gmmt/hai/irules.tdl
+U gmmt/hai/labels.tdl
+U gmmt/hai/lexicon.tdl
+U gmmt/hai/lrules.tdl
+U gmmt/hai/matrix.tdl
+U gmmt/hai/pet.tdl
+U gmmt/hai/roots.tdl
+U gmmt/hai/rules.tdl
+U gmmt/hai/semi.vpm
+U gmmt/hai/lkb/567.mtr
+U gmmt/hai/lkb/globals.lsp
+U gmmt/hai/lkb/globals.lsp.fasl
+U gmmt/hai/lkb/mrsglobals.lisp
+U gmmt/hai/lkb/mrsglobals.lisp.fasl
+U gmmt/hai/lkb/mrsmunge.tdl
+U gmmt/hai/lkb/mt.lsp
+U gmmt/hai/lkb/mt.lsp.fasl
+U gmmt/hai/lkb/script
+U gmmt/hai/lkb/transfer.tdl
+U gmmt/hai/lkb/user-fns.lsp
+U gmmt/hai/lkb/user-fns.lsp.fasl
+U gmmt/hai/pet/flop.set
+U gmmt/hai/pet/global.set
+U gmmt/hai/pet/pet.set
+U gmmt/hai-acm/filter.mtr
+U gmmt/hai-acm/globals.lsp
+U gmmt/hai-acm/hai-acm.mtr
+U gmmt/hai-acm/mrs.tdl
+U gmmt/hai-acm/mrsglobals.lsp
+U gmmt/hai-acm/mt.lsp
+U gmmt/hai-acm/mtr.tdl
+U gmmt/hai-acm/norgram.mtr
+U gmmt/hai-acm/script
+U gmmt/hai-acm/user-fns.lsp
+U gmmt/hau/README
+U gmmt/hau/Version.lsp
+U gmmt/hau/choices
+U gmmt/hau/hausa.tdl
+U gmmt/hau/head-types.tdl
+U gmmt/hau/irregs.tab
+U gmmt/hau/irules.tdl
+U gmmt/hau/labels.tdl
+U gmmt/hau/lexicon.tdl
+U gmmt/hau/licence.txt
+U gmmt/hau/lrules.tdl
+U gmmt/hau/matrix.tdl
+U gmmt/hau/pet.tdl
+U gmmt/hau/roots.tdl
+U gmmt/hau/rules.tdl
+U gmmt/hau/semi.vpm
+U gmmt/hau/doc/Lab9Writeup
+U gmmt/hau/doc/lab2_writeup.txt
+U gmmt/hau/doc/lab3_writeup.txt
+U gmmt/hau/doc/lab4_writeup.txt
+U gmmt/hau/doc/lab5_writeup.txt
+U gmmt/hau/doc/lab6_writeup.txt
+U gmmt/hau/doc/lab7_writeup.txt
+U gmmt/hau/doc/lab8_writeup.txt
+U gmmt/hau/doc/lab9_writeup.txt
+U gmmt/hau/doc/rubric2
+U gmmt/hau/doc/rubric3
+U gmmt/hau/doc/rubric4
+U gmmt/hau/doc/rubric5
+U gmmt/hau/doc/rubric6
+U gmmt/hau/doc/rubric7
+U gmmt/hau/doc/rubric8
+U gmmt/hau/doc/rubric9
+U gmmt/hau/lkb/567.mtr
+U gmmt/hau/lkb/base-script
+U gmmt/hau/lkb/checkpaths.lsp
+U gmmt/hau/lkb/globals.lsp
+U gmmt/hau/lkb/mrsglobals.lisp
+U gmmt/hau/lkb/mrsmunge.tdl
+U gmmt/hau/lkb/mt.lsp
+U gmmt/hau/lkb/script
+U gmmt/hau/lkb/script2
+U gmmt/hau/lkb/transfer.tdl
+U gmmt/hau/lkb/user-fns.lsp
+U gmmt/hau/lkb/user-prefs.lsp
+U gmmt/hau/pet/flop.set
+U gmmt/hau/pet/global.set
+U gmmt/hau/pet/pet.set
+U gmmt/hau/tsdb/baseline/analysis
+U gmmt/hau/tsdb/baseline/daughter
+U gmmt/hau/tsdb/baseline/decision
+U gmmt/hau/tsdb/baseline/edge
+U gmmt/hau/tsdb/baseline/fold
+U gmmt/hau/tsdb/baseline/item
+U gmmt/hau/tsdb/baseline/item-phenomenon
+U gmmt/hau/tsdb/baseline/item-set
+U gmmt/hau/tsdb/baseline/output
+U gmmt/hau/tsdb/baseline/parameter
+U gmmt/hau/tsdb/baseline/parse
+U gmmt/hau/tsdb/baseline/phenomenon
+U gmmt/hau/tsdb/baseline/preference
+U gmmt/hau/tsdb/baseline/relations
+U gmmt/hau/tsdb/baseline/result
+U gmmt/hau/tsdb/baseline/rule
+U gmmt/hau/tsdb/baseline/run
+U gmmt/hau/tsdb/baseline/score
+U gmmt/hau/tsdb/baseline/set
+U gmmt/hau/tsdb/baseline/tree
+U gmmt/hau/tsdb/baseline/update
+U gmmt/hau/tsdb/gold/analysis
+U gmmt/hau/tsdb/gold/daughter
+U gmmt/hau/tsdb/gold/decision
+U gmmt/hau/tsdb/gold/edge
+U gmmt/hau/tsdb/gold/fold
+U gmmt/hau/tsdb/gold/item
+U gmmt/hau/tsdb/gold/item-phenomenon
+U gmmt/hau/tsdb/gold/item-set
+U gmmt/hau/tsdb/gold/output
+U gmmt/hau/tsdb/gold/parameter
+U gmmt/hau/tsdb/gold/parse
+U gmmt/hau/tsdb/gold/phenomenon
+U gmmt/hau/tsdb/gold/preference
+U gmmt/hau/tsdb/gold/relations
+U gmmt/hau/tsdb/gold/result
+U gmmt/hau/tsdb/gold/rule
+U gmmt/hau/tsdb/gold/run
+U gmmt/hau/tsdb/gold/score
+U gmmt/hau/tsdb/gold/set
+U gmmt/hau/tsdb/gold/tree
+U gmmt/hau/tsdb/gold/update
+U gmmt/hau/tsdb/hau_gmmt_gen_output/analysis
+U gmmt/hau/tsdb/hau_gmmt_gen_output/daughter
+U gmmt/hau/tsdb/hau_gmmt_gen_output/decision
+U gmmt/hau/tsdb/hau_gmmt_gen_output/edge
+U gmmt/hau/tsdb/hau_gmmt_gen_output/fold
+U gmmt/hau/tsdb/hau_gmmt_gen_output/item
+U gmmt/hau/tsdb/hau_gmmt_gen_output/item-phenomenon
+U gmmt/hau/tsdb/hau_gmmt_gen_output/item-set
+U gmmt/hau/tsdb/hau_gmmt_gen_output/output
+U gmmt/hau/tsdb/hau_gmmt_gen_output/parameter
+U gmmt/hau/tsdb/hau_gmmt_gen_output/parse
+U gmmt/hau/tsdb/hau_gmmt_gen_output/phenomenon
+U gmmt/hau/tsdb/hau_gmmt_gen_output/preference
+U gmmt/hau/tsdb/hau_gmmt_gen_output/relations
+U gmmt/hau/tsdb/hau_gmmt_gen_output/result
+U gmmt/hau/tsdb/hau_gmmt_gen_output/rule
+U gmmt/hau/tsdb/hau_gmmt_gen_output/run
+U gmmt/hau/tsdb/hau_gmmt_gen_output/score
+U gmmt/hau/tsdb/hau_gmmt_gen_output/set
+U gmmt/hau/tsdb/hau_gmmt_gen_output/tree
+U gmmt/hau/tsdb/hau_gmmt_gen_output/update
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/analysis
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/daughter
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/decision
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/edge
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/fold
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item-phenomenon
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item-set
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/output
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/parameter
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/parse
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/phenomenon
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/preference
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/relations
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/result
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/rule
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/run
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/score
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/set
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/tree
+U gmmt/hau/tsdb/hau_gmmt_gold_unthinned/update
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/analysis
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/decision
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/edge
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/fold
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/item
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/item-phenomenon
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/item-set
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/output
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/parameter
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/parse
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/phenomenon
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/preference
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/relations
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/result
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/rule
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/run
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/score
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/set
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/tree
+U gmmt/hau/tsdb/hau_gmmt_mrs_input/update
+U gmmt/hau-acm/filter.mtr
+U gmmt/hau-acm/globals.lsp
+U gmmt/hau-acm/hau-acm.mtr
+U gmmt/hau-acm/mrs.tdl
+U gmmt/hau-acm/mrsglobals.lsp
+U gmmt/hau-acm/mt.lsp
+U gmmt/hau-acm/mtr.tdl
+U gmmt/hau-acm/norgram.mtr
+U gmmt/hau-acm/script
+U gmmt/hau-acm/user-fns.lsp
+U gmmt/heb/README
+U gmmt/heb/Version.lsp
+U gmmt/heb/choices
+U gmmt/heb/head-types.tdl
+U gmmt/heb/heb-bak.tgz
+U gmmt/heb/hebrew.tdl
+U gmmt/heb/irregs.tab
+U gmmt/heb/irules.tdl
+U gmmt/heb/labels.tdl
+U gmmt/heb/lexicon.tdl
+U gmmt/heb/licence.txt
+U gmmt/heb/lrules.tdl
+U gmmt/heb/matrix.tdl
+U gmmt/heb/pet.tdl
+U gmmt/heb/roots.tdl
+U gmmt/heb/rules.tdl
+U gmmt/heb/semi.vpm
+U gmmt/heb/doc/lab2_writeup.txt
+U gmmt/heb/doc/lab3_writeup.txt
+U gmmt/heb/doc/lab4_writeup.txt
+U gmmt/heb/doc/lab5_writeup.txt
+U gmmt/heb/doc/lab6_writeup.txt
+U gmmt/heb/doc/lab7_writeup.txt
+U gmmt/heb/doc/lab8_writeup.txt
+U gmmt/heb/doc/lab9_writeup.txt
+U gmmt/heb/doc/rubric3
+U gmmt/heb/doc/rubric4
+U gmmt/heb/doc/rubric5
+U gmmt/heb/doc/rubric6
+U gmmt/heb/doc/rubric7
+U gmmt/heb/doc/rubric8
+U gmmt/heb/doc/rubric9
+U gmmt/heb/lkb/base-script
+U gmmt/heb/lkb/checkpaths.lsp
+U gmmt/heb/lkb/globals.lsp
+U gmmt/heb/lkb/globals.lsp.~1.5.~
+U gmmt/heb/lkb/mrsglobals.lisp
+U gmmt/heb/lkb/mrsmunge.tdl
+U gmmt/heb/lkb/mt.lsp
+U gmmt/heb/lkb/script
+U gmmt/heb/lkb/smaf.conf
+U gmmt/heb/lkb/transfer.tdl
+U gmmt/heb/lkb/user-fns.lsp
+U gmmt/heb/lkb/user-prefs.lsp
+U gmmt/heb/pet/flop.set
+U gmmt/heb/pet/global.set
+U gmmt/heb/pet/pet.set
+U gmmt/heb/tsdb/heb_gmmt_gen_output/analysis
+U gmmt/heb/tsdb/heb_gmmt_gen_output/daughter
+U gmmt/heb/tsdb/heb_gmmt_gen_output/decision
+U gmmt/heb/tsdb/heb_gmmt_gen_output/edge
+U gmmt/heb/tsdb/heb_gmmt_gen_output/fold
+U gmmt/heb/tsdb/heb_gmmt_gen_output/item
+U gmmt/heb/tsdb/heb_gmmt_gen_output/item-phenomenon
+U gmmt/heb/tsdb/heb_gmmt_gen_output/item-set
+U gmmt/heb/tsdb/heb_gmmt_gen_output/output
+U gmmt/heb/tsdb/heb_gmmt_gen_output/parameter
+U gmmt/heb/tsdb/heb_gmmt_gen_output/parse
+U gmmt/heb/tsdb/heb_gmmt_gen_output/phenomenon
+U gmmt/heb/tsdb/heb_gmmt_gen_output/preference
+U gmmt/heb/tsdb/heb_gmmt_gen_output/relations
+U gmmt/heb/tsdb/heb_gmmt_gen_output/result
+U gmmt/heb/tsdb/heb_gmmt_gen_output/rule
+U gmmt/heb/tsdb/heb_gmmt_gen_output/run
+U gmmt/heb/tsdb/heb_gmmt_gen_output/score
+U gmmt/heb/tsdb/heb_gmmt_gen_output/set
+U gmmt/heb/tsdb/heb_gmmt_gen_output/tree
+U gmmt/heb/tsdb/heb_gmmt_gen_output/update
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/analysis
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/daughter
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/decision
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/edge
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/fold
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item-phenomenon
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item-set
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item~
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/output
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/parameter
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/parse
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/phenomenon
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/preference
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/relations
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/result
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/rule
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/run
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/score
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/set
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/tree
+U gmmt/heb/tsdb/heb_gmmt_gold_unthinned/update
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/analysis
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/decision
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/edge
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/fold
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/item
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/item-phenomenon
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/item-set
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/output
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/parameter
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/parse
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/phenomenon
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/preference
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/relations
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/result
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/rule
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/run
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/score
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/set
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/tree
+U gmmt/heb/tsdb/heb_gmmt_mrs_input/update
+U gmmt/heb-acm/filter.mtr
+U gmmt/heb-acm/globals.lsp
+U gmmt/heb-acm/heb-acm.mtr
+U gmmt/heb-acm/mrs.tdl
+U gmmt/heb-acm/mrsglobals.lsp
+U gmmt/heb-acm/mt.lsp
+U gmmt/heb-acm/mtr.tdl
+U gmmt/heb-acm/norgram.mtr
+U gmmt/heb-acm/script
+U gmmt/heb-acm/user-fns.lsp
+U gmmt/hye/Version.lsp
+U gmmt/hye/armenian.tdl
+U gmmt/hye/head-types.tdl
+U gmmt/hye/irregs.tab
+U gmmt/hye/irules.tdl
+U gmmt/hye/labels.tdl
+U gmmt/hye/lexicon.tdl
+U gmmt/hye/lrules.tdl
+U gmmt/hye/matrix.tdl
+U gmmt/hye/pet.tdl
+U gmmt/hye/roots.tdl
+U gmmt/hye/rules.tdl
+U gmmt/hye/semi.vpm
+U gmmt/hye/transfer.tdl
+U gmmt/hye/doc/lab2_writeup.txt
+U gmmt/hye/doc/lab3_writeup.txt
+U gmmt/hye/doc/lab4_writeup.txt
+U gmmt/hye/doc/lab5_writeup.txt
+U gmmt/hye/doc/lab6_writeup.txt
+U gmmt/hye/lkb/567.mtr
+U gmmt/hye/lkb/checkpaths.lsp
+U gmmt/hye/lkb/globals.lsp
+U gmmt/hye/lkb/globals.lsp.fasl
+U gmmt/hye/lkb/mrsglobals.lisp
+U gmmt/hye/lkb/mrsglobals.lisp.fasl
+U gmmt/hye/lkb/mrsmunge.tdl
+U gmmt/hye/lkb/mt.lsp
+U gmmt/hye/lkb/mt.lsp.fasl
+U gmmt/hye/lkb/script
+U gmmt/hye/lkb/user-fns.lsp
+U gmmt/hye/lkb/user-fns.lsp.fasl
+U gmmt/hye-acm/filter.mtr
+U gmmt/hye-acm/globals.lsp
+U gmmt/hye-acm/hye-acm.mtr
+U gmmt/hye-acm/mrs.tdl
+U gmmt/hye-acm/mrsglobals.lsp
+U gmmt/hye-acm/mt.lsp
+U gmmt/hye-acm/mtr.tdl
+U gmmt/hye-acm/norgram.mtr
+U gmmt/hye-acm/script
+U gmmt/hye-acm/user-fns.lsp
+U gmmt/identity/filter.mtr
+U gmmt/identity/globals.lsp
+U gmmt/identity/identity.mtr
+U gmmt/identity/mrs.tdl
+U gmmt/identity/mrsglobals.lsp
+U gmmt/identity/mt.lsp
+U gmmt/identity/mtr.tdl
+U gmmt/identity/norgram.mtr
+U gmmt/identity/script
+U gmmt/identity/user-fns.lsp
+U gmmt/isl/README
+U gmmt/isl/Version.lsp
+U gmmt/isl/choices
+U gmmt/isl/head-types.tdl
+U gmmt/isl/icelandic.tdl
+U gmmt/isl/irregs.tab
+U gmmt/isl/irules.tdl
+U gmmt/isl/labels.tdl
+U gmmt/isl/lexicon.tdl
+U gmmt/isl/licence.txt
+U gmmt/isl/lrules.tdl
+U gmmt/isl/matrix.tdl
+U gmmt/isl/pet.tdl
+U gmmt/isl/roots.tdl
+U gmmt/isl/rules.tdl
+U gmmt/isl/semi.vpm
+U gmmt/isl/doc/Gunnar.adj
+U gmmt/isl/doc/adj.item
+U gmmt/isl/doc/adjectives
+U gmmt/isl/doc/lab2_writeup.txt
+U gmmt/isl/doc/lab3_writeup.txt
+U gmmt/isl/doc/lab4_writeup.txt
+U gmmt/isl/doc/lab5_writeup.txt
+U gmmt/isl/doc/lab6_writeup.txt
+U gmmt/isl/doc/lab7_writeup.txt
+U gmmt/isl/doc/lab8_writeup.txt
+U gmmt/isl/doc/lab9_writeup.txt
+U gmmt/isl/doc/rubric2
+U gmmt/isl/doc/rubric3
+U gmmt/isl/doc/rubric4
+U gmmt/isl/doc/rubric5
+U gmmt/isl/doc/rubric6
+U gmmt/isl/doc/rubric7
+U gmmt/isl/doc/rubric8
+U gmmt/isl/lkb/567.mtr
+U gmmt/isl/lkb/base-script
+U gmmt/isl/lkb/checkpaths.lsp
+U gmmt/isl/lkb/globals.lsp
+U gmmt/isl/lkb/mrsglobals.lisp
+U gmmt/isl/lkb/mrsmunge.tdl
+U gmmt/isl/lkb/mt.lsp
+U gmmt/isl/lkb/script
+U gmmt/isl/lkb/transfer.tdl
+U gmmt/isl/lkb/trigger.mtr
+U gmmt/isl/lkb/user-fns.lsp
+U gmmt/isl/pet/flop.set
+U gmmt/isl/pet/global.set
+U gmmt/isl/pet/pet.set
+U gmmt/isl/tsdb/baseline/analysis
+U gmmt/isl/tsdb/baseline/daughter
+U gmmt/isl/tsdb/baseline/decision
+U gmmt/isl/tsdb/baseline/edge
+U gmmt/isl/tsdb/baseline/fold
+U gmmt/isl/tsdb/baseline/item
+U gmmt/isl/tsdb/baseline/item-phenomenon
+U gmmt/isl/tsdb/baseline/item-set
+U gmmt/isl/tsdb/baseline/output
+U gmmt/isl/tsdb/baseline/parameter
+U gmmt/isl/tsdb/baseline/parse
+U gmmt/isl/tsdb/baseline/phenomenon
+U gmmt/isl/tsdb/baseline/preference
+U gmmt/isl/tsdb/baseline/relations
+U gmmt/isl/tsdb/baseline/result
+U gmmt/isl/tsdb/baseline/rule
+U gmmt/isl/tsdb/baseline/run
+U gmmt/isl/tsdb/baseline/score
+U gmmt/isl/tsdb/baseline/set
+U gmmt/isl/tsdb/baseline/tree
+U gmmt/isl/tsdb/baseline/update
+U gmmt/isl/tsdb/gold/analysis
+U gmmt/isl/tsdb/gold/daughter
+U gmmt/isl/tsdb/gold/decision
+U gmmt/isl/tsdb/gold/edge
+U gmmt/isl/tsdb/gold/fold
+U gmmt/isl/tsdb/gold/item
+U gmmt/isl/tsdb/gold/item-phenomenon
+U gmmt/isl/tsdb/gold/item-set
+U gmmt/isl/tsdb/gold/output
+U gmmt/isl/tsdb/gold/parameter
+U gmmt/isl/tsdb/gold/parse
+U gmmt/isl/tsdb/gold/phenomenon
+U gmmt/isl/tsdb/gold/preference
+U gmmt/isl/tsdb/gold/relations
+U gmmt/isl/tsdb/gold/result
+U gmmt/isl/tsdb/gold/rule
+U gmmt/isl/tsdb/gold/run
+U gmmt/isl/tsdb/gold/score
+U gmmt/isl/tsdb/gold/set
+U gmmt/isl/tsdb/gold/tree
+U gmmt/isl/tsdb/gold/update
+U gmmt/isl/tsdb/isl_gmmt_gen_output/analysis
+U gmmt/isl/tsdb/isl_gmmt_gen_output/daughter
+U gmmt/isl/tsdb/isl_gmmt_gen_output/decision
+U gmmt/isl/tsdb/isl_gmmt_gen_output/edge
+U gmmt/isl/tsdb/isl_gmmt_gen_output/fold
+U gmmt/isl/tsdb/isl_gmmt_gen_output/item
+U gmmt/isl/tsdb/isl_gmmt_gen_output/item-phenomenon
+U gmmt/isl/tsdb/isl_gmmt_gen_output/item-set
+U gmmt/isl/tsdb/isl_gmmt_gen_output/output
+U gmmt/isl/tsdb/isl_gmmt_gen_output/parameter
+U gmmt/isl/tsdb/isl_gmmt_gen_output/parse
+U gmmt/isl/tsdb/isl_gmmt_gen_output/phenomenon
+U gmmt/isl/tsdb/isl_gmmt_gen_output/preference
+U gmmt/isl/tsdb/isl_gmmt_gen_output/relations
+U gmmt/isl/tsdb/isl_gmmt_gen_output/result
+U gmmt/isl/tsdb/isl_gmmt_gen_output/rule
+U gmmt/isl/tsdb/isl_gmmt_gen_output/run
+U gmmt/isl/tsdb/isl_gmmt_gen_output/score
+U gmmt/isl/tsdb/isl_gmmt_gen_output/set
+U gmmt/isl/tsdb/isl_gmmt_gen_output/tree
+U gmmt/isl/tsdb/isl_gmmt_gen_output/update
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/analysis
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/daughter
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/decision
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/edge
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/fold
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item-phenomenon
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item-set
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/output
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/parameter
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/parse
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/phenomenon
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/preference
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/relations
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/result
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/rule
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/run
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/score
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/set
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/tree
+U gmmt/isl/tsdb/isl_gmmt_gold_unthinned/update
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/analysis
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/decision
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/edge
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/fold
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/item
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/item-phenomenon
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/item-set
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/output
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/parameter
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/parse
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/phenomenon
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/preference
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/relations
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/result
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/rule
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/run
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/score
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/set
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/tree
+U gmmt/isl/tsdb/isl_gmmt_mrs_input/update
+U gmmt/isl-acm/filter.mtr
+U gmmt/isl-acm/globals.lsp
+U gmmt/isl-acm/isl-acm.mtr
+U gmmt/isl-acm/mrs.tdl
+U gmmt/isl-acm/mrsglobals.lsp
+U gmmt/isl-acm/mt.lsp
+U gmmt/isl-acm/mtr.tdl
+U gmmt/isl-acm/norgram.mtr
+U gmmt/isl-acm/script
+U gmmt/isl-acm/user-fns.lsp
+U gmmt/ita/README
+U gmmt/ita/Version.lsp
+U gmmt/ita/head-types.tdl
+U gmmt/ita/irregs.tab
+U gmmt/ita/irules.tdl
+U gmmt/ita/italian.tdl
+U gmmt/ita/labels.tdl
+U gmmt/ita/lexicon.tdl
+U gmmt/ita/licence.txt
+U gmmt/ita/lrules.tdl
+U gmmt/ita/matrix.tdl
+U gmmt/ita/modules_choices.txt
+U gmmt/ita/pet.tdl
+U gmmt/ita/roots.tdl
+U gmmt/ita/rules.tdl
+U gmmt/ita/semi.vpm
+U gmmt/ita/doc/lab2_writeup.txt
+U gmmt/ita/doc/lab3_writeup.txt
+U gmmt/ita/doc/lab4_writeup.txt
+U gmmt/ita/doc/lab5_writeup.txt
+U gmmt/ita/doc/lab6_writeup.txt
+U gmmt/ita/doc/lab7_writeup.txt
+U gmmt/ita/doc/lab8_writeup.txt
+U gmmt/ita/doc/lab9_writeup.txt
+U gmmt/ita/doc/rubric3
+U gmmt/ita/doc/rubric4
+U gmmt/ita/doc/rubric5
+U gmmt/ita/doc/rubric7
+U gmmt/ita/doc/rubric8
+U gmmt/ita/doc/rubric9
+U gmmt/ita/lkb/567.mtr
+U gmmt/ita/lkb/567.mtr~
+U gmmt/ita/lkb/base-script
+U gmmt/ita/lkb/checkpaths.lsp
+U gmmt/ita/lkb/globals.lsp
+U gmmt/ita/lkb/globals.lsp.fasl
+U gmmt/ita/lkb/globals.lsp~
+U gmmt/ita/lkb/mrsglobals.lisp
+U gmmt/ita/lkb/mrsglobals.lisp.fasl
+U gmmt/ita/lkb/mrsmunge.tdl
+U gmmt/ita/lkb/mt.lsp
+U gmmt/ita/lkb/mt.lsp.fasl
+U gmmt/ita/lkb/script
+U gmmt/ita/lkb/transfer.tdl
+U gmmt/ita/lkb/user-fns.lsp
+U gmmt/ita/lkb/user-fns.lsp.fasl
+U gmmt/ita/lkb/user-prefs.lsp
+U gmmt/ita/pet/flop.set
+U gmmt/ita/pet/global.set
+U gmmt/ita/pet/pet.set
+U gmmt/ita/tsdb/baseline/analysis
+U gmmt/ita/tsdb/baseline/daughter
+U gmmt/ita/tsdb/baseline/decision
+U gmmt/ita/tsdb/baseline/edge
+U gmmt/ita/tsdb/baseline/fold
+U gmmt/ita/tsdb/baseline/item
+U gmmt/ita/tsdb/baseline/item-phenomenon
+U gmmt/ita/tsdb/baseline/item-set
+U gmmt/ita/tsdb/baseline/output
+U gmmt/ita/tsdb/baseline/parameter
+U gmmt/ita/tsdb/baseline/parse
+U gmmt/ita/tsdb/baseline/phenomenon
+U gmmt/ita/tsdb/baseline/preference
+U gmmt/ita/tsdb/baseline/relations
+U gmmt/ita/tsdb/baseline/result
+U gmmt/ita/tsdb/baseline/rule
+U gmmt/ita/tsdb/baseline/run
+U gmmt/ita/tsdb/baseline/score
+U gmmt/ita/tsdb/baseline/set
+U gmmt/ita/tsdb/baseline/tree
+U gmmt/ita/tsdb/baseline/update
+U gmmt/ita/tsdb/gold/analysis
+U gmmt/ita/tsdb/gold/daughter
+U gmmt/ita/tsdb/gold/decision
+U gmmt/ita/tsdb/gold/edge
+U gmmt/ita/tsdb/gold/fold
+U gmmt/ita/tsdb/gold/item
+U gmmt/ita/tsdb/gold/item-phenomenon
+U gmmt/ita/tsdb/gold/item-set
+U gmmt/ita/tsdb/gold/output
+U gmmt/ita/tsdb/gold/parameter
+U gmmt/ita/tsdb/gold/parse
+U gmmt/ita/tsdb/gold/phenomenon
+U gmmt/ita/tsdb/gold/preference
+U gmmt/ita/tsdb/gold/relations
+U gmmt/ita/tsdb/gold/result
+U gmmt/ita/tsdb/gold/rule
+U gmmt/ita/tsdb/gold/run
+U gmmt/ita/tsdb/gold/score
+U gmmt/ita/tsdb/gold/set
+U gmmt/ita/tsdb/gold/tree
+U gmmt/ita/tsdb/gold/update
+U gmmt/ita/tsdb/ita_gmmt_gen_output/analysis
+U gmmt/ita/tsdb/ita_gmmt_gen_output/daughter
+U gmmt/ita/tsdb/ita_gmmt_gen_output/decision
+U gmmt/ita/tsdb/ita_gmmt_gen_output/edge
+U gmmt/ita/tsdb/ita_gmmt_gen_output/fold
+U gmmt/ita/tsdb/ita_gmmt_gen_output/item
+U gmmt/ita/tsdb/ita_gmmt_gen_output/item-phenomenon
+U gmmt/ita/tsdb/ita_gmmt_gen_output/item-set
+U gmmt/ita/tsdb/ita_gmmt_gen_output/output
+U gmmt/ita/tsdb/ita_gmmt_gen_output/parameter
+U gmmt/ita/tsdb/ita_gmmt_gen_output/parse
+U gmmt/ita/tsdb/ita_gmmt_gen_output/phenomenon
+U gmmt/ita/tsdb/ita_gmmt_gen_output/preference
+U gmmt/ita/tsdb/ita_gmmt_gen_output/relations
+U gmmt/ita/tsdb/ita_gmmt_gen_output/result
+U gmmt/ita/tsdb/ita_gmmt_gen_output/rule
+U gmmt/ita/tsdb/ita_gmmt_gen_output/run
+U gmmt/ita/tsdb/ita_gmmt_gen_output/score
+U gmmt/ita/tsdb/ita_gmmt_gen_output/set
+U gmmt/ita/tsdb/ita_gmmt_gen_output/tree
+U gmmt/ita/tsdb/ita_gmmt_gen_output/update
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/analysis
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/daughter
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/decision
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/edge
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/fold
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item-phenomenon
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item-set
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/output
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/parameter
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/parse
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/phenomenon
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/preference
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/relations
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/result
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/rule
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/run
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/score
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/set
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/tree
+U gmmt/ita/tsdb/ita_gmmt_gold_unthinned/update
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/analysis
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/decision
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/edge
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/fold
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/item
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/item-phenomenon
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/item-set
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/output
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/parameter
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/parse
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/phenomenon
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/preference
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/relations
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/result
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/rule
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/run
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/score
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/set
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/tree
+U gmmt/ita/tsdb/ita_gmmt_mrs_input/update
+U gmmt/ita-acm/filter.mtr
+U gmmt/ita-acm/globals.lsp
+U gmmt/ita-acm/ita-acm.mtr
+U gmmt/ita-acm/mrs.tdl
+U gmmt/ita-acm/mrsglobals.lsp
+U gmmt/ita-acm/mt.lsp
+U gmmt/ita-acm/mtr.tdl
+U gmmt/ita-acm/norgram.mtr
+U gmmt/ita-acm/script
+U gmmt/ita-acm/user-fns.lsp
+U gmmt/mal/README
+U gmmt/mal/Version.lsp
+U gmmt/mal/choices
+U gmmt/mal/head-types.tdl
+U gmmt/mal/irregs.tab
+U gmmt/mal/irules.tdl
+U gmmt/mal/labels.tdl
+U gmmt/mal/lexicon.tdl
+U gmmt/mal/licence.txt
+U gmmt/mal/lrules.tdl
+U gmmt/mal/malayalam.tdl
+U gmmt/mal/matrix.tdl
+U gmmt/mal/pet.tdl
+U gmmt/mal/roots.tdl
+U gmmt/mal/rules.tdl
+U gmmt/mal/semi.vpm
+U gmmt/mal/doc/lab2_writeup.txt
+U gmmt/mal/doc/lab3_writeup.txt
+U gmmt/mal/doc/lab4_writeup.txt
+U gmmt/mal/doc/lab5_writeup.txt
+U gmmt/mal/doc/lab6_writeup.txt
+U gmmt/mal/doc/lab7_writeup.txt
+U gmmt/mal/doc/lab8_writeup.txt
+U gmmt/mal/doc/lab9_writeup.txt
+U gmmt/mal/doc/rubric2
+U gmmt/mal/doc/rubric3
+U gmmt/mal/doc/rubric4
+U gmmt/mal/doc/rubric5
+U gmmt/mal/doc/rubric6
+U gmmt/mal/doc/rubric7
+U gmmt/mal/doc/rubric8
+U gmmt/mal/doc/rubric9
+U gmmt/mal/lkb/567.mtr
+U gmmt/mal/lkb/base-script
+U gmmt/mal/lkb/globals.lsp
+U gmmt/mal/lkb/mrsglobals.lisp
+U gmmt/mal/lkb/mrsmunge.tdl
+U gmmt/mal/lkb/mt.lsp
+U gmmt/mal/lkb/script
+U gmmt/mal/lkb/transfer.tdl
+U gmmt/mal/lkb/user-fns.lsp
+U gmmt/mal/lkb/user-prefs.lsp
+U gmmt/mal/pet/flop.set
+U gmmt/mal/pet/global.set
+U gmmt/mal/pet/pet.set
+U gmmt/mal/tsdb/baseline/analysis
+U gmmt/mal/tsdb/baseline/daughter
+U gmmt/mal/tsdb/baseline/decision
+U gmmt/mal/tsdb/baseline/edge
+U gmmt/mal/tsdb/baseline/fold
+U gmmt/mal/tsdb/baseline/item
+U gmmt/mal/tsdb/baseline/item-phenomenon
+U gmmt/mal/tsdb/baseline/item-set
+U gmmt/mal/tsdb/baseline/output
+U gmmt/mal/tsdb/baseline/parameter
+U gmmt/mal/tsdb/baseline/parse
+U gmmt/mal/tsdb/baseline/phenomenon
+U gmmt/mal/tsdb/baseline/preference
+U gmmt/mal/tsdb/baseline/relations
+U gmmt/mal/tsdb/baseline/result
+U gmmt/mal/tsdb/baseline/rule
+U gmmt/mal/tsdb/baseline/run
+U gmmt/mal/tsdb/baseline/score
+U gmmt/mal/tsdb/baseline/set
+U gmmt/mal/tsdb/baseline/tree
+U gmmt/mal/tsdb/baseline/update
+U gmmt/mal-acm/filter.mtr
+U gmmt/mal-acm/globals.lsp
+U gmmt/mal-acm/mal-acm.mtr
+U gmmt/mal-acm/mrs.tdl
+U gmmt/mal-acm/mrsglobals.lsp
+U gmmt/mal-acm/mt.lsp
+U gmmt/mal-acm/mtr.tdl
+U gmmt/mal-acm/norgram.mtr
+U gmmt/mal-acm/script
+U gmmt/mal-acm/user-fns.lsp
+U gmmt/spa/README
+U gmmt/spa/Version.lsp
+U gmmt/spa/head-types.tdl
+U gmmt/spa/irregs.tab
+U gmmt/spa/irules.tdl
+U gmmt/spa/labels.tdl
+U gmmt/spa/lexicon.tdl
+U gmmt/spa/lrules.tdl
+U gmmt/spa/matrix.tdl
+U gmmt/spa/pet.tdl
+U gmmt/spa/roots.tdl
+U gmmt/spa/rules.tdl
+U gmmt/spa/semi.vpm
+U gmmt/spa/spanish.tdl
+U gmmt/spa/doc/Spanish_links.txt
+U gmmt/spa/doc/congugatortool.txt
+U gmmt/spa/doc/ex.txt
+U gmmt/spa/doc/lab4test.items
+U gmmt/spa/doc/test.items
+U gmmt/spa/doc/test.out
+U gmmt/spa/doc/writeup.txt
+U gmmt/spa/lkb/globals.lsp
+U gmmt/spa/lkb/globals.lsp.fasl
+U gmmt/spa/lkb/globals.lsp~
+U gmmt/spa/lkb/mrsglobals.lisp
+U gmmt/spa/lkb/mrsglobals.lisp.fasl
+U gmmt/spa/lkb/mrsmunge.tdl
+U gmmt/spa/lkb/mt.lsp
+U gmmt/spa/lkb/script
+U gmmt/spa/lkb/script_original
+U gmmt/spa/lkb/script~
+U gmmt/spa/lkb/user-fns.lsp
+U gmmt/spa/lkb/user-fns.lsp.fasl
+U gmmt/spa/lkb/user-prefs.lsp
+U gmmt/spa-acm/filter.mtr
+U gmmt/spa-acm/globals.lsp
+U gmmt/spa-acm/mrs.tdl
+U gmmt/spa-acm/mrsglobals.lsp
+U gmmt/spa-acm/mt.lsp
+U gmmt/spa-acm/mtr.tdl
+U gmmt/spa-acm/norgram.mtr
+U gmmt/spa-acm/script
+U gmmt/spa-acm/spa-acm.mtr
+U gmmt/spa-acm/user-fns.lsp
+U gmmt/test_sentences/eng.txt
+U gmmt/test_sentences/eng2epo.txt
+U gmmt/test_sentences/eng2fas.txt
+U gmmt/test_sentences/eng2fin.txt
+U gmmt/test_sentences/eng2hau.txt
+U gmmt/test_sentences/eng2heb.txt
+U gmmt/test_sentences/eng2hye.txt
+U gmmt/test_sentences/eng2isl.txt
+U gmmt/test_sentences/eng2ita.txt
+U gmmt/test_sentences/eng2zul.txt
+U gmmt/test_sentences/epo.txt
+U gmmt/test_sentences/epo2eng.txt
+U gmmt/test_sentences/epo2fas.txt
+U gmmt/test_sentences/epo2fin.txt
+U gmmt/test_sentences/epo2hau.txt
+U gmmt/test_sentences/epo2heb.txt
+U gmmt/test_sentences/epo2hye.txt
+U gmmt/test_sentences/epo2isl.txt
+U gmmt/test_sentences/epo2ita.txt
+U gmmt/test_sentences/epo2zul.txt
+U gmmt/test_sentences/fas.txt
+U gmmt/test_sentences/fas2eng.txt
+U gmmt/test_sentences/fas2epo.txt
+U gmmt/test_sentences/fas2fin.txt
+U gmmt/test_sentences/fas2hau.txt
+U gmmt/test_sentences/fas2heb.txt
+U gmmt/test_sentences/fas2hye.txt
+U gmmt/test_sentences/fas2isl.txt
+U gmmt/test_sentences/fas2ita.txt
+U gmmt/test_sentences/fas2zul.txt
+U gmmt/test_sentences/fin.txt
+U gmmt/test_sentences/fin2eng.txt
+U gmmt/test_sentences/fin2epo.txt
+U gmmt/test_sentences/fin2fas.txt
+U gmmt/test_sentences/fin2hau.txt
+U gmmt/test_sentences/fin2heb.txt
+U gmmt/test_sentences/fin2hye.txt
+U gmmt/test_sentences/fin2isl.txt
+U gmmt/test_sentences/fin2ita.txt
+U gmmt/test_sentences/fin2zul.txt
+U gmmt/test_sentences/hau.txt
+U gmmt/test_sentences/hau2eng.txt
+U gmmt/test_sentences/hau2epo.txt
+U gmmt/test_sentences/hau2fas.txt
+U gmmt/test_sentences/hau2fin.txt
+U gmmt/test_sentences/hau2heb.txt
+U gmmt/test_sentences/hau2hye.txt
+U gmmt/test_sentences/hau2isl.txt
+U gmmt/test_sentences/hau2ita.txt
+U gmmt/test_sentences/hau2zul.txt
+U gmmt/test_sentences/hausa
+U gmmt/test_sentences/hausa.item
+U gmmt/test_sentences/heb.txt
+U gmmt/test_sentences/heb2eng.txt
+U gmmt/test_sentences/heb2epo.txt
+U gmmt/test_sentences/heb2fas.txt
+U gmmt/test_sentences/heb2fin.txt
+U gmmt/test_sentences/heb2hau.txt
+U gmmt/test_sentences/heb2hye.txt
+U gmmt/test_sentences/heb2isl.txt
+U gmmt/test_sentences/heb2ita.txt
+U gmmt/test_sentences/heb2zul.txt
+U gmmt/test_sentences/hye.txt
+U gmmt/test_sentences/hye2eng.txt
+U gmmt/test_sentences/hye2epo.txt
+U gmmt/test_sentences/hye2fas.txt
+U gmmt/test_sentences/hye2fin.txt
+U gmmt/test_sentences/hye2hau.txt
+U gmmt/test_sentences/hye2heb.txt
+U gmmt/test_sentences/hye2isl.txt
+U gmmt/test_sentences/hye2ita.txt
+U gmmt/test_sentences/hye2zul.txt
+U gmmt/test_sentences/icelandic
+U gmmt/test_sentences/icelandic.item
+U gmmt/test_sentences/isl.txt
+U gmmt/test_sentences/isl2eng.txt
+U gmmt/test_sentences/isl2epo.txt
+U gmmt/test_sentences/isl2fas.txt
+U gmmt/test_sentences/isl2fin.txt
+U gmmt/test_sentences/isl2hau.txt
+U gmmt/test_sentences/isl2heb.txt
+U gmmt/test_sentences/isl2hye.txt
+U gmmt/test_sentences/isl2ita.txt
+U gmmt/test_sentences/isl2zul.txt
+U gmmt/test_sentences/ita.txt
+U gmmt/test_sentences/ita2eng.txt
+U gmmt/test_sentences/ita2epo.txt
+U gmmt/test_sentences/ita2fas.txt
+U gmmt/test_sentences/ita2fin.txt
+U gmmt/test_sentences/ita2hau.txt
+U gmmt/test_sentences/ita2heb.txt
+U gmmt/test_sentences/ita2hye.txt
+U gmmt/test_sentences/ita2isl.txt
+U gmmt/test_sentences/ita2zul.txt
+U gmmt/test_sentences/malayalam
+U gmmt/test_sentences/spa.txt
+U gmmt/test_sentences/template
+U gmmt/test_sentences/zul.txt
+U gmmt/test_sentences/zul2eng.txt
+U gmmt/test_sentences/zul2epo.txt
+U gmmt/test_sentences/zul2fas.txt
+U gmmt/test_sentences/zul2fin.txt
+U gmmt/test_sentences/zul2hau.txt
+U gmmt/test_sentences/zul2heb.txt
+U gmmt/test_sentences/zul2hye.txt
+U gmmt/test_sentences/zul2isl.txt
+U gmmt/test_sentences/zul2ita.txt
+U gmmt/test_sentences/zulu
+U gmmt/tsdb/batch_gen_notes
+U gmmt/tsdb/batch_translate_howto
+U gmmt/tsdb/batch_translate_notes
+U gmmt/tsdb/interactive_translate
+U gmmt/tsdb/home/epo/gold/analysis
+U gmmt/tsdb/home/epo/gold/daughter
+U gmmt/tsdb/home/epo/gold/decision
+U gmmt/tsdb/home/epo/gold/edge
+U gmmt/tsdb/home/epo/gold/fold
+U gmmt/tsdb/home/epo/gold/item
+U gmmt/tsdb/home/epo/gold/item-phenomenon
+U gmmt/tsdb/home/epo/gold/item-set
+U gmmt/tsdb/home/epo/gold/output
+U gmmt/tsdb/home/epo/gold/parameter
+U gmmt/tsdb/home/epo/gold/parse
+U gmmt/tsdb/home/epo/gold/phenomenon
+U gmmt/tsdb/home/epo/gold/preference
+U gmmt/tsdb/home/epo/gold/relations
+U gmmt/tsdb/home/epo/gold/result
+U gmmt/tsdb/home/epo/gold/rule
+U gmmt/tsdb/home/epo/gold/run
+U gmmt/tsdb/home/epo/gold/score
+U gmmt/tsdb/home/epo/gold/set
+U gmmt/tsdb/home/epo/gold/tree
+U gmmt/tsdb/home/epo/gold/update
+U gmmt/tsdb/home/fas/gold/analysis
+U gmmt/tsdb/home/fas/gold/daughter
+U gmmt/tsdb/home/fas/gold/decision
+U gmmt/tsdb/home/fas/gold/edge
+U gmmt/tsdb/home/fas/gold/fold
+U gmmt/tsdb/home/fas/gold/item
+U gmmt/tsdb/home/fas/gold/item-phenomenon
+U gmmt/tsdb/home/fas/gold/item-set
+U gmmt/tsdb/home/fas/gold/output
+U gmmt/tsdb/home/fas/gold/parameter
+U gmmt/tsdb/home/fas/gold/parse
+U gmmt/tsdb/home/fas/gold/phenomenon
+U gmmt/tsdb/home/fas/gold/preference
+U gmmt/tsdb/home/fas/gold/relations
+U gmmt/tsdb/home/fas/gold/result
+U gmmt/tsdb/home/fas/gold/rule
+U gmmt/tsdb/home/fas/gold/run
+U gmmt/tsdb/home/fas/gold/score
+U gmmt/tsdb/home/fas/gold/set
+U gmmt/tsdb/home/fas/gold/tree
+U gmmt/tsdb/home/fas/gold/update
+U gmmt/tsdb/home/fin/gold/analysis
+U gmmt/tsdb/home/fin/gold/daughter
+U gmmt/tsdb/home/fin/gold/decision
+U gmmt/tsdb/home/fin/gold/edge
+U gmmt/tsdb/home/fin/gold/fold
+U gmmt/tsdb/home/fin/gold/item
+U gmmt/tsdb/home/fin/gold/item-phenomenon
+U gmmt/tsdb/home/fin/gold/item-set
+U gmmt/tsdb/home/fin/gold/output
+U gmmt/tsdb/home/fin/gold/parameter
+U gmmt/tsdb/home/fin/gold/parse
+U gmmt/tsdb/home/fin/gold/phenomenon
+U gmmt/tsdb/home/fin/gold/preference
+U gmmt/tsdb/home/fin/gold/relations
+U gmmt/tsdb/home/fin/gold/result
+U gmmt/tsdb/home/fin/gold/rule
+U gmmt/tsdb/home/fin/gold/run
+U gmmt/tsdb/home/fin/gold/score
+U gmmt/tsdb/home/fin/gold/set
+U gmmt/tsdb/home/fin/gold/tree
+U gmmt/tsdb/home/fin/gold/update
+U gmmt/tsdb/skeletons/Index.lisp
+U gmmt/tsdb/skeletons/Relations
+U gmmt/tsdb/skeletons/arb_567/item
+U gmmt/tsdb/skeletons/arb_567/relations
+U gmmt/tsdb/skeletons/eng_mmt/item
+U gmmt/tsdb/skeletons/eng_mmt/relations
+U gmmt/tsdb/skeletons/epo/item
+U gmmt/tsdb/skeletons/epo/relations
+U gmmt/tsdb/skeletons/epo_mmt/item
+U gmmt/tsdb/skeletons/epo_mmt/relations
+U gmmt/tsdb/skeletons/fas/item
+U gmmt/tsdb/skeletons/fas/relations
+U gmmt/tsdb/skeletons/fas_mmt/item
+U gmmt/tsdb/skeletons/fas_mmt/relations
+U gmmt/tsdb/skeletons/fin/item
+U gmmt/tsdb/skeletons/fin/relations
+U gmmt/tsdb/skeletons/fin_mmt/item
+U gmmt/tsdb/skeletons/fin_mmt/relations
+U gmmt/tsdb/skeletons/hau_567/item
+U gmmt/tsdb/skeletons/hau_567/relations
+U gmmt/tsdb/skeletons/hau_mmt/item
+U gmmt/tsdb/skeletons/hau_mmt/relations
+U gmmt/tsdb/skeletons/hye_mmt/item
+U gmmt/tsdb/skeletons/hye_mmt/relations
+U gmmt/tsdb/skeletons/isl_567/item
+U gmmt/tsdb/skeletons/isl_567/relations
+U gmmt/tsdb/skeletons/isl_mmt/item
+U gmmt/tsdb/skeletons/isl_mmt/relations
+U gmmt/tsdb/skeletons/ita_567/item
+U gmmt/tsdb/skeletons/ita_567/relations
+U gmmt/tsdb/skeletons/ita_mmt/item
+U gmmt/tsdb/skeletons/ita_mmt/relations
+U gmmt/tsdb/skeletons/mal_567/item
+U gmmt/tsdb/skeletons/mal_567/relations
+U gmmt/tsdb/skeletons/zul_567/item
+U gmmt/tsdb/skeletons/zul_567/relations
+U gmmt/tsdb/skeletons/zul_mmt/item
+U gmmt/tsdb/skeletons/zul_mmt/relations
+U gmmt/zul/README
+U gmmt/zul/Version.lsp
+U gmmt/zul/choices
+U gmmt/zul/head-types.tdl
+U gmmt/zul/irules.tdl
+U gmmt/zul/labels.tdl
+U gmmt/zul/lexicon.tdl
+U gmmt/zul/licence.txt
+U gmmt/zul/lrules.tdl
+U gmmt/zul/matrix.tdl
+U gmmt/zul/pet.tdl
+U gmmt/zul/roots.tdl
+U gmmt/zul/rules.tdl
+U gmmt/zul/semi.vpm
+U gmmt/zul/zulu.tdl
+U gmmt/zul/doc/lab2_writeup.txt
+U gmmt/zul/doc/lab3_writeup.txt
+U gmmt/zul/doc/lab4_writeup.txt
+U gmmt/zul/doc/lab5_writeup.txt
+U gmmt/zul/doc/lab6_writeup.txt
+U gmmt/zul/doc/lab7_writeup.txt
+U gmmt/zul/doc/lab8_writeup.txt
+U gmmt/zul/doc/lab9_writeup.txt
+U gmmt/zul/doc/rubric2
+U gmmt/zul/doc/rubric3
+U gmmt/zul/doc/rubric4
+U gmmt/zul/doc/rubric5
+U gmmt/zul/doc/rubric6
+U gmmt/zul/doc/rubric7
+U gmmt/zul/doc/rubric8
+U gmmt/zul/lkb/567-2.mtr
+U gmmt/zul/lkb/567.mtr
+U gmmt/zul/lkb/base-script
+U gmmt/zul/lkb/checkpaths.lsp
+U gmmt/zul/lkb/globals.lsp
+U gmmt/zul/lkb/mrsglobals.lisp
+U gmmt/zul/lkb/mrsmunge.tdl
+U gmmt/zul/lkb/mt.lsp
+U gmmt/zul/lkb/script
+U gmmt/zul/lkb/transfer.tdl
+U gmmt/zul/lkb/trigger.mtr
+U gmmt/zul/lkb/user-fns.lsp
+U gmmt/zul/lkb/user-prefs.lsp
+U gmmt/zul/tsdb/baseline/analysis
+U gmmt/zul/tsdb/baseline/daughter
+U gmmt/zul/tsdb/baseline/decision
+U gmmt/zul/tsdb/baseline/edge
+U gmmt/zul/tsdb/baseline/fold
+U gmmt/zul/tsdb/baseline/item
+U gmmt/zul/tsdb/baseline/item-phenomenon
+U gmmt/zul/tsdb/baseline/item-set
+U gmmt/zul/tsdb/baseline/output
+U gmmt/zul/tsdb/baseline/parameter
+U gmmt/zul/tsdb/baseline/parse
+U gmmt/zul/tsdb/baseline/phenomenon
+U gmmt/zul/tsdb/baseline/preference
+U gmmt/zul/tsdb/baseline/relations
+U gmmt/zul/tsdb/baseline/result
+U gmmt/zul/tsdb/baseline/rule
+U gmmt/zul/tsdb/baseline/run
+U gmmt/zul/tsdb/baseline/score
+U gmmt/zul/tsdb/baseline/set
+U gmmt/zul/tsdb/baseline/tree
+U gmmt/zul/tsdb/baseline/update
+U gmmt/zul/tsdb/gold/analysis
+U gmmt/zul/tsdb/gold/daughter
+U gmmt/zul/tsdb/gold/decision
+U gmmt/zul/tsdb/gold/edge
+U gmmt/zul/tsdb/gold/fold
+U gmmt/zul/tsdb/gold/item
+U gmmt/zul/tsdb/gold/item-phenomenon
+U gmmt/zul/tsdb/gold/item-set
+U gmmt/zul/tsdb/gold/output
+U gmmt/zul/tsdb/gold/parameter
+U gmmt/zul/tsdb/gold/parse
+U gmmt/zul/tsdb/gold/phenomenon
+U gmmt/zul/tsdb/gold/preference
+U gmmt/zul/tsdb/gold/relations
+U gmmt/zul/tsdb/gold/result
+U gmmt/zul/tsdb/gold/rule
+U gmmt/zul/tsdb/gold/run
+U gmmt/zul/tsdb/gold/score
+U gmmt/zul/tsdb/gold/set
+U gmmt/zul/tsdb/gold/tree
+U gmmt/zul/tsdb/gold/update
+U gmmt/zul/tsdb/zul_gmmt_gen_output/analysis
+U gmmt/zul/tsdb/zul_gmmt_gen_output/daughter
+U gmmt/zul/tsdb/zul_gmmt_gen_output/decision
+U gmmt/zul/tsdb/zul_gmmt_gen_output/edge
+U gmmt/zul/tsdb/zul_gmmt_gen_output/fold
+U gmmt/zul/tsdb/zul_gmmt_gen_output/item
+U gmmt/zul/tsdb/zul_gmmt_gen_output/item-phenomenon
+U gmmt/zul/tsdb/zul_gmmt_gen_output/item-set
+U gmmt/zul/tsdb/zul_gmmt_gen_output/output
+U gmmt/zul/tsdb/zul_gmmt_gen_output/parameter
+U gmmt/zul/tsdb/zul_gmmt_gen_output/parse
+U gmmt/zul/tsdb/zul_gmmt_gen_output/phenomenon
+U gmmt/zul/tsdb/zul_gmmt_gen_output/preference
+U gmmt/zul/tsdb/zul_gmmt_gen_output/relations
+U gmmt/zul/tsdb/zul_gmmt_gen_output/result
+U gmmt/zul/tsdb/zul_gmmt_gen_output/rule
+U gmmt/zul/tsdb/zul_gmmt_gen_output/run
+U gmmt/zul/tsdb/zul_gmmt_gen_output/score
+U gmmt/zul/tsdb/zul_gmmt_gen_output/set
+U gmmt/zul/tsdb/zul_gmmt_gen_output/tree
+U gmmt/zul/tsdb/zul_gmmt_gen_output/update
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/analysis
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/daughter
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/decision
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/edge
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/fold
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item-phenomenon
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item-set
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/output
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/parameter
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/parse
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/phenomenon
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/preference
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/relations
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/result
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/rule
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/run
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/score
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/set
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/tree
+U gmmt/zul/tsdb/zul_gmmt_gold_unthinned/update
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/analysis
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/decision
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/edge
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/fold
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/item
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/item-phenomenon
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/item-set
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/output
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/parameter
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/parse
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/phenomenon
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/preference
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/relations
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/result
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/rule
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/run
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/score
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/set
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/tree
+U gmmt/zul/tsdb/zul_gmmt_mrs_input/update
+U gmmt/zul-acm/filter.mtr
+U gmmt/zul-acm/globals.lsp
+U gmmt/zul-acm/mrs.tdl
+U gmmt/zul-acm/mrsglobals.lsp
+U gmmt/zul-acm/mt.lsp
+U gmmt/zul-acm/mtr.tdl
+U gmmt/zul-acm/norgram.mtr
+U gmmt/zul-acm/script
+U gmmt/zul-acm/user-fns.lsp
+U gmmt/zul-acm/zul-acm.mtr
+cvs update: lkb/base-script is no longer in the repository
+U lkb/globals.lsp
+U lkb/mt.lsp
+U lkb/script
+U lkb/transfer.tdl
 M Makefile
 ? doc
-? linux.x86.32
 ? man
 ? include/mrs.h
 M log/build
@@ -25,32 +1625,33 @@ M log/build
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.549; previous revision: 1.548
+new revision: 1.562; previous revision: 1.561
 done
+cvs [rtag aborted]: could not open lock file `/lingo/CVS/lkb/src/ACL-CG_specific/Attic/,README,': Permission denied
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
-  cd /lingo/build//lkb; \
-  if [ ! -d /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` ]; then \
+	  cd /lingo/build//lkb; \
+	  if [ ! -d /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` ]; then \
             mkdir /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
           fi; \
-  chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
-  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_source.tgz \
-      --exclude=Makefile \
-      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
-      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="src/.????*" --exclude="src/fasl*" \
-      --exclude="*.fasl" --exclude="./lexdb*" \
-      --exclude="src/doc*" --exclude="src/data*" \
-      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
-      --exclude="bin*" --exclude="include*" --exclude="lib*" \
-      --exclude="man*" --exclude="doc*" --exclude="log*" \
-      --exclude="etc*" --exclude=src/general/itsdb.lisp \
-      --exclude="src/tsdb*" --exclude="src/pvm*" \
-      --exclude=src/systems/tsdb.system \
-      --exclude=src/systems/pvm.system \
-      .; \
-)
+	  chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
+	  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_source.tgz \
+	      --exclude=Makefile \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude="src/.????*" --exclude="src/fasl*" \
+	      --exclude="*.fasl" --exclude="./lexdb*" \
+	      --exclude="src/doc*" --exclude="src/data*" \
+	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
+	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
+	      --exclude="man*" --exclude="doc*" --exclude="log*" \
+	      --exclude="etc*" --exclude=src/general/itsdb.lisp \
+	      --exclude="src/tsdb*" --exclude="src/pvm*" \
+	      --exclude=src/systems/tsdb.system \
+	      --exclude=src/systems/pvm.system \
+	      .; \
+	)
 ./
 ./src/
 ./src/ACL-CG_specific/
@@ -116,6 +1717,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/glue/sppp.lsp
 ./src/glue/sppp
 ./src/glue/erg.sppp
+./src/glue/repp.lsp
 ./src/graft/
 ./src/graft/arboretum.lsp
 ./src/io-general/
@@ -189,6 +1791,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/main/check-unif.lsp
 ./src/main/generics.lsp
 ./src/main/statistics.lsp
+./src/main/compound-lex.lsp
 ./src/mrs/
 ./src/mrs/idioms.lisp
 ./src/mrs/mrsglobals.lisp
@@ -227,6 +1830,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mrs/serialize.lisp
 ./src/mrs/dtd-notes.txt
 ./src/mrs/mrs.dtd
+./src/mrs/lnk.lisp
 ./src/mt/
 ./src/mt/transfer.lisp
 ./src/mt/lm.lisp
@@ -243,6 +1847,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/mt/comparison.lisp
 ./src/mt/utool.lisp
 ./src/mt/vpm.lisp
+./src/mt/smt.lisp
 ./src/ppcre/
 ./src/ppcre/api.lisp
 ./src/ppcre/closures.lisp
@@ -262,6 +1867,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/psql/
 ./src/psql/pq-libpq.lsp
 ./src/psql/pq-package.lsp
+./src/psql/pq-libpq-sbcl.lsp
 ./src/rmrs/
 ./src/rmrs/annlt-test/
 ./src/rmrs/annlt-test/fullsemtest.rasp
@@ -334,6 +1940,14 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/www/dot.clinit.cl
 ./src/www/grammar.lisp
 ./src/www/mt.lisp
+./src/www/1x20.jpg
+./src/www/builder.js
+./src/www/controls.js
+./src/www/dragdrop.js
+./src/www/effects.js
+./src/www/prototype.js
+./src/www/scriptaculous.js
+./src/www/slider.js
 ./src/xml/
 ./src/xml/pxml1.cl
 ./src/xml/phtml.cl
@@ -382,15 +1996,98 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/preprocess/sample-sent-standoff
 ./src/preprocess/sample-xml-doc
 ./src/preprocess/sent-split.pl
-./src/preprocess/fspp/
-./src/preprocess/fspp/fspp.cpp
 ./src/preprocess/saf0.lsp
 ./src/preprocess/saf2xml.lsp
 ./src/preprocess/graph.lsp
 ./src/preprocess/server.lsp
 ./src/preprocess/smaf-package.lsp
+./src/preprocess/erg.external-smaf
 ./src/preprocess/fspp-package.lsp
 ./src/preprocess/hook-mrs.lsp
+./src/preprocess/external-smaf.lsp
+./src/preprocess/external-smaf.sh
+./src/asdf/
+./src/asdf/source/
+./src/asdf/source/acl-compat/
+./src/asdf/source/acl-compat/acl-compat-common-lisp-lw.lisp
+./src/asdf/source/acl-compat/acl-compat-corman.lisp
+./src/asdf/source/acl-compat/acl-compat.asd
+./src/asdf/source/acl-compat/acl-excl-common.lisp
+./src/asdf/source/acl-compat/acl-excl-corman.lisp
+./src/asdf/source/acl-compat/acl-mp-corman.lisp
+./src/asdf/source/acl-compat/acl-mp-package.lisp
+./src/asdf/source/acl-compat/acl-socket-corman.lisp
+./src/asdf/source/acl-compat/acl-ssl-streams.lisp
+./src/asdf/source/acl-compat/acl-ssl.lisp
+./src/asdf/source/acl-compat/chunked-stream-mixin.lisp
+./src/asdf/source/acl-compat/chunked.lisp
+./src/asdf/source/acl-compat/defsys.lisp
+./src/asdf/source/acl-compat/lw-buffering.lisp
+./src/asdf/source/acl-compat/packages.lisp
+./src/asdf/source/acl-compat/test-acl-socket.lisp
+./src/asdf/source/acl-compat/allegro/
+./src/asdf/source/acl-compat/allegro/acl-excl.lisp
+./src/asdf/source/acl-compat/allegro/acl-mp.lisp
+./src/asdf/source/acl-compat/allegro/acl-socket.lisp
+./src/asdf/source/acl-compat/allegro/acl-sys.lisp
+./src/asdf/source/acl-compat/clisp/
+./src/asdf/source/acl-compat/clisp/acl-excl.lisp
+./src/asdf/source/acl-compat/clisp/acl-mp.lisp
+./src/asdf/source/acl-compat/clisp/acl-socket.lisp
+./src/asdf/source/acl-compat/clisp/acl-sys.lisp
+./src/asdf/source/acl-compat/cmucl/
+./src/asdf/source/acl-compat/cmucl/acl-excl.lisp
+./src/asdf/source/acl-compat/cmucl/acl-mp.lisp
+./src/asdf/source/acl-compat/cmucl/acl-socket.lisp
+./src/asdf/source/acl-compat/cmucl/acl-sys.lisp
+./src/asdf/source/acl-compat/lispworks/
+./src/asdf/source/acl-compat/lispworks/acl-excl.lisp
+./src/asdf/source/acl-compat/lispworks/acl-mp.lisp
+./src/asdf/source/acl-compat/lispworks/acl-socket.lisp
+./src/asdf/source/acl-compat/lispworks/acl-sys.lisp
+./src/asdf/source/acl-compat/mcl/
+./src/asdf/source/acl-compat/mcl/acl-excl.lisp
+./src/asdf/source/acl-compat/mcl/acl-mp.lisp
+./src/asdf/source/acl-compat/mcl/acl-socket-mcl.lisp
+./src/asdf/source/acl-compat/mcl/acl-socket-openmcl.lisp
+./src/asdf/source/acl-compat/mcl/acl-sys.lisp
+./src/asdf/source/acl-compat/mcl/mcl-stream-fix.lisp
+./src/asdf/source/acl-compat/mcl/mcl-timers.lisp
+./src/asdf/source/acl-compat/sbcl/
+./src/asdf/source/acl-compat/sbcl/acl-excl.lisp
+./src/asdf/source/acl-compat/sbcl/acl-mp.lisp
+./src/asdf/source/acl-compat/sbcl/acl-socket.lisp
+./src/asdf/source/acl-compat/sbcl/acl-sys.lisp
+./src/asdf/source/asdf/
+./src/asdf/source/asdf/asdf-install.lisp
+./src/asdf/source/asdf/asdf.lisp
+./src/asdf/source/asdf/wild-modules.lisp
+./src/asdf/source/cl-ppcre/
+./src/asdf/source/cl-ppcre/api.lisp
+./src/asdf/source/cl-ppcre/cl-ppcre-test.asd
+./src/asdf/source/cl-ppcre/cl-ppcre.asd
+./src/asdf/source/cl-ppcre/closures.lisp
+./src/asdf/source/cl-ppcre/convert.lisp
+./src/asdf/source/cl-ppcre/errors.lisp
+./src/asdf/source/cl-ppcre/lexer.lisp
+./src/asdf/source/cl-ppcre/lispworks-defsystem.lisp
+./src/asdf/source/cl-ppcre/load.lisp
+./src/asdf/source/cl-ppcre/optimize.lisp
+./src/asdf/source/cl-ppcre/packages.lisp
+./src/asdf/source/cl-ppcre/parser.lisp
+./src/asdf/source/cl-ppcre/ppcre-tests.lisp
+./src/asdf/source/cl-ppcre/regex-class.lisp
+./src/asdf/source/cl-ppcre/repetition-closures.lisp
+./src/asdf/source/cl-ppcre/scanner.lisp
+./src/asdf/source/cl-ppcre/specials.lisp
+./src/asdf/source/cl-ppcre/util.lisp
+./src/asdf/source/common-lisp-controller/
+./src/asdf/source/common-lisp-controller/common-lisp-controller.lisp
+./src/asdf/source/common-lisp-controller/post-sysdef-install.lisp
+./src/asdf/source/puri/
+./src/asdf/source/puri/puri.asd
+./src/asdf/source/puri/src.lisp
+./src/asdf/source/puri/tests.lisp
 ./src/s-xml/
 ./src/s-xml/ChangeLog
 ./src/s-xml/src/
@@ -415,15 +2112,15 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/s-xml/test/tracer.lisp
 ./src/s-xml/test/xhtml-page.xml
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_data.tgz \
-      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_data.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="src/data/spanish*" \
-      --exclude="src/data/interrogatives*" \
-      --exclude="src/data/aline2*" \
-      src/data src/*.el lexdb etc; \
-)
+	      --exclude="src/data/spanish*" \
+	      --exclude="src/data/interrogatives*" \
+	      --exclude="src/data/aline2*" \
+	      src/data src/*.el lexdb etc; \
+	)
 src/data/
 src/data/Dikran/
 src/data/Dikran/globals.lsp
@@ -1172,24 +2869,24 @@ rm -f /lingo/build//.yes;
 ( cd /lingo/build//lkb && make lkb_linux@cypriot; )
 make[2]: Entering directory `/lingo/build/lkb'
 ( \
-  echo "(load \"/lingo/build//lkb/src/general/loadup.lisp\")"; \
-  echo "(load \"/lingo/build//lkb/src/ACL_specific/deliver.lsp\")"; \
-  echo "(pushnew :lkb *features*)"; \
-  echo "(pushnew :psql *features*)"; \
-  echo "(pushnew :lui *features*)"; \
-  echo "(pushnew :mrs *features*)"; \
-  echo "(pushnew :mt *features*)"; \
-  echo "(setf make::*building-image-p* t)"; \
-  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
-  echo "(compile-system \"tsdb\" :force t)"; \
-  echo "(excl:exit)"; \
-) | ( ACL_LOCALE=C \
+	  echo "(load \"/lingo/build//lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"/lingo/build//lkb/src/ACL_specific/deliver.lsp\")"; \
+	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :psql *features*)"; \
+	  echo "(pushnew :lui *features*)"; \
+	  echo "(pushnew :mrs *features*)"; \
+	  echo "(pushnew :mt *features*)"; \
+	  echo "(setf make::*building-image-p* t)"; \
+	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+	  echo "(compile-system \"tsdb\" :force t)"; \
+	  echo "(excl:exit)"; \
+	) | ( ACL_LOCALE=C \
               LD_LIBRARY_PATH=/lingo/build//lkb/lib/linux.x86.32 \
                 cd /lingo/local/acl; \
                 alisp -I clim -qq && touch /lingo/build//.yes; )
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Feb 8, 2006 8:00)
-Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+8.1 [Linux (x86)] (Aug 13, 2007 5:51)
+Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
    [TC7227] Stanford University
@@ -1199,30 +2896,28 @@ This development copy of Allegro CL is licensed to:
 ;; optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
 CL-USER(1): ; Loading /lingo/build/lkb/src/general/loadup.lisp
 ;   Loading /lingo/build/lkb/src/general/allegro-patches.lisp
+;;; Compiling file /lingo/build/lkb/src/general/clim.lisp
+;;; Writing fasl file /lingo/build/lkb/src/general/clim.fasl
+;;; Fasl write complete
+;     Fast loading /lingo/build/lkb/src/general/clim.fasl
 ;     Loading /lingo/build/lkb/src/general/defsystem.lisp
 ;   Loading /lingo/build/lkb/src/general/loadup-library.lisp
 T
 CL-USER(2): ; Loading /lingo/build/lkb/src/ACL_specific/deliver.lsp
-; Autoloading for DELETE-DIRECTORY-AND-FILES:
-;   Fast loading from bundle code/fileutil.fasl.
 ; Autoloading for GENERATE-APPLICATION:
-;   Fast loading /lingo/local/acl/code/genapp.fasl
+;   Fast loading /lingo/local/acl81/code/genapp.fasl
+;     Fast loading from bundle code/fileutil.fasl.
 ;     Fast loading from bundle code/build.fasl.
 Bundle is up to date.
 Initial generation spread = 1
 Allocated 10485760 bytes for old space
 Allocated 5242880 bytes for new space
-; fasl /lingo/local/acl/sys/startup.001
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /lingo/local/acl/code/aclstart.001
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /lingo/local/acl/private/rsa.001
-;;; Installing rsa patch, version 1
-;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;; Autoloading locale from #P"/lingo/local/acl/locales/en_US"
 International Allegro CL Enterprise Edition
-8.0 [Linux (x86)] (Feb 14, 2007 13:43)
-Copyright (C) 1985-2005, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+8.1 [Linux (x86)] (Aug 21, 2007 8:12)
+Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
    [TC7227] Stanford University
@@ -1254,6 +2949,21 @@ T
 
 :CASE-INSENSITIVE-UPPER 
  #|
+ (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
+       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
+         #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+         (:LIB-BUNDLE #P"sys:;code;.fasl")
+         (:LIB-BUNDLE #P"sys:;private;.fasl")
+         (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
+         (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+ |#
+
+(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
+ #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+ (:LIB-BUNDLE #P"sys:;code;.fasl") (:LIB-BUNDLE #P"sys:;private;.fasl")
+ (:LIB-BUNDLE #P"sys:;private;crypto;.fasl") (:LIB-BUNDLE #P"sys:;clos;.fasl")
+ (:LIB-BUNDLE #P"sys:;sys;.fasl")) 
+ #|
  (SETQ EXCL::*APP-RUNTIME-MODE* T)
  |#
 
@@ -1263,12 +2973,13 @@ T
  |#
 
 (:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC :COMPILER
- :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX :REDHAT8 :REDHAT7
- :LINUX86 :X86 :VERIFY-CAR-CDR :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES
+ :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX :REDHAT9 :LINUX86
+ :X86 :VERIFY-STACK :VERIFY-CAR-CDR :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES
  :MODULE-VERSIONS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :ICS
  :COMMON-LISP :ANSI-CL :DRAFT-ANSI-CL-2 :X3J13 :ALLEGRO :EXCL :FRANZ-INC
- :ALLEGRO-VERSION>= :ALLEGRO-VERSION= :NEW-ENVIRONMENTS :PROCESS7
- :SYMBOL-VALUE-VECTOR :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.0 :SSL-SUPPORT) 
+ :ALLEGRO-VERSION>= :ALLEGRO-VERSION= :NEW-ENVIRONMENTS :SYMBOL-VALUE-VECTOR
+ :PROCESS7 :USE-THREAD-LIBS :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.1 :TLSVALUES
+ :TLSBNP :SSL-SUPPORT) 
  #|
  (FORCE-OUTPUT)
  |#
@@ -1282,17 +2993,15 @@ NIL
 
 NIL 
  #|
- (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
-       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;clos;.fasl"
-         #P"sys:;sys;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
-         (:LIB-BUNDLE #P"sys:;private;.fasl")
-         (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+ (SETQ *LOAD-VERBOSE* T)
  |#
 
-(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;clos;.fasl"
- #P"sys:;sys;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
- (:LIB-BUNDLE #P"sys:;private;.fasl") (:LIB-BUNDLE #P"sys:;clos;.fasl")
- (:LIB-BUNDLE #P"sys:;sys;.fasl")) 
+T 
+ #|
+ (SETQ *SYSTEM-MESSAGES* T)
+ |#
+
+T 
  #|
  (PROCLAIM '(OPTIMIZE (DEBUG 2) (SPEED 3) (SPACE 1) (SAFETY 1)))
  |#
@@ -1324,21 +3033,20 @@ NIL
 
 NIL 
  #|
- (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\d)
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\f)
  |#
+; Autoloading for MATCH-REGEXP:
 ; Fast loading from bundle code/regexp.fasl.
-Loaded patch file /lingo/local/acl/update/pda003.001.
-Loaded patch file /lingo/local/acl/update/pda004.001.
 
  #|
- (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\d)
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\f)
  |#
 
  #|
  (REQUIRE :CLIMXM)
  |#
-; Fast loading /lingo/local/acl/code/climxm.fasl
-;   Fast loading /lingo/local/acl/code/climg.fasl
+; Fast loading /lingo/local/acl81/code/climxm.fasl
+;   Fast loading /lingo/local/acl81/code/climg.fasl
 ;   Autoloading for class SYNONYM-STREAM:
 ;     Fast loading from bundle code/streamc.fasl.
 ;       Fast loading from bundle code/efft-utf8-base.fasl.
@@ -1359,7 +3067,7 @@ T
  #|
  (REQUIRE :RUNTIME-STD)
  |#
-; Fast loading /lingo/local/acl/code/runtime-std.fasl
+; Fast loading /lingo/local/acl81/code/runtime-std.fasl
 
 T 
  #|
@@ -1387,7 +3095,7 @@ NIL
  #|
  (WHEN (PROBE-FILE "sys:custom.cl") (LOAD "sys:custom.cl"))
  |#
-; Loading /lingo/local/acl/custom.cl
+; Loading /lingo/local/acl81/custom.cl
 ; Autoloading for EXCL::PROCESS-FSPECS-IN-FILE:
 ;   Fast loading from bundle code/srecord.fasl.
 
@@ -1404,9 +3112,7 @@ T
 ;     Fast loading from bundle code/debug.fasl.
 ;   Autoloading for package "ACL-SOCKET":
 ;     Fast loading from bundle code/sock-s.fasl.
-;;; Installing sock-s patch, version 1
 ; Fast loading from bundle code/sock.fasl.
-;;; Installing sock patch, version 1
 ; Autoloading for FOREIGN-FUNCTIONS:GET-FOREIGN-TYPE:
 ;   Fast loading from bundle code/defftype.fasl.
 ;     Fast loading from bundle code/compftype.fasl.
@@ -1415,6 +3121,12 @@ T
 ; Loading /lingo/build/lkb/src/ACL_specific/build.lsp
 ;   Loading /lingo/build/lkb/src/general/loadup.lisp
 ;     Loading /lingo/build/lkb/src/general/allegro-patches.lisp
+;;; Compiling file /lingo/build/lkb/src/general/clim.lisp
+;     Autoloading for EXCL::COMPLEX-LOOP-EXPANDER:
+;       Fast loading from bundle code/loop.fasl.
+;;; Writing fasl file /lingo/build/lkb/src/general/clim.fasl
+;;; Fasl write complete
+;       Fast loading /lingo/build/lkb/src/general/clim.fasl
 ;       Loading /lingo/build/lkb/src/general/defsystem.lisp
 ;     Loading /lingo/build/lkb/src/general/loadup-library.lisp
 ;   Fast loading from bundle code/seq2.fasl.
@@ -1428,1971 +3140,91 @@ T
 ;   Fast loading from bundle code/walker.fasl.
 ;   Fast loading from bundle code/trace.fasl.
 ;   Fast loading from bundle code/inspect.fasl.
-;   Fast loading from bundle code/loop.fasl.
 ;   Fast loading from bundle clos/constructor.fasl.
 ;   Fast loading from bundle clos/mcombin.fasl.
 ;   Fast loading from bundle code/uri.fasl.
-;   Fast loading /lingo/local/acl/code/euc.fasl
+;   Fast loading /lingo/local/acl81/code/euc.fasl
 ;   Fast loading from bundle code/ffcompat.fasl.
-;   Fast loading /lingo/local/acl/code/acache.001
-;;; Installing acache patch, version 1
-AllegroCache version 1.0.0
-;     Fast loading /lingo/local/acl/code/sax.fasl
-;     Fast loading /lingo/local/acl/code/regexp2.fasl
-;       Fast loading /lingo/local/acl/code/yacc.fasl
-;   Autoloading for package "CROSS-REFERENCE":
-;     Fast loading from bundle code/xref-s.fasl.
-;   Fast loading from bundle code/ef-1250.fasl.
-;   Fast loading from bundle code/efft-1250-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1250-BASE' 
-;   Fast loading from bundle code/ef-1251.fasl.
-;   Fast loading from bundle code/efft-1251-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1251-BASE' 
-;   Fast loading from bundle code/ef-1252.fasl.
-;   Fast loading from bundle code/efft-1252-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1252-BASE' 
-;   Fast loading from bundle code/ef-1253.fasl.
-;   Fast loading from bundle code/efft-1253-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1253-BASE' 
-;   Fast loading from bundle code/ef-1254.fasl.
-;   Fast loading from bundle code/efft-1254-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1254-BASE' 
-;   Fast loading from bundle code/ef-1255.fasl.
-;   Fast loading from bundle code/efft-1255-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1255-BASE' 
-;   Fast loading from bundle code/ef-1256.fasl.
-;   Fast loading from bundle code/efft-1256-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1256-BASE' 
-;   Fast loading from bundle code/ef-1257.fasl.
-;   Fast loading from bundle code/efft-1257-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1257-BASE' 
-;   Fast loading from bundle code/ef-1258.fasl.
-;   Fast loading from bundle code/efft-1258-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1258-BASE' 
-;   Fast loading from bundle code/ef-874.fasl.
-;   Fast loading from bundle code/efft-874-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':874-BASE' 
-;   Fast loading from bundle code/ef-932.fasl.
-;   Fast loading from bundle code/efft-932-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':932-BASE' 
-;   Fast loading from bundle code/ef-936.fasl.
-;   Fast loading from bundle code/efft-936-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':936-BASE' 
-;   Fast loading from bundle code/ef-949.fasl.
-;   Fast loading from bundle code/efft-949-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':949-BASE' 
-;   Fast loading from bundle code/ef-950.fasl.
-;   Fast loading from bundle code/efft-950-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':950-BASE' 
-;   Fast loading from bundle code/ef-big5.fasl.
-;   Fast loading from bundle code/efft-big5-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':BIG5-BASE' 
-;   Fast loading from bundle code/ef-e-cr.fasl.
-;   Fast loading from bundle code/ef-e-crcrlf.fasl.
-;   Fast loading from bundle code/ef-e-crlf.fasl.
-;   Fast loading from bundle code/ef-emacs-mule.fasl.
-;   Fast loading from bundle code/efft-emacs-mule-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EMACS-MULE-BASE' 
-;   Fast loading from bundle code/ef-euc.fasl.
-;   Fast loading from bundle code/efft-euc-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EUC-BASE' 
-;   Fast loading from bundle code/ef-fat.fasl.
-;   Fast loading from bundle code/efft-fat-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':FAT-BASE' 
-;   Fast loading from bundle code/ef-gb2312.fasl.
-;   Fast loading from bundle code/efft-gb2312-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':GB2312-BASE' 
-;   Fast loading from bundle code/ef-iso-2022-jp.fasl.
-;     Fast loading from bundle code/ef-jis.fasl.
-;   Fast loading from bundle code/efft-jis-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':JIS-BASE' 
-;   Fast loading from bundle code/ef-iso8859-14.fasl.
-;   Fast loading from bundle code/efft-iso8859-14-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-14-BASE' 
-;   Fast loading from bundle code/ef-iso8859-15.fasl.
-;   Fast loading from bundle code/efft-iso8859-15-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-15-BASE' 
-;   Fast loading from bundle code/ef-iso8859-2.fasl.
-;   Fast loading from bundle code/efft-iso8859-2-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-2-BASE' 
-;   Fast loading from bundle code/ef-iso8859-3.fasl.
-;   Fast loading from bundle code/efft-iso8859-3-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-3-BASE' 
-;   Fast loading from bundle code/ef-iso8859-4.fasl.
-;   Fast loading from bundle code/efft-iso8859-4-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-4-BASE' 
-;   Fast loading from bundle code/ef-iso8859-5.fasl.
-;   Fast loading from bundle code/efft-iso8859-5-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-5-BASE' 
-;   Fast loading from bundle code/ef-iso8859-6.fasl.
-;   Fast loading from bundle code/efft-iso8859-6-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-6-BASE' 
-;   Fast loading from bundle code/ef-iso8859-7.fasl.
-;   Fast loading from bundle code/efft-iso8859-7-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-7-BASE' 
-;   Fast loading from bundle code/ef-iso8859-8.fasl.
-;   Fast loading from bundle code/efft-iso8859-8-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-8-BASE' 
-;   Fast loading from bundle code/ef-iso8859-9.fasl.
-;   Fast loading from bundle code/efft-iso8859-9-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-9-BASE' 
-;   Fast loading from bundle code/ef-koi8-r.fasl.
-;   Fast loading from bundle code/efft-koi8-r-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':KOI8-R-BASE' 
-;   Fast loading from bundle code/ef-shiftjis.fasl.
-;   Fast loading from bundle code/efft-shiftjis-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':SHIFTJIS-BASE' 
-;   Fast loading from bundle code/ef-unicode.fasl.
-;   Fast loading from bundle code/efft-unicode-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':UNICODE-BASE' 
-;   Loading /lingo/build/lkb/src/systems/lkb.system
-;   Loading /lingo/build/lkb/src/systems/psql.system
-;;; Compiling file /lingo/build/lkb/src/psql/pq-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/psql/pq-package.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/psql/pq-package.fasl
-;;; Compiling file /lingo/build/lkb/src/psql/pq-libpq.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/psql/pq-libpq.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/psql/pq-libpq.fasl
-;   Loading /lingo/build/lkb/src/systems/ppcre.system
-;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;   Loading /lingo/build/lkb/src/systems/preprocessor.system
-;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;   Loading /lingo/build/lkb/src/systems/s-xml.system
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/fspp-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/fspp-package.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/fspp-package.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/smaf-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/smaf-package.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/smaf-package.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf0.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf0.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf0.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf2xml.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf2xml.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf2xml.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf-conf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/fspp-misc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/fspp-misc.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/fspp-misc.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;   Loading /lingo/build/lkb/src/systems/pxml.system
-;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml1.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml2.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml2.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml2.fasl
-;   Loading /lingo/build/lkb/src/lkb-package.lsp
-;   Loading /lingo/build/lkb/src/mrs-package.lsp
-;   Loading /lingo/build/lkb/src/mt-package.lsp
-;;; Compiling file /lingo/build/lkb/src/version.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/version.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/version.fasl
-;   Loading /lingo/build/lkb/src/main/initializations.lsp
-;;; Compiling file /lingo/build/lkb/src/main/globals.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/globals.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/globals.fasl
-;;; Compiling file /lingo/build/lkb/src/main/statistics.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/statistics.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/statistics.fasl
-;;; Compiling file /lingo/build/lkb/src/main/ssp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/ssp.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/ssp.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/graphics.lsp
-;   Fast loading /lingo/local/acl/code/climps.fasl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/misc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/topmenu.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/dialog.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
-;;; Compiling file /lingo/build/lkb/src/main/types.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/types.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/types.fasl
-;;; Compiling file /lingo/build/lkb/src/main/dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/dag.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/dag.fasl
-;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/yadu.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/yadu.fasl
-;;; Compiling file /lingo/build/lkb/src/main/gen.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/gen.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/gen.fasl
-;;; Compiling file /lingo/build/lkb/src/main/structs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/structs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/structs.fasl
-;;; Compiling file /lingo/build/lkb/src/main/user-fns.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
-;;; Compiling file /lingo/build/lkb/src/main/marks.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/marks.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/marks.fasl
-;;; Compiling file /lingo/build/lkb/src/main/checktypes.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/checktypes.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/checktypes.fasl
-;;; Compiling file /lingo/build/lkb/src/main/cdb.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/cdb.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/cdb.fasl
-;;; Compiling file /lingo/build/lkb/src/main/leaf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/leaf.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/leaf.fasl
-;;; Compiling file /lingo/build/lkb/src/main/lex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/lex.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/lex.fasl
-;;; Compiling file /lingo/build/lkb/src/main/clex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/clex.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/clex.fasl
-;;; Compiling file /lingo/build/lkb/src/main/rules.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/rules.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/rules.fasl
-;;; Compiling file /lingo/build/lkb/src/main/parse.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/parse.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/parse.fasl
-;;; Compiling file /lingo/build/lkb/src/main/active.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/active.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/active.fasl
-;;; Compiling file /lingo/build/lkb/src/main/unpack.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/unpack.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/unpack.fasl
-;;; Compiling file /lingo/build/lkb/src/main/brackets.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/brackets.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/brackets.fasl
-;;; Compiling file /lingo/build/lkb/src/main/morph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/morph.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/morph.fasl
-;;; Compiling file /lingo/build/lkb/src/main/check-unif.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/check-unif.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/check-unif.fasl
-;;; Compiling file /lingo/build/lkb/src/main/discriminants.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/discriminants.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/discriminants.fasl
-;;; Compiling file /lingo/build/lkb/src/main/unfill-dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/unfill-dag.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/unfill-dag.fasl
-;;; Compiling file /lingo/build/lkb/src/main/generics.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/generics.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/generics.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/preprocess.lsp
-; Autoloading for package "EXCL.OSI":
-;   Fast loading /lingo/local/acl/code/osi.fasl
-;     Fast loading from bundle code/fileutil.fasl.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/graph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/graph.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/graph.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/server.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/server.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/server.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/hook-mrs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/hook-mrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/preprocess/hook-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/headers.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/headers.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/headers.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lex-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lex-entry.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-msc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/extract.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/gentdl.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database0.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database2.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/menus.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/async.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/async.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/async.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputfs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputtdfs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputsrc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/toplevel.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/dag.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/glue/dag.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/lsp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/lsp.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/glue/lsp.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/lui.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/lui.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/glue/lui.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/sppp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/sppp.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/glue/sppp.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/typeinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/typeinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-paths/typeinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/lexinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/lexinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-paths/lexinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/ruleinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/ruleinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-paths/ruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/pathout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdltypeinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdloutput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdlruleinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdllexinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdllexinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdllexinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-lilfes/lilout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-lilfes/lilout.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-lilfes/lilout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/graph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/activefs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/tree.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/parseout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/chartout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/listout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/compare.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/tree-nodes.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/utils.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/utils.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/io-general/utils.fasl
-;;; Compiling file /lingo/build/lkb/src/main/batch-check.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
-;;; Compiling file /lingo/build/lkb/src/main/debug.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/debug.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/main/debug.fasl
-;;; Compiling file /lingo/build/lkb/src/non-core/powerset.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/non-core/powerset.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/non-core/powerset.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lkb-interface.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lkb-interface.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lkb-interface.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsglobals.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsglobals.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsglobals.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/basemrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/basemrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/basemrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsoutput.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsoutput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsoutput.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrscorpus.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrscorpus.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrscorpus.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/algebra.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/algebra.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/algebra.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/interface.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/interface.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/interface.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsresolve.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsresolve.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsresolve.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrscons.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrscons.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrscons.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/cheapscope.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/cheapscope.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/cheapscope.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsmunge.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsmunge.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsmunge.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsruleinput.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsruleinput.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lkb-acl-mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lkb-acl-mrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lkb-acl-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexutils.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexutils.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexutils.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexindex.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexindex.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexindex.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexlookup.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexlookup.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexlookup.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/genpredict.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/genpredict.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/genpredict.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/serialize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/serialize.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/serialize.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/generate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/generate.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/generate.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/spell.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/spell.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/spell.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/genbatch.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/genbatch.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/genbatch.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrstoplevel.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrstoplevel.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrstoplevel.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/idioms.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/idioms.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/idioms.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/gq.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/gq.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/tproving/gq.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/gq-to-fol.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/gq-to-fol.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/tproving/gq-to-fol.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/fol-to-nf.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/fol-to-nf.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/tproving/fol-to-nf.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/nf-to-fol.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/nf-to-fol.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/tproving/nf-to-fol.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/fol-to-mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/fol-to-mrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/tproving/fol-to-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/basermrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/basermrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/basermrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/comp.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/comp.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/comp.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/convert.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/annlt.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/annlt.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/annlt.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/output.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/output.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/output.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/xml-utils.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/xml-utils.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/xml-utils.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/readgram.lisp
-; While compiling READ-RMRS-GRAMMAR:
-Warning: Free reference to undeclared variable *ALGEBRA-RULE-INSTRUCTIONS*
-         assumed special.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/readgram.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/readgram.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/readtag.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/readtag.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/readtag.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/input.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/input.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/input.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/compare.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/compare.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/compare.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/lkb-acl-rmrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/lkb-acl-rmrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/lkb-acl-rmrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/testing.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/testing.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/rmrs/testing.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/dependencies.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/dependencies.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/dependencies.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lsp.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lsp.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/lsp.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/translate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/translate.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/translate.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/semi.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/semi.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/semi.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/semi-psql.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/semi-psql.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mrs/semi-psql.fasl
-;   Loading /lingo/build/lkb/src/mt/version.lisp
-;;; Compiling file /lingo/build/lkb/src/mt/globals.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/globals.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/globals.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/patches.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/patches.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/patches.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/vpm.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/transfer.lisp
-; While compiling TRANSFER-MRS:
-Warning: Variable TM is never used.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/comparison.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/comparison.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/comparison.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/translate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/translate.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/translate.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/clim.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/clim.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/clim.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/semi.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/semi.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/semi.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/fragments.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/utool.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/utool.fasl
-;;; Fasl write complete
-;   Fast loading /lingo/build/lkb/src/.l8cl/mt/utool.fasl
-Warning: While compiling these undefined functions were referenced:
-         MRS::ALGEBRA-CREATE-BASE-STRUCT from position 10518 in
-           /lingo/build/lkb/src/rmrs/comp.lisp
-         MRS::ALGEBRA-COMPOSE from position 10518 in
-           /lingo/build/lkb/src/rmrs/comp.lisp
+;   Fast loading /lingo/local/acl81/code/acache.fasl
+Error (from ERROR): You have loaded the AllegroCache stub file.  To prevent
+                    problems with loading incompatible databases, you must
+                    load a specific version of AllegroCache.  For information
+                    on database version compatibility, please read the
+                    discussion on the AllegroCache download page, which can be
+                    viewed here:
+                    http://www.franz.com/products/allegrocache/download/dist/download.
+                    To load a specific version of AllegroCache, please use one
+                    of the following forms:
 
-NIL 
- #|
- (WHEN (FBOUNDP 'EXCL::TRANSLATE-SHLIB-FILENAMES)
-   (EXCL::TRANSLATE-SHLIB-FILENAMES 'T))
- |#
-;; translate shlib: clim2:climxm.so to sys:climxm.so
+ (REQUIRE :ACACHE "acache-2.1.5.fasl")
 
-NIL 
- #|
- (DISCARD-ALL-SOURCE-FILE-INFO)
- |#
+Evaluation stack:
 
-#<EQUAL hash-table with 0 entries @ #x487312fa> 
- #|
-; Fast loading from bundle code/who.fasl.
- (DISCARD-LOCAL-NAME-INFO)
- |#
+   (EXCL::INTERNAL-INVOKE-DEBUGGER)
+   (ERROR)
+ ->((:TOP-LEVEL-FORM "acache-stub.cl" 82))
+   (EXCL::FASLOAD)
+   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
+   (EXCL::LOAD-2)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::REQUIRE-LOCATE-MODULE)
+   (REQUIRE)
+   (EVAL)
+   (EXCL::SLOLOAD)
+   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
+   (EXCL::LOAD-2)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::EVAL-AS-PROGN)
+   (MULTIPLE-VALUE-PROG1)
+   (UNWIND-PROTECT)
+   (LET)
+   (LET)
+   (EVAL)
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa283820812261")
+   (TPL:START-INTERACTIVE-TOP-LEVEL
+      #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @ #x4810c4c2>
+      #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
+   (EXCL::START-LISP-EXECUTION NIL)
 
-NIL 
- #|
- (REQUIRE :NOCOMPILER)
- |#
-; Fast loading from bundle code/nocompiler.fasl.
-;   Fast loading from bundle sys/defdecl.fasl.
-160151032 bytes have been tenured, next gc will be global.
-See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
+(to see any ghost frames, the disassembler must be loaded)
 
-T 
- #|
- (SETQ EXCL::*PATCHES-PRELOADABLE* NIL)
- |#
-
-NIL 
- #|
- (SETQ EXCL::*SOURCE-FILE-AUTOLOAD-SRECORD* T)
- |#
-
-T 
- #|
- (PROGN (GC :TENURE) (GC :TENURE) (GC :TENURE) (GC T))
- |#
-
- #|
- (SYSTEM:RESIZE-AREAS :OLD 12582912 :NEW (- (/ 4194304 2) (* 1025 50))
-                      :GLOBAL-GC T :TENURE T)
- |#
-
- #|
- (EXCL::ALLEGRO-RUNTIME-CHECK)
- |#
-
-NIL 
- #|
- (PROGN (PRINC "; dumping image...") (FORCE-OUTPUT))
- |#
-; dumping image...
-NIL 
- #|
- (DUMPLISP :NAME #P"/lingo/build/lkb/linux.x86.32/lkb.dxl" :BUNDLE-FILE
-           "files.bu" :BATCH-MODE T :DESTINATION-DIRECTORY
-           #P"/lingo/build/lkb/linux.x86.32/" :AUTOLOAD-WARNING T :PLL-FILE
-           "acli8010.pll" :PLL-FROM-SYS T :RUNTIME :STANDARD :SHOW-WINDOW
-           :SHOWNOACTIVATE :SYSTEM-DLLS-PATH "system-dlls/"
-           :TEMPORARY-DIRECTORY #P"/tmp/" :VERBOSE NIL :OPT-SPEED 3 :NEWSPACE
-           4194304 :OLDSPACE 12582912 :LISP-HEAP-SIZE 805306368
-           :LISP-HEAP-START "1152M" :RUNTIME :STANDARD :INCLUDE-CLIM T
-           :INCLUDE-COMPILER T :PLL-FILE "acli8010.pll" :BUNDLE-FILE
-           "files.bu" :OPT-SPEED 3 :OPT-SPACE 1 :OPT-SAFETY 1 :OPT-DEBUG 2
-           :INCLUDE-TPL T :INCLUDE-DEBUGGER NIL :INCLUDE-DEVEL-ENV NIL
-           :INCLUDE-IDE NIL :INCLUDE-COMPOSER NIL :INCLUDE-XCW NIL
-           :DISCARD-COMPILER T :DISCARD-ARGLISTS T :DISCARD-LOCAL-NAME-INFO T
-           :DISCARD-SOURCE-FILE-INFO T :LOAD-XREF-INFO NIL :RECORD-XREF-INFO
-           NIL :DISCARD-XREF-INFO NIL)
- |#
-Warning: shared object files have been loaded into this image, and so the
-         resulting image will depend on sys:climxm.so for successful operation.
-
- #|
- (REQUIRE :GENUTILS)
- |#
-; Fast loading /lingo/local/acl/code/genutils.fasl
-
-T 
- #|
- (EXCL::COPY-SHARED-LIBRARIES #P"/lingo/build/lkb/linux.x86.32/" 'T
-   :SYSTEM-DLLS-PATH "system-dlls/" :VERBOSE T)
- |#
-;; copying file clim2:climxm.so to /lingo/build/lkb/linux.x86.32/climxm.so
-;; copying file sys:libacli8010.so to /lingo/build/lkb/linux.x86.32/libacli8010.so
-
-NIL 
- #|
- (REQUIRE :GENUTILS)
- |#
-
-NIL 
- #|
- (EXCL::AUTOLOAD-REPORT #P"/lingo/local/acl/autoloads.out")
- |#
-
-NIL 
- #|
- (FORMAT T
-         "Check /lingo/local/acl/autoloads.out for a report of functions, macros and generic functions which might be autoloaded from various files if called in the image you just created.")
- |#
-Check /lingo/local/acl/autoloads.out for a report of functions, macros and generic functions which might be autoloaded from various files if called in the image you just created.
-NIL 
- #|
- (EXIT 0)
- |#
-T
-CL-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :CASE-INSENSITIVE
- :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE :CLIM-MOTIF :ANSI-90 ...)
-CL-USER(4): (:PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :CASE-INSENSITIVE
- :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE :CLIM-MOTIF ...)
-CL-USER(5): (:LUI :PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
- :CASE-INSENSITIVE :MK-DEFSYSTEM :CLTL2 :ALLEGRO-CL-ENTERPRISE ...)
-CL-USER(6): (:MRS :LUI :PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
- :CASE-INSENSITIVE :MK-DEFSYSTEM :CLTL2 ...)
-CL-USER(7): (:MT :MRS :LUI :PSQL :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN
- :CASE-INSENSITIVE :MK-DEFSYSTEM ...)
-CL-USER(8): T
-CL-USER(9): NIL
-CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
-; Loading /lingo/build/lkb/src/systems/pvm.system
-; Foreign loading /lingo/build/lkb/src/pvm/linux.x86.32/pvm.so.
-;;; Compiling file /lingo/build/lkb/src/pvm/pvm-package.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/pvm/pvm-package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/pvm/pvm-package.fasl
-;;; Compiling file /lingo/build/lkb/src/pvm/pvm.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/pvm/pvm.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/pvm/pvm.fasl
-; Loading /lingo/build/lkb/src/systems/fad.system
-;   Fast loading /lingo/local/acl/code/osi.fasl
-;   Autoloading for package "REGEXP":
-;     Fast loading /lingo/local/acl/code/regexp2.fasl
-;       Fast loading /lingo/local/acl/code/yacc.fasl
-;;; Compiling file /lingo/build/lkb/src/fad/packages.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/fad/packages.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/fad/packages.fasl
-;;; Compiling file /lingo/build/lkb/src/fad/fad.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/fad/fad.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/fad/fad.fasl
-; Loading /lingo/build/lkb/src/systems/lkb.system
-; Loading /lingo/build/lkb/src/systems/psql.system
-;;; Compiling file /lingo/build/lkb/src/psql/pq-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/psql/pq-package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/psql/pq-package.fasl
-;;; Compiling file /lingo/build/lkb/src/psql/pq-libpq.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/psql/pq-libpq.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/psql/pq-libpq.fasl
-; Loading /lingo/build/lkb/src/systems/ppcre.system
-;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-; Loading /lingo/build/lkb/src/systems/preprocessor.system
-;;; Compiling file /lingo/build/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/packages.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/specials.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/util.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/errors.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/lexer.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/parser.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/regex-class.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-8507592 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/optimize.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/repetition-closures.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/scanner.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/api.fasl
-;;; Compiling file /lingo/build/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ppcre/PATCHES.fasl
-; Loading /lingo/build/lkb/src/systems/s-xml.system
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/fspp-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/fspp-package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/fspp-package.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/smaf-package.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/smaf-package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/smaf-package.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/lxml.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/lxml.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf0.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf0.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf0.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf2xml.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf2xml.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf2xml.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/x-preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/saf-conf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/saf-conf.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/fspp-misc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/fspp-misc.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/fspp-misc.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/package.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /lingo/build/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/s-xml/src/xml-struct-dom.fasl
-; Loading /lingo/build/lkb/src/systems/pxml.system
-;;; Compiling file /lingo/build/lkb/src/xml/pxml0.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml0.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml1.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml1.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml3.fasl
-;;; Compiling file /lingo/build/lkb/src/xml/pxml2.cl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/xml/pxml2.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/xml/pxml2.fasl
-; Loading /lingo/build/lkb/src/lkb-package.lsp
-; Loading /lingo/build/lkb/src/mrs-package.lsp
-; Loading /lingo/build/lkb/src/mt-package.lsp
-;;; Compiling file /lingo/build/lkb/src/version.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/version.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/version.fasl
-; Loading /lingo/build/lkb/src/main/initializations.lsp
-;;; Compiling file /lingo/build/lkb/src/main/globals.lsp
-15371528 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/globals.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/globals.fasl
-;;; Compiling file /lingo/build/lkb/src/main/statistics.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/statistics.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/statistics.fasl
-;;; Compiling file /lingo/build/lkb/src/main/ssp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/ssp.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/ssp.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/graphics.lsp
-; Fast loading /lingo/local/acl/code/climps.fasl
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graphics.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/misc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/misc.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/topmenu.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/topmenu.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/dialog.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/dialog.fasl
-;;; Compiling file /lingo/build/lkb/src/main/types.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/types.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/types.fasl
-;;; Compiling file /lingo/build/lkb/src/main/dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/dag.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/dag.fasl
-13775248 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
-;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/yadu.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/yadu.fasl
-;;; Compiling file /lingo/build/lkb/src/main/gen.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/gen.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/gen.fasl
-;;; Compiling file /lingo/build/lkb/src/main/structs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/structs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/structs.fasl
-;;; Compiling file /lingo/build/lkb/src/main/user-fns.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/user-fns.fasl
-;;; Compiling file /lingo/build/lkb/src/main/marks.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/marks.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/marks.fasl
-;;; Compiling file /lingo/build/lkb/src/main/checktypes.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/checktypes.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/checktypes.fasl
-;;; Compiling file /lingo/build/lkb/src/main/cdb.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/cdb.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/cdb.fasl
-;;; Compiling file /lingo/build/lkb/src/main/leaf.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/leaf.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/leaf.fasl
-;;; Compiling file /lingo/build/lkb/src/main/lex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/lex.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/lex.fasl
-;;; Compiling file /lingo/build/lkb/src/main/clex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/clex.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/clex.fasl
-;;; Compiling file /lingo/build/lkb/src/main/rules.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/rules.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/rules.fasl
-;;; Compiling file /lingo/build/lkb/src/main/parse.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/parse.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/parse.fasl
-;;; Compiling file /lingo/build/lkb/src/main/active.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/active.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/active.fasl
-;;; Compiling file /lingo/build/lkb/src/main/unpack.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/unpack.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/unpack.fasl
-;;; Compiling file /lingo/build/lkb/src/main/brackets.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/brackets.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/brackets.fasl
-;;; Compiling file /lingo/build/lkb/src/main/morph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/morph.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/morph.fasl
-;;; Compiling file /lingo/build/lkb/src/main/check-unif.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/check-unif.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/check-unif.fasl
-;;; Compiling file /lingo/build/lkb/src/main/discriminants.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/discriminants.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/discriminants.fasl
-;;; Compiling file /lingo/build/lkb/src/main/unfill-dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/unfill-dag.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/unfill-dag.fasl
-;;; Compiling file /lingo/build/lkb/src/main/generics.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/generics.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/generics.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/preprocess.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/preprocess.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/graph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/graph.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/graph.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/server.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/server.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/server.fasl
-;;; Compiling file /lingo/build/lkb/src/preprocess/hook-mrs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/preprocess/hook-mrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/preprocess/hook-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/headers.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/headers.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/headers.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lex-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lex-entry.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-msc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-msc.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/extract.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/extract.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/gentdl.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/gentdl.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psqllex.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psqllex.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/external-lex-database.lsp
-;;; Writing fasl file
-;;;   /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/external-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database0.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database0.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-database2.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-database2.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-lex-entry.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/command.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/command.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/psql-emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/psql-emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/lexport.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/lexdb/lexport.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/menus.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/menus.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/async.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/async.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/async.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputfs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputfs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputtdfs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputtdfs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/outputsrc.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/outputsrc.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/toplevel.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/toplevel.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/dag.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/dag.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/glue/dag.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/lsp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/lsp.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/glue/lsp.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/lui.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/lui.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/glue/lui.fasl
-;;; Compiling file /lingo/build/lkb/src/glue/sppp.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/glue/sppp.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/glue/sppp.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/typeinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/typeinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-paths/typeinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/lexinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/lexinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-paths/lexinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/ruleinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/ruleinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-paths/ruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-paths/pathout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-paths/pathout.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdltypeinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdltypeinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdloutput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdloutput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdlruleinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdlruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-tdl/tdllexinput.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-tdl/tdllexinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-tdl/tdllexinput.fasl
-;;; Compiling file /lingo/build/lkb/src/io-lilfes/lilout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-lilfes/lilout.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-lilfes/lilout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/graph.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/graph.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/activefs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/activefs.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/tree.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/tree.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/parseout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/parseout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/chartout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/chartout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/listout.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/listout.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/compare.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/compare.fasl
-;;; Compiling file /lingo/build/lkb/src/ACL_specific/emacs.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/ACL_specific/emacs.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/tree-nodes.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/tree-nodes.fasl
-;;; Compiling file /lingo/build/lkb/src/io-general/utils.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/io-general/utils.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/io-general/utils.fasl
-;;; Compiling file /lingo/build/lkb/src/main/batch-check.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/batch-check.fasl
-;;; Compiling file /lingo/build/lkb/src/main/debug.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/main/debug.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/main/debug.fasl
-;;; Compiling file /lingo/build/lkb/src/non-core/powerset.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/non-core/powerset.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/non-core/powerset.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lkb-interface.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lkb-interface.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lkb-interface.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsglobals.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsglobals.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsglobals.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/basemrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/basemrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/basemrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsoutput.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsoutput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsoutput.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrscorpus.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrscorpus.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrscorpus.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/algebra.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/algebra.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/algebra.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/interface.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/interface.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/interface.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsresolve.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsresolve.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsresolve.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrscons.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrscons.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrscons.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/cheapscope.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/cheapscope.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/cheapscope.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsmunge.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsmunge.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsmunge.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrsruleinput.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrsruleinput.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrsruleinput.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lkb-acl-mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lkb-acl-mrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lkb-acl-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexutils.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexutils.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexutils.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexindex.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexindex.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexindex.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lexlookup.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lexlookup.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lexlookup.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/genpredict.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/genpredict.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/genpredict.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/serialize.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/serialize.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/serialize.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/generate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/generate.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/generate.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/spell.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/spell.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/spell.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/genbatch.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/genbatch.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/genbatch.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/mrstoplevel.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/mrstoplevel.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/mrstoplevel.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/idioms.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/idioms.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/idioms.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/gq.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/gq.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/tproving/gq.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/gq-to-fol.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/gq-to-fol.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/tproving/gq-to-fol.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/fol-to-nf.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/fol-to-nf.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/tproving/fol-to-nf.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/nf-to-fol.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/nf-to-fol.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/tproving/nf-to-fol.fasl
-;;; Compiling file /lingo/build/lkb/src/tproving/fol-to-mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/tproving/fol-to-mrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/tproving/fol-to-mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/basermrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/basermrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/basermrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/comp.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/comp.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/comp.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/convert.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/convert.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/convert.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/annlt.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/annlt.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/annlt.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/output.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/output.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/output.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/xml-utils.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/xml-utils.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/xml-utils.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/readgram.lisp
-; While compiling READ-RMRS-GRAMMAR:
-Warning: Free reference to undeclared variable *ALGEBRA-RULE-INSTRUCTIONS*
-         assumed special.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/readgram.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/readgram.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/readtag.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/readtag.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/readtag.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/input.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/input.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/input.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/compare.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/compare.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/compare.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/lkb-acl-rmrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/lkb-acl-rmrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/lkb-acl-rmrs.fasl
-;;; Compiling file /lingo/build/lkb/src/rmrs/testing.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/rmrs/testing.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/rmrs/testing.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/dependencies.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/dependencies.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/dependencies.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/lsp.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/lsp.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/lsp.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/translate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/translate.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/translate.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/semi.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/semi.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/semi.fasl
-;;; Compiling file /lingo/build/lkb/src/mrs/semi-psql.lsp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mrs/semi-psql.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mrs/semi-psql.fasl
-; Loading /lingo/build/lkb/src/mt/version.lisp
-;;; Compiling file /lingo/build/lkb/src/mt/globals.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/globals.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/globals.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/patches.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/patches.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/patches.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/mrs.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/mrs.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/vpm.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/vpm.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/transfer.lisp
-; While compiling TRANSFER-MRS:
-Warning: Variable TM is never used.
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/transfer.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/comparison.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/comparison.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/comparison.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/translate.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/translate.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/translate.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/clim.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/clim.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/clim.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/semi.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/semi.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/semi.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/fragments.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/fragments.fasl
-;;; Compiling file /lingo/build/lkb/src/mt/utool.lisp
-;;; Writing fasl file /lingo/build/lkb/src/.l8cl/mt/utool.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l8cl/mt/utool.fasl
-; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/capi.so.
-; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/gc.so.
-; Foreign loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so.
-Error: Loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so failed with
-       error:
-       libdb-4.2.so: cannot open shared object file: No such file or directory.
-  [condition type: FILE-ERROR]
+(to start saving call arguments, use the `:args' toplevel command)
+; Auto-exit
+Error: image creation failed
+  [condition type: SIMPLE-ERROR]
 
 Restart actions (select using :continue):
- 0: retry the load of /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so
- 1: skip loading /lingo/build/lkb/src/tsdb/linux.x86.32/bdb.so
- 2: Return to Top Level (an "abort" restart).
- 3: Abort entirely from this (lisp) process.
-[1] CL-USER(11): :pop
-CL-USER(11): EOF
+ 0: retry the load of /lingo/build//lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /lingo/build//lkb/src/ACL_specific/deliver.lsp
+ 2: recompile /lingo/build/lkb/src/ACL_specific/deliver.lsp
+ 3: Return to Top Level (an "abort" restart).
+ 4: Abort entirely from this (lisp) process.
+[1] CL-USER(3): :pop
+CL-USER(3): EOF
 Really exit lisp [n]? 
 ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
 ( \
-  if [ ! -f /lingo/build//.yes ]; then exit 1; fi; \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_linux.x86.32.tgz \
+	  if [ ! -f /lingo/build//.yes ]; then exit 1; fi; \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_linux.x86.32.tgz \
               --exclude=".nfs*" \
-      linux.x86.32 bin/linux.x86.32/yzlui; \
-)
+	      linux.x86.32 bin/linux.x86.32/yzlui; \
+	)
 linux.x86.32/
-linux.x86.32/acli8010.pll
+linux.x86.32/acli817.pll
 linux.x86.32/lkb
 linux.x86.32/lkb.lic
 linux.x86.32/files.bu
-linux.x86.32/lkb.dxl
-linux.x86.32/climxm.so
-linux.x86.32/libacli8010.so
 bin/linux.x86.32/yzlui
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_macos.ppc.32.tgz \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_macos.ppc.32.tgz \
               --exclude=".nfs*" \
-      bin/macos.ppc.32/yzlui.app; \
-)
+	      bin/macos.ppc.32/yzlui.app; \
+	)
 bin/macos.ppc.32/yzlui.app/
 bin/macos.ppc.32/yzlui.app/CVS/
 bin/macos.ppc.32/yzlui.app/CVS/Root
@@ -3599,12 +3431,12 @@ bin/macos.ppc.32/yzlui.app/Contents/MacOS/yzlui
 rm /lingo/www/lingo/ftp/test;
 ln -s /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"` /lingo/www/lingo/ftp/test;
 ( \
-  cd /lingo/build/; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/yzlui.tgz \
-      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	  cd /lingo/build/; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/yzlui.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      yzlui; \
-)
+	      yzlui; \
+	)
 yzlui/
 yzlui/DONE
 yzlui/Make.config
@@ -3666,13 +3498,13 @@ yzlui/src/test-avm.c
 yzlui/src/tree-view.c
 yzlui/src/xtext-view.c
 ( \
-  cd /lingo/build/; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/erg.tgz \
-      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	  cd /lingo/build/; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/erg.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="tsdb*" --exclude="*.fasl" \
-      erg; \
-)
+	      --exclude="tsdb*" --exclude="*.fasl" \
+	      erg; \
+	)
 erg/
 erg/arboretum/
 erg/arboretum/README
@@ -3757,7 +3589,7 @@ erg/gold/hike/analysis
 erg/gold/hike/preference.gz
 erg/gold/hike/edge
 erg/gold/hike/item-phenomenon
-erg/gold/hike/item-set
+erg/gold/hike/item.gz
 erg/gold/hike/result.gz
 erg/gold/hike/output
 erg/gold/hike/parameter
@@ -3770,9 +3602,9 @@ erg/gold/hike/rule
 erg/gold/hike/score
 erg/gold/hike/set
 erg/gold/hike/parse.gz
-erg/gold/hike/item.gz
 erg/gold/hike/decision.gz
 erg/gold/hike/fold
+erg/gold/hike/item-set.gz
 erg/gold/mrs/
 erg/gold/mrs/analysis.gz
 erg/gold/mrs/preference.gz
@@ -3918,7 +3750,7 @@ erg/gold/jh2/run.gz
 erg/gold/jh2/score
 erg/gold/jh2/set
 erg/gold/jh2/tree.gz
-erg/gold/jh2/update
+erg/gold/jh2/update.gz
 erg/gold/jh3/
 erg/gold/jh3/analysis
 erg/gold/jh3/decision.gz
@@ -3960,7 +3792,7 @@ erg/gold/jh4/run.gz
 erg/gold/jh4/score
 erg/gold/jh4/set
 erg/gold/jh4/tree.gz
-erg/gold/jh4/update
+erg/gold/jh4/update.gz
 erg/gold/jh5/
 erg/gold/jh5/analysis
 erg/gold/jh5/decision.gz
@@ -3981,7 +3813,7 @@ erg/gold/jh5/run.gz
 erg/gold/jh5/score
 erg/gold/jh5/set
 erg/gold/jh5/tree.gz
-erg/gold/jh5/update
+erg/gold/jh5/update.gz
 erg/gold/tg/
 erg/gold/tg/analysis
 erg/gold/tg/decision.gz
@@ -4003,6 +3835,90 @@ erg/gold/tg/score
 erg/gold/tg/set
 erg/gold/tg/tree.gz
 erg/gold/tg/update.gz
+erg/gold/fracas/
+erg/gold/fracas/analysis
+erg/gold/fracas/decision.gz
+erg/gold/fracas/edge
+erg/gold/fracas/fold
+erg/gold/fracas/item-phenomenon
+erg/gold/fracas/item-set
+erg/gold/fracas/item.gz
+erg/gold/fracas/output
+erg/gold/fracas/parameter
+erg/gold/fracas/parse.gz
+erg/gold/fracas/phenomenon
+erg/gold/fracas/preference.gz
+erg/gold/fracas/relations
+erg/gold/fracas/result.gz
+erg/gold/fracas/rule
+erg/gold/fracas/run.gz
+erg/gold/fracas/score
+erg/gold/fracas/set
+erg/gold/fracas/tree.gz
+erg/gold/fracas/update.gz
+erg/gold/seval2/
+erg/gold/seval2/analysis
+erg/gold/seval2/decision.gz
+erg/gold/seval2/edge
+erg/gold/seval2/fold
+erg/gold/seval2/item-phenomenon
+erg/gold/seval2/item-set
+erg/gold/seval2/item.gz
+erg/gold/seval2/output
+erg/gold/seval2/parameter
+erg/gold/seval2/parse.gz
+erg/gold/seval2/phenomenon
+erg/gold/seval2/preference.gz
+erg/gold/seval2/relations
+erg/gold/seval2/result.gz
+erg/gold/seval2/rule
+erg/gold/seval2/run.gz
+erg/gold/seval2/score
+erg/gold/seval2/set
+erg/gold/seval2/tree.gz
+erg/gold/seval2/update.gz
+erg/gold/seval3/
+erg/gold/seval3/analysis
+erg/gold/seval3/decision.gz
+erg/gold/seval3/edge
+erg/gold/seval3/fold
+erg/gold/seval3/item-phenomenon
+erg/gold/seval3/item-set
+erg/gold/seval3/item.gz
+erg/gold/seval3/output
+erg/gold/seval3/parameter
+erg/gold/seval3/parse.gz
+erg/gold/seval3/phenomenon
+erg/gold/seval3/preference.gz
+erg/gold/seval3/relations
+erg/gold/seval3/result.gz
+erg/gold/seval3/rule
+erg/gold/seval3/run.gz
+erg/gold/seval3/score
+erg/gold/seval3/set
+erg/gold/seval3/tree.gz
+erg/gold/seval3/update.gz
+erg/gold/seval4/
+erg/gold/seval4/analysis
+erg/gold/seval4/decision.gz
+erg/gold/seval4/edge
+erg/gold/seval4/fold
+erg/gold/seval4/item-phenomenon
+erg/gold/seval4/item-set
+erg/gold/seval4/item.gz
+erg/gold/seval4/output
+erg/gold/seval4/parameter
+erg/gold/seval4/parse.gz
+erg/gold/seval4/phenomenon
+erg/gold/seval4/preference.gz
+erg/gold/seval4/relations
+erg/gold/seval4/result.gz
+erg/gold/seval4/rule
+erg/gold/seval4/run.gz
+erg/gold/seval4/score
+erg/gold/seval4/set
+erg/gold/seval4/tree.gz
+erg/gold/seval4/update.gz
 erg/lkb/
 erg/lkb/mt.lsp
 erg/lkb/checkpaths.items
@@ -4043,49 +3959,43 @@ erg/parse-nodes.tdl
 erg/lextypes.tdl
 erg/paraphraser.mtr
 erg/licence.txt
-erg/mrs.tdl
+erg/mtr.tdl
 erg/preprocessor.fsr
-erg/redwoods.mem
 erg/rondane.fsr
+erg/roots.tdl
 erg/ptblex.tdl
-erg/rondane.mem
+erg/semi.vpm
 erg/variants.tab
 erg/lexdb.rev
 erg/lexicon.tdl
 erg/lexrules.tdl
-erg/roots.tdl
 erg/syntax.tdl
 erg/trigger.mtr
-erg/ec.mem
-erg/vm.mem
+erg/idioms.mtr
+erg/erg.smi
 erg/lexdb.README
 erg/gcide.fsr
-erg/idioms.mtr
+erg/jhpstg.mem
 erg/lexicon-small.tdl
 erg/lexdb.rev_key
-erg/mtr.tdl
-erg/erg.smi
+erg/new-le-types.txt
 erg/inflr-pnct.tdl
-erg/logon.g.mem
-erg/jh.mem
+erg/jhpstg.g.mem
 erg/ace/
 erg/ace/config.tdl
 erg/ace/generation.ignore
 erg/generation.mtr
-erg/jhpstg.g.mem
-erg/semi.vpm
 erg/abstract.vpm
 erg/core.smi
-erg/jhpstg.mem
 ( \
-  cd /lingo/build/; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/spanish.tgz \
-      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	  cd /lingo/build/; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/spanish.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="pet*" --exclude="tsdb*" \
-      --exclude="*.fasl" \
-      spanish; \
-)
+	      --exclude="pet*" --exclude="tsdb*" \
+	      --exclude="*.fasl" \
+	      spanish; \
+	)
 spanish/
 spanish/lkb/
 spanish/lkb/checkpaths.lsp
@@ -4110,16 +4020,16 @@ spanish/roots.tdl
 spanish/semantics.tdl
 spanish/types.tdl
 ( \
-  cd /lingo/build//lkb; \
-  find src/.l8cl -type f -exec touch {} \; ; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_linux.x86.32.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  find src/.l8cl -type f -exec touch {} \; ; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_linux.x86.32.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
-      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
-      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
-      src/.l8cl/pvm src/.l8cl/tsdb src/.l8cl/fad; \
-)
+	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
+	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
+	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
+	      src/.l8cl/pvm src/.l8cl/tsdb src/.l8cl/fad; \
+	)
 bin/linux.x86.32/tsdb
 bin/linux.x86.32/swish++
 bin/linux.x86.32/pvmd3
@@ -4169,12 +4079,12 @@ src/.l8cl/fad/
 src/.l8cl/fad/packages.fasl
 src/.l8cl/fad/fad.fasl
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
-      etc include lib man src/general/itsdb.lisp; \
-)
+	      etc include lib man src/general/itsdb.lisp; \
+	)
 etc/
 etc/install
 etc/dot.bashrc
@@ -4560,13 +4470,15 @@ lib/linux.x86.32/libgdk-1.2.so.0
 lib/linux.x86.32/libglib-1.2.so.0
 lib/linux.x86.32/libgmodule-1.2.so.0
 lib/linux.x86.32/libgtk-1.2.so.0
+lib/linux.x86.32/libXp.so.6
 lib/linux.x86.64/
 lib/linux.x86.64/libitsdb.a
 lib/linux.x86.64/libitsdb.so
 lib/linux.x86.64/libpvm3.a
-lib/linux.x86.64/libXm.so.2
+lib/linux.x86.64/libXp.so.6
 lib/linux.x86.64/libXm.so.3
 lib/linux.x86.64/libdb-4.2.so
+lib/linux.x86.64/libtermcap.so.2
 lib/macos.ppc.32/
 lib/macos.ppc.32/libitsdb.a
 lib/macos.ppc.32/libitsdb.dylib
@@ -5803,17 +5715,17 @@ man/mann/watch.n
 man/mann/winop.n
 src/general/itsdb.lisp
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_source.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_source.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
-      src/systems/tsdb.system src/systems/pvm.system \
-      src/systems/fad.system  \
-      src/fad src/pvm/*.lisp \
-      src/tsdb/lisp src/tsdb/tcl \
+	      src/systems/tsdb.system src/systems/pvm.system \
+	      src/systems/fad.system  \
+	      src/fad src/pvm/*.lisp \
+	      src/tsdb/lisp src/tsdb/tcl \
               src/tsdb/ToDo src/tsdb/Registration \
-      src/tsdb/TeX; \
-)
+	      src/tsdb/TeX; \
+	)
 src/systems/tsdb.system
 src/systems/pvm.system
 src/systems/fad.system
@@ -5875,6 +5787,8 @@ src/tsdb/lisp/features.lisp
 src/tsdb/lisp/learner.lisp
 src/tsdb/lisp/experiment.lisp
 src/tsdb/lisp/kf.lisp
+src/tsdb/lisp/hunter.lisp
+src/tsdb/lisp/mmt.lisp
 src/tsdb/tcl/
 src/tsdb/tcl/copyleft.tcl
 src/tsdb/tcl/balloon.tcl
@@ -5896,12 +5810,12 @@ src/tsdb/Registration
 src/tsdb/TeX/
 src/tsdb/TeX/piclatex.sty
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_capi.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_capi.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
-      src/tsdb/capi; \
-)
+	      src/tsdb/capi; \
+	)
 src/tsdb/capi/
 src/tsdb/capi/5lib/
 src/tsdb/capi/5lib/getloadavg.o
@@ -5917,12 +5831,12 @@ src/tsdb/capi/gc.c
 src/tsdb/capi/mfile.c
 src/tsdb/capi/mfile.h
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_tsdb.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_tsdb.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
-      src/tsdb/c; \
-)
+	      src/tsdb/c; \
+	)
 src/tsdb/c/
 src/tsdb/c/llib/
 src/tsdb/c/llib/libreadline.a
@@ -5950,19 +5864,19 @@ src/tsdb/c/6lib/libregex.a
 src/tsdb/c/mlib/
 src/tsdb/c/mlib/libreadline.a
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_data.tgz \
-      --exclude=src/tsdb/skeletons/english/vm97 \
-      --exclude=src/tsdb/skeletons/english/vm97p \
-      --exclude=src/tsdb/skeletons/english/vm98 \
-      --exclude=src/tsdb/skeletons/english/wsj00 \
-      --exclude=src/tsdb/skeletons/english/parc \
-      --exclude=src/tsdb/skeletons/yy \
-      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_data.tgz \
+	      --exclude=src/tsdb/skeletons/english/vm97 \
+	      --exclude=src/tsdb/skeletons/english/vm97p \
+	      --exclude=src/tsdb/skeletons/english/vm98 \
+	      --exclude=src/tsdb/skeletons/english/wsj00 \
+	      --exclude=src/tsdb/skeletons/english/parc \
+	      --exclude=src/tsdb/skeletons/yy \
+	      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-      src/tsdb/skeletons src/tsdb/home; \
-)
+	      src/tsdb/skeletons src/tsdb/home; \
+	)
 src/tsdb/skeletons/
 src/tsdb/skeletons/deutsch/
 src/tsdb/skeletons/deutsch/babel/
@@ -5992,6 +5906,9 @@ src/tsdb/skeletons/deutsch/mrs/
 src/tsdb/skeletons/deutsch/mrs/item
 src/tsdb/skeletons/deutsch/mrs/output
 src/tsdb/skeletons/deutsch/mrs/relations
+src/tsdb/skeletons/deutsch/vmt/
+src/tsdb/skeletons/deutsch/vmt/item
+src/tsdb/skeletons/deutsch/vmt/relations
 src/tsdb/skeletons/english/
 src/tsdb/skeletons/english/aged/
 src/tsdb/skeletons/english/aged/item
@@ -6047,6 +5964,7 @@ src/tsdb/skeletons/english/hike/relations
 src/tsdb/skeletons/english/mrs/
 src/tsdb/skeletons/english/mrs/item
 src/tsdb/skeletons/english/mrs/relations
+src/tsdb/skeletons/english/mrs/item-set
 src/tsdb/skeletons/english/vm13/
 src/tsdb/skeletons/english/vm13/item
 src/tsdb/skeletons/english/vm13/relations
@@ -6110,6 +6028,30 @@ src/tsdb/skeletons/english/tg/
 src/tsdb/skeletons/english/tg/item
 src/tsdb/skeletons/english/tg/item-set
 src/tsdb/skeletons/english/tg/relations
+src/tsdb/skeletons/english/jhk/
+src/tsdb/skeletons/english/jhk/item
+src/tsdb/skeletons/english/jhk/item-set
+src/tsdb/skeletons/english/jhk/relations
+src/tsdb/skeletons/english/jhu/
+src/tsdb/skeletons/english/jhu/item
+src/tsdb/skeletons/english/jhu/item-set
+src/tsdb/skeletons/english/jhu/relations
+src/tsdb/skeletons/english/psk/
+src/tsdb/skeletons/english/psk/item
+src/tsdb/skeletons/english/psk/item-set
+src/tsdb/skeletons/english/psk/relations
+src/tsdb/skeletons/english/psu/
+src/tsdb/skeletons/english/psu/item
+src/tsdb/skeletons/english/psu/item-set
+src/tsdb/skeletons/english/psu/relations
+src/tsdb/skeletons/english/tgk/
+src/tsdb/skeletons/english/tgk/item
+src/tsdb/skeletons/english/tgk/item-set
+src/tsdb/skeletons/english/tgk/relations
+src/tsdb/skeletons/english/tgu/
+src/tsdb/skeletons/english/tgu/item
+src/tsdb/skeletons/english/tgu/item-set
+src/tsdb/skeletons/english/tgu/relations
 src/tsdb/skeletons/espanol/
 src/tsdb/skeletons/espanol/banca/
 src/tsdb/skeletons/espanol/banca/item
@@ -6152,6 +6094,10 @@ src/tsdb/skeletons/nihongo/Relations
 src/tsdb/skeletons/nihongo/shiken/
 src/tsdb/skeletons/nihongo/shiken/item
 src/tsdb/skeletons/nihongo/shiken/relations
+src/tsdb/skeletons/nihongo/mrs/
+src/tsdb/skeletons/nihongo/mrs/item
+src/tsdb/skeletons/nihongo/mrs/output
+src/tsdb/skeletons/nihongo/mrs/relations
 src/tsdb/skeletons/norsk/
 src/tsdb/skeletons/norsk/enkel/
 src/tsdb/skeletons/norsk/enkel/item
@@ -6159,6 +6105,7 @@ src/tsdb/skeletons/norsk/enkel/relations
 src/tsdb/skeletons/norsk/mrs/
 src/tsdb/skeletons/norsk/mrs/item
 src/tsdb/skeletons/norsk/mrs/relations
+src/tsdb/skeletons/norsk/mrs/output
 src/tsdb/skeletons/norsk/tur/
 src/tsdb/skeletons/norsk/tur/item
 src/tsdb/skeletons/norsk/tur/relations
@@ -6222,6 +6169,30 @@ src/tsdb/skeletons/norsk/tg/
 src/tsdb/skeletons/norsk/tg/item
 src/tsdb/skeletons/norsk/tg/output
 src/tsdb/skeletons/norsk/tg/relations
+src/tsdb/skeletons/norsk/jhk/
+src/tsdb/skeletons/norsk/jhk/item
+src/tsdb/skeletons/norsk/jhk/output
+src/tsdb/skeletons/norsk/jhk/relations
+src/tsdb/skeletons/norsk/jhu/
+src/tsdb/skeletons/norsk/jhu/item
+src/tsdb/skeletons/norsk/jhu/output
+src/tsdb/skeletons/norsk/jhu/relations
+src/tsdb/skeletons/norsk/psk/
+src/tsdb/skeletons/norsk/psk/item
+src/tsdb/skeletons/norsk/psk/output
+src/tsdb/skeletons/norsk/psk/relations
+src/tsdb/skeletons/norsk/psu/
+src/tsdb/skeletons/norsk/psu/item
+src/tsdb/skeletons/norsk/psu/output
+src/tsdb/skeletons/norsk/psu/relations
+src/tsdb/skeletons/norsk/tgk/
+src/tsdb/skeletons/norsk/tgk/item
+src/tsdb/skeletons/norsk/tgk/output
+src/tsdb/skeletons/norsk/tgk/relations
+src/tsdb/skeletons/norsk/tgu/
+src/tsdb/skeletons/norsk/tgu/item
+src/tsdb/skeletons/norsk/tgu/output
+src/tsdb/skeletons/norsk/tgu/relations
 src/tsdb/home/
 src/tsdb/home/lingo/
 src/tsdb/home/lingo/nov-98/
@@ -6285,13 +6256,14 @@ src/tsdb/home/lingo/oct-97/csli/97-11-26/page/set
 src/tsdb/home/lingo/oct-97/csli/97-11-26/page/tree
 src/tsdb/home/export
 src/tsdb/home/itsdb
+src/tsdb/home/triples
 ( \
-  cd /lingo/build//lkb; \
-  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
-      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
-)
+	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
+	)
 doc/itsdb.ps
 doc/tsnlp.ps
 doc/profiling.ps
