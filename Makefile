@@ -153,7 +153,7 @@ lkb_linux@cypriot:
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( ACL_LOCALE=C \
-              LD_LIBRARRY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
+              LD_LIBRARY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
                 cd /lingo/local/acl; \
                 alisp -I clim -qq && touch ${ROOT}/.yes; )
 
