@@ -43,7 +43,9 @@
 
 (defstruct (rel (:include rel-base))
   str 
-  handel                               
+  handel                                
+  anchor				; used by RMRS in version
+					; without INGs                         
   parameter-strings			; the constant values
 					; a junk slot used by the
                                         ; generator and comparison code
