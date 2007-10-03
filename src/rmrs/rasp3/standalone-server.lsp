@@ -58,7 +58,7 @@
   (loop
       with strm = (make-string-output-stream)
       for c = (read-char stream nil nil)
-      when (debug :raw-char-in)
+      when (svr-debug :raw-char-in)
       do (print c)
       while (and c (not (char= c term-char)))
       unless (or
@@ -142,8 +142,8 @@
 		      :eof))
 ;;      for empty-input = (lxml::xml-whitespace-p input)
       for empty-input = (and (stringp input)
-			     (net.xml.parser::all-xml-whitespace-p input))
-      when (debug :input-chunk)
+ 			     (net.xml.parser::all-xml-whitespace-p input))
+      when (svr-debug :input-chunk)
       do (format t "~&I: ~a" input)
       while (not (eq :eof input))
       if empty-input
@@ -161,13 +161,7 @@
 	 ))
 
 
-(defun saf-id (saf)
-  (saf-fs-feature-value2 
-   (saf-meta-olac 
-    (saf-meta saf)) 
-   "dc:identifier"))
-
-(defun debug (type)
+(defun svr-debug (type)
   (member type *r-server-debug*))
 
 ;;
@@ -216,7 +210,7 @@
 	 ;(unless tree
 	 ;  (return))
 	 (when tree
-	   (mrs::construct-sem-for-tree 
+	   (construct-sem-for-tree 
 	    tree
 	    :rasp s tagged))))
      )
