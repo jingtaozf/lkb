@@ -26,7 +26,7 @@
    (list :srecord
          :eli
          :sock
-         (merge-pathnames #p"src/ACL_specific/build.lsp" sys-home))
+         (merge-pathnames #p"src/rmrs/rasp3/build_standalone.lsp" sys-home))
 
    :opt-speed 3
    :newspace (* 1024 1024 4)
@@ -45,7 +45,7 @@
   ; :include-clim t
    :include-compiler t
 
-   :pll-file (when (pll-file) (file-namestring (pll-file)))
+   :pll-file (when (pll-file) (merge-pathnames (current-directory) (file-namestring (pll-file))))
    :bundle-file (file-namestring (namestring (bundle-pathname)))
    :opt-speed 3 :opt-space 1 :opt-safety 1 :opt-debug 2
    :read-init-files '(".clinit.cl" "clinit.cl")
