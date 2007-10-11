@@ -37,6 +37,20 @@
   a-cons
   vcs)
 
+;;; for composition
+
+(defstruct (hook)
+  index
+  ltop
+  xarg
+  anchor)
+
+(defstruct (slot)
+  hook
+  name)
+
+;;;
+
 (defstruct (rel-base)
   pred					; relation name
   flist)
