@@ -35,7 +35,6 @@
      '(#\space #\tab #\newline #\page #\return #\linefeed)
      str)))
 
-#+:pxml
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
   ;;; so we just need to find this
@@ -43,6 +42,12 @@
     (dolist (xml-el raw-xml)
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))
+
+#|
+#-:pxml
+(defun parse-xml-removing-junk (istream)
+  (shift-package (xml:parse-xml istream) :mrs))
+|#
 
 ;; [bmw] copied from preprocess/lxml.lsp
 (defun shift-package (lxml package)
@@ -57,9 +62,7 @@
 	 (t
 	  x))))
 
-#-:pxml
-(defun parse-xml-removing-junk (istream)
-  (shift-package (xml:parse-xml istream) :mrs))
+
 
 (defun remove-xml-whitespace-elements (content)
   ;;; sl revised version of fn contributed by Fabre
