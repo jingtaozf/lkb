@@ -11,7 +11,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.19")
+(defvar *lexdb-pg-interface-version* "2.20")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -707,7 +707,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-lookup-aux2 (field-kw val-str from)
   (let* ((iums (cle-lookup field-kw val-str "name,userid,modstamp" from)))
     (setf *lexdb-active-ium-size* (length iums))
-    (setf *lexdb-active-ium-ring* (make-ring iums))
+    (setf *lexdb-active-ium-ring* (make-bmwring iums))
     (lexdb-advance-ium-aux)
     ))
 
@@ -899,10 +899,25 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cut-white-spc (str)
   (mapconcat #'(lambda (x) x) (remove "" (split-string str)) " "))
 
-(defun make-ring (l)
+(defun make-bmwring (l)
   (and 
-   l
+   (listp l)
    (setf (cdr (last l)) l)))
+
+;(defun make-bmwring (l)
+;  (make-bmwring-1 l))
+;
+;(defun make-bmwring-1 (l)
+;  (and 
+;   (make-bmwring-2 l)
+;   (make-bmwring-3 l)))
+;
+;(defun make-bmwring-2 (l)
+;  (listp l))
+;
+;(defun make-bmwring-3 (l)
+;  (setf (cdr (last l)) l))
+
 
 ;;;
 ;;; allegro lisp interface fns

@@ -8,7 +8,7 @@
 
 (in-package :lkb)
 
-(defparameter *check-pg-interface-version* 2.19)
+(defparameter *check-pg-interface-version* 2.20)
 
 (define-constant *lexdb-emacs-other-fns*
     '(initialize-lexdb
