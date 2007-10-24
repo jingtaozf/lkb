@@ -931,13 +931,14 @@
     ;; possibly the initial quick-check vector should always be computed afresh
     ;; in apply-mtrs(); see comments there.                     (31-dec-06; oe)
     ;;
-    (loop
-        for ep in (mrs:psoa-liszt mrs)
-        for pred = (mrs:rel-pred ep)
-        for id = (when (string-predicate-p pred)
-                   (gethash pred (tl-all *transfer-lexicon*)))
-        when id do (push id (edge-preds edge)))
-    (setf (edge-preds edge) (sort (edge-preds edge) #'<))
+    (when *transfer-lexicon*
+      (loop
+          for ep in (mrs:psoa-liszt mrs)
+          for pred = (mrs:rel-pred ep)
+          for id = (when (string-predicate-p pred)
+                     (gethash pred (tl-all *transfer-lexicon*)))
+          when id do (push id (edge-preds edge)))
+      (setf (edge-preds edge) (sort (edge-preds edge) #'<)))
     (multiple-value-bind (result condition)
         (#-:debug ignore-errors #+:debug progn
          (transfer-mrs2 
@@ -1599,7 +1600,6 @@
     (unless hconss2 (list solution))))
 
 (defun unify-hcons (hcons1 hcons2 solution &key subsumesp)
-
   ;;
   ;; okay, here is the current (22-jan-04) rationale about HCONS unification;
   ;; all handles in HCONS must occur somewhere else in the input MRS (this is
@@ -1612,14 +1612,20 @@
   ;; equated with yet another variable (while, ordinarily, we do allow chains
   ;; of transitive equalities).                                 (22-jan-04; oe)
   ;;
+  ;; --- i no longer believe the optimization sketched above is sound: we have
+  ;; rules that use a CONTEXT QEQ to find the handle outscoping some relation,
+  ;; call it R, so as to insert a new relation right above R.  hence, no longer
+  ;; force :strictp below; i wonder what the cost is in terms of efficiency.
+  ;;                                                            (19-oct-07; oe)
+  ;;
   (let* ((solution (copy-solution solution))
          (harg (unify-values
                 (mrs:hcons-scarg hcons1) (mrs:hcons-scarg hcons2) 
-                solution :strictp t :subsumesp subsumesp))
+                solution :subsumesp subsumesp))
          (larg (when harg
                  (unify-values
                   (mrs:hcons-outscpd hcons1) (mrs:hcons-outscpd hcons2)
-                  solution :strictp t :subsumesp subsumesp))))
+                  solution :subsumesp subsumesp))))
     (when larg 
       (align-hconss hcons1 hcons2 solution)
       solution)))
