@@ -27,7 +27,7 @@
                         #-:runtime-standard "-L" #-:runtime-standard client))
          (start (format
                  nil
-                 "(tsdb::mmt-initialize-client ~(~s~) ~@[:transfer~])"
+                 "(tsdb::mmt-initialize-client ~(~s~)~@[ :transfer~])"
                  id (eq task :transfer)))
          (cpu (make-cpu
                :host (short-site-name) :spawn binary
@@ -60,7 +60,7 @@
                :host (short-site-name) :spawn binary
                :options (append options (list "-e" start))
                :class id :name name :task '(:translate)
-               :template "%s/%t/%d" :wait 360 :quantum 300)))
+               :template "mmt/%s/%t/%d" :wait 360 :quantum 300)))
     (unless (loop
                 for cpu in *pvm-cpus*
                 for class = (cpu-class cpu)

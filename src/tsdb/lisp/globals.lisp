@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (26-jul; beta)")
+(defparameter *tsdb-version* "2.0 (28-sep-07; beta)")
 
 (defparameter
   *tsdb-application*
@@ -58,7 +58,7 @@
 
 (defparameter *tsdb-gold* nil)
 
-(defparameter *tsdb-encoding* nil)
+(defparameter *tsdb-encoding* #+:logon :utf-8 #-:logon nil)
 
 (defparameter *tsdb-protocol-file * nil)
 

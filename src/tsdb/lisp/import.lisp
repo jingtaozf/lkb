@@ -38,7 +38,8 @@
 (defparameter *import-marks*
   '((#\* . :illformed) 
     (#\+ . :incomplete) 
-    (#\^ . :mispeled)))
+    (#\^ . :mispeled)
+    (#\# . :td)))
 
 (defparameter *import-email-headers*
   '("From " "From:" "To:" "Subject:" 
@@ -112,7 +113,7 @@
                comment 
                (separator (or *import-separator* ";;"))
                (pseparator (or *import-phenomena-separator* ";;;"))
-               meter)
+               encoding meter)
   
   (when meter (meter :value (get-field :start meter)))
   (unless absolute (purge-profile-cache data))
@@ -223,6 +224,7 @@
                                            :comment comment
                                            :separator separator
                                            :pseparator pseparator
+                                           :encoding encoding
                                            :meter rmeter))
               (:bitext
                (read-items-from-bitext-file
@@ -230,7 +232,7 @@
                 :base base :origin origin :register register
                 :difficulty difficulty :category category
                 :comment comment :separator separator :pseparator pseparator
-                :meter rmeter))
+                :encoding encoding :meter rmeter))
               (:ptb
                (read-items-from-ptb-directory file :base base)) 
               (:rasp
@@ -241,6 +243,7 @@
                                           :difficulty difficulty
                                           :category category
                                           :comment comment
+                                          :encoding encoding
                                           :meter rmeter)))
           (declare (ignore foo bar))
           (cond
@@ -276,6 +279,7 @@
                                              (separator ";;")
                                              (pseparator ";;;")
                                              (p-id 1)
+                                             encoding
                                              meter)
   
   (when meter (meter :value (get-field :start meter)))
@@ -289,6 +293,8 @@
          (index 0)
          item phenomenon item-phenomenon)
     (when stream
+      #+:allegro
+      (when encoding (setf (stream-external-format stream) encoding))
       (decf p-id)
       (loop
           with context = :newline
@@ -313,67 +319,72 @@
           else when (zerop length) do
             (setf context :newline)
           else unless (zerop length) do
-            (multiple-value-bind (offset extras)
-                (classify-item line)
-              (when (and (eq (get-field :header extras) :envelope)
-                         (smember context '(:newline :phenomenon)))
-                (incf index 1000)
-                (setf base 1))
-              (when (get-field :author extras)
-                (setf author (get-field :author extras)))
-              (when (get-field :date extras)
-                (setf author (get-field :date extras)))
-              (let ((foo (get-field :index extras)))
-                (when (and (numberp foo) (not (= foo index)))
-                  (format
-                   t
-                   "read-items-from-ascii-file(): ~
-                    [~d] index mismatch (~d vs. ~d).~%"
-                   i foo index)))
-              (let* ((string (subseq line offset))
-                     (break (when separator 
-                              (search separator string 
-                                      :test #'string= :from-end t)))
-                     (comment 
-                      (format
-                       nil
-                       "~@[~a~]~@[ ~a~]"
-                       comment
-                       (when break
-                         (normalize-string 
-                          (subseq string (+ break (length separator)))))))
-                     (string (if break
-                               (subseq string 0 (max break 0)) 
-                               string))
-                     (input (string-trim '(#\Space #\Tab) string))
-                     (oinput 
-                      (when (find-attribute-reader :i-input)
-                        (funcall (find-attribute-reader :i-input) input))))
-                (multiple-value-bind (ninput length)
-                    (if (get-field :header extras)
-                      (values input -1)
-                      (normalize-item (or oinput input)))
-                  (unless (zerop length)
-                    (let* ((category (get-field+ :category extras category))
-                           (wf (cond
-                                ((get-field :header extras) -1)
-                                ((get-field :illformed extras) 0)
-                                (t 1))))
-                      (push (pairlis '(:i-id 
-                                       :i-origin :i-register :i-format
-                                       :i-difficulty :i-category :i-input :i-wf
-                                       :i-length :i-comment :i-author :i-date)
-                                     (list (+ index base)
-                                           origin register format
-                                           difficulty category 
-                                           (if oinput input ninput) wf
-                                           length comment author date))
-                          item)
-                    (when phenomenon
-                      (push (pairlis '(:ip-id :i-id :p-id :ip-author :ip-date)
-                                     (list base base p-id author date))
-                            item-phenomenon))
-                    (incf base))))))
+            (multiple-value-bind (string id) (strip-identifier string)
+              (multiple-value-bind (offset extras) (classify-item string)
+                (when (and (eq (get-field :header extras) :envelope)
+                           (smember context '(:newline :phenomenon)))
+                  (incf index 1000)
+                  (setf base 1))
+                (unless (and (numberp id) (>= id (+ index base)))
+                  (setf id (+ index base)))
+                (when (get-field :author extras)
+                  (setf author (get-field :author extras)))
+                (when (get-field :date extras)
+                  (setf author (get-field :date extras)))
+                (let ((foo (get-field :index extras)))
+                  (when (and (numberp foo) (not (= foo index)))
+                    (format
+                     t
+                     "read-items-from-ascii-file(): ~
+                      [~d] index mismatch (~d vs. ~d).~%"
+                     i foo index)))
+                (let* ((string (subseq string offset))
+                       (break (when separator 
+                                (search separator string 
+                                        :test #'string= :from-end t)))
+                       (comment 
+                        (format
+                         nil
+                         "~@[~a~]~@[ ~a~]"
+                         comment
+                         (when break
+                           (normalize-string 
+                            (subseq string (+ break (length separator)))))))
+                       (string (if break
+                                 (subseq string 0 (max break 0)) 
+                                 string))
+                       (input (string-trim '(#\Space #\Tab) string))
+                       (oinput 
+                        (when (find-attribute-reader :i-input)
+                          (funcall (find-attribute-reader :i-input) input))))
+                  (multiple-value-bind (ninput length)
+                      (if (get-field :header extras)
+                        (values input -1)
+                        (normalize-item (or oinput input)))
+                    (unless (or (get-field :paragraph extras)
+                                (zerop length))
+                      (let* ((category (get-field+ :category extras category))
+                             (wf (cond
+                                  ((get-field :header extras) -1)
+                                  ((get-field :illformed extras) 0)
+                                  (t 1))))
+                        (push (pairlis '(:i-id :i-origin :i-register :i-format
+                                         :i-difficulty :i-category :i-input
+                                         :i-wf :i-length :i-comment
+                                         :i-author :i-date)
+                                       (list id origin register format
+                                             difficulty category 
+                                             (if oinput input ninput)
+                                             wf length
+                                             comment author date))
+                              item)
+                        (when phenomenon
+                          (push (pairlis '(:ip-id :i-id :p-id
+                                           :ip-author :ip-date)
+                                         (list base base p-id
+                                               author date))
+                                item-phenomenon))
+                        (incf base)))))))
             (setf context nil))
 
       (close stream)
@@ -390,6 +401,7 @@
                                               (separator ";;")
                                               (pseparator ";;;")
                                               (p-id 1)
+                                              encoding
                                               meter)
 
   (when meter (meter :value (get-field :start meter)))
@@ -404,6 +416,8 @@
          (delta 0)
          item phenomenon item-phenomenon output titem tis)
     (when stream
+      #+:allegro
+      (when encoding (setf (stream-external-format stream) encoding))
       (decf p-id)
       (loop
           with context = :newline
@@ -474,9 +488,7 @@
                       (unless (zerop length)
                         (let* ((category
                                 (get-field+ :category extras category))
-                               (wf (cond
-                                    ((get-field :illformed extras) 0)
-                                    (t 1)))
+                               (wf (if (get-field :illformed extras) 0 1))
                                (targetp (not (zerop (mod id 10)))))
                           (cond
                            (targetp
@@ -583,22 +595,25 @@
       (multiple-value-setq (start end)
         (cl-ppcre:scan "^\\[[0-9]{4,5}[a-z]\\]( |$)" string))
       (when (numberp start) (incf start)))
+    (unless start
+      (multiple-value-setq (start end)
+        (cl-ppcre:scan "^\\[[0-9]+\\]( |$)" string))
+      (when (numberp start) (incf start)))
     (if (numberp end)
       (let ((suffix (subseq string end))
             (id (or (parse-integer string :start start :junk-allowed t) 0))
-            (offset (or (case (when (>= end 3) (char string (- end 3)))
-                          (#\a 0)
-                          (#\b 1)
-                          (#\c 2)
-                          (#\d 3)
-                          (#\e 4)
-                          (#\f 5)
-                          (#\g 6)
-                          (#\h 7)
-                          (#\i 8)
-                          (#\j 9))
-                        0)))
-        (values suffix (+ (* id 10) offset)))
+            (offset (case (when (>= end 3) (char string (- end 3)))
+                      (#\a 0)
+                      (#\b 1)
+                      (#\c 2)
+                      (#\d 3)
+                      (#\e 4)
+                      (#\f 5)
+                      (#\g 6)
+                      (#\h 7)
+                      (#\i 8)
+                      (#\j 9))))
+        (values suffix (if offset (+ (* id 10) offset) id)))
       string)))
 
 (defun classify-item (string)
@@ -607,7 +622,9 @@
     (unless (string= string "")
       (loop
           for stablep = t
-          do
+          when (char= (char string offset) #\|)
+          do (incf offset)
+          else do
             (loop
                 for (mark . key) in *import-marks*
                 when (char= (char string offset) mark) do
@@ -615,13 +632,15 @@
                   (incf offset)
                   (setf stablep nil))
           until stablep)
-      (when (string-equal (subseq string offset) "<p>")
+      (when (or (string-equal (subseq string offset) "<p>")
+                (string-equal (subseq string offset) "<tr>"))
         (setf result (acons :paragraph t nil)))
       (loop
           with length = (length string)
           for key in *import-email-headers*
           for end = (max (- (min length (+ offset (length key))) 1) 0)
-          when (string= string key :start1 offset :end1 end) do
+          when (and (< offset end)
+                    (string= string key :start1 offset :end1 end)) do
             (push (cons :category "EH") result)
             (push (cons :header t) result)
             (when (string-equal key "From " :start1 offset :end1 end)
@@ -643,5 +662,7 @@
          ((get-field :illformed result)
           (push (cons :category "") result))
          ((get-field :incomplete result)
-          (push (cons :category "XP") result)))))
+          (push (cons :category "XP") result))
+         ((get-field :td result)
+          (push (cons :category "TD") result)))))
     (values offset result)))

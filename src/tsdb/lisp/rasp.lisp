@@ -119,7 +119,7 @@
                                        category comment 
                                        (trees-hook *tsdb-trees-hook*)
                                        (semantix-hook *tsdb-semantix-hook*)
-                                       (run 0) meter)
+                                       (run 0) encoding meter)
   (declare (ignore meter))
   
   (let ((author (current-user))
@@ -127,6 +127,8 @@
         (format "none")
         item parse result)
     (with-open-file (stream file :direction :input)
+      #+:allegro
+      (when encoding (setf (stream-external-format stream) encoding))
       (loop
           with i = 0
           with surface = nil

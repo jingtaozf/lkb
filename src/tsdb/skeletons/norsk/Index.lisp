@@ -49,5 +49,12 @@
  ((:path . "tg") (:content . "LOGON Turglede Corpus"))
  ((:path . "tge") (:content . "LOGON Turglede Corpus (Evaluation Sub-Set)"))
  ((:path . "tgk") (:content . "LOGON Turglede Test Corpus (Known-Vocabulary)"))
- ((:path . "tgu") (:content . "LOGON Turglede Test Corpus (Unknown-Vocabulary)")))
+ ((:path . "tgu") (:content . "LOGON Turglede Test Corpus (Unknown-Vocabulary)"))
+ ((:path . "dnt.aktivitet") (:content . "HandOn Corpus from DNT Acitivties"))
+ ((:path . "dnt.artikkel") (:content . "HandOn Corpus from DNT Articles"))
+ ((:path . "dnt.omraade") (:content . "HandOn Corpus from DNT Areas"))
+ ((:path . "dnt.rute") (:content . "HandOn Corpus from DNT Trails"))
+ ((:path . "dnt.turforslag") (:content . "HandOn Corpus from DNT Trip Recommendations"))
+ ((:path . "guide.generelt") (:content . "HandOn Corpus from Willassen Overview"))
+ ((:path . "guide.omraade") (:content . "HandOn Corpus from Willassen Areas")))
 

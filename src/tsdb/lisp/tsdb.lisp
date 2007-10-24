@@ -80,6 +80,9 @@
              :output :stream :input :stream
              :error-output nil)
             (declare (ignore foo))
+            #+:allegro
+            (when *tsdb-encoding*
+              (setf (stream-external-format stream) *tsdb-encoding*))
             (push (make-connection :data data :absolute absolute :path path
                                    :unique unique :ro ro
                                    :stream stream :pid pid)
@@ -275,6 +278,9 @@
              :if-output-exists :append
              :input "/dev/null" :error-output nil))
           (declare (ignore foo #-:allegro pid))
+          #+:allegro
+          (when (and (not connection) *tsdb-encoding*)
+            (setf (stream-external-format stream) *tsdb-encoding*))
           (if output
             ;;
             ;; we are in a rather intricate situation here: possibly the child
@@ -372,6 +378,9 @@
                                :direction :output 
                                :if-exists :append 
                                :if-does-not-exist :create)))
+             #+:allegro
+             (when *tsdb-encoding*
+               (setf (stream-external-format stream) *tsdb-encoding*))
              (push (cons key stream) cache))
          finally (return cache)))
     (:cooked
@@ -383,6 +392,9 @@
                           :direction :output 
                           :if-exists :supersede :if-does-not-exist :create)))
        (when stream
+         #+:allegro
+         (when *tsdb-encoding*
+           (setf (stream-external-format stream) *tsdb-encoding*))
          (format stream "set implicit-commit \"exit\".~%")
          (when verbose
            (format 
@@ -846,9 +858,15 @@
            (others (get-field+ :others result -1))
            (gcs (get-field+ :gcs result -1))
            (i-load (get-field :i-load result))
-           (i-load (if i-load (round (* 100 i-load)) -1))
+           (i-load (typecase i-load
+                     (float (round (* 100 i-load)))
+                     (integer i-load)
+                     (t -1)))
            (a-load (get-field :a-load result))
-           (a-load (if a-load (round (* 100 a-load)) -1))
+           (a-load (typecase a-load
+                     (float (round (* 100 a-load)))
+                     (integer a-load)
+                     (t -1)))
            (date (current-time :long t))
            (error 
             (normalize-string (get-field+ :error result "") :escape rawp))

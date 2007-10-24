@@ -102,7 +102,7 @@
         (filterp (member :mrs filter))
         tgc tcpu utgc utcpu treal graph solutions)
     (nconc
-     (handler-case
+     (#-:debug handler-case #+:debug progn
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                 (nfragments 0)
                 readings mrss unknown invalid)
@@ -265,6 +265,7 @@
                                      unknown))))
                             (format nil "~@[~a; ~]~@[~a~]" invalid unknown)))))
 
+       #-:debug
        (storage-condition (condition)
          (declare (ignore condition))
          #+:allegro
@@ -275,6 +276,7 @@
          (error 
           "no known mechanism to shutdown Lisp (see `xle-interface.lisp'"))
 
+       #-:debug
        (condition (condition)
          #+:debug (error condition)
          (let* ((error (tsdb::normalize-string 

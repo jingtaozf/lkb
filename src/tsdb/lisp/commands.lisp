@@ -803,7 +803,10 @@
                       for file in (directory 
                                    (make-pathname :directory old :name :wild))
                       for name = (pathname-name file) 
-                      unless (member name '("CVS" "LVS") :test #'string=)
+                      unless (member
+                              name
+                              '("CVS" "LVS" ".svn")
+                              :test #'string=)
                       do (cp file (merge-pathnames target file))
                       finally (return t)))))
             (if status

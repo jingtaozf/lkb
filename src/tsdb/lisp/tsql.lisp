@@ -415,6 +415,9 @@
                        :direction :output
                        :if-does-not-exist :create
                        :if-exists :append)
+        #+:allegro
+        (when *tsdb-encoding*
+          (setf (stream-external-format stream) *tsdb-encoding*))
         (loop
             for tuple in tuples
             for i from 1 by 1
@@ -429,7 +432,10 @@
                            (value (if (eq type :string)
                                     (normalize-string value :escape t)
                                     value)))
-                      (format stream "~:[@~;~]~a" start value))
+                      (unless start (write-char *tsdb-ofs* stream))
+                      (if (eq type :integer)
+                        (write value :stream stream)
+                        (write-string value stream)))
                   finally (format stream "~%"))
               (when increment
                 (meter-advance increment))))

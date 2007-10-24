@@ -246,6 +246,9 @@
            :output :stream :input "/dev/null"
            :error-output "/dev/null" :if-error-output-exists :append)
         (declare (ignore foo))
+        #+:allegro
+        (setf (stream-external-format input)
+          (excl:find-external-format :utf-8))
         (let ((xml (net.xml.parser:parse-xml input)))
           #+:allegro
           (sys:os-wait nil pid)

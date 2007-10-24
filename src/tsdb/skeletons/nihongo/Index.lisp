@@ -24,6 +24,7 @@
  ((:path . "hizuke") (:content . "Date Expressions"))
  ((:path . "suuji") (:content . "Number Expressions"))
  ((:path . "faqs") (:content . "Online Banking FAQ Sample"))
+ ((:path . "mrs") (:content . "Japanese MRS Test Suite"))
  ((:path . "shiken") (:content . "Embryonic UiO MT Test Suite")))
 
  

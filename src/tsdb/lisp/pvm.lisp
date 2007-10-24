@@ -98,7 +98,7 @@
   ;;
   (loop
       with tag = (gensym)
-      with result
+      with result with encoding
       with classes = (if (consp classes) classes (list classes))
       with allp = (member :all classes :test #'eq)
       for cpu in (or cpus *pvm-cpus*)
@@ -114,6 +114,36 @@
             for tid = (when (and (or allp (intersection class classes))
                                  (or (null task)
                                      (member task tasks :test #'eq)))
+                        ;;
+                        ;; _fix_me_
+                        ;; per-cpu encodings are not really well-defined when
+                        ;; running multiple cpus: while poll()ing for messages,
+                        ;; in principle, we would have to allow receiving
+                        ;; messages with arbitrary encodings, unless we require
+                        ;; all active clients to use the same encoding, which
+                        ;; seems reasonable in most settings.  to work around
+                        ;; this constraint, we would have to provide a list of
+                        ;; active clients to the PVM layer (pvm_poll() and
+                        ;; friends), for each incoming message find its client
+                        ;; definition based on the remote tid, and then invoke
+                        ;; native-to-string() accordingly. 
+                        ;;                                      (21-sep-07; oe)
+                        (when (and (cpu-encoding cpu)
+                                   (not (eq (cpu-encoding cpu)
+                                            *pvm-encoding*)))
+                          (if (null encoding)
+                            (format
+                             stream
+                             "~ainitialize-cpus(): ~
+                              changing *pvm-encoding* to ~(~a~).~%"
+                             prefix
+                             (setf encoding
+                               (setf *pvm-encoding* (cpu-encoding cpu))))
+                            (format
+                             stream
+                             "~ainitialize-cpus(): ~
+                              ignoring cpu encoding ~(~a~).~%"
+                             prefix (cpu-encoding cpu))))
                         (pvm_create
                          (cpu-spawn cpu) (cpu-options cpu)
                          :host node :architecture (cpu-architecture cpu)))

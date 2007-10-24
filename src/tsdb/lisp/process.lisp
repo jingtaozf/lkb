@@ -888,6 +888,15 @@
    ((and client
          (smember type '(:parse :transfer :generate :translate))
          (client-p client))
+    ;;
+    ;; adjust resource limits recorded in .item. according to cpu definition
+    ;;
+    (let* ((cpu (client-cpu client))
+           (edges (cpu-edges cpu)))
+      (when (numberp edges)
+        (if (get-field :edges item)
+          (setf (get-field :edges item) edges)
+          (nconc item (acons :edges edges nil)))))
     (let* ((nanalyses (if exhaustive 
                         0 
                         (if (and (integerp nanalyses) (>= nanalyses 1))
@@ -896,13 +905,6 @@
            (trees-hook (and *tsdb-write-tree-p* trees-hook))
            (semantix-hook (and *tsdb-write-mrs-p* semantix-hook))
            (tid (client-tid client))
-           #+(and :null :allegro-version>= (version>= 6 0))
-           (ef (let ((old (excl:locale-external-format excl:*locale*))
-                     (new (when *pvm-encoding*
-                            (excl:find-external-format *pvm-encoding*))))
-                 (when (excl::external-format-p new)
-                   (setf (excl:locale-external-format excl:*locale*) new)
-                   old)))
            (reader (find-attribute-reader :mrs))
            (mrs (when (smember type '(:transfer :generate))
                   (let* ((id
@@ -947,8 +949,6 @@
                      (process_item 
                       tid (nconc item (acons :mrs mrs nil))
                       nanalyses nresults interactive))))
-      #+(and :null :allegro-version>= (version>= 6 0))
-      (when ef (setf (excl:locale-external-format excl:*locale*) ef))
       (case status
         (:ok 
          (setf (client-status client) (cons (get-universal-time) item))
