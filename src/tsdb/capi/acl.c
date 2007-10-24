@@ -514,7 +514,16 @@ int pvm_poll(int tid, int tag, int block, char *output, int size) {
       pvm_quit();
       return(-1);
     } /* if */
-    n += sprintf(&output[n], ") (:load . %.2f))", load);
+    //
+    // with the ACL font patch for CLIM in place, the Lisp *locale* is applied
+    // with setlocale() now, which means sprintf() et al. are sensitive to the
+    // corresponding values for LC_NUMERIC, e.g. a comma for the decimal point
+    // and maybe spaces to separate thousands, and such.  on the other hand, 
+    // the Lisp read()er is /not/ sensitive to the current locale, i.e. will 
+    // fail to read foreign floats :-{.  hence, project the load value into an
+    // integer range, at some loss in precision.                (15-sep-07; oe)
+    //
+    n += sprintf(&output[n], ") (:load . %d))", (int)(load * 100));
     if(trace != NULL) {
       fflush(trace);
     } /* if */
@@ -585,7 +594,7 @@ int pvm_collect(char *output, int size) {
     pvm_quit();
     return(-1);
   } /* if */
-  n += sprintf(&output[n], ") (:load . %.2f))", load);
+  n += sprintf(&output[n], ") (:load . %d))", (int)(load * 100));
   if(trace != NULL) {
     fflush(trace);
   } /* if */

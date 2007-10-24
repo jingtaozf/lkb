@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <unistd.h>
+#include <locale.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/utsname.h>
@@ -375,18 +376,18 @@ struct MFILE *client_process_item() {
               "  (:i-id . %d) (:parse-id . %d)\n"
               "  (:edges . %d) (:nanalyses . %d)"
               "  (:derivationp . %d) (:interactive . %d)\n"
-              "  (:i-load . %f)\n",
+              "  (:i-load . %d)\n",
               i_id, parse_id,
               edges, nanalyses, 
               derivationp, interactive,
-              load_average());
+              load_average() * 100);
   if(callbacks[C_PROCESS_ITEM] != NULL) {
     if(callbacks[C_PROCESS_ITEM](i_id, i_input, parse_id, edges, 
                                  nanalyses, derivationp, interactive) < 0) {
       fprintf(stderr, "process_item(): erroneous client return value.\n");
     } /* if */
   } /* if */
-  capi_printf("  (:a-load . %f)))", load_average());
+  capi_printf("  (:a-load . %d)))", load_average() * 100);
   free(i_input);
   return(client_output);
   
@@ -488,7 +489,7 @@ int client_send_item_summary() {
 
   if(client_output != NULL &&
      mlength(client_output) > 0) {
-    capi_printf("  (:a-load . %f)))", load_average());
+    capi_printf("  (:a-load . %d)))", load_average() * 100);
     pvm_mfile_transmit(remote, LISP_MESSAGE, client_output);
     mclose(client_output);
   } /* if */
@@ -690,6 +691,7 @@ void monitor() {
 int main() {
 
   
+  fprintf(stderr, "%s\n\n", setlocale(LC_ALL, NULL));
   if(!capi_register(NULL, NULL, NULL, NULL)) {
     return(slave());
   } /* if */

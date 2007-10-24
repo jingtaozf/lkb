@@ -106,9 +106,9 @@ macos:
 	  client.o acl.o mfile.o
 	$(RANLIB) ../../../lib/macos.ppc.32/libitsdb.a
 
-client: client.c ../../../include/itsdb.h
+client: client.c ../../../include/itsdb.h acl.o mfile.o
 	$(CC) -DMAIN -c client.c
-	$(CC) -DMAIN -o client client.o acl.o mfile.o $(LINUX_LIBS)
+	$(CC) -DMAIN -o client client.o acl.o mfile.o $(LINUX_X86_64_LIBS)
 
 client.o: client.c
 	rm -f client.o
