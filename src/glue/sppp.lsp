@@ -48,6 +48,8 @@
 
 (defparameter *sppp-application* nil)
 
+(defparameter *sppp-coding-system* :utf-8)
+
 (defparameter *sppp-input-buffer* 
   (make-array 2048 :element-type 'character :adjustable nil :fill-pointer 0))
 
@@ -126,20 +128,16 @@
 (defun sppp (text &key (stream *sppp-stream*))
 
   (when (streamp stream)
+    #+:allegro
+    (setf (stream-external-format stream)
+      (excl:find-external-format *sppp-coding-system*))
     (when (output-stream-p stream)
-      ;; [bmw] added to enable compilation under SBCL 
-      ;;       (without more major changes)
-      #+:allegro 
-      (setf (stream-external-format stream) (excl:find-external-format :utf-8))
       (format
        stream
-       "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
+       "<?xml version='1.0' encoding='~(~a~)'?><text>~a</text>~%~a~%"
+       *sppp-coding-system*
        (xml-escape-string text) #\page)
       (force-output stream))
-    ;; [bmw] added to enable compilation under SBCL 
-    ;;       (without more major changes)
-    #+:allegro
-    (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
                  with size = (array-dimension *sppp-input-buffer* 0)
@@ -163,10 +161,15 @@
         (multiple-value-bind (xml condition) 
             (ignore-errors
              #+:pxml
-	     (net.xml.parser:parse-xml (string-trim '(#\newline) *sppp-input-buffer*))
+	     (net.xml.parser:parse-xml
+              (string-trim '(#\newline) *sppp-input-buffer*))
 	     #-:pxml
-	     (list :dummy (lxml::shift-package (xml:parse-xml (string-trim '(#\newline) *sppp-input-buffer*)) *package*))
-	     )
+	     (list
+              :dummy
+              (lxml::shift-package
+               (xml:parse-xml
+                (string-trim '(#\newline) *sppp-input-buffer*))
+               *package*)))
           (if condition
             (format
              t
@@ -203,6 +206,8 @@
 (defun sppp-process-analysis (analysis)
   (let* ((base (first analysis))
          (stem (sppp-xml-get base '|stem|))
+         (tag (sppp-xml-get base '|tag|))
+         (probability (sppp-xml-get base '|probability|))
          (inflection (sppp-xml-get base '|inflection|))
          rules)
     (loop
@@ -218,8 +223,9 @@
       (format
        t
        "sppp-process-analysis(): ignoring superfluous `inflection' value.~%"))
-    (pairlis '(:stem :inflection :rules)
-             (list stem (unless rules inflection) (nreverse rules)))))
+    (pairlis '(:stem :inflection :rules :tag :probability)
+             (list stem (unless rules inflection) (nreverse rules)
+                   tag probability))))
 
 (defun sppp-serialize-tokens (tokens)
   #+:debug
@@ -246,7 +252,7 @@
           (setf (first (aref map i)) last)
           (setf endp nil)
         when (rest (aref map i)) do
-          (incf last)
+          (unless (eql (first (aref map i)) last) (incf last))
           (setf (rest (aref map i)) last)
           (setf endp t))
     (loop
@@ -317,3 +323,30 @@
         finally
           (return result))
     string))
+
+(defun sppp-for-pet (string &optional tagger)
+  (declare (ignore tagger))
+  (with-output-to-string (stream)
+    (loop
+        with *package* = (find-package :lkb)
+        with id = -1
+        for token in (sppp string)
+        for form = (rest (assoc :form token))
+        for start = (rest (assoc :start token))
+        for end = (rest (assoc :end token))
+        do
+          (loop
+              for analysis in (rest (assoc :analyses token))
+              for stem = (rest (assoc :stem analysis))
+              for tag = (rest (assoc :tag analysis))
+              for probability
+              = (when tag (or (rest (assoc :probability analysis)) 0.0))
+              for rules = (loop
+                              for rule in (rest (assoc :rules analysis))
+                              collect (rest (assoc :id rule)))
+              do
+                (format
+                 stream
+                 "(~a, ~a, ~a, 0, ~s ~s, 0, ~{\"$~(~s~)\"~^ ~}~
+                  ~:[~;, ~s ~a~]) "
+                 (incf id) start end stem form rules tag tag probability)))))

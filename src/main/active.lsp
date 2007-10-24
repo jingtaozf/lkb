@@ -248,9 +248,10 @@
           (restrict-fs (tdfs-indef (edge-dag edge)))))))
   (cond 
    ((or *first-only-p* *chart-dependencies*)
-    (heap-insert *agenda* 
-                 (if *scoring-hook* (funcall *scoring-hook* passive) priority)
-                 passive))
+    (heap-insert 
+     *agenda* 
+     (if *scoring-hook* (funcall *scoring-hook* passive) priority)
+     passive))
    (t
     (fundamental4passive passive))))
 
@@ -338,7 +339,7 @@
       for rule in (if orthographemics
                     (let* ((next (pt-node-rule (first orthographemics)))
                            (rule (get-lex-rule-entry next)))
-                      (unless next
+                      (unless rule
                         (error
                          "postulate(): ~a requires unknown rule `~(~a~)'.~%"
                          passive next))
