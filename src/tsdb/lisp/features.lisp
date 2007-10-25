@@ -1044,7 +1044,8 @@
                            when string 
                            collect string 
                            and do (push result foo))
-        with scores = (mt::lm-score-strings strings :measure :logprob)
+        with scores
+        = #+:lm (mt::lm-score-strings strings :measure :logprob) #-:lm 0
         for result in (nreverse foo)
         for score = (/ (rest (pop scores)) *feature-lm-p*)
         do (nconc result (acons :lm score nil))))
