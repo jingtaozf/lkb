@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003 - 2006 Ben Waldron
+;;; Copyright (c) 2003 - 2007 Ben Waldron
 ;;; see licence.txt for conditions
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
 
@@ -7,11 +7,9 @@
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
-
-
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.20")
+(defvar *lexdb-pg-interface-version* "2.21")
 
 (require 'cl)      ; we use some common-lisp idioms
 (require 'widget)
@@ -226,40 +224,65 @@
     ;; top level
     (define-key map [menu-bar LexDB] (lexdb-make-name-keymap "LexDB"))
     
-    ;;
-    ;; level 1
-    (define-key map [menu-bar LexDB lexdb-dump]
+    ;; level 2
+    (define-key map [menu-bar LexDB dump/load] (lexdb-make-name-keymap "Dump/Load LexDB"))
+
+    (define-key map [menu-bar LexDB dump/load lexdb-dump]
       '(menu-item "Dump LexDB" lexdb-dump
 		  ;:keys "M-dump"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB lexdb-load]
+    (define-key map [menu-bar LexDB dump/load lexdb-load]
       '(menu-item "Load LexDB entries" lexdb-load
 		  ;:keys "M-load"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB view-scratch]
+    (define-key map [menu-bar LexDB dump/load lexdb-dump-tdl]
+      '(menu-item "Export LexDB (tdl file)" lexdb-dump-tdl
+		  ;:keys "M-dump-tdl"
+		  :enable (cle-connection)))
+
+    (define-key map [menu-bar LexDB manage-scratch] (lexdb-make-name-keymap "Manage private rev"))
+    (define-key map [menu-bar LexDB manage-scratch view-scratch]
       '(menu-item "View private rev" lexdb-view-private-rev
 		  :keys "M-vpr"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB next-id]
+    (define-key map [menu-bar LexDB manage-scratch commit-scratch]
+      '(menu-item "Commit private rev" lexdb-commit-private-rev
+		  :keys "M-cpr"
+		  :enable (cle-connection)))
+    (define-key map [menu-bar LexDB manage-scratch clear-scratch]
+      '(menu-item "Clear private rev" lexdb-clear-private-rev
+		  :keys "M-cpr"
+		  :enable (cle-connection)))
+
+    (define-key map [menu-bar LexDB select-record] (lexdb-make-name-keymap "Select record"))
+
+    (define-key map [menu-bar LexDB select-record next-id]
       '(menu-item "Next id" lexdb-advance-ium 
 		  :keys "M-n"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB lexdb-search-orth-val]
+    (define-key map [menu-bar LexDB select-record lexdb-search-orth-val]
       '(menu-item "Search orth" lexdb-search-orth
 		  :keys "C-c C-s"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB search]
+    (define-key map [menu-bar LexDB select-record search]
       '(menu-item "Search" lexdb-search-field-val 
 		  :keys "M-s"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB cross-ref-lex]
+    (define-key map [menu-bar LexDB select-record cross-ref-lex]
       '(menu-item "Cross reference(lex)" lexdb-lookup 
 		  :keys "M-TAB l"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB cross-ref-rev]
+    (define-key map [menu-bar LexDB select-record cross-ref-rev]
       '(menu-item "Cross reference(rev)" lexdb-lookup-rev-all 
 		  :keys "M-TAB r"
 		  :enable (cle-connection)))
+    (define-key map [menu-bar LexDB select-record edit]
+      '(menu-item "Load record" lexdb-load-record 
+		  :keys "C-l"
+		  :enable (cle-connection)))
+    ;;
+    ;; level 1
+
     (define-key map [menu-bar LexDB break] (lexdb-make-name-keymap "---"))
     (define-key map [menu-bar LexDB normalize]
       '(menu-item "Normalize buffer" lexdb-normalize-buffer 
@@ -277,10 +300,9 @@
       '(menu-item "Commit record" lexdb-commit-record 
 		  :keys "C-c C-c"
 		  :enable (cle-connection)))
-    (define-key map [menu-bar LexDB edit]
-      '(menu-item "Load record" lexdb-load-record 
-		  :keys "C-l"
-		  :enable (cle-connection)))))
+
+
+))
 
 (add-hook 'lexdb-mode-hook 
 	  (function (lambda ()
@@ -294,7 +316,10 @@
 ;; no need for keystrokes for these commands
 ;    (define-key map "\M-load" 'lexdb-load)
 ;    (define-key map "\M-dump" 'lexdb-dump)
+;    (define-key map "\M-dump-tdl" 'lexdb-dump-tdl)
     (define-key map "\M-vpr" 'lexdb-view-private-rev)
+    (define-key map "\M-cpr" 'lexdb-commit-private-rev)
+    (define-key map "\M-dpr" 'lexdb-clear-private-rev)
     (define-key map "\M-va" 'lexdb-view-merge-add)
     (define-key map "\C-l" 'lexdb-load-record)
     (define-key map "\C-c\C-r" 'lexdb-rename-record)
@@ -389,6 +414,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (interactive)
   (lexdb-view-private-rev-aux))
 
+(defun lexdb-commit-private-rev()
+  (interactive)
+  (lexdb-commit-private-rev-aux))
+
+(defun lexdb-clear-private-rev()
+  (interactive)
+  (lexdb-clear-private-rev-aux))
+
 (defun lexdb-load (filename)
   (interactive (list (read-file-name "Load from .rev file: ")))
   (princ (format "Loading new entries into LexDB %s from file %s" (l:dbname) filename))
@@ -403,6 +436,15 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (princ (format "Dumping LexDB %s to file %s" (l:dbname) filename))
   (terpri)
   (cle-dump-lexdb filename)
+  (terpri)
+  (princ "DONE. See Lisp buffer for details.")
+  (beep))
+
+(defun lexdb-dump-tdl (filename)
+  (interactive (list (read-file-name "Dump to TDL file: ")))
+  (princ (format "Dumping LexDB %s to TDL file %s" (l:dbname) filename))
+  (terpri)
+  (cle-dump-tdl-lexdb filename)
   (terpri)
   (princ "DONE. See Lisp buffer for details.")
   (beep))
@@ -477,18 +519,55 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		     "")))
 
 (defun lexdb-view-private-rev-aux nil
-  (let ((buffer *lexdb-scratch-buffer*)
-	(priv-recs (cle-get-private-revs)))
-    (when priv-recs
-      (if (get-buffer buffer)
-	  (kill-buffer buffer))
-      (with-current-buffer (get-buffer-create buffer)
-	(lexdb-mode)
-	(insert (mapconcat 'identity
-			   (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
-			   "\n")))
-      
-      (switch-to-buffer buffer))))
+  (let* ((buffer *lexdb-scratch-buffer*)
+	 (priv-recs (cle-get-private-revs))
+	 (len (length priv-recs)))
+    (case len
+      (0
+       (error "0 entries in private rev!")
+       (beep))
+      (t
+       (if (get-buffer buffer)
+	   (kill-buffer buffer))
+       (with-current-buffer (get-buffer-create buffer)
+	 (lexdb-mode)
+	 (insert (mapconcat 'identity
+			    (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
+			    "\n")))
+       
+       (switch-to-buffer buffer)))))
+
+(defun lexdb-commit-private-rev-aux nil
+  (let* ((scratch (cle-get-private-revs))
+	(len (length scratch)))
+    (case len 
+     (0
+      (error "0 entries in private rev!")
+      (beep))
+     (t
+      (when (y-or-n-p (format
+		       "Confirm commit privat rev (%s entries): "
+		       (length scratch)))
+	(cle-commit-private-rev)
+	(if (get-buffer *lexdb-scratch-buffer*)
+	    (kill-buffer *lexdb-scratch-buffer*))
+	(beep))))))
+
+(defun lexdb-clear-private-rev-aux nil
+  (let* ((scratch (cle-get-private-revs))
+	(len (length scratch)))
+    (case len 
+     (0
+      (error "0 entries in private rev!")
+      (beep))
+     (t
+      (when (y-or-n-p (format
+		       "Confirm clear privat rev (%s entries): "
+		       (length scratch)))
+	(cle-clear-private-rev)
+	(if (get-buffer *lexdb-scratch-buffer*)
+	    (kill-buffer *lexdb-scratch-buffer*))
+	(beep))))))
 
 (defun lexdb-view-merge-add-aux nil
   (let ((buffer *lexdb-new-entries-buffer*))
@@ -998,6 +1077,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-get-private-revs ()
   (cle-eval-lexdb 'scratch-records))
 
+(defun cle-commit-private-rev ()
+  (cle-eval-lexdb 'commit-private-rev))
+
+(defun cle-clear-private-rev ()
+  (cle-eval-lexdb 'clear-private-rev))
+
 (defun cle-complete (field-kw val-str)
   (if (or (string= val-str "") (null val-str))
       (setf val-str (cle-lisp-str ""))
@@ -1024,6 +1109,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun cle-dump-lexdb (filename)
   (cle-eval-lexdb 'dump-lexdb2 (cle-lisp-str filename)))
+
+(defun cle-dump-tdl-lexdb (filename)
+  (cle-eval-lexdb 'dump-tdl-lexdb2 (cle-lisp-str filename)))
 
 (defun cle-merge-lexdb (filename)
   (cle-eval-lexdb 'merge-lexdb2 (cle-lisp-str filename)))

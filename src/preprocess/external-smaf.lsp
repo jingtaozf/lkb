@@ -22,6 +22,10 @@
 ;;
 ;;  (saf::e-shutdown)
 ;;
+;; to see debugging messages:
+;;
+;;  (setf smaf::*e-debug-p* t)
+;;
 
 (in-package :saf)
 

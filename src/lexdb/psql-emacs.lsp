@@ -8,7 +8,7 @@
 
 (in-package :lkb)
 
-(defparameter *check-pg-interface-version* 2.20)
+(defparameter *check-pg-interface-version* 2.21)
 
 (define-constant *lexdb-emacs-other-fns*
     '(initialize-lexdb
@@ -18,7 +18,10 @@
 (defparameter *lexdb-emacs-lexdb-fns*
     '(complete
       check-pg-interface-version
+      clear-private-rev
+      commit-private-rev
       dump-lexdb2
+      dump-tdl-lexdb2
       connection
       dbname
       delete-record
@@ -81,6 +84,11 @@
   (unless (eq *lexdb* lex)
     (error "Lisp is confused: ~a should be eq to *lexdb* ..." lex))
   (command-dump-lexdb filename))
+
+(defmethod dump-tdl-lexdb2 ((lex psql-lex-database) filename)
+  (unless (eq *lexdb* lex)
+    (error "Lisp is confused: ~a should be eq to *lexdb* ..." lex))
+  (command-export-lexicon-to-tdl filename))
 
 (defmethod merge-lexdb2 ((lex psql-lex-database) filename)
   (unless (eq *lexdb* lex)
