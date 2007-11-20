@@ -121,9 +121,9 @@
     #+:linux
     (let (#+allegro 
 	  (excl::*load-foreign-types* 
-	   (append '("3" "4") excl::*load-foreign-types*))
+	   (append '("3" "4" "0") excl::*load-foreign-types*))
 	  )
-      (load-libpq '("libpq.so.5" "libpq.so" "libpq.so.4" "libpq.so.3")))
+      (load-libpq '("libpq.so.5" "libpq.so.5.0" "libpq.so" "libpq.so.4" "libpq.so.3")))
     #+:mswindows
     (load-libpq '("libpq.dll"))
     #-(or :linux :mswindows)

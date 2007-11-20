@@ -113,7 +113,14 @@
     (when (typep lex 'psql-lex-database)
       (dump-generator-indices-to-psql lex))
     (when (typep lkb::lex 'lkb::cdb-lex-database)
-      (mrs::serialize-semantics-indices))))
+      (mrs::serialize-semantics-indices))
+
+    ;; [bmw] dump trigger tdl
+    (when mrs::*empty-semantics-lexical-entries*
+      (format t "~%~%ADD THE FOLLOWING TO trigger.mtr:")
+      (make-trigger-tdl mrs::*empty-semantics-lexical-entries*))
+    
+    ))
 
 (defun reindex-lexicon nil ; <-- efficiency problem
   (format t "~% (recompiling semantic indices)")
@@ -142,7 +149,24 @@
 	       (format t "~%No feature structure for ~A~%" 
 		       (lex-entry-id entry)))))
 	   (forget-psort *lexicon* (lex-entry-id entry))))      
-      (mrs::check-for-redundant-filter-rules))))
+      (mrs::check-for-redundant-filter-rules)))
+  
+  ;; [bmw] dump trigger tdl
+  (when mrs::*empty-semantics-lexical-entries*
+    (format t "~%~%ADD THE FOLLOWING TO trigger.mtr:")
+    (make-trigger-tdl mrs::*empty-semantics-lexical-entries*))
+  )
+
+;; [bmw] code to dump trigger tdl for rules which
+;; have 'no semantics and no filter rule'
+(defun make-trigger-tdl (empty-semantics-lexical-entries)
+  (loop for x in empty-semantics-lexical-entries
+      do
+	(format t "~%~%~a_gr := generator_rule &
+[ CONTEXT.RELS <! [ PRED \"non_existing_rel\" ] !>,
+  FLAGS.TRIGGER \"~a\" ]." 
+		(string-downcase x) 
+		(string-downcase x))))
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)
