@@ -169,7 +169,9 @@
 ;; (contributed by CJ Rupp)
 ;;
 
+(print "Entering MRS package")
 (in-package mrs)
+(print "In MRS package")
 
 ;#+:rasp-server
 (defvar *rasp-rmrs-gram-file*)
@@ -180,6 +182,8 @@
 ;#+:rasp-server
 (defvar *rasp-xml-type*)
 
+(setf mrs::*anchor-rmrs-p* t)
+
 ;#+:rasp-server
 (defun init-rasp-server (&optional (rmrs-gram-file "/home/bmw20/lkb/src/rmrs/rasp3/gram15.rmrs")
 				   (rmrs-tag-file "/home/bmw20/lkb/src/rmrs/rasp3/lex15.rmrs"))
@@ -188,6 +192,7 @@
   (setf *rasp-rmrs-tag-file* rmrs-tag-file)
   (setf *rasp-xml-word-p* t)
   (setf *rasp-xml-type* :none)
+  (setf mrs::*anchor-rmrs-p* t)
   
   (clear-rule-record)
   (read-rmrs-grammar rmrs-gram-file)
