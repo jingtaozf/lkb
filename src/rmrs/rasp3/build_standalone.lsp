@@ -5,10 +5,6 @@
 
 (in-package :common-lisp-user)
 
-(print (pathname-directory *load-truename*))
-
-;;(load (merge-pathnames #p"src/general/loadup.lisp" sys-home))
-
 (load (make-pathname 
        :device (pathname-device *load-truename*)
        :host (pathname-host *load-truename*)
@@ -71,44 +67,12 @@
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
 
-;;(pushnew :lkb *features*)
-
-  ;; (bmw - 06jun04)
-  ;; activate PSQL/LexDB code (no longer OS specific)
-  ;;
-;;(pushnew :psql *features*)
+#+(and (version>= 6 0) (or :linux86 :solaris))
 
 (pushnew :pxml *features*)
 
-;;;
-;;; include LUI support code (disabled by default, though) on 
-;;; those platforms supported
-;;;
-#+(and (version>= 6 0) (or :linux86 :solaris))
-;;(pushnew :lui *features*)
-
-(print "Compiling RMRS system")
 (compile-system "rmrs" :force t)
-(print "Compiled RMRS system")
 
-;;(in-package :lkb)
-
-;;(in-package :rmrs)
 (load (merge-pathnames #p"src/rmrs/rasp3/standalone-server.lsp" sys-home))
-;;(compile-system "lkb" :force t)
 (setq make::*building-image-p* nil)
-
-;;;
-;;; even though, as of may-04, we build with the PSQL code in the image, we do
-;;; not want to operate in PSQL-mode unless explicitly requested, i.e. by the
-;;; end user running an image setting an environment variable PSQL (the same
-;;; strategy we use for turning on the LUI).  hence, drop :psql feature now and
-;;; leave it to start-lkb() to initialize PSQL and put it back on if requested.
-;;;
-;;; (bmw - 05jun05) the global *lexdb-params* achieves this purpose more 
-;;;                 cleanly
-;;(setf *features* (delete :psql *features*))
-
-;; (setf excl:*restart-init-function* 
-;;   #'(lambda () (lkb::start-lkb t)))
 
