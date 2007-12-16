@@ -180,7 +180,7 @@
                                 :test #'string= :key #'first))))
         (unless (purge-directory tpath)
           (when (probe-file tpath) (delete-file tpath))
-          (mkdir tpath))
+          (mkdir tpath :parentp t))
         (let ((relations 
                (make-pathname :directory (namestring *tsdb-skeleton-directory*)
                               :name *tsdb-relations-skeleton*))

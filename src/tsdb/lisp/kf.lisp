@@ -118,10 +118,10 @@
        (equal (fifth mtr1) (fifth mtr2))))
 
 (defstruct kfe
-  surface ;; `oppslagsord'
-  id ;; `homografnr'
-  gender ;; `kjønn'
-  category ;; `ordklasse' or `ordkategori'
+  surface  ; `oppslagsord'
+  id       ; `homografnr'
+  gender   ; `kjønn'
+  category ; `ordklasse' or `ordkategori'
   senses
   xml)
 
@@ -131,12 +131,13 @@
 (defun process-kf (kf
                    &key simplex mwe log
                         (source :norgram) (target :erg)
-                        active)
+                        active gaps)
   (let* ((sstream (create-output-stream simplex))
          (mstream (if mwe (create-output-stream mwe) sstream))
          (lstream (create-output-stream log))
          (nounp (eq source (mrs:vsym "noun_no")))
-         (adjectivep (eq source (mrs:vsym "adjective_no"))))
+         (adjectivep (eq source (mrs:vsym "adjective_no")))
+         (hash (make-hash-table :test #'equal)))
     (loop 
         for entry in (if (stringp kf) (read-kf-entries kf) kf)
         for in = (first entry)
@@ -157,6 +158,7 @@
             (when striggers
               (loop
                   with mtrs = (make-array (length striggers))
+                  with issues with match
                   for out in (rest entry)
                   do
                     (multiple-value-bind (tmrss ttriggers)
@@ -166,6 +168,7 @@
                        lstream
                        ">  |~a| {~a:~a}"
                        out (length tmrss) (length ttriggers))
+                      (unless tmrss (push out issues))
                       (loop
                           with types
                           for (tid . tpreds) in ttriggers
@@ -189,7 +192,8 @@
                                           spreds tpreds)
                                          (aref mtrs i)
                                          :test #'mtr-equivalent-p)
-                                        (pushnew (second combinations) types)))
+                                        (pushnew (second combinations) types)
+                                        (setf match t)))
                           finally 
                             ;; 
                             ;; _fix_me_
@@ -226,12 +230,61 @@
                                  :simplex sstream :mwe mstream))
                         finally
                           (when finalization
-                            (apply #'output-mtr finalization))))))
+                            (apply #'output-mtr finalization)))
+                    (loop
+                        for issue in issues
+                        do (push (cons match in) (gethash issue hash))))))
           (format lstream "~%")
           (force-output sstream) (force-output mstream) (force-output lstream))
     (when (stringp simplex) (close sstream))
     (when (stringp mwe) (close mstream))
-    (when (stringp log) (close lstream))))
+    (when (stringp log) (close lstream))
+    (when gaps
+      (with-open-file (stream gaps :direction :output :if-exists :supersede)
+        (loop
+            with gaps = (make-hash-table :test #'equal)
+            with holes = (make-hash-table :test #'equal)
+            with predicate
+            = #'(lambda (a b)
+                  (or (> (first a) (first b))
+                      (and (= (first a) (first b))
+                           (string< (second a) (second b)))))
+            for key being each hash-key
+            using (hash-value bucket) in hash
+            do
+              (loop
+                  for (first . rest) in bucket
+                  when first do (push rest (gethash key gaps))
+                  else do (push rest (gethash key holes)))
+            finally
+              (loop
+                  with counts
+                  = (loop
+                        for key being each hash-key
+                        using (hash-value bucket) in gaps
+                        collect (list* (length bucket) key bucket))
+                  for (count target . sources)
+                  in (sort counts predicate)
+                  do
+                    (format
+                     stream
+                     "~a [~a] {~{|~a|~^ ~}}~%"
+                     target count sources))
+              (terpri stream)
+              (loop
+                  with counts
+                  = (loop
+                        for key being each hash-key
+                        using (hash-value bucket) in holes
+                        collect (list* (length bucket) key bucket))
+                  for (count target . sources)
+                  in (sort counts predicate)
+                  do
+                    (format
+                     stream
+                     "~a [~a] {~{|~a|~^ ~}}~%"
+                     target count sources)))))
+    hash))
 
 (defun read-kf-file (file)
   (let* ((root (system:getenv "LOGONROOT"))
@@ -505,7 +558,7 @@
                      (and (functionp category) (funcall category kfe))
                      (equal (kfe-category kfe) category))
             collect kfe)
-      for primary = (funcall heuristic kfes)
+      for primary = (and heuristic (funcall heuristic kfes))
       for secondary
       = (loop
             for kfe in kfes

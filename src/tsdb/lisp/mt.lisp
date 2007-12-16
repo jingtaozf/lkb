@@ -60,24 +60,24 @@
   (labels ((read-string (stream)
              (loop
                  for line = (read-line stream nil nil)
-                 while (and line (cl-ppcre:scan "^[ \\t]*;" line))
+                 while (and line (ppcre:scan "^[ \\t]*;" line))
                  finally (return line)))
            (emptyp (string)
-             (cl-ppcre:scan "^[ \\t]*$" string))
+             (ppcre:scan "^[ \\t]*$" string))
            (strip-identifier (string)
              (or
               (multiple-value-bind (start end) 
-                  (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
+                  (ppcre:scan "^[0-9]+[a-z]\\. " string)
                 (declare (ignore start))
                 (and (numberp end) (subseq string end)))
               (multiple-value-bind (start end) 
-                  (cl-ppcre:scan "^\\[[0-9]{4}[a-z]\\] " string)
+                  (ppcre:scan "^\\[[0-9]{4}[a-z]\\] " string)
                 (declare (ignore start))
                 (and (numberp end) (subseq string end)))
               string))
            (fragmentp (string)
              (multiple-value-bind (start end) 
-                 (cl-ppcre:scan "^[ ]*\\^" string)
+                 (ppcre:scan "^[ ]*\\^" string)
                (declare (ignore start))
                (values (if (numberp end) (subseq string end) string) end))))
     (let* ((*tsdb-io* (if (eq *tsdb-io* t) *terminal-io* *tsdb-io*))
@@ -889,7 +889,13 @@
            into mrss
            finally (mt::browse-mrss 
                     mrss 
-                    (format nil "`~a' Parse Results" string)))))))
+                    (format nil "`~a' Parse Results" string)))
+       (let ((error (get-field :error item)))
+       (when (and error (not (equal error "")))
+         (format
+          #+:allegro excl:*initial-terminal-io* #-:allegro t
+          "parse-interactively(): error `~a'.~%"
+          (normalize-string error))))))))
 
 (defparameter *string-similarity-punctuation-characters*
   '(#\. #\! #\? #\, #\: #\|))

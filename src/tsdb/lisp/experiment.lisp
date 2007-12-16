@@ -36,7 +36,7 @@
      (identity (format nil "~a.~a" (current-user) (current-pid)))
      (recache t)
      (verbose t) (stream t) (debug nil)
-     (evalp t) ;;create eval.gz files with scores in the target profiles
+     (evalp nil) ;; create eval.gz files with scores in the target profiles
      ;;
      ;; global Redwoods parameters
      ;;

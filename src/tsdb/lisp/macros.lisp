@@ -72,8 +72,9 @@
            :test #'equal)))
 
 (defmacro find-skeleton-directory (skeleton)
-  `(let* ((path (dir-append (namestring *tsdb-skeleton-directory*)
-                            (list :relative (get-field :path ,skeleton)))))
+  `(let* ((path (if (consp ,skeleton) (get-field :path ,skeleton) ,skeleton))
+          (path (dir-append (namestring *tsdb-skeleton-directory*)
+                            (list :relative path))))
      (namestring path)))
 
 (defmacro divide (numerator denominator)

@@ -279,6 +279,7 @@
             for daughter2 in (derivation-daughters blue)
             always (derivation-equal daughter1 daughter2 level)))))))
 
+;;;
 ;;; functionality to reconstruct derivation trees and report nature of failure
 ;;; when unification clashes.
 ;;;
@@ -459,15 +460,22 @@
   (let* ((root (if (consp derivation) (first derivation) derivation))
          (children (when (consp derivation) (rest derivation))))
     (if (null children)
-      (lkb::make-edge :id id :category root 
+      (let* ((string (string root))
+             (matches (ppcre:all-matches "</?[wW][^>]*>" string))
+             (category (when (= (length matches) 4)
+                         (subseq string (second matches) (third matches))))
+             (break (position 
+                     *reconstruct-cfg-separator*
+                     (or category string)
+                     :from-end t :test #'char=))
+             (leaves (list (subseq (or category string) 0 break)))
+             (category
+              (if (numberp break)
+                  (intern (subseq (or category string) (+ break 1)) :tsdb)
+                root)))
+      (lkb::make-edge :id id :category category
                       :from start :to (+ start 1)
-                      :leaves (let* ((string (string root))
-                                     (break (position 
-                                             *reconstruct-cfg-separator*
-                                             string 
-                                             :from-end t :test #'char=)))
-                                (list (subseq string 0 break))))
-      
+                      :leaves leaves))
       (let ((edges
              (loop
                  for i from (+ id 1)
@@ -509,28 +517,3 @@
           (unless (equal string "") (read-from-string string)))))
   (setf (gethash :derivation *statistics-predicates*)
     #'(lambda (gold blue) (not (derivation-equal gold blue)))))
-
-;;;
-;;; _fix_me_
-;;; to allow equality of derivations obtained from re-generating MRSs that had
-;;; their CARGs frobbed.
-;;;
-#|
-(setf buckets
-  (loop
-      for pred being each hash-key in mrs::*relation-index*
-      for bucket = (gethash pred mrs::*relation-index*)
-      when (consp bucket)
-      collect (cons pred (rest (first bucket)))))
-(loop
-    for bucket in buckets
-    for hash = (rest bucket)
-    for ids = (remove-duplicates 
-               (loop for ids being each hash-value in hash append ids))
-    for key
-    = (loop
-          for foo in *generic-lexical-entries*
-          when (member (first foo) ids) return (first foo))
-    for match = (and key (gethash "DUMMY" hash))
-    when match collect (cons key match))
-|#

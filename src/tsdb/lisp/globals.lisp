@@ -162,6 +162,10 @@
 
 (defparameter *tsdb-efs* #\@)
 
+(defparameter *tsdb-core-files*
+  '("item" "analysis" "phenomenon" "parameter" "set" 
+    "item-phenomenon" "item-set"))
+
 (defparameter *tsdb-redwoods-files*
   '("tree" "decision" "preference" "update" "fold" "score"))
 

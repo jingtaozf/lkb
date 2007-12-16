@@ -556,18 +556,19 @@
      (t string))))
 
 ;;;
-;;; _fix_me_
-;;; this is part of the solution for functionality that francis and eric require
-;;; in their efforts: for them to try and learn things from partial transfer
-;;; results, they want `fragment' transfers in the profile, much like a regular
-;;; result.  this would likely not make sense within the MT pipeline, as there
-;;; is little reason to expect the generator to gracefully handle such fragment
-;;; transfers, but for off-line experimentation there may be utility in this.
-;;; presumably, though, [incr tsdb()] should have a general notion of fragments
-;;; and abstract from specific tasks, i.e. this parameter will eventually morph
-;;; into something more like *tsdb-fragments-p* (or thereabout), hence we will
-;;; not document it (not even on the wiki, francis), and there is no commitment,
-;;; express or implied, to supporting this specific parameter.  (12-jul-07; oe)
+;;; _fix_me_ 
+;;; this is part of the solution for functionality that francis and eric
+;;; require in their efforts: for them to try and learn things from partial
+;;; transfer results, they want `fragment' transfers in the profile, much like
+;;; a regular result.  this would likely not make sense within the MT pipeline,
+;;; as there is little reason to expect the generator to gracefully handle such
+;;; fragment transfers, but for off-line experimentation there may be utility
+;;; in this.  presumably, though, [incr tsdb()] should have a general notion of
+;;; fragments and abstract from specific tasks, i.e. this parameter will
+;;; eventually morph into something more like *tsdb-fragments-p* (or
+;;; thereabout), hence we will not document it (not even on the wiki, francis),
+;;; and there is no commitment, express or implied, to supporting this specific
+;;; parameter.                                                  (12-jul-07; oe)
 ;;;
 (defparameter tsdb::*tsdb-transfer-include-fragments-p* nil)
 
@@ -575,7 +576,9 @@
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
                            filter burst (nresults 0) (fragmentp t)
-                           (partialp tsdb::*tsdb-transfer-include-fragments-p*))
+                           (partialp
+                            tsdb::*tsdb-transfer-include-fragments-p*))
+  
   (declare (ignore edges derivations string id exhaustive nanalyses
                    filter semantix-hook trees-hook))
 
@@ -797,15 +800,16 @@
    (let ((distinct-parse-edges nil)
          (successful-lrule-applications 0))
       (dolist (p *parse-record*)
-         (setq distinct-parse-edges (parse-tsdb-distinct-edges p distinct-parse-edges)))
+         (setq distinct-parse-edges
+           (parse-tsdb-distinct-edges p distinct-parse-edges)))
       (dotimes (vertex (- *chart-limit* 1))
          (when (aref *chart* (+ 1 vertex) 0)
            (dolist (config (aref *chart* (+ 1 vertex) 0))
-             (when (lexical-rule-p (edge-rule (chart-configuration-edge config)))
+             (when (lexical-rule-p
+                    (edge-rule (chart-configuration-edge config)))
                 (incf successful-lrule-applications)))))
       (values successful-lrule-applications (length distinct-parse-edges)
-              0
-         )))
+              0)))
 
 (defun summarize-chart (&key derivationp)
   (loop
@@ -1048,7 +1052,7 @@
              ;; would still have to worry about getting the LNK effect into the
              ;; instantiate-generic-lexical-entry() call.        (7-dec-06; oe)
              ;;
-             (tdfs (if mrs::*lnkp* (lnk-tdfs tdfs (list id)) tdfs))
+             (tdfs (if (eq mrs::*lnkp* :id) (lnk-tdfs tdfs (list id)) tdfs))
              (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
              (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
@@ -1090,7 +1094,7 @@
               (setf result (yadu! result tdfs path))
             finally
               (when result
-                (when mrs::*lnkp* (lnk-tdfs result (list id)))
+                (when (eq mrs::*lnkp* :id) (lnk-tdfs result (list id)))
                 (setf result (restrict-and-copy-tdfs result))))))
     (if (or result (null dagp))
       (make-edge :id id :category (and result (indef-type-of-tdfs result))
