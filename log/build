@@ -5,19 +5,923 @@
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-M Makefile
+U customize/choices.py
+U customize/tdl.py
+U customize/sql_profiles/add_permutes.py
+U customize/sql_profiles/filters.py
+U customize/sql_profiles/g.py
+U customize/sql_profiles/post_permutes.py
+U customize/sql_profiles/s_filters.py
+U customize/sql_profiles/u_filters.py
+U gmmt/README
+U gmmt/status
+cvs update: gmmt/summary.2007-07-03 is no longer in the repository
+U gmmt/hau/lexicon.tdl
+cvs update: gmmt/hau/doc/Lab9Writeup is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/analysis is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/daughter is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/decision is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/edge is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/fold is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/item is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/item-phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/item-set is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/output is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/parameter is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/parse is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/preference is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/relations is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/result is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/rule is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/run is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/score is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/set is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/tree is no longer in the repository
+cvs update: gmmt/hau/tsdb/baseline/update is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/analysis is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/daughter is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/decision is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/edge is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/fold is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/item is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/item-phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/item-set is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/output is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/parameter is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/parse is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/preference is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/relations is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/result is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/rule is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/run is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/score is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/set is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/tree is no longer in the repository
+cvs update: gmmt/hau/tsdb/gold/update is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/analysis is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/daughter is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/decision is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/edge is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/fold is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/item is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/item-phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/item-set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/output is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/parameter is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/parse is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/preference is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/relations is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/result is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/rule is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/run is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/score is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/tree is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gen_output/update is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/analysis is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/daughter is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/decision is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/edge is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/fold is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item-phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/item-set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/output is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/parameter is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/parse is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/preference is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/relations is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/result is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/rule is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/run is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/score is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/tree is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_gold_unthinned/update is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/analysis is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/decision is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/edge is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/fold is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/item is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/item-phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/item-set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/output is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/parameter is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/parse is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/phenomenon is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/preference is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/relations is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/result is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/rule is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/run is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/score is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/set is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/tree is no longer in the repository
+cvs update: gmmt/hau/tsdb/hau_gmmt_mrs_input/update is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/analysis is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/daughter is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/decision is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/edge is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/fold is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/item is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/item-phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/item-set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/output is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/parameter is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/parse is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/preference is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/relations is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/result is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/rule is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/run is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/score is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/tree is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gen_output/update is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/analysis is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/daughter is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/decision is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/edge is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/fold is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item-phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item-set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/item~ is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/output is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/parameter is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/parse is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/preference is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/relations is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/result is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/rule is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/run is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/score is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/tree is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_gold_unthinned/update is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/analysis is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/decision is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/edge is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/fold is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/item is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/item-phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/item-set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/output is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/parameter is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/parse is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/phenomenon is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/preference is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/relations is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/result is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/rule is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/run is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/score is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/set is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/tree is no longer in the repository
+cvs update: gmmt/heb/tsdb/heb_gmmt_mrs_input/update is no longer in the repository
+U gmmt/hye/lexicon.tdl
+U gmmt/hye/lkb/script
+cvs update: gmmt/isl/tsdb/baseline/analysis is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/daughter is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/decision is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/edge is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/fold is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/item is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/item-phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/item-set is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/output is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/parameter is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/parse is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/preference is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/relations is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/result is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/rule is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/run is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/score is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/set is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/tree is no longer in the repository
+cvs update: gmmt/isl/tsdb/baseline/update is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/analysis is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/daughter is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/decision is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/edge is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/fold is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/item is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/item-phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/item-set is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/output is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/parameter is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/parse is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/preference is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/relations is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/result is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/rule is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/run is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/score is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/set is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/tree is no longer in the repository
+cvs update: gmmt/isl/tsdb/gold/update is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/analysis is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/daughter is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/decision is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/edge is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/fold is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/item is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/item-phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/item-set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/output is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/parameter is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/parse is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/preference is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/relations is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/result is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/rule is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/run is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/score is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/tree is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gen_output/update is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/analysis is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/daughter is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/decision is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/edge is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/fold is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item-phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/item-set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/output is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/parameter is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/parse is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/preference is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/relations is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/result is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/rule is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/run is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/score is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/tree is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_gold_unthinned/update is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/analysis is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/decision is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/edge is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/fold is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/item is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/item-phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/item-set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/output is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/parameter is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/parse is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/phenomenon is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/preference is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/relations is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/result is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/rule is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/run is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/score is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/set is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/tree is no longer in the repository
+cvs update: gmmt/isl/tsdb/isl_gmmt_mrs_input/update is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/analysis is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/daughter is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/decision is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/edge is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/fold is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/item is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/item-phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/item-set is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/output is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/parameter is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/parse is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/preference is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/relations is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/result is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/rule is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/run is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/score is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/set is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/tree is no longer in the repository
+cvs update: gmmt/ita/tsdb/baseline/update is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/analysis is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/daughter is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/decision is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/edge is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/fold is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/item is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/item-phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/item-set is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/output is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/parameter is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/parse is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/preference is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/relations is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/result is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/rule is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/run is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/score is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/set is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/tree is no longer in the repository
+cvs update: gmmt/ita/tsdb/gold/update is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/analysis is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/daughter is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/decision is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/edge is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/fold is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/item is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/item-phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/item-set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/output is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/parameter is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/parse is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/preference is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/relations is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/result is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/rule is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/run is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/score is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/tree is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gen_output/update is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/analysis is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/daughter is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/decision is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/edge is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/fold is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item-phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/item-set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/output is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/parameter is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/parse is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/preference is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/relations is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/result is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/rule is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/run is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/score is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/tree is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_gold_unthinned/update is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/analysis is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/decision is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/edge is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/fold is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/item is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/item-phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/item-set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/output is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/parameter is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/parse is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/phenomenon is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/preference is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/relations is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/result is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/rule is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/run is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/score is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/set is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/tree is no longer in the repository
+cvs update: gmmt/ita/tsdb/ita_gmmt_mrs_input/update is no longer in the repository
+cvs update: gmmt/test_sentences/hausa is no longer in the repository
+cvs update: gmmt/test_sentences/hausa.item is no longer in the repository
+cvs update: gmmt/test_sentences/icelandic is no longer in the repository
+cvs update: gmmt/test_sentences/icelandic.item is no longer in the repository
+cvs update: gmmt/test_sentences/malayalam is no longer in the repository
+cvs update: gmmt/test_sentences/template is no longer in the repository
+cvs update: gmmt/test_sentences/zulu is no longer in the repository
+U gmmt/tsdb/home/eng/mmt/analysis
+U gmmt/tsdb/home/eng/mmt/daughter
+U gmmt/tsdb/home/eng/mmt/decision
+U gmmt/tsdb/home/eng/mmt/edge
+U gmmt/tsdb/home/eng/mmt/fold
+U gmmt/tsdb/home/eng/mmt/item
+U gmmt/tsdb/home/eng/mmt/item-phenomenon
+U gmmt/tsdb/home/eng/mmt/item-set
+U gmmt/tsdb/home/eng/mmt/output
+U gmmt/tsdb/home/eng/mmt/parameter
+U gmmt/tsdb/home/eng/mmt/parse
+U gmmt/tsdb/home/eng/mmt/phenomenon
+U gmmt/tsdb/home/eng/mmt/preference
+U gmmt/tsdb/home/eng/mmt/relations
+U gmmt/tsdb/home/eng/mmt/result
+U gmmt/tsdb/home/eng/mmt/rule
+U gmmt/tsdb/home/eng/mmt/run
+U gmmt/tsdb/home/eng/mmt/score
+U gmmt/tsdb/home/eng/mmt/set
+U gmmt/tsdb/home/eng/mmt/tree
+U gmmt/tsdb/home/eng/mmt/update
+U gmmt/tsdb/home/epo/mmt/analysis
+U gmmt/tsdb/home/epo/mmt/daughter
+U gmmt/tsdb/home/epo/mmt/decision
+U gmmt/tsdb/home/epo/mmt/edge
+U gmmt/tsdb/home/epo/mmt/fold
+U gmmt/tsdb/home/epo/mmt/item
+U gmmt/tsdb/home/epo/mmt/item-phenomenon
+U gmmt/tsdb/home/epo/mmt/item-set
+U gmmt/tsdb/home/epo/mmt/output
+U gmmt/tsdb/home/epo/mmt/parameter
+U gmmt/tsdb/home/epo/mmt/parse
+U gmmt/tsdb/home/epo/mmt/phenomenon
+U gmmt/tsdb/home/epo/mmt/preference
+U gmmt/tsdb/home/epo/mmt/relations
+U gmmt/tsdb/home/epo/mmt/result
+U gmmt/tsdb/home/epo/mmt/rule
+U gmmt/tsdb/home/epo/mmt/run
+U gmmt/tsdb/home/epo/mmt/score
+U gmmt/tsdb/home/epo/mmt/set
+U gmmt/tsdb/home/epo/mmt/tree
+U gmmt/tsdb/home/epo/mmt/update
+U gmmt/tsdb/home/fas/mmt/analysis
+U gmmt/tsdb/home/fas/mmt/daughter
+U gmmt/tsdb/home/fas/mmt/decision
+U gmmt/tsdb/home/fas/mmt/edge
+U gmmt/tsdb/home/fas/mmt/fold
+U gmmt/tsdb/home/fas/mmt/item
+U gmmt/tsdb/home/fas/mmt/item-phenomenon
+U gmmt/tsdb/home/fas/mmt/item-set
+U gmmt/tsdb/home/fas/mmt/output
+U gmmt/tsdb/home/fas/mmt/parameter
+U gmmt/tsdb/home/fas/mmt/parse
+U gmmt/tsdb/home/fas/mmt/phenomenon
+U gmmt/tsdb/home/fas/mmt/preference
+U gmmt/tsdb/home/fas/mmt/relations
+U gmmt/tsdb/home/fas/mmt/result
+U gmmt/tsdb/home/fas/mmt/rule
+U gmmt/tsdb/home/fas/mmt/run
+U gmmt/tsdb/home/fas/mmt/score
+U gmmt/tsdb/home/fas/mmt/set
+U gmmt/tsdb/home/fas/mmt/tree
+U gmmt/tsdb/home/fas/mmt/update
+U gmmt/tsdb/home/fin/mmt/analysis
+U gmmt/tsdb/home/fin/mmt/daughter
+U gmmt/tsdb/home/fin/mmt/decision
+U gmmt/tsdb/home/fin/mmt/edge
+U gmmt/tsdb/home/fin/mmt/fold
+U gmmt/tsdb/home/fin/mmt/item
+U gmmt/tsdb/home/fin/mmt/item-phenomenon
+U gmmt/tsdb/home/fin/mmt/item-set
+U gmmt/tsdb/home/fin/mmt/output
+U gmmt/tsdb/home/fin/mmt/parameter
+U gmmt/tsdb/home/fin/mmt/parse
+U gmmt/tsdb/home/fin/mmt/phenomenon
+U gmmt/tsdb/home/fin/mmt/preference
+U gmmt/tsdb/home/fin/mmt/relations
+U gmmt/tsdb/home/fin/mmt/result
+U gmmt/tsdb/home/fin/mmt/rule
+U gmmt/tsdb/home/fin/mmt/run
+U gmmt/tsdb/home/fin/mmt/score
+U gmmt/tsdb/home/fin/mmt/set
+U gmmt/tsdb/home/fin/mmt/tree
+U gmmt/tsdb/home/fin/mmt/update
+U gmmt/tsdb/home/hau/gold/analysis
+U gmmt/tsdb/home/hau/gold/daughter
+U gmmt/tsdb/home/hau/gold/decision
+U gmmt/tsdb/home/hau/gold/edge
+U gmmt/tsdb/home/hau/gold/fold
+U gmmt/tsdb/home/hau/gold/item
+U gmmt/tsdb/home/hau/gold/item-phenomenon
+U gmmt/tsdb/home/hau/gold/item-set
+U gmmt/tsdb/home/hau/gold/output
+U gmmt/tsdb/home/hau/gold/parameter
+U gmmt/tsdb/home/hau/gold/parse
+U gmmt/tsdb/home/hau/gold/phenomenon
+U gmmt/tsdb/home/hau/gold/preference
+U gmmt/tsdb/home/hau/gold/relations
+U gmmt/tsdb/home/hau/gold/result
+U gmmt/tsdb/home/hau/gold/rule
+U gmmt/tsdb/home/hau/gold/run
+U gmmt/tsdb/home/hau/gold/score
+U gmmt/tsdb/home/hau/gold/set
+U gmmt/tsdb/home/hau/gold/tree
+U gmmt/tsdb/home/hau/gold/update
+U gmmt/tsdb/home/hau/mmt/analysis
+U gmmt/tsdb/home/hau/mmt/daughter
+U gmmt/tsdb/home/hau/mmt/decision
+U gmmt/tsdb/home/hau/mmt/edge
+U gmmt/tsdb/home/hau/mmt/fold
+U gmmt/tsdb/home/hau/mmt/item
+U gmmt/tsdb/home/hau/mmt/item-phenomenon
+U gmmt/tsdb/home/hau/mmt/item-set
+U gmmt/tsdb/home/hau/mmt/output
+U gmmt/tsdb/home/hau/mmt/parameter
+U gmmt/tsdb/home/hau/mmt/parse
+U gmmt/tsdb/home/hau/mmt/phenomenon
+U gmmt/tsdb/home/hau/mmt/preference
+U gmmt/tsdb/home/hau/mmt/relations
+U gmmt/tsdb/home/hau/mmt/result
+U gmmt/tsdb/home/hau/mmt/rule
+U gmmt/tsdb/home/hau/mmt/run
+U gmmt/tsdb/home/hau/mmt/score
+U gmmt/tsdb/home/hau/mmt/set
+U gmmt/tsdb/home/hau/mmt/tree
+U gmmt/tsdb/home/hau/mmt/update
+U gmmt/tsdb/home/heb/mmt/analysis
+U gmmt/tsdb/home/heb/mmt/daughter
+U gmmt/tsdb/home/heb/mmt/decision
+U gmmt/tsdb/home/heb/mmt/edge
+U gmmt/tsdb/home/heb/mmt/fold
+U gmmt/tsdb/home/heb/mmt/item
+U gmmt/tsdb/home/heb/mmt/item-phenomenon
+U gmmt/tsdb/home/heb/mmt/item-set
+U gmmt/tsdb/home/heb/mmt/output
+U gmmt/tsdb/home/heb/mmt/parameter
+U gmmt/tsdb/home/heb/mmt/parse
+U gmmt/tsdb/home/heb/mmt/phenomenon
+U gmmt/tsdb/home/heb/mmt/preference
+U gmmt/tsdb/home/heb/mmt/relations
+U gmmt/tsdb/home/heb/mmt/result
+U gmmt/tsdb/home/heb/mmt/rule
+U gmmt/tsdb/home/heb/mmt/run
+U gmmt/tsdb/home/heb/mmt/score
+U gmmt/tsdb/home/heb/mmt/set
+U gmmt/tsdb/home/heb/mmt/tree
+U gmmt/tsdb/home/heb/mmt/update
+U gmmt/tsdb/home/hye/gold/analysis
+U gmmt/tsdb/home/hye/gold/daughter
+U gmmt/tsdb/home/hye/gold/decision
+U gmmt/tsdb/home/hye/gold/edge
+U gmmt/tsdb/home/hye/gold/fold
+U gmmt/tsdb/home/hye/gold/item
+U gmmt/tsdb/home/hye/gold/item-phenomenon
+U gmmt/tsdb/home/hye/gold/item-set
+U gmmt/tsdb/home/hye/gold/output
+U gmmt/tsdb/home/hye/gold/parameter
+U gmmt/tsdb/home/hye/gold/parse
+U gmmt/tsdb/home/hye/gold/phenomenon
+U gmmt/tsdb/home/hye/gold/preference
+U gmmt/tsdb/home/hye/gold/relations
+U gmmt/tsdb/home/hye/gold/result
+U gmmt/tsdb/home/hye/gold/rule
+U gmmt/tsdb/home/hye/gold/run
+U gmmt/tsdb/home/hye/gold/score
+U gmmt/tsdb/home/hye/gold/set
+U gmmt/tsdb/home/hye/gold/tree
+U gmmt/tsdb/home/hye/gold/update
+U gmmt/tsdb/home/hye/mmt/analysis
+U gmmt/tsdb/home/hye/mmt/daughter
+U gmmt/tsdb/home/hye/mmt/decision
+U gmmt/tsdb/home/hye/mmt/edge
+U gmmt/tsdb/home/hye/mmt/fold
+U gmmt/tsdb/home/hye/mmt/item
+U gmmt/tsdb/home/hye/mmt/item-phenomenon
+U gmmt/tsdb/home/hye/mmt/item-set
+U gmmt/tsdb/home/hye/mmt/output
+U gmmt/tsdb/home/hye/mmt/parameter
+U gmmt/tsdb/home/hye/mmt/parse
+U gmmt/tsdb/home/hye/mmt/phenomenon
+U gmmt/tsdb/home/hye/mmt/preference
+U gmmt/tsdb/home/hye/mmt/relations
+U gmmt/tsdb/home/hye/mmt/result
+U gmmt/tsdb/home/hye/mmt/rule
+U gmmt/tsdb/home/hye/mmt/run
+U gmmt/tsdb/home/hye/mmt/score
+U gmmt/tsdb/home/hye/mmt/set
+U gmmt/tsdb/home/hye/mmt/tree
+U gmmt/tsdb/home/hye/mmt/update
+U gmmt/tsdb/home/isl/gold/analysis
+U gmmt/tsdb/home/isl/gold/daughter
+U gmmt/tsdb/home/isl/gold/decision
+U gmmt/tsdb/home/isl/gold/edge
+U gmmt/tsdb/home/isl/gold/fold
+U gmmt/tsdb/home/isl/gold/item
+U gmmt/tsdb/home/isl/gold/item-phenomenon
+U gmmt/tsdb/home/isl/gold/item-set
+U gmmt/tsdb/home/isl/gold/output
+U gmmt/tsdb/home/isl/gold/parameter
+U gmmt/tsdb/home/isl/gold/parse
+U gmmt/tsdb/home/isl/gold/phenomenon
+U gmmt/tsdb/home/isl/gold/preference
+U gmmt/tsdb/home/isl/gold/relations
+U gmmt/tsdb/home/isl/gold/result
+U gmmt/tsdb/home/isl/gold/rule
+U gmmt/tsdb/home/isl/gold/run
+U gmmt/tsdb/home/isl/gold/score
+U gmmt/tsdb/home/isl/gold/set
+U gmmt/tsdb/home/isl/gold/tree
+U gmmt/tsdb/home/isl/gold/update
+U gmmt/tsdb/home/isl/mmt/analysis
+U gmmt/tsdb/home/isl/mmt/daughter
+U gmmt/tsdb/home/isl/mmt/decision
+U gmmt/tsdb/home/isl/mmt/edge
+U gmmt/tsdb/home/isl/mmt/fold
+U gmmt/tsdb/home/isl/mmt/item
+U gmmt/tsdb/home/isl/mmt/item-phenomenon
+U gmmt/tsdb/home/isl/mmt/item-set
+U gmmt/tsdb/home/isl/mmt/output
+U gmmt/tsdb/home/isl/mmt/parameter
+U gmmt/tsdb/home/isl/mmt/parse
+U gmmt/tsdb/home/isl/mmt/phenomenon
+U gmmt/tsdb/home/isl/mmt/preference
+U gmmt/tsdb/home/isl/mmt/relations
+U gmmt/tsdb/home/isl/mmt/result
+U gmmt/tsdb/home/isl/mmt/rule
+U gmmt/tsdb/home/isl/mmt/run
+U gmmt/tsdb/home/isl/mmt/score
+U gmmt/tsdb/home/isl/mmt/set
+U gmmt/tsdb/home/isl/mmt/tree
+U gmmt/tsdb/home/isl/mmt/update
+U gmmt/tsdb/home/ita/gold/analysis
+U gmmt/tsdb/home/ita/gold/daughter
+U gmmt/tsdb/home/ita/gold/decision
+U gmmt/tsdb/home/ita/gold/edge
+U gmmt/tsdb/home/ita/gold/fold
+U gmmt/tsdb/home/ita/gold/item
+U gmmt/tsdb/home/ita/gold/item-phenomenon
+U gmmt/tsdb/home/ita/gold/item-set
+U gmmt/tsdb/home/ita/gold/output
+U gmmt/tsdb/home/ita/gold/parameter
+U gmmt/tsdb/home/ita/gold/parse
+U gmmt/tsdb/home/ita/gold/phenomenon
+U gmmt/tsdb/home/ita/gold/preference
+U gmmt/tsdb/home/ita/gold/relations
+U gmmt/tsdb/home/ita/gold/result
+U gmmt/tsdb/home/ita/gold/rule
+U gmmt/tsdb/home/ita/gold/run
+U gmmt/tsdb/home/ita/gold/score
+U gmmt/tsdb/home/ita/gold/set
+U gmmt/tsdb/home/ita/gold/tree
+U gmmt/tsdb/home/ita/gold/update
+U gmmt/tsdb/home/ita/mmt/analysis
+U gmmt/tsdb/home/ita/mmt/daughter
+U gmmt/tsdb/home/ita/mmt/decision
+U gmmt/tsdb/home/ita/mmt/edge
+U gmmt/tsdb/home/ita/mmt/fold
+U gmmt/tsdb/home/ita/mmt/item
+U gmmt/tsdb/home/ita/mmt/item-phenomenon
+U gmmt/tsdb/home/ita/mmt/item-set
+U gmmt/tsdb/home/ita/mmt/output
+U gmmt/tsdb/home/ita/mmt/parameter
+U gmmt/tsdb/home/ita/mmt/parse
+U gmmt/tsdb/home/ita/mmt/phenomenon
+U gmmt/tsdb/home/ita/mmt/preference
+U gmmt/tsdb/home/ita/mmt/relations
+U gmmt/tsdb/home/ita/mmt/result
+U gmmt/tsdb/home/ita/mmt/rule
+U gmmt/tsdb/home/ita/mmt/run
+U gmmt/tsdb/home/ita/mmt/score
+U gmmt/tsdb/home/ita/mmt/set
+U gmmt/tsdb/home/ita/mmt/tree
+U gmmt/tsdb/home/ita/mmt/update
+U gmmt/tsdb/home/zul/gold/analysis
+U gmmt/tsdb/home/zul/gold/daughter
+U gmmt/tsdb/home/zul/gold/decision
+U gmmt/tsdb/home/zul/gold/edge
+U gmmt/tsdb/home/zul/gold/fold
+U gmmt/tsdb/home/zul/gold/item
+U gmmt/tsdb/home/zul/gold/item-phenomenon
+U gmmt/tsdb/home/zul/gold/item-set
+U gmmt/tsdb/home/zul/gold/output
+U gmmt/tsdb/home/zul/gold/parameter
+U gmmt/tsdb/home/zul/gold/parse
+U gmmt/tsdb/home/zul/gold/phenomenon
+U gmmt/tsdb/home/zul/gold/preference
+U gmmt/tsdb/home/zul/gold/relations
+U gmmt/tsdb/home/zul/gold/result
+U gmmt/tsdb/home/zul/gold/rule
+U gmmt/tsdb/home/zul/gold/run
+U gmmt/tsdb/home/zul/gold/score
+U gmmt/tsdb/home/zul/gold/set
+U gmmt/tsdb/home/zul/gold/tree
+U gmmt/tsdb/home/zul/gold/update
+U gmmt/tsdb/home/zul/mmt/analysis
+U gmmt/tsdb/home/zul/mmt/daughter
+U gmmt/tsdb/home/zul/mmt/decision
+U gmmt/tsdb/home/zul/mmt/edge
+U gmmt/tsdb/home/zul/mmt/fold
+U gmmt/tsdb/home/zul/mmt/item
+U gmmt/tsdb/home/zul/mmt/item-phenomenon
+U gmmt/tsdb/home/zul/mmt/item-set
+U gmmt/tsdb/home/zul/mmt/output
+U gmmt/tsdb/home/zul/mmt/parameter
+U gmmt/tsdb/home/zul/mmt/parse
+U gmmt/tsdb/home/zul/mmt/phenomenon
+U gmmt/tsdb/home/zul/mmt/preference
+U gmmt/tsdb/home/zul/mmt/relations
+U gmmt/tsdb/home/zul/mmt/result
+U gmmt/tsdb/home/zul/mmt/rule
+U gmmt/tsdb/home/zul/mmt/run
+U gmmt/tsdb/home/zul/mmt/score
+U gmmt/tsdb/home/zul/mmt/set
+U gmmt/tsdb/home/zul/mmt/tree
+U gmmt/tsdb/home/zul/mmt/update
+U gmmt/tsdb/skeletons/Index.lisp
+U gmmt/tsdb/skeletons/epo_mmt/item
+U gmmt/tsdb/skeletons/fas_mmt/item
+U gmmt/tsdb/skeletons/fin_mmt/item
+U gmmt/tsdb/skeletons/hau/item
+U gmmt/tsdb/skeletons/hau/relations
+cvs update: gmmt/tsdb/skeletons/hau_567/item is no longer in the repository
+cvs update: gmmt/tsdb/skeletons/hau_567/relations is no longer in the repository
+U gmmt/tsdb/skeletons/hau_mmt/item
+U gmmt/tsdb/skeletons/heb_mmt/item
+U gmmt/tsdb/skeletons/heb_mmt/relations
+U gmmt/tsdb/skeletons/hye/item
+U gmmt/tsdb/skeletons/hye/relations
+U gmmt/tsdb/skeletons/isl/item
+U gmmt/tsdb/skeletons/isl/relations
+cvs update: gmmt/tsdb/skeletons/isl_567/item is no longer in the repository
+cvs update: gmmt/tsdb/skeletons/isl_567/relations is no longer in the repository
+U gmmt/tsdb/skeletons/isl_mmt/item
+U gmmt/tsdb/skeletons/ita/item
+U gmmt/tsdb/skeletons/ita/relations
+cvs update: gmmt/tsdb/skeletons/ita_567/item is no longer in the repository
+cvs update: gmmt/tsdb/skeletons/ita_567/relations is no longer in the repository
+U gmmt/tsdb/skeletons/ita_mmt/item
+U gmmt/tsdb/skeletons/zul/item
+U gmmt/tsdb/skeletons/zul/relations
+cvs update: gmmt/tsdb/skeletons/zul_567/item is no longer in the repository
+cvs update: gmmt/tsdb/skeletons/zul_567/relations is no longer in the repository
+U gmmt/tsdb/skeletons/zul_mmt/item
+U gmmt/zul/lexicon.tdl
+U gmmt/zul/zulu.tdl
+cvs update: gmmt/zul/tsdb/baseline/analysis is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/daughter is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/decision is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/edge is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/fold is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/item is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/item-phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/item-set is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/output is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/parameter is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/parse is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/preference is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/relations is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/result is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/rule is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/run is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/score is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/set is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/tree is no longer in the repository
+cvs update: gmmt/zul/tsdb/baseline/update is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/analysis is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/daughter is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/decision is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/edge is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/fold is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/item is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/item-phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/item-set is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/output is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/parameter is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/parse is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/preference is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/relations is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/result is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/rule is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/run is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/score is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/set is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/tree is no longer in the repository
+cvs update: gmmt/zul/tsdb/gold/update is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/analysis is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/daughter is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/decision is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/edge is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/fold is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/item is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/item-phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/item-set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/output is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/parameter is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/parse is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/preference is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/relations is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/result is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/rule is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/run is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/score is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/tree is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gen_output/update is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/analysis is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/daughter is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/decision is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/edge is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/fold is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item-phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/item-set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/output is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/parameter is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/parse is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/preference is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/relations is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/result is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/rule is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/run is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/score is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/tree is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_gold_unthinned/update is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/analysis is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/decision is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/edge is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/fold is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/item is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/item-phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/item-set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/output is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/parameter is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/parse is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/phenomenon is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/preference is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/relations is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/result is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/rule is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/run is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/score is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/set is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/tree is no longer in the repository
+cvs update: gmmt/zul/tsdb/zul_gmmt_mrs_input/update is no longer in the repository
 ? doc
 ? linux.x86.32
 ? man
 ? include/mrs.h
+U lexdb/pg-interface.el
+U lib/linux.x86.32/libitsdb.a
+U lib/linux.x86.32/libitsdb.so
+U lib/linux.x86.64/libitsdb.a
+U lib/linux.x86.64/libitsdb.so
 M log/build
+U src/version.lsp
+? src/.l1cl
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/ACL_specific/build.lsp
 ? src/general/clim.fasl
+U src/glue/sppp.lsp
+U src/lexdb/headers.lsp
+U src/lexdb/psql-emacs.lsp
+U src/main/active.lsp
+U src/mrs/lexutils.lisp
+U src/mt/transfer.lisp
+U src/preprocess/external-smaf.lsp
+U src/pvm/linux.x86.32/pvm.so
+U src/pvm/linux.x86.64/pvm.so
+U src/rmrs/standalone.lisp
+U src/rmrs/xml-utils.lisp
+U src/rmrs/rasp3/build_standalone.lsp
+U src/rmrs/rasp3/build_standalone_image.sh
+U src/rmrs/rasp3/standalone-image.lsp
+U src/rmrs/rasp3/standalone-server.lsp
+U src/rmrs/rasp3/start_rasp3_rmrs_server.sh
+U src/systems/rmrs.system
+U src/tsdb/capi/Makefile
+U src/tsdb/capi/acl.c
+U src/tsdb/capi/client.c
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
+U src/tsdb/linux.x86.32/capi.so
+cvs update: src/tsdb/linux.x86.32/drakma.fasl is no longer in the repository
+U src/tsdb/linux.x86.32/gc.so
+U src/tsdb/linux.x86.64/capi.so
+cvs update: src/tsdb/linux.x86.64/drakma.fasl is no longer in the repository
+U src/tsdb/linux.x86.64/gc.so
+U src/tsdb/lisp/commands.lisp
+U src/tsdb/lisp/derivations.lisp
+U src/tsdb/lisp/experiment.lisp
+U src/tsdb/lisp/features.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/import.lisp
+U src/tsdb/lisp/kf.lisp
+U src/tsdb/lisp/lkb-interface.lisp
+U src/tsdb/lisp/macros.lisp
+U src/tsdb/lisp/mmt.lisp
+U src/tsdb/lisp/mt.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/pvm.lisp
+U src/tsdb/lisp/rasp.lisp
+U src/tsdb/lisp/tsdb.lisp
+U src/tsdb/lisp/tsql.lisp
+U src/tsdb/lisp/xle-interface.lisp
+U src/tsdb/skeletons/english/Index.lisp
+U src/tsdb/skeletons/english/rondane/item
+U src/tsdb/skeletons/espanol/Index.lisp
+U src/tsdb/skeletons/nihongo/Index.lisp
+U src/tsdb/skeletons/nihongo/faqs/item
+U src/tsdb/skeletons/nihongo/ginkougyou/item
+U src/tsdb/skeletons/nihongo/hizuke/item
+U src/tsdb/skeletons/nihongo/kihon/item
+U src/tsdb/skeletons/nihongo/suuji/item
+U src/tsdb/skeletons/norsk/Index.lisp
 **********
 
   Remember to update the version number:
@@ -27,7 +931,7 @@ U src/ACL_specific/build.lsp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.563; previous revision: 1.562
+new revision: 1.565; previous revision: 1.564
 done
 cvs [rtag aborted]: could not open lock file `/lingo/CVS/lkb/src/ACL-CG_specific/Attic/,README,': Permission denied
 make[1]: Entering directory `/lingo/build/lkb'
@@ -308,6 +1212,11 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/rmrs/rasp3/notes.txt
 ./src/rmrs/rasp3/selected.trees
 ./src/rmrs/rasp3/test-set.txt
+./src/rmrs/rasp3/build_standalone.lsp
+./src/rmrs/rasp3/build_standalone_image.sh
+./src/rmrs/rasp3/standalone-image.lsp
+./src/rmrs/rasp3/standalone-server.lsp
+./src/rmrs/rasp3/start_rasp3_rmrs_server.sh
 ./src/rmrs/rmrs-algebra.lisp
 ./src/rmrs/rmrs2.dtd
 ./src/systems/
@@ -1319,7 +2228,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Aug 21, 2007 8:27)
+8.1 [Linux (x86)] (Dec 16, 2007 7:28)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2552,7 +3461,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-143727960 bytes have been tenured, next gc will be global.
+139491344 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2653,7 +3562,7 @@ Evaluation stack:
    (OPEN)
    (EXCL::AUTOLOAD-REPORT)
    (EVAL)
-   (EXCL::PROCESS-SCRIPT "/tmp/genappa293130827041")
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa230090728301")
    (TPL:START-INTERACTIVE-TOP-LEVEL
       #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @ #x48108eea>
       #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
