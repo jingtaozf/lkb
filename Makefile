@@ -51,7 +51,9 @@ update:
 	${CP} ${ROOT}/lkb/etc/install ${TARGET}/etc
 	( \
 	  cd ${ROOT}/lkb/log; \
-          mail -s "automated LKB build (${DATE})" oe@lingo.stanford.edu \
+          mail -s "automated LKB build (${DATE})" \
+	    oe@ifi.uio.no \
+	    ben.waldron@hf.ntnu.no \
             < build; \
 	  cvs commit -m "" build; \
 	)
