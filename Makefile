@@ -53,6 +53,7 @@ update:
 	  cd ${ROOT}/lkb/log; \
           mail -s "automated LKB build (${DATE})" \
 	    oe@ifi.uio.no \
+	    ann.copestake@cl.cam.ac.uk \
 	    ben.waldron@hf.ntnu.no \
             < build; \
 	  cvs commit -m "" build; \
@@ -329,27 +330,27 @@ itsdb_linux: itsdb_linux_x86_32
 itsdb_linux_x86_32:
 	( \
 	  cd ${ROOT}/lkb; \
-	  find src/.l8cl -type f -exec touch {} \; ; \
+	  find src/.l1cl -type f -exec touch {} \; ; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_linux.x86.32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
 	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
 	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
-	      src/.l8cl/pvm src/.l8cl/tsdb src/.l8cl/fad; \
+	      src/.l1cl/pvm src/.l1cl/tsdb src/.l1cl/fad; \
 	)
 
 itsdb_linux_x86_64:
 	( \
 	  cd ${LROOT}/lkb; \
-	  find src/.l8c4 -type f -exec touch {} \; ; \
+	  find src/.l1c4 -type f -exec touch {} \; ; \
 	  tar Svczf /tmp/itsdb_linux.x86.64.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.64/tsdb bin/linux.x86.64/swish++ \
 	      bin/linux.x86.64/pvmd3 bin/linux.x86.64/pvm \
 	      src/pvm/linux.x86.64/*.so src/tsdb/linux.x86.64/*.so \
-	      src/.l8c4/pvm src/.l8c4/tsdb src/.l8c4/fad; \
+	      src/.l1c4/pvm src/.l1c4/tsdb src/.l1c4/fad; \
 	  scp /tmp/itsdb_linux.x86.64.tgz \
 	    oe@lingo.stanford.edu:${TARGET}/test \
 	)
