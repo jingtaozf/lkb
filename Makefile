@@ -51,7 +51,7 @@ update:
 	${CP} ${ROOT}/lkb/etc/install ${TARGET}/etc
 	( \
 	  cd ${ROOT}/lkb/log; \
-          mail -s "automated LKB build (${DATE})" \
+          mail -s "automated LinGO build (${DATE})" \
 	    oe@ifi.uio.no \
 	    ann.copestake@cl.cam.ac.uk \
 	    ben.waldron@hf.ntnu.no \
