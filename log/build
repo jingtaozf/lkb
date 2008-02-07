@@ -5,15 +5,6 @@
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U customize/choices.py
-U customize/customize.py
-U customize/matrix.cgi
-U customize/matrixdef
-U customize/tdl.py
-U customize/test.py
-U customize/utils.py
-U customize/validate.py
-U Makefile
 ? doc
 ? linux.x86.32
 ? man
@@ -23,6 +14,7 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
+U src/general/allegro-patches.lisp
 U src/general/clim.lisp
 ? src/general/clim.fasl
 ? src/tsdb/home/log
@@ -36,7 +28,7 @@ U src/general/clim.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.568; previous revision: 1.567
+new revision: 1.569; previous revision: 1.568
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1311,15 +1303,6 @@ This development copy of Allegro CL is licensed to:
 ;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
 CL-USER(1): ; Loading /lingo/build/lkb/src/general/loadup.lisp
 ;   Loading /lingo/build/lkb/src/general/allegro-patches.lisp
-;;; Compiling file /lingo/build/lkb/src/general/clim.lisp
-;;; Writing fasl file /lingo/build/lkb/src/general/clim.fasl
-;;; Fasl write complete
-;     Fast loading /lingo/build/lkb/src/general/clim.fasl
-;       Fast loading from bundle code/ef-euc.fasl.
-;       Fast loading from bundle code/efft-euc-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EUC-BASE' 
 ;     Loading /lingo/build/lkb/src/general/defsystem.lisp
 ;   Loading /lingo/build/lkb/src/general/loadup-library.lisp
 T
@@ -1337,7 +1320,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Feb 7, 2008 9:49)
+8.1 [Linux (x86)] (Feb 7, 2008 10:29)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1548,17 +1531,6 @@ T
 ; Loading /lingo/build/lkb/src/ACL_specific/build.lsp
 ;   Loading /lingo/build/lkb/src/general/loadup.lisp
 ;     Loading /lingo/build/lkb/src/general/allegro-patches.lisp
-;;; Compiling file /lingo/build/lkb/src/general/clim.lisp
-;     Autoloading for EXCL::COMPLEX-LOOP-EXPANDER:
-;       Fast loading from bundle code/loop.fasl.
-;;; Writing fasl file /lingo/build/lkb/src/general/clim.fasl
-;;; Fasl write complete
-;       Fast loading /lingo/build/lkb/src/general/clim.fasl
-;         Fast loading from bundle code/ef-euc.fasl.
-;         Fast loading from bundle code/efft-euc-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EUC-BASE' 
 ;       Loading /lingo/build/lkb/src/general/defsystem.lisp
 ;     Loading /lingo/build/lkb/src/general/loadup-library.lisp
 ;   Fast loading from bundle code/seq2.fasl.
@@ -1572,6 +1544,7 @@ T
 ;   Fast loading from bundle code/walker.fasl.
 ;   Fast loading from bundle code/trace.fasl.
 ;   Fast loading from bundle code/inspect.fasl.
+;   Fast loading from bundle code/loop.fasl.
 ;   Fast loading from bundle clos/constructor.fasl.
 ;   Fast loading from bundle clos/mcombin.fasl.
 ;   Fast loading from bundle code/uri.fasl.
@@ -1660,6 +1633,11 @@ T
 ;; Note: Switching the following external-formats to runtime mode
 ;;       since prebuilt filled templates for them were found and loaded:
 ;;       ':EMACS-MULE-BASE' 
+;   Fast loading from bundle code/ef-euc.fasl.
+;   Fast loading from bundle code/efft-euc-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':EUC-BASE' 
 ;   Fast loading from bundle code/ef-fat.fasl.
 ;   Fast loading from bundle code/efft-fat-base.fasl.
 ;; Note: Switching the following external-formats to runtime mode
@@ -2617,7 +2595,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-144836936 bytes have been tenured, next gc will be global.
+144681720 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2721,7 +2699,7 @@ Evaluation stack:
    (OPEN)
    (EXCL::AUTOLOAD-REPORT)
    (EVAL)
-   (EXCL::PROCESS-SCRIPT "/tmp/genappa47920948591")
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa74821029471")
    (TPL:START-INTERACTIVE-TOP-LEVEL
       #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
         #x48108ee2>
