@@ -134,8 +134,9 @@
   :arg-checking nil)
 
 (defparameter *external-formats-to-locale-charset-alist*
-              `((,(excl:find-external-format "UTF-8") . "UTF-8")
-                (,(excl:find-external-format "LATIN1") . "ISO-8859-1")))
+    `((,(excl:find-external-format "UTF-8") . "UTF-8")
+      (,(excl:find-external-format :euc) . "EUCJP")
+      (,(excl:find-external-format "LATIN1") . "ISO-8859-1")))
 
 (ff:defun-foreign-callable xt-current-locale-for-acl ((display (* :void)) (xnl (* :char)) (client-data (* :void)))
   (declare (:convention :c)
