@@ -1,9 +1,9 @@
 ROOT = /lingo/build/
 SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/delphin
-WROOT = e:
-WACLROOT = c:/program\ files/acl70
-WLOGIN = ${LINGO_LOGIN}
+WROOT = c:/d/delphin-download
+WACLROOT = c:/Program\ Files/acl81
+WLOGIN = aac
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
  
@@ -230,6 +230,10 @@ lkb_windows_clean:
 lkb_windows: lkb_windows_clean
 	( cd ${WROOT}/lkb && ${MAKE} latest; )
 	( \
+          echo "(in-package \"COMMON-LISP-USER\")"; \
+          echo "(setf (sys::gsgc-parameter :generation-spread) 20)"; \
+          echo "(sys:resize-areas :verbose t :new 128000000 :old 64000000)"; \
+          echo "(require :climnt)"; \
 	  echo "(load \"${WROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(setf *default-pathname-defaults* "; \
           echo "  (translate-logical-pathname \"sys:\"))"; \
@@ -237,7 +241,7 @@ lkb_windows: lkb_windows_clean
 	  echo "(load \"${WROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
           echo "(excl:exit)"; \
 	) > c:/tmp/build.lisp
-	( cd ${WACLROOT}; ./clim.exe -qq -L c:/tmp/build.lisp \
+	( cd ${WACLROOT}; ./alisp.exe -qq -L c:/tmp/build.lisp \
           && touch ${WROOT}/.yes; )
 	( \
 	  if [ ! -f ${WROOT}/.yes ]; then exit 1; fi; \
