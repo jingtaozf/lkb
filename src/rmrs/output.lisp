@@ -33,10 +33,12 @@
 ;;; xml rmrs-output-type class for rmrs.dtd
 ;;;
 
-;; [bmw] if set, (superfluous) newlines ommited from RMRS XML output
+;; [bmw] if set, (superfluous) newlines omitted from RMRS XML output
 ;; (one can then use lkb::pprint-xml to produce nicely indented 
 ;;  human-readable RMRS XML)
 (defvar *write-compact-xml* nil)
+;;; aac - April 2008 - this is a very ugly way of implementing this!
+;;; the preferred way to do this sort of thing is to define a new class
 
 (defclass xml (rmrs-output-type) ())
 
@@ -53,16 +55,16 @@
   (with-slots (stream) rmrsout
     (unless *write-compact-xml* (terpri stream))
     (write-string "<rmrs cfrom='" stream)
-    (princ (or cfrom -1) stream) ;; [bmw] could this be made optional?
+    (princ (or cfrom -1) stream) 
     (write-string "' cto='" stream)
-    (princ (or cto -1) stream) ;; [bmw] could this be made optional?
+    (princ (or cto -1) stream) 
     (write-char #\' stream)
     (when surface
-      (write-string " surface='")
+      (write-string " surface='" stream)
       (xml-escaped-output surface stream)
       (write-char #\' stream))
     (when ident
-      (write-string " ident='")
+      (write-string " ident='" stream)
       (xml-escaped-output ident stream)
       (write-char #\' stream))
     (write-char #\> stream)
