@@ -6,7 +6,7 @@ lkb_home=/home/cr351/work/lkb
 
 tmp=/tmp/$USER;
 
-rmrs_gram_file=$lkb_home/src/rmrs/rasp3/gram15.rmrs;
+rmrs_gram_file=$lkb_home/src/rmrs/rasp3/gram15-general.rmrs;
 rmrs_tag_file=$lkb_home/src/rmrs/rasp3/lex15.rmrs;
 
 ## Use an exec command, so that no child process is created and Java can clean
