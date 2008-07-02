@@ -68,7 +68,7 @@ windows: lkb_windows
 
 solaris: lkb_solaris itsdb_solaris
 
-linux_x86_64: lkb_linux@ar itsdb_linux_x86_64
+linux_x86_64: lkb_linux_x86_64 itsdb_linux_x86_64
 
 #
 # link structure on CSLI LinGO ftp(1) site
@@ -160,7 +160,7 @@ lkb_linux@cypriot:
                 cd /lingo/build/acl; \
                 alisp -I clim -qq && touch ${ROOT}/.yes; )
 
-lkb_linux@ar:
+lkb_linux_x86_64:
 	${RM} -f ${LROOT}/.yes;
 	( cd ${LROOT}/lkb && ${MAKE} latest; )
 	( \
