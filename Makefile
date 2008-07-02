@@ -157,7 +157,7 @@ lkb_linux@cypriot:
 	  echo "(excl:exit)"; \
 	) | ( ACL_LOCALE=C \
               LD_LIBRARY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
-                cd /lingo/local/acl; \
+                cd /lingo/build/acl; \
                 alisp -I clim -qq && touch ${ROOT}/.yes; )
 
 lkb_linux@ar:
