@@ -115,19 +115,21 @@
                (let ((executep (test-experiment target :supersede supersede)))
                  (when executep  
                    (tsdb :create target :skeleton skeleton)
-                   (handler-case (rank-profile
-                                  source target :type type
-                                  :nfold nfold :niterations niterations
-                                  :recache recache :identity identity
-                                  :enhancers enhancers
-                                  :resolvedp resolvedp
-                                  :normalizep normalizep)
-                     (condition (condition)
-                       (format
-                        stream
-                        "~&[~a] batch-experiment(): ~
-                         error: `~a'.~%"
-                        (current-time :long :short) condition)))
+                   (#-:debug handler-case #+:debug progn
+                       (rank-profile
+                        source target :type type
+                        :nfold nfold :niterations niterations
+                        :recache recache :identity identity
+                        :enhancers enhancers
+                        :resolvedp resolvedp
+                        :normalizep normalizep)
+                    #-:debug
+                    (condition (condition)
+                      (format
+                       stream
+                       "~&[~a] batch-experiment(): ~
+                        error: `~a'.~%"
+                       (current-time :long :short) condition)))
                    (when evalp
                      (create-evaluation-file 
                       target source :similarities score-similarities))

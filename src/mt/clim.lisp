@@ -115,7 +115,7 @@
                       (or (mrs-transfer-stack frame)
                           (mrs-transfer-edges frame))))
            (mrs (edge-mrs edge))
-           (edges (transfer-mrs mrs :filter nil)))
+           (edges (transfer-mrs mrs :filter nil :block nil)))
       (when edges (browse-mrss edges "Transfer Output")))))
 
 
@@ -161,6 +161,7 @@
                       ("Edit" :value :edit :active t)
                       ("Read" :value :read :active t)
                       ("Print" :value :print :active t)
+                      ("LaTeX" :value :latex :active t)
                       ("Rule" :value :rule :active t)
                       ("Select" :value :select :active t)
                       ("Contrast" :value :contrast :active t)
@@ -372,6 +373,28 @@
                     (format t "~%Error: ~A~%" condition))
                   (serious-condition (condition)
                     (format t "~%Something nasty: ~A~%" condition))))))))
+
+        (:latex
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (file 
+                 (format nil "/tmp/mrs.~a.tex" (lkb::current-user))))
+           (ignore-errors
+            (with-open-file (stream file
+                             :direction :output :if-exists :supersede)
+              (format
+               stream
+               "%~%% ~a --- ~a @ ~a~%%~%"
+               (mrs-transfer-title frame) 
+               (lkb::current-user) (lkb::current-time :long :pretty))
+              (mrs::output-mrs1 mrs 'mrs::latex stream)
+              (format 
+               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+               "~&browse-mrss(): (LaTeX) saved current view to `~a'.~%"
+               file)))))
+
         (:rule (interactively-browse-mtr frame))
 
         (:select
@@ -596,4 +619,4 @@
             (setf previous id)))))))
 
 (defun mrs-transfer-font ()
-  '(:sans-serif :roman 12))
+  '(:sans-serif :roman 10))

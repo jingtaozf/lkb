@@ -46,8 +46,7 @@
         (let* ((log (make-broadcast-stream 
                      log
 		     #+:sbcl excl:*initial-terminal-io*
-		     #-:sbcl (or #+:allegro excl:*initial-terminal-io* t)
-		     ))
+		     #-:sbcl (or #+:allegro excl:*initial-terminal-io* t)))
                (mrss (mrs::read-mrss-from-file file)))
           (format
            log

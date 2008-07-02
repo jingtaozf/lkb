@@ -286,8 +286,21 @@
     (unwind-protect
         (run-frame-top-level frame)
       (when *complete-lisp-close*
+        ;;
+        ;; with the latest set of CLIM patches, it appears we need to rebind the
+        ;; standard streams to avoid an `operation on closed stream' error(),
+        ;; while shutting down the Lisp.  not quite sure why, but alas.
+        ;;                                                        (8-feb-08; oe)
         #+:allegro
-        (excl:exit 0 :no-unwind t)
+        (let* ((stream excl:*initial-terminal-io*)
+               (*standard-output* stream)
+               (*debug-io* stream)
+               (*terminal-io* stream)
+               (*standard-input* stream)
+               (*error-output* stream)
+               (*query-io* stream)
+               (*trace-output* stream))
+          (excl:exit 0 :no-unwind t :quiet t))
         #+:lispworks
         (lw:quit :ignore-errors-p t)
         #-(or :allegro :lispworks)
@@ -385,6 +398,13 @@
 (defun invoke-with-output-to-top (body)
   (unwind-protect
       (let ((*standard-output* *lkb-top-stream*)
+            ;;
+            ;; _fix_me_
+            ;; we believe that debug output from the CLIM patches may cause a
+            ;; force-output() on *debug-io* to raise an error(), when running 
+            ;; in a background process.                        (13-feb-08; oe)
+            ;;
+            #-:logon
 	    (*debug-io* *lkb-top-stream*)
 	    ;; (*terminal-io* *lkb-top-stream*)
 	    (*standard-input* *lkb-top-stream*)

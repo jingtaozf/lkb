@@ -965,6 +965,7 @@ Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *key_list) {
   } /* for */
   new->tuples[i]=NULL;
   new->next = key_list->next;
+  new->future = key_list->future;
 
   return(new);
 
@@ -982,6 +983,7 @@ Tsdb_key_list *tsdb_new_copy_key_list(Tsdb_key_list *key_list) {
   new->tuples = (Tsdb_tuple**) key_list->tuples[new->n_tuples];
   new->tuples[new->n_tuples]=NULL;
   new->next = key_list->next;
+  new->future = key_list->future;
 
   return(new);
 
@@ -2169,6 +2171,7 @@ BOOL tsdb_collect_tuples(Tsdb_selection* selection,Tsdb_tuple** tuples,
       new->tuples = tuples;
       new->n_tuples = n_tuples;
       new->next = (Tsdb_key_list *)NULL;
+      new->future = (Tsdb_key_list *)NULL;
       if (resized) {
         temp = (Tsdb_key_list**)
           realloc(lists[offset+j],(*size*2+1)*sizeof(Tsdb_key_list*));
@@ -2253,154 +2256,6 @@ BOOL tsdb_sort_tuples(Tsdb_key_list*** lists,int last,int n_lists) {
   } /* for () */
   return TRUE;
 } /* tsdb_sort_tuples () */
-
-
-BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
-                                Tsdb_tuple **tuples) {
-
-/*****************************************************************************\
-|*        file: 
-|*      module: tsdb_insert_into_selection()
-|*     version: 
-|*  written by: andrew p. white & oe, dfki saarbruecken
-|* last update: 16-jul-95
-|*  updated by: oe, dfki saarbruecken
-|*****************************************************************************|
-|* tsdb_insert_into_selection() inserts .tuples. into all key lists of
-|* .selection.; note that .tuples. is not copied; a call with all arguments
-|* NULL pointers resets the static memory (i.e. called in a series it is
-|* assumed that .selection. is the same unless indicated by a reset call).
-|*****************************************************************************|
-|* <known bugs>
-|* for several key lists and growing length the linear search turns out to be
-|* too inefficient; hence, the plan is to add a second level index or similar.
-|* --- which may now be unnecessary thanx to the static memory (16-jul-96 oe).
-\*****************************************************************************/
-
-
-  Tsdb_value *value, *comparison;
-  Tsdb_key_list *new, *next;
-  static Tsdb_key_list **last = (Tsdb_key_list **)NULL;
-  int i, j, offset, n_tuples;
-  static int n_key_lists = 0;
-  BOOL kaerb;
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-  float time = tsdb_timer(TSDB_START_TIMER);
-  int n_keys = 0;
-#endif
-
-  if(selection == NULL && tuples == NULL) {
-    if (last)
-      free(last);
-    last = (Tsdb_key_list **)NULL;
-    n_key_lists = 0;
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-    (void)tsdb_timer(time);
-#endif
-    return(FALSE);
-  } /* if */
-  else if(last == NULL && !n_key_lists) {
-    n_key_lists = selection->n_key_lists;
-    last = (Tsdb_key_list **)malloc(n_key_lists * sizeof(Tsdb_key_list *));
-    for(i = 0; i < n_key_lists; i++) {
-      last[i] = (Tsdb_key_list *)NULL;
-    } /* for */
-  } /* if */
-
-  for(n_tuples = 0; tuples != NULL && tuples[n_tuples] != NULL; n_tuples++);
-  for(i = 0, offset = 0; i < selection->n_relations; i++, offset += j) {
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-    n_keys += selection->relations[i]->n_keys;
-#endif    
-    for (j = 0; j < selection->relations[i]->n_keys; j++) {
-      kaerb = FALSE;
-      value = tuples[i]->fields[selection->relations[i]->keys[j]];
-      if(selection->key_lists[offset + j] != NULL) {
-
-        if(last[offset + j] != NULL) {
-          switch(tsdb_value_compare(value, last[offset + j]->key)) {
-            case TSDB_GREATER_THAN:
-            case TSDB_EQUAL:
-              new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
-              new->key = value;
-              new->tuples = tuples;
-              new->n_tuples = n_tuples;
-              new->next = (Tsdb_key_list *)NULL;
-              last[offset + j]->next = new;
-              last[offset + j] = new;
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-              fprintf(tsdb_debug_stream,
-                      "insert_into_selection(): "
-                      "appended tuple at position %d.\n", selection->length);
-              fflush(tsdb_debug_stream);
-#endif
-              continue;
-          } /* switch */
-        } /* if */
-
-        comparison = selection->key_lists[offset + j]->key;
-        switch(tsdb_value_compare(value, comparison)) {
-          case TSDB_GREATER_THAN:
-            next = selection->key_lists[offset + j];
-            while(!kaerb && next->next != NULL) {
-              comparison = next->next->key;
-              switch(tsdb_value_compare(value, comparison)) {
-              case TSDB_GREATER_THAN:
-                next = next->next;
-                break;
-              case TSDB_EQUAL:
-              case TSDB_LESS_THAN:
-                kaerb = TRUE;
-                break;
-              default:
-                fprintf(tsdb_error_stream,
-                        "insert_into_selection(): ignoring invalid tuple.\n");
-                return(FALSE);
-              } /* switch */
-            } /* while */
-
-            new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
-            new->key = value;
-            new->tuples = tuples;
-            new->n_tuples = n_tuples;
-            new->next = next->next;
-            next->next = new;
-            kaerb = TRUE;
-            break;
-          case TSDB_EQUAL:
-          case TSDB_LESS_THAN:
-            break;
-          default:
-            fprintf(tsdb_error_stream,
-                    "insert_into_selection(): ignoring invalid tuple.\n");
-            return(FALSE);
-          } /* switch */
-      } /* if */
-      if(!kaerb) {
-        new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
-        new->key = value;
-        new->tuples = tuples;
-        new->n_tuples = n_tuples;
-        new->next = selection->key_lists[offset + j];
-        selection->key_lists[offset + j] = new;
-        if(last[offset + j] == NULL) {
-          last[offset + j] = new;
-        } /* if */
-      } /* if */
-    } /* for */
-  } /* for */
-#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
-  if((time = tsdb_timer(time)) != (float)-1) {
-    fprintf(tsdb_debug_stream,
-            "insert_into_selection(): inserted %d tuple(s) (%d key lists) "
-            "in %.3f seconds.\n",
-            n_tuples, n_keys, time);
-    fflush(tsdb_debug_stream);
-  } /* if */
-#endif
-  return(TRUE);
-
-} /* tsdb_insert_into_selection() */
 
 int comp(char **a,char**b) {
   return(strcmp(*a,*b));

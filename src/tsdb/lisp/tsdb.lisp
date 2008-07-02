@@ -125,7 +125,7 @@
   (declare (special *tsdb-podium-home* *tsdb-podium* *tsdb-wish-application*
                     *string-similarity-binaries*
                     *statistics-readers* *statistics-browsers* 
-                    *statistics-predicates* *mmt-root*))
+                    *statistics-predicates* *mmt-root* *chasen-application*))
   
   (unless (and *tsdb-initialized-p* (null action) (null rc))
     (let* ((*tsdb-initialized-p* t)
@@ -167,10 +167,19 @@
               (list
                (cons :torbjoern (format nil "~a/ntnu/bleu/bleu.pl" root))
                (cons :wa (format nil "~a/ntnu/bleu/wa.pl" root))
-               (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root)))))))
-      (when (and (or (null action) (member action '(:tsdbrc :all)))
-                 (probe-file tsdbrc))
-        (load tsdbrc))
+               (cons :waft (format nil "~a/ntnu/bleu/wa.pl -t" root))))
+            (setf *chasen-application*
+              (format nil "~a/bin/chasen" root)))))
+      (when (and (or (null action) (member action '(:tsdbrc :all))))
+        #+:logon
+        (let* ((home (getenv "LOGONROOT"))
+               (home (when home (namestring (parse-namestring home))))
+               (home (make-pathname :directory home))
+               (tsdbrc (when home (dir-and-name home "dot.tsdbrc"))))
+          (when (and tsdbrc (probe-file tsdbrc))
+            (let ((*package* (find-package :tsdb))) (load tsdbrc))))
+        (when (probe-file tsdbrc)
+          (let ((*package* (find-package :tsdb))) (load tsdbrc))))
       (let* ((home (if (stringp *tsdb-home*)
                      (make-pathname :directory *tsdb-home*)
                      *tsdb-home*))
@@ -183,6 +192,8 @@
           (setf *tsdb-skeletons*
             (with-open-file (stream index :direction :input)
               (read stream nil nil)))))
+      (setf (gethash :derivation *statistics-readers*) "read-from-string")
+      (setf (gethash :flags *statistics-readers*) "read-from-string")
       (when (find-package :lkb)
         (when (null *tsdb-trees-hook*)
           (setf *tsdb-trees-hook* "lkb::parse-tree-structure")))

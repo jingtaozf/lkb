@@ -19,17 +19,17 @@
 
 (defparameter *mt-analysis-weight* 0.1)
 
-(defparameter *mt-transfer-weight* 0.25)
+(defparameter *mt-transfer-weight* 0.1)
 
-(defparameter *mt-realization-weight* 0.1)
+(defparameter *mt-realization-weight* 0.25)
 
 (defparameter *mt-lm-weight* 0.25)
 
 (defparameter *mt-distortion-weight* 0.1)
 
-(defparameter *mt-lfn-weight* 0.1)
+(defparameter *mt-lfn-weight* 0.2)
 
-(defparameter *mt-lnf-weight* 0.1)
+(defparameter *mt-lnf-weight* 0.0)
 
 (defun summarize (profiles &key file meter)
   (when meter (meter :value (get-field :start meter)))
@@ -119,7 +119,7 @@
                               :id i :targets targets :stream tee))
                      (parsep (let ((foo (get-field :readings result)))
                                (and (numberp foo) (> foo 0))))
-                     (fragmentp (let ((foo (get-field :fragments result)))
+                     (fragmentp (let ((foo (get-field :nfragments result)))
                                   (and (numberp foo) (> foo 0))))
                      (transfers (get-field :transfers result))
                      (transferp (loop
@@ -163,12 +163,13 @@
         (format capture "~%</run>~%")
         (when (stringp xml) (close capture))))))
 
-(defun translate-string (input &key id (wf 1) targets nhypotheses
+(defun translate-string (input &key id (wf 1) targets nanalyses
                                     (stream *tsdb-io*)
                                     (format :ascii)
                                     (types '(:neva :bleu :torbjoern :wa))
                                     filter index)
-
+  (declare (special %model%))
+  
   ;;
   ;; in HTML mode, use extra cell (instead of a container and margins) to get
   ;; better dynamic rendering (in Mozilla, at least).          (25-jan-05; oe)
@@ -190,8 +191,23 @@
       (current-time :long :short) id (and (numberp wf) (zerop wf)) input)))
   (force-output stream)
   
-  (let ((start (get-internal-real-time))
-        (parse (pvm-process input :parse :wait 30 :filter filter)))
+  (let* ((start (get-internal-real-time))
+         (nanalyses
+          (if (stringp nanalyses)
+            (loop
+                with split
+                = #+:ppcre (ppcre:split "[^0-9]" nanalyses) #-:ppcre nil
+                for match = (pop split)
+                for i = (or (ignore-errors (read-from-string match)) 0)
+                repeat 4
+                collect i)
+            (and (numberp nanalyses) (> nanalyses 0)
+                 (list nanalyses nanalyses nanalyses nanalyses))))
+         (parse
+          (pvm-process
+           input :parse :wait 30 :filter filter
+           :nanalyses (first nanalyses))))
+
     (print-result
      parse :stream stream :format format :index index :format format)
     (case format
@@ -207,10 +223,8 @@
         with rmin with rmax with lmin with lmax
         with nfmin with nfmax with fnmin with fnmax with dmin with dmax
         with analyses = (get-field :results parse)
-        with fragments = (get-field :fragments parse)
-        with n = (if (and (numberp nhypotheses) (> nhypotheses 0))
-                   nhypotheses
-                   (length analyses))
+        with nfragments = (get-field :nfragments parse)
+        with n = (if (consp nanalyses) (first nanalyses) (length analyses))
         with transfers
         with translations
         with ntransfers = 0
@@ -221,9 +235,12 @@
         for i from 1 to n
         for result in analyses
         for aid = (get-field :result-id result)
-        for ascore = (get-field :ascore (get-field :flags result))
-        for transfer = (pvm-process
-                        parse :transfer :result-id aid :filter filter)
+        for aflags = (get-field :flags result)
+        for ascore = (get-field :ascore aflags)
+        for transfer
+        = (pvm-process
+           parse :transfer :result-id aid :filter filter
+           :nanalyses (second nanalyses))
         for realizations = nil
         when (numberp ascore) do
           (when (or (null amin) (< ascore amin)) (setf amin ascore))
@@ -256,15 +273,17 @@
           (force-output stream)
           (loop
               with analyses = (get-field :results transfer)
-              with n = (if (and (numberp nhypotheses) (> nhypotheses 0))
-                         nhypotheses
-                         (length analyses))
+              with n
+              = (if (consp nanalyses) (second nanalyses) (length analyses))
               for j from 1 to n
               for result in (get-field :results transfer)
               for tid = (get-field :result-id result)
-              for tscore = (get-field :tscore (get-field :flags result))
-              for realization = 
-                (pvm-process transfer :generate :result-id tid :filter filter)
+              for tflags = (get-field :flags result)
+              for tscore = (get-field :tscore tflags)
+              for realization
+              = (pvm-process
+                 transfer :generate :result-id tid :filter filter
+                 :nanalyses (third nanalyses))
               when (numberp tscore) do
                 (when (or (null tmin) (< tscore tmin)) (setf tmin tscore))
                 (when (or (null tmax) (> tscore tmax)) (setf tmax tscore))
@@ -301,16 +320,16 @@
                     for result in results
                     for rid = (get-field :result-id result)
                     for surface = (get-field :surface result)
-                    for flags = (get-field :flags result)
+                    for rflags = (get-field :flags result)
                     for rscore = (or (get-field :score result)
-                                     (when (consp flags)
-                                       (get-field :rscore flags)))
-                    for lm = (when (consp flags) (- (get-field+ :lm flags 0)))
+                                     (when (consp rflags)
+                                       (get-field :rscore rflags)))
+                    for lm = (and (consp rflags) (- (get-field :lm rflags)))
                     for distortion
-                    = (or (and (consp flags) (get-field :distortion flags)) 0)
-                    for distance = (let ((foo (when (consp flags)
+                    = (and (consp rflags) (get-field :distortion rflags))
+                    for distance = (let ((foo (when (consp rflags)
                                                 (get-field
-                                                 :distance flags))))
+                                                 :distance rflags))))
                                      (when (and (numberp foo) (> foo 0))
                                        foo))
                     for scores = (let ((scores
@@ -350,11 +369,11 @@
                       (when (or (null nfmax) (> lnf nfmax)) (setf nfmax lnf))
                     do
                       (let ((flags
-                             (nconc
+                             (append
                               (pairlis types scores)
                               (pairlis '(:aid :tid :rid) (list aid tid rid))
                               (pairlis '(:lfn :lnf) (list lfn lnf))
-                              flags)))
+                              aflags tflags rflags)))
                         (if (get-field :flags result)
                           (setf (get-field :flags result) flags)
                           (nconc result (acons :flags flags nil))))
@@ -388,13 +407,21 @@
                       (force-output stream)
                     when (and (stringp surface) (numberp rscore))
                     do
-                      (push (pairlis '(:aid :tid :rid :string :flags
-                                       :ascore :tscore :rscore :lm
-                                       :distortion :lfn :lnf :bleu :distance)
-                                     (list aid tid rid surface flags
-                                           ascore tscore rscore lm
-                                           distortion lfn lnf bleu distance))
-                            translations)
+                      (let* ((flags (get-field :flags result))
+                             (translation
+                              (pairlis '(:aid :tid :rid :string :flags
+                                         :ascore :tscore :rscore :lm
+                                         :distortion :distance
+                                         :lfn :lnf :bleu)
+                                       (list aid tid rid surface flags
+                                             ascore tscore rscore lm
+                                             distortion distance
+                                             lfn lnf bleu)))
+                             (score (mem-score-result
+                                     result %model% :normalizep :minmax)))
+                        (when score
+                          (nconc translation (acons :score score nil)))
+                        (push translation translations))
                       (incf ntranslations))
                 (force-output stream)
                 (push realization realizations))
@@ -440,35 +467,37 @@
                 for lnf = (get-field+ :lnf translation 0)
                 for distance = (get-field+ :distance translation 0)
                 for score
-                = (+ (* *mt-analysis-weight*
-                        (if (and ascore arange)
-                          (divide (- ascore amin) arange)
-                          0))
-                     (* *mt-transfer-weight*
-                        (if (and tscore trange)
-                          (divide (- tscore tmin) trange)
-                          0))
-                     (* *mt-realization-weight*
-                        (if (and rscore rrange)
-                          (divide (- rscore rmin) rrange)
-                          0))
-                     (* *mt-lm-weight*
-                        (if (and lm lrange)
-                          (divide (- lm lmin) lrange)
-                          0))
-                     (* *mt-distortion-weight*
-                        (if (and distortion drange)
-                          (divide (- distortion dmin) drange)
-                          0))
-                     (* *mt-lfn-weight*
-                        (if (and lnf fnrange)
-                          (divide (- lfn fnmin) fnrange)
-                          0))
-                     (* *mt-lnf-weight*
-                        (if (and lnf nfrange)
-                          (divide (- lnf nfmin) nfrange)
-                          0))
-                     (- distance))
+                = (or (get-field :score translation)
+                      (+ (* *mt-analysis-weight*
+                            (if (and ascore arange)
+                              (divide (- ascore amin) arange)
+                              0))
+                         (* *mt-transfer-weight*
+                            (if (and tscore trange)
+                              (divide (- tscore tmin) trange)
+                              0))
+                         (* *mt-realization-weight*
+                            (if (and rscore rrange)
+                              (divide (- rscore rmin) rrange)
+                              0))
+                         (* *mt-lm-weight*
+                            (if (and lm lrange)
+                              (divide (- lm lmin) lrange)
+                              0))
+                         (* *mt-distortion-weight*
+                            (if (and distortion drange)
+                              (divide (- distortion dmin) drange)
+                              0))
+                         (* *mt-lfn-weight*
+                            (if (and lnf fnrange)
+                              (divide (- lfn fnmin) fnrange)
+                              0))
+                         (* *mt-lnf-weight*
+                            (if (and lnf nfrange)
+                              (divide (- lnf nfmin) nfrange)
+                              0))
+                         (- distance)))
+                unless (get-field :score translation)
                 do (nconc translation (acons :score score nil))
                 when (or (null (gethash string scores))
                          (> score (gethash string scores)))
@@ -499,6 +528,8 @@
              translations
              #'> :key #'(lambda (foo) (get-field :score foo))))
           (loop
+              with n
+              = (if (consp nanalyses) (fourth nanalyses) (length translations))
               initially
                 (let ((n (length translations)))
                   (case format
@@ -509,7 +540,7 @@
                        ~:[~;^~]~a x ~a x ~a = ~
                        ~:[~*~a~;~a [~a]~]~%"
                       (and (numberp wf) (zerop wf)) input id
-                      (and (numberp fragments) (> fragments 0))
+                      (and (numberp nfragments) (> nfragments 0))
                       (length analyses) ntransfers nrealizations
                       (not (= ntranslations n)) n ntranslations)
                      (loop
@@ -525,10 +556,11 @@
                              ~:[~*~a~;~a [~a]~]</td>~
                            <td class=\"flowRightBorder\"></td>~%"
                       (and (numberp wf) (zerop wf)) input id 
-                      (and (numberp fragments) (> fragments 0))
+                      (and (numberp nfragments) (> nfragments 0))
                       (length analyses) ntransfers nrealizations
                       (not (= ntranslations n)) n ntranslations))))
               for translation in translations
+              for i from 1 to n
               when (eq translation (first translations))
               do (setf first (get-field :bleu translation))
               do
@@ -537,7 +569,7 @@
                    (format
                     stream
                     "|> |~@[~a~]|~@[ [~a]~] ~
-                     {~@[~,2f~]} <~@[~,2f~]> (~a:~a:~a).~%"
+                     {~@[~,2e~]} <~@[~,2f~]> (~a:~a:~a).~%"
                     (get-field :string translation) 
                     (get-field :distance translation) 
                     (get-field :score translation) 
@@ -551,7 +583,7 @@
                     "<tr><td class=\"flowLeftBorder\"></td>~
                          <td class=\"flow\" colspan=3>~
                            <span class=\"flowOutput\">~@[~a~]</span>~
-                           ~@[ [~a]~] {~@[~,2f~]} ~
+                           ~@[ [~a]~] {~@[~,2e~]} ~
                            (~a:~a:~a).</td>~
                          <td class=\"flowRightBorder\"></td>~%"
                     (get-field :string translation) 
@@ -633,11 +665,11 @@
     (format
      stream
      "~a<item type=\"~(~a~)\"~@[ id=\"~a\"~] ~
-           readings=\"~a\"~@[ fragments=\"~a\"~]~@[ tcpu=\"~d\"~]>~%"
+           readings=\"~a\"~@[ nfragments=\"~a\"~]~@[ tcpu=\"~d\"~]>~%"
      prefix type
      (when (eq type :analysis) (get-field :i-id item))
      (get-field :readings item) 
-     (get-field :fragments item) (get-field :tcpu item))
+     (get-field :nfragments item) (get-field :tcpu item))
 
     ;;
     ;; first off, get the end-to-end summary out: the original string, followed
@@ -762,12 +794,12 @@
                  (error "no ~(~a~) PVM client" task)))
          
          (let* ((item (translate-string
-                       string :id id :wf wf :nhypotheses nanalyses :stream log
+                       string :id id :wf wf :nanalyses nanalyses :stream log
                        :filter filter :targets targets))
                 (tgc 0) (tcpu 0) (treal 0) (conses 0) (symbols 0) (others 0)
                 (total 0) (readings 0) outputs (errors "") 
                 (nparses 0) (ntransfers 0) (nrealizations 0)
-                (nfragments (get-field :fragments item))
+                (nfragments (get-field :nfragments item))
                 (ntranslations (length (get-field :translations item))))
            
            (setf stop (get-internal-run-time))
@@ -787,7 +819,6 @@
            (loop
                for transfer in (get-field :transfers item)
                for result in (get-field :results item)
-               for aflags = (get-field :flags result)
                for pid = (get-field :result-id result)
                do
                  (incf nparses)
@@ -805,7 +836,6 @@
                  (loop
                      for realization in (get-field :realizations transfer)
                      for result in (get-field :results transfer)
-                     for tflags = (get-field :flags result)
                      for tid = (get-field :result-id result)
                      do
                        (incf ntransfers)
@@ -825,16 +855,17 @@
                               errors pid tid error))))
                        (loop
                            for result in (get-field :results realization)
-                           for rflags = (get-field :flags result)
-                           for olength = (get-field :length rflags)
-                           for ratio = (float (divide olength length))
-                           for flags
-                           = (acons :ratio ratio (append aflags tflags))
+                           for ratio 
+                           = (let* ((surface (get-field :surface result))
+                                    (olength (+ 1 (count #\space surface))))
+                               (and surface (float (divide olength length))))
+                           for flags = (and ratio (acons :ratio ratio nil))
                            do
                              (incf nrealizations)
-                             (if (get-field :flags result)
-                               (nconc (get-field :flags result) flags)
-                               (nconc result (acons :flags flags nil)))
+                             (when flags
+                               (if (get-field :flags result)
+                                 (nconc (get-field :flags result) flags)
+                                 (nconc result (acons :flags flags nil))))
                              (push (acons :result-id readings result) outputs)
                              (incf readings))))
            
@@ -843,12 +874,12 @@
              (:readings . ,readings) (:total . ,total) (:error . ,errors)
              (:comment . ,(format 
                            nil
-                           "(:nanalyses . ~a) (:ntransfers . ~a) ~
+                           "(:nanalyses . ~s) (:ntransfers . ~a) ~
                             (:nrealizations . ~a) (:ntranslations . ~a)"
                            nparses ntransfers nrealizations ntranslations))
              (:trace . ,(get-output-stream-string log))
              (:results . ,outputs)
-             (:fragments . ,nfragments)
+             (:nfragments . ,nfragments)
              (:fan . ,(list nparses ntransfers nrealizations ntranslations))
              (:fbleu . ,(get-field :fbleu item))
              (:bbleu . ,(get-field :bbleu item)))))
@@ -1057,7 +1088,7 @@
                            (:tst "tstset")
                            (:src "srcset")
                            (t (error
-                               "mteval-string(): unrecognized type `~a'"
+                               "score-string(): unrecognized type `~a'"
                                type))))
                     (name (or name
                               (format
@@ -1402,17 +1433,19 @@
   oracle)
 
 #+:logon
-(let ((vurl "http://visl.dk/trs")
-      (vscanner (ppcre:create-scanner
-                 "Translated Output</[hH]2><[bB][rR] */>([^<]+)"))
+(let ((vurl "http://www.gramtrans.com")
+      (vscanner (ppcre:create-scanner "<blockquote[^<]*><br/>([^<]+)"))
       (nurl "http://babel.hf.ntnu.no/babelcgi/translate/translate.cgi/right")
       (nscanner (ppcre:create-scanner
                  "translation</[hH]1><[bB]>([^<]+)" :case-insensitive-mode t))
       (iurl "http://www.tranexp.com:2000/Translate/result.shtml")
-      (iscanner "\"translation\" *>([^<]+)"))
+      (iscanner "\"translation\" *>([^<]+)")
+      (gurl "http://www.google.com/translate_t?sl=no&tl=en")
+      (gscanner "<div id=\"?result_box\"?[^>]*>([^<]+)"))
   (defun www-translate-item (input
-                             &key (engine (or *mt-engine* :visl))
+                             &key (engine (or *mt-engine* :google))
                                   (format :ascii)
+                                  (source :no) (target :en)
                                   id (wf 1) exhaustive nanalyses trace
                                   edges derivations semantix-hook trees-hook
                                   filter (nresults 0) targets burst)
@@ -1425,6 +1458,10 @@
             (if trace (make-broadcast-stream *standard-output* stream) stream))
            (ua (or (and (consp engine) (get-field :ua engine))
                    "LOGON MT Syndicator"))
+           (source (or source
+                       (and (consp engine) (get-field :source engine))))
+           (target (or target
+                       (and (consp engine) (get-field :target engine))))
            (delay (and (consp engine) (get-field :delay engine)))
            (engine (if (consp engine) (get-field :engine engine) engine))
            start stop)
@@ -1464,7 +1501,7 @@
                            (drakma:http-request
                             vurl
                             :method :post :user-agent ua
-                            :parameters `(("pair" . "nor-en")
+                            :parameters `(("pair" . "nor2eng")
                                           ("input" . ,input)))
                          (declare (ignore headers uri stream))
                          (when (= status 200)
@@ -1510,6 +1547,27 @@
                                (subseq
                                 body
                                 (aref starts 0) (aref ends 0))))))))
+                    #+:drakma
+                    (:google
+                     (let ((drakma::*drakma-default-external-format*
+                            :iso-8859-1)
+                           (source (string-downcase (string source)))
+                           (target (string-downcase (string target))))
+                       (multiple-value-bind (body status headers uri stream)
+                           (drakma:http-request
+                            gurl
+                            :method :post :user-agent ua
+                            :parameters `(("sl" . ,source) ("tl" . ,target)
+                                          ("text" . ,input)))
+                         (declare (ignore headers uri stream))
+                         (when (= status 200)
+                           (multiple-value-bind (start end starts ends)
+                               (ppcre:scan gscanner body)
+                             (when (and start end starts ends)
+                               (subseq
+                                body
+                                (aref starts 0) (aref ends 0))))))))
+                     
                     (:smt
                      (first (mt::smt-translate-strings (list input)))))))
 

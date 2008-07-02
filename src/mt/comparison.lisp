@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2004 -- 2008 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by

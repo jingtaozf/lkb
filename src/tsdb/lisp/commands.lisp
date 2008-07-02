@@ -33,15 +33,17 @@
 (in-package "TSDB")
 
 (defun retrieve (&optional condition (data *tsdb-data*)
-                 &key mrs (stream *tsdb-io*) (verbose t) meter)
+                 &key mrs
+                      (output (not *tsdb-ignore-output-p*))
+                      (stream *tsdb-io*) (verbose t) meter)
 
   (initialize-tsdb)
   (when meter
     (status :text (format nil "retrieving `~a' data ..." data)))
-  (let* ((imeter (if *tsdb-ignore-output-p*
-                   meter
-                   (madjust * meter 0.5)))
-         (ometer (unless *tsdb-ignore-output-p*
+  (let* ((imeter (if output
+                   (madjust * meter 0.5)
+                   meter))
+         (ometer (when output
                    (madjust + (madjust * meter 0.5) (mduration imeter))))
          (items (select '("i-id" "i-wf" "i-length" "i-input")
                         '(:integer :integer :integer :string)
@@ -50,7 +52,7 @@
                         data
                         :unique nil :sort :i-id
                         :meter imeter))
-         (outputs (unless *tsdb-ignore-output-p*
+         (outputs (when output
                     (select '("i-id" "o-ignore" "o-surface"
                               "o-wf" "o-gc" "o-edges")
                             '(:integer :string :string
@@ -77,15 +79,15 @@
                   for iid = (get-field :i-id item)
                   for length = (get-field+ :i-length item 0)
                   for ogc = -2 for oedges = -2
-                  for output
-                  = (unless *tsdb-ignore-output-p*
+                  for matches
+                  = (when output
                       (loop
                           for record in (member
                                          iid outputs
                                          :key #'(lambda (foo)
                                                   (get-field :i-id foo)))
                           while (= (get-field :i-id record) iid)
-                          do 
+                          do
                             (setf ogc (max ogc (get-field+ :o-gc record -1)))
                             (setf oedges
                               (max oedges (get-field+ :o-edges record -1)))
@@ -96,7 +98,7 @@
                      (pairlis '(:o-gc :o-edges :outputs)
                               (list (and (> ogc -2) ogc)
                                     (and (> oedges 2) oedges)
-                                    output)))
+                                    matches)))
                   when (> length 0) collect item)))
     (when results
       (setf all
@@ -538,7 +540,7 @@
             "~v,0t  <tr>~%~
              ~v,0t    <td><input type=radio name=data value=\"~a\"></td>~%~
              ~v,0t    <td align=left>~a</td><td align=center>~a</td>~
-             <td align=center>~a</td><td align=center>~a~a~a~a</td>~%~
+             <td align=center>~a</td><td align=center>~a~a~a~a~a</td>~%~
              ~v,0t  </tr>~%"
             indentation 
             indentation (get-field :database db)

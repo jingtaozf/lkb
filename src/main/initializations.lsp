@@ -162,10 +162,22 @@
 
       (let* ((home (getenv "DELPHINHOME"))
              (home (when home (namestring (parse-namestring home))))
+             (home (make-pathname :directory home))
              (lkbrc (when home (dir-and-name home "dot.lkbrc"))))
         (when (and lkbrc (probe-file lkbrc))
           (with-package (:lkb) (load lkbrc))))
-          
+
+      ;;
+      ;; when part of the LOGON source tree, initialize appropriately
+      ;;
+      #+:logon
+      (let* ((home (getenv "LOGONROOT"))
+             (home (when home (namestring (parse-namestring home))))
+             (home (make-pathname :directory home))
+             (lkbrc (when home (dir-and-name home "dot.lkbrc"))))
+        (when (and lkbrc (probe-file lkbrc))
+          (with-package (:lkb) (load lkbrc))))
+      
       (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
         (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
       
@@ -187,7 +199,7 @@
       #+:lui
       (let* ((lui (getenv "LUI"))
              (port (and (stringp lui) (parse-integer lui :junk-allowed t))))
-        (when lui (lui-initialize :port port :runtimep runtimep)))
+        (when lui (lui-initialize :port port :runtimep runtimep :lui lui)))
 
       ;;
       ;; no graphics when in :tty mode

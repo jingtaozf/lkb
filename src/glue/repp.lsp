@@ -58,18 +58,18 @@
 
 (defparameter *repp* nil)
 
-(defstruct fspp
+(defstruct repp
   version
   (tokenizer (ppcre:create-scanner "[ \\t]+"))
   global
   local)
 
-(defmethod print-object ((object fspp) stream)
+(defmethod print-object ((object repp) stream)
   (format 
    stream 
-   "#[FSPP (~d global, ~d token-level rules @ `~a')]"
-   (length (fspp-global object)) (length (fspp-local object)) 
-   (fspp-tokenizer object)))
+   "#[REPP (~d global, ~d token-level rules @ `~a')]"
+   (length (repp-global object)) (length (repp-local object)) 
+   (repp-tokenizer object)))
 
 (defstruct fsr
   type
@@ -77,7 +77,7 @@
   scanner
   target)
 
-(defun read-repp (file &key (fspp (make-fspp) fsppp) (prefix ""))
+(defun read-repp (file &key (repp (make-repp) reppp) (prefix ""))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
@@ -100,7 +100,7 @@
                          (version (if (string= version "$Date: " :end1 7)
                                     (subseq version 7 (- (length version) 2))
                                     version)))
-                    (setf (fspp-version fspp) 
+                    (setf (repp-version repp) 
                       (string-trim '(#\Space) version))))
                  ((char= c #\<)
                   (let* ((name (subseq line 1 end))
@@ -108,14 +108,14 @@
                                    (probe-file (merge-pathnames name path)))))
                     (if file
                       (read-repp
-                       file :fspp fspp :prefix (format nil "~a  " prefix))
+                       file :repp repp :prefix (format nil "~a  " prefix))
                         (format
                          t
                          "~aread-repp(): [~d] unable to include `~a'~%"
                          prefix n name))))
                  ((char= c #\:)
                   (let ((tokenizer (subseq line 1 end)))
-                    (setf (fspp-tokenizer fspp) tokenizer)))
+                    (setf (repp-tokenizer repp) tokenizer)))
                  ((member c '(#\! #\- #\+ #\^) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
@@ -135,8 +135,8 @@
                                             :scanner scanner :target target)))
                       (if scanner
                         (if (eq type :replace)
-                          (push match (fspp-global fspp))
-                          (push match (fspp-local fspp)))
+                          (push match (repp-global repp))
+                          (push match (repp-local repp)))
                         (format
                          t
                          "~aread-repp(): [~d] invalid pattern `~a'~%"
@@ -152,13 +152,13 @@
                     prefix ignoring unknown rule type `~a'~%"
                    n c))))
             when (null line) do
-              (unless fsppp
-                (setf (fspp-global fspp)
-                  (nreverse (fspp-global fspp)))
-                (setf (fspp-local fspp)
-                  (nreverse (fspp-local fspp))))
-              (unless fsppp (format t "~a~%" fspp))
-              (return (if fsppp fspp (setf *repp* fspp))))))))
+              (unless reppp
+                (setf (repp-global repp)
+                  (nreverse (repp-global repp)))
+                (setf (repp-local repp)
+                  (nreverse (repp-local repp))))
+              (unless reppp (format t "~a~%" repp))
+              (return (if reppp repp (setf *repp* repp))))))))
 
 (defun repp (string &key (repp *repp*) 
                          (globalp t) (tokenp t)
@@ -168,9 +168,9 @@
   (when (null repp)
     (return-from repp (and (eq format :lkb) string)))
   
-  (let ((tokenizer (and repp (fspp-tokenizer repp)))
-        (global (and repp (fspp-global repp)))
-        (local (and repp (fspp-local repp)))
+  (let ((tokenizer (and repp (repp-tokenizer repp)))
+        (global (and repp (repp-global repp)))
+        (local (and repp (repp-local repp)))
         (length 0)
         result)
     (when globalp

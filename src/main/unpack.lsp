@@ -409,7 +409,7 @@
   (unless (numberp robust) (setf robust 42))
   (unless (numberp limit) (setf limit nil))
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
-    (let ((edges (unpack-edges edges)))
+    (let* ((edges (unpack-edges edges)))
       (if (null test)
         edges
         (loop
@@ -658,9 +658,10 @@
       (let* ((decomposition (hypothesis-decomposition hypothesis))
              (edge (decomposition-lhs decomposition)))
         (when (edge-odag edge) (setf (edge-dag edge) (edge-odag edge)))
-        (when mrs:*lnkp*
-          (setf (edge-dag edge)
-            (lnk-tdfs (edge-dag edge) (list (edge-id edge)))))
+        (case mrs:*lnkp*
+          (:id
+           (setf (edge-dag edge)
+             (lnk-tdfs (edge-dag edge) (list (edge-id edge))))))
         (setf (edge-score edge) (hypothesis-score hypothesis))
         (setf (hypothesis-edge hypothesis) edge)))
      (t
@@ -702,7 +703,7 @@
                   finally
                     (when result
                       (setf id (next-edge :unpack))
-                      (when mrs:*lnkp* (lnk-tdfs result (list id)))
+                      (when (eq mrs:*lnkp* :id) (lnk-tdfs result (list id)))
                       (setf result (restrict-and-copy-tdfs result)))
                     (return
                       (if result

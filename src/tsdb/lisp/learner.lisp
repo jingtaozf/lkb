@@ -40,7 +40,7 @@
 
 (defparameter *maxent-relative-tolerance* 1e-10)
 
-(defparameter *maxent-absolute-tolerance* 1e-10)
+(defparameter *maxent-absolute-tolerance* 1e-20)
 
 (defparameter *maxent-variance* 1e-2)
 
@@ -57,9 +57,7 @@
 
 (defparameter *maxent-debug-p* t)
 
-(defparameter *svm-kernel* 0)
-;;fix_me - convert to keyword format,
-;;eg 0 --> :linear
+(defparameter *svm-kernel* 0) 
 
 (defparameter *svm-error-to-margin* nil)
 
@@ -271,7 +269,7 @@
                (format stream "~%"))
                (format stream "~%:end :features.~%~%:end :model.~%"))))))
 
-(defun read-model (file &key (verbose t))
+(defun read-model (file &key (verbose t) id)
   (labels ((|[|-reader (stream char)
                (declare (ignore char))
                (read-delimited-list #\] stream nil))
@@ -329,6 +327,7 @@
                              (eq (read stream nil nil) :model))
                   (format t "read-model(): invalid model prologue.~%")
                   (return-from read-model))
+                (when id (push (cons id model) *models*))
                 (return (setf %model% model))
               else when bodyp do
                 (unless (and (consp form) (numberp (first form)))

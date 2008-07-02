@@ -198,7 +198,11 @@
           do (extract-discriminants-from-edge child top :mode mode)))
     #+:mrs
     (let* ((eds (mrs::ed-convert-edge edge))
+           (mrs::*eds-include-quantifiers-p* t)
+           (mrs::*eds-include-vacuous-relations-p* t)
            (triples (mrs::ed-explode eds)))
+      (declare (special mrs::*eds-include-quantifiers-p*
+                        mrs::*eds-include-vacuous-relations-p*))
       (loop
           for triple in triples
           for key = (format nil "~{~a~^ ~}" triple)
@@ -219,7 +223,7 @@
       ;; discriminants that characterize that edge; multiple occurrences of the
       ;; same unary rule at the same position (discharging several optional
       ;; complements, say) could be one such case, though.  however, for that
-      ;; to work, we will need to elaborate the notions of discriminats already
+      ;; to work, we will need to elaborate the notion of discriminants already
       ;; because the old-style code would only provide a single occurance of
       ;; that discriminant and, thus, be insufficient to fully disambiguate.  a
       ;; quick-and-dirty way of ruling out these cases, at least, would be to

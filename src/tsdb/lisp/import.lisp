@@ -268,7 +268,7 @@
             (when (and tis tpath)
               (insert tpath "item-set" tis :absolute t))
             item)
-           (t 4))))))))
+           (t 42))))))))
 
 (defun read-items-from-ascii-file (file &key (base 1)
                                              (origin "unknown")
@@ -456,7 +456,7 @@
               (when (and (numberp last) (<= id last))
                 (setf id (+ last 1)))
               (setf last id)
-              (when (eq context :newline) 
+              (when (smember context '(:newline :phenomenon))
                 (setf sid id)
                 (setf rid id))
               (multiple-value-bind (offset extras)
@@ -590,14 +590,14 @@
 
 (defun strip-identifier (string)
   (multiple-value-bind (start end) 
-      (cl-ppcre:scan "^[0-9]+[a-z]\\. " string)
+      (ppcre:scan "^[0-9]+[a-z]\\. " string)
     (unless start
       (multiple-value-setq (start end)
-        (cl-ppcre:scan "^\\[[0-9]{4,5}[a-z]\\]( |$)" string))
+        (ppcre:scan "^\\[[0-9]{4,5}[a-z]\\]( |$)" string))
       (when (numberp start) (incf start)))
     (unless start
       (multiple-value-setq (start end)
-        (cl-ppcre:scan "^\\[[0-9]+\\]( |$)" string))
+        (ppcre:scan "^\\[[0-9]+\\]( |$)" string))
       (when (numberp start) (incf start)))
     (if (numberp end)
       (let ((suffix (subseq string end))

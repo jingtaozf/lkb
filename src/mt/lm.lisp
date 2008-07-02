@@ -142,8 +142,8 @@
        (make-pathname :name "mrs" :type "blm")))
     (setf *utool-binary* (format nil "exec ~a/bin/utool" root)))
   (setf *scrub-stream* nil)
-  (setf *scrub-pid* nil))
-    
+  (setf *scrub-pid* nil)
+  (initialize-smt))
 
 (defun lm-normalize-string (string)
   (when string
@@ -179,6 +179,7 @@
         (setf foo foo))))
   
   (defun lm-score-strings (strings &key (measure *lm-measure*))
+
     (mp:with-process-lock (lock)
       (when (null *lm-input*) (lm-initialize))
       (let (files oovs-files)
@@ -345,6 +346,8 @@
       (let (files lengths)
         
         (loop
+            with mrs::*eds-include-quantifiers-p* = t
+            with mrs::*eds-include-vacuous-relations-p* = t
             for mrs in mrss
             for i from 0
             for file = (format 
@@ -373,15 +376,17 @@
         (let ((results
                (with-open-file (stream *tm-output* :direction :input)
                  (loop
+                     with mrss = (copy-list mrss)
                      for line = (read-line stream nil nil)
                      for perplexity 
-                     = (multiple-value-bind (foo bar)
-                           (ppcre::scan-to-strings 
-                            "^Perplexity = ([0-9.]+)" line)
-                         (setf foo foo)
-                         (when (simple-vector-p bar)
-                           (ignore-errors
-                            (read-from-string (svref bar 0) nil nil))))
+                     = (when line
+                         (multiple-value-bind (foo bar)
+                             (ppcre::scan-to-strings 
+                              "^Perplexity = ([0-9.]+)" line)
+                           (setf foo foo)
+                           (when (simple-vector-p bar)
+                             (ignore-errors
+                              (read-from-string (svref bar 0) nil nil)))))
 		     for score 
 		     = (when (numberp perplexity)
                          (case measure
@@ -393,10 +398,13 @@
                             (error 
                              "tm-score-strings(): unknown score type ~a~%" 
                              measure))))
+                     when (null line) return nil
 		     when score
 		     collect (cons (pop mrss) score)
 		     while mrss))))
           (loop 
               for file in files when (probe-file file) 
               do (delete-file file))
-          results)))))
+          (or results
+              (loop
+                  for mrs in mrss collect (cons mrs 0))))))))

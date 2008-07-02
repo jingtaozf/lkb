@@ -1189,7 +1189,7 @@
     (force-output *tsdb-wish-stream*))
   (unwind-protect 
       (when (or wait recursive)
-        (let ((*package* (find-package "TSDB"))
+        (let ((*package* (find-package :tsdb))
               (form (when (streamp *tsdb-wish-stream*)
                       (read *tsdb-wish-stream* nil nil))))
           (when *tsdb-podium-debug*

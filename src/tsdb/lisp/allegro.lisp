@@ -144,10 +144,23 @@
   ;; is insufficient to make it exit.
   ;;
   (push '(ignore-errors (shutdown-podium)) sys:*exit-cleanup-forms*)
+  ;;
+  ;; with the latest set of CLIM patches, it appears this latter bit results in
+  ;; an `operation on closed stream' error, when shutting down the Lisp.  but
+  ;; it also appears unnecessary, as the podium swish++ ends up duly killed.
+  ;;                                                             (8-feb-08; oe)
   (when (find :compiler *features*)
     (excl:advise mp:process-kill :before nil nil 
                  (when (and *tsdb-wish-process*
                             (eq (first excl:arglist) *tsdb-wish-process*))
-                   (ignore-errors (shutdown-podium))))))
+                   (let* ((stream excl:*initial-terminal-io*)
+                          (*standard-output* stream)
+                          (*debug-io* stream)
+                          (*terminal-io* stream)
+                          (*standard-input* stream)
+                          (*error-output* stream)
+                          (*query-io* stream)
+                          (*trace-output* stream))
+                     (ignore-errors (shutdown-podium)))))))
 
 

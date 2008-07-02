@@ -1,6 +1,6 @@
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment
-# Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 1996 -- 2008 Stephan Oepen (oe@ifi.uio.no)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -42,8 +42,8 @@ proc copyleft {action} {
         -text "$globals(name)  -  version $globals(version)"
       frame $copyleft.zero -bg $bg -height 5
       label $copyleft.first -bg $bg -fg grey -font $small \
-        -text "Copyleft (c) 1995 - 2004 \
-               by Stephan Oepen (oe@csli.stanford.edu) \
+        -text "Copyleft (c) 1995 - 2008 \
+               by Stephan Oepen (oe@ifi.uio.no) \
                -  All Rights Reserved"
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \

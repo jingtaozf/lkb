@@ -474,7 +474,7 @@
                         *intersective-rule-names*))
                   (spelling-change-rule-p r)))
           possible-grules))
-        tgc tcpu conses symbols others (consistent nil) (partial nil))
+        tgc tcpu conses symbols others yield consistent partial)
     
    (with-parser-lock ()
       (clear-gen-chart)
@@ -485,6 +485,7 @@
        #'(lambda () 
            (catch 'first
              ;; Add lexical edges
+             #-:logon
              (dolist (found found-lex-items)
                (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
                       (word (extract-orth-from-fs lex-entry-fs))
@@ -513,6 +514,27 @@
                                    (list :lexicon edge))
                                   (gen-lex-priority lex-entry-fs)))
                    (gen-chart-add-inactive edge input-sem input-rels))))
+             #+:logon
+             (loop
+                 for fl in found-lex-items
+                 for edge = (unfold-found-lex fl)
+                 when *gen-packing-p* do
+                   (setf (edge-odag edge) (edge-dag edge))
+                   (setf (edge-dag edge)
+                     (copy-tdfs-partially (edge-odag edge)))
+                 do
+                   (setf (g-edge-accessible edge)
+                     (collect-semantic-variables-in-fs (g-edge-dag edge)))
+                   ;; each lex entry will be a copy
+                   (incf (statistics-copies *statistics*))
+                   (let ((priority
+                          (when *gen-first-only-p* 
+                            (if *gen-scoring-hook*
+                              (funcall *gen-scoring-hook* (list :lexicon edge))
+                              (gen-lex-priority (g-edge-odag edge))))))
+                     (with-agenda priority
+                       (gen-chart-add-inactive edge input-sem input-rels)))
+                   (push edge yield))
              ;; Process tasks
              (loop 
                  until (empty-heap *agenda*)
@@ -527,6 +549,31 @@
            (declare (ignore tr ignore))
            (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
                  conses (* scons 8) symbols (* ssym 24) others sother)))
+      
+      ;;
+      ;; edges corresponding to lexical rule applications are not in the chart
+      ;; initially, as lexical rules have been applied prior to invocation of
+      ;; chart-generate().  for better post-generation debugging, add the extra
+      ;; edges into the chart now.  it would seem tempting to delegate this to
+      ;; unfold-found-lex(), but because we do not have correct dags for those
+      ;; edges, it would be tricky avoiding unwanted combinatorics; for similar
+      ;; reasons, suppress packing of these edges.               (1-jul-08; oe)
+      ;;
+      #+:logon
+      (loop
+          with *gen-packing-p* = nil
+          for edge in yield
+          do
+            (loop
+                with agenda = (copy-list (edge-children edge))
+                for edge = (pop agenda)
+                while edge do
+                  (gen-chart-add-with-index edge)
+                  (loop
+                      for edge in (edge-children edge)
+                      do (push edge agenda))))
+                  
+      
       (setq %generator-statistics%
         (nconc %generator-statistics%
                (pairlis '(:gtgc :gtcpu :gconses :gsymbols :gothers)
@@ -575,18 +622,19 @@
                          ;; the distance is determined as the second values()
                          ;; returned from the test predicate.   (13-feb-06; oe)
                          ;;
-                         (selectively-unpack-edges
-                          (loop
-                              for edge in candidates
-                              when (gen-chart-check-covering edge input-rels)
-                              collect edge)
-                          nanalyses
-                          :test #'(lambda (edge)
-                                    (and
-                                       (gen-filter-root-edges (list edge))
-                                       (gen-chart-check-compatible edge)))
-                          :robust 42
-                          :limit (and (numberp nanalyses) (* 2 nanalyses))))
+                         (let ((mrs:*lnkp* :id))
+                           (selectively-unpack-edges
+                            (loop
+                                for edge in candidates
+                                when (gen-chart-check-covering edge input-rels)
+                                collect edge)
+                            nanalyses
+                            :test #'(lambda (edge)
+                                      (and
+                                         (gen-filter-root-edges (list edge))
+                                         (gen-chart-check-compatible edge)))
+                            :robust 42
+                            :limit (and (numberp nanalyses) (* 2 nanalyses)))))
                         (t
                          (loop
                              for edge in candidates
@@ -627,7 +675,41 @@
        (statistics-aedges *statistics*)
        (statistics-pedges *statistics*)))))
 
-
+;;;
+;;; the lexical lookup returns results in its own idiosyncratic form; to make
+;;; generator edges look more like corresponding parser edges, `unfold' the
+;;; chain of lexical rules that have been applied already.
+;;;
+(defun unfold-found-lex (fl
+                         &optional (rules (mrs::found-lex-rule-list fl) rulesp)
+                                   (tdfs (mrs::found-lex-inst-fs fl))
+                                   (eps (mrs::found-lex-main-rels fl))
+                                   (id (mrs::found-lex-lex-id fl)))
+  ;;
+  ;; _fix_me_
+  ;; to give these daughter edges a correct TDFS, we would have to re-create
+  ;; the unifications at each level; at the top, however, we always must keep
+  ;; the Skolemized TDFS given to us by lexical lookup.  all a bit messy ...
+  ;;                                                             (9-feb-08; oe)
+  (if (null rules)
+    (let* ((word (extract-orth-from-fs tdfs))
+           (entry (get-lex-entry-from-id id))
+           (tdfs
+            (if rulesp (copy-tdfs-completely (lex-entry-full-fs entry)) tdfs)))
+      (make-g-edge
+       :id (next-edge) :category (indef-type-of-tdfs tdfs) :rule word :dag tdfs
+       :needed nil :rels-covered eps :children nil :leaves (list word)
+       :lex-ids (list id) :lexemes (if rulesp nil (list fl))))
+    (let* ((child (unfold-found-lex fl (rest rules) tdfs eps id))
+           (rid (first rules))
+           (rule (get-lex-rule-entry rid))
+           (tdfs (if rulesp (rule-full-fs rule) tdfs)))
+      (make-g-edge
+       :id (next-edge) :category (indef-type-of-tdfs tdfs) :rule rule :dag tdfs
+       :needed nil :rels-covered eps :children (list child)
+       :leaves (edge-leaves child) :lex-ids (list id)
+       :lexemes (unless rulesp (list fl))))))
+  
 (defun extract-strings-from-gen-record nil
   (loop 
       for edge in *gen-record*
@@ -725,7 +807,7 @@
       ;;
       (let* ((input *generator-internal-mrs*)
              (mrs (let ((mrs:*lnkp* :id)) (mrs::extract-mrs edge)))
-             (mrs (mt:map-mrs mrs :semi :backward)))
+             (imrs (mt:map-mrs mrs :semi :backward)))
         (setf (edge-mrs edge) mrs)
         ;;
         ;; see the comment on extract-string-from-g-edge() for our rationale in
@@ -737,7 +819,7 @@
         ;; later on.
         ;;
         (extract-string-from-g-edge edge)
-        (let* ((mrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs))
+        (let* ((imrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs imrs) imrs))
                #+:logon
                (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
                ;;
@@ -746,7 +828,7 @@
                ;;
                #+:logon
                (types '(("i" "u")))
-               (solution (mt::compare-mrss mrs input :type :subsumption))
+               (solution (mt::compare-mrss imrs input :type :subsumption))
                (distance
                 ;;
                 ;; _fix_me_
@@ -754,7 +836,7 @@
                 ;; ten or so times, the comparison should be able to carry on 
                 ;; when detecting a problem (that can be remedied according to
                 ;; one of the known ways of relaxation) and return a suitable
-                ;; code indicating which exceptions had to be made.
+                ;; code indicating which exception(s) had to be made.
                 ;;                                             (30-may-06; oe)
                 (or (when solution 0)
                     #+:logon
@@ -762,47 +844,47 @@
                       (or
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles))
                          1)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :types types))
                          2)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :properties t))
                          3)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles :types types))
                          4)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles :properties t))
                          5)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles :properties t :types types))
                          6)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :hcons t))
                          7)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles :hcons t))
                          8)
                        (when (setf solution
                                (mt::compare-mrss
-                                mrs input :type :subsumption
+                                imrs input :type :subsumption
                                 :roles roles :properties t :hcons t))
                          9)
                        42)))))
@@ -1492,7 +1574,7 @@
       (format stream "~%Vertex ~(~A~):~%" (car entry))
       (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
                        :key #'edge-id))
-        (when (or activep (> (edge-id e) ))
+        (when (or activep (> (edge-id e) 0))
           (print-gen-chart-edge e stream concise)
           (dolist (p (g-edge-equivalent e))
             (format stream " = packed ")

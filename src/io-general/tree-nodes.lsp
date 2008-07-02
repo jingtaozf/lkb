@@ -700,17 +700,14 @@
        (values nil t nil))))
 
 ;;;
-;;; generate HTML-only rendering of parse tree; requires LKB style sheet
+;;; generate HTML-only rendering of parse tree; requires LOGON CSS and JS
 ;;;
-
 (defun html-tree (edge &key tree (indentation 0) color (stream t))
   (labels ((depth (edge)
              (let ((children (edge-children edge))) 
                (if (null children)
                  1
-                 (+ 1 (loop
-                          for edge in children
-                          maximize (depth edge))))))
+                 (+ 1 (loop for edge in children maximize (depth edge))))))
            (label (edge)
              (cond 
               ((rule-p (edge-rule edge))
@@ -725,14 +722,14 @@
                (let* ((root (label edge))
                       (from (edge-from edge))
                       (to (edge-to edge))
-                      (children (edge-children edge))
-                      (children (unless recursivep
+                      (children (when recursivep
                                   (loop
-                                      for child in children
+                                      for child in (edge-children edge)
                                       collect (derivation child t)))))
                  (format 
                   nil
-                  "~:[~2*~;[~a:~a] ~]~(~a~)~@[ : ~{~a~^ ~}~]"
+                  "<div class=treeNode>~
+                     ~:[~2*~;[~a:~a] ~]~(~a~)~@[ : ~{~a~^ ~}~]</div>"
                   (and (numberp from) (numberp to)) from to root children))
                ""))
            (index (tree cache row column)
@@ -781,13 +778,16 @@
                      "~v,0t    ~
                       <td class=tree~:[Branch~;Leaf~] colspan=~a>~%~v,0t      ~
                       <div class=tree~:[Label~;Form~]~%~v,0t           ~
-                           onMouseOver=\"postStatus('~a')\"~%~v,0t           ~
-                           onMouseOut=\"postStatus('')\">~a</div></td>~%~
+                           onMouseOver=\"treeNodeSelect(this, '~a')\"~%~
+                           ~v,0t           ~
+                           onMouseOut=\"treeNodeUnselect(this)\">~
+                        ~a</div></td>~%~
                       ~:[~*~;~v,0t    <td class=treeMargin>&nbsp;</td>~%~]"
                      indentation
                      leafp (if (= size 1) 1 (- (* size 2) 1)) indentation
                      leafp indentation
-                     comment indentation 
+                     comment
+                     indentation 
                      string
                      (< (+ column (- size 1)) width) indentation)
                     (setf span (- size 1)))
@@ -800,6 +800,44 @@
                    indentation (< column width))
                 else do (decf span))
           do (format stream "~v,0t  </tr>~%" indentation)))))
+
+(defun latex-tree (edge &key tree (format :derivation)
+                             (indentation 0) (stream t))
+  (labels ((label (edge)
+             (cond 
+              ((rule-p (edge-rule edge))
+               (let ((foo (string (rule-id (edge-rule edge)))))
+                 (or (inflectional-rule-p foo) foo)))
+              ((and (null (edge-rule edge)) (edge-category edge))
+               (string (edge-category edge)))
+              (t
+               (string (first (edge-lex-ids edge)))))))
+    (when (null tree)
+      (format stream "~v,0t{%~%" indentation)
+      (incf indentation))
+    (let* ((tree (or tree (make-new-parse-tree edge 1 t))))
+      (if (edge-children edge)
+        (loop
+            for dtree in (get tree 'daughters)
+            for dedge = (get dtree 'edge-record)
+            do (latex-tree
+                dedge :tree dtree :format format
+                :indentation indentation :stream stream))
+        (format
+         stream
+         "~v,0t\\leaf{\\emph{~a}}~%"
+         indentation (first (edge-leaves edge))))
+      (format
+       stream
+       "~v,0t\\branch{~a}{~a}~%"
+       indentation (max (length (edge-children edge)) 1)
+       (latex-escape-string
+        (if (eq format :derivation)
+          (string-downcase (label edge))
+          (get-string-for-edge tree)))))
+    (when (null tree)
+      (format stream "~v,0t\\qobitree}~%" indentation))))
+         
 
 ;;;
 

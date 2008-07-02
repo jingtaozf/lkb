@@ -29,6 +29,11 @@
 (defstruct wp
   in out weight)
 
+(defun initialize-smt ()
+  #+:logon
+  (setf *smt-directory*
+    (namestring (dir-append (get-sources-dir "mt") '(:relative "mt")))))
+
 (defun read-smt (&key file hash)
   (if file
     (multiple-value-bind (input foo pid)

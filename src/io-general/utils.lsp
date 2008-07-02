@@ -221,15 +221,38 @@
      #\fullwidth_exclamation_mark
      #\fullwidth_comma #\ideographic_space)))
 
-(defun alphanumeric-or-extended-p (c)
-  (and (graphic-char-p c) 
-       (not (member c *punctuation-characters* :test #'eql))))
-
 (defun punctuationp (thing)
   (let ((string (string thing)))
     (loop
         for c across string
         always (member c *punctuation-characters*))))
+
+(defun alphanumeric-or-extended-p (c)
+  (and (graphic-char-p c) 
+       (not (member c *punctuation-characters* :test #'eql))))
+
+(defun punctuation-normalize-string (string)
+  (loop
+      with padding = 128
+      with length = (+ (length string) padding)
+      with result = (make-array length
+                                :element-type 'character
+                                :adjustable nil :fill-pointer 0)
+      with space = t
+      for c across string
+      when (or (member c '(#\Space #\Newline #\Tab))
+               (not (alphanumeric-or-extended-p c))) do
+        (when space (incf padding))
+        (unless space
+          (vector-push #\Space result)
+          (setf space :space))
+      else do
+        (vector-push c result)
+        (setf space nil)
+      finally
+        (when (and (eq space :space) (not (zerop (fill-pointer result))))
+          (decf (fill-pointer result)))
+        (return result)))
 
 ;;;  Loading and reloading - called by the tty version as well
 ;;; as the menu driven version
@@ -348,7 +371,7 @@
       ;;
       ;; in order to protect concurrent processes compiling a file in parallel,
       ;; attempt puttting a mandatory lock on the source file while we compile
-      ;; and load it.
+      ;; and load it; try this out in the protected LOGON environment for now.
       ;;
       #+(and :allegro :logon)
       (with-open-file (foo file

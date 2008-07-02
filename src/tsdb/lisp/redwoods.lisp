@@ -46,11 +46,13 @@
 
 (defparameter *redwoods-train-percentage* 100)
 
+(defparameter *models* nil)
+
+(defparameter %model% nil)
+
 (defparameter %redwoods-items-increment% #-:64bit 500 #+:64bit 2000)
 
 (defparameter %redwoods-items-percentile% 20)
-
-(defparameter %model% nil)
 
 (defstruct fc
   file db (strikes 0) cache)
@@ -578,6 +580,7 @@
       (let ((status (lkb::set-up-compare-frame 
                      frame lkb::*parse-record* :runp runp :display display)))
         
+        (sleep 0.5)
         #+:debug 
         (break)
 
@@ -2898,7 +2901,7 @@
    (t
     (let* ((thorough
             (nconc
-             (when (or (> *feature-grandparenting* 0)
+             (when (or (>= *feature-grandparenting* 0)
                        (> *feature-ngram-size* 0))
                '(:derivation))
              (when *feature-flags*
@@ -3026,7 +3029,11 @@
              ;;
              (:svm (let* ((output (format nil "/tmp/.model.~a.~a.svm_weights"
                                           (current-user) (current-pid)))
-             ;; _fix_me_, svm2weights.pl will only work for linear kernels (15-feb-07 erik)
+
+                          ;;
+                          ;; _fix_me_
+                          ;; svm2weights.pl will only work for linear kernels
+                          ;;                                  (15-feb-07; erik)
                           (command (format nil "~a/uio/svm2weights.pl ~a"
                                            (system:getenv "LOGONROOT")
                                            (model-parameters model))))
@@ -3077,13 +3084,20 @@
             (if (and condition (not (equal condition "")))
               (format nil "readings > 1 && (~a)" condition)
               "readings > 1")))
+         ;;
+         ;; _fix_me_
+         ;; in principle, most experiments should be able to make do without
+         ;; any data from the `result' relation (it can be huge and thus slow
+         ;; to retrieve and join from the DB); this is not finished, though.
+         ;;                                                     (23-nov-07; oe)
+         (thorough (append
+                    (and #+:null (eq type :ngram) '(:surface))
+                    (and *feature-flags* '(:flags))))
          (gold (or data
                    (analyze 
                     source 
-                    :thorough (cons :surface (and *feature-flags* '(:flags)))
-                    :condition condition :gold source
+                    :thorough thorough :condition condition :gold source
                     :readerp nil :message meter)))
-         ;; sift out items where readings = t-active
          (nsifted 0)
          (data (loop
                    initially
@@ -3267,7 +3281,7 @@
                                                               nscores)))
                                             0.0)))
                           (if (get-field :f-extras fold)
-                              (nconc (get-field :f-extras fold) similarities)
+                            (nconc (get-field :f-extras fold) similarities)
                             (nconc fold (acons :f-extras similarities nil)))
                           (nconc (get-field :f-extras fold)
                                  (acons :naccuracy naccuracy nil))

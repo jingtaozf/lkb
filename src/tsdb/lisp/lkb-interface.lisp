@@ -166,7 +166,12 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         filter burst (nresults 0))
-  (declare (ignore id derivations filter))
+  (declare (ignore id derivations filter)
+           (special tsdb::*fakes*))
+  
+  (when tsdb::*fakes*
+    (return-from tsdb::parse-item
+      (tsdb::search-fake string)))
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)
@@ -413,7 +418,6 @@
                           strings :measure '(:logprob :perplexity)))
                        #-:lm
                        nil)
-                  
                   (scores
                    (loop
                        for edge in *gen-record*
@@ -429,7 +433,19 @@
                          ;;
                          ;; _fix_me_
                          ;; treat fragments properly.           (18-may-07; oe)
+                         ;; --- but then, the original motivation for using the
+                         ;; perplexity (rather than logprob) score was to avoid
+                         ;; penalizing longer strings, which often correspond
+                         ;; to more MRS fragments succeeding in generation.  
+                         ;; thus, it is not entirely clear what `properly' 
+                         ;; should mean here.  just using the perplexity score,
+                         ;; on the other hand, throws off re-ranking, skewing
+                         ;; the range of values it will see as the realization 
+                         ;; ranker score.                       (29-jan-08; oe)
                          ;;
+                         (tsdb::mem-score-result
+                          (pairlis '(:edge :lm) (list edge lm)))
+                         #+:null
                          (if (edge-dag edge)
                            (tsdb::mem-score-result
                             (pairlis '(:edge :lm) (list edge lm)))
@@ -740,7 +756,6 @@
            (lexemes (when (g-edge-p edge) (g-edge-lexemes edge))))
       
       (cond
-       #+:mrs
        ((and (g-edge-p edge) lexemes
              (not (null (mrs::found-lex-rule-list (first lexemes))))
              (null (edge-children edge)))

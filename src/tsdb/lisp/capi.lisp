@@ -76,6 +76,7 @@
                       (get-field :i-input item)))
          (parse-id (get-field :parse-id item))
          (edges (or (get-field :edges item) 0))
+         (nanalyses (if (integerp nanalyses) nanalyses 0))
          (interactive (if interactive 1 0))
          (status 
           (_process_item tid i-id i-input parse-id 

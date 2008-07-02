@@ -194,7 +194,7 @@
 ;;; make debugging with MRSs a little easier: print very compact representation
 ;;; of object by default; set *mrs-raw-output-p* to see things in full glory.
 ;;;
-(defparameter *mrs-raw-output-p* t)
+(defparameter *mrs-raw-output-p* #-:logon t #+:logon nil)
 
 ;;;
 ;;; provide a way of suppressing select roles in output; useful when preparing
@@ -855,11 +855,13 @@ higher and lower are handle-variables
        stream 
        "</tr></table></td></tr>~%~
         <tr><td><table class=mrsRelsContainer><tr>~%"))
-    (format 
-     stream 
-     "    <td><table class=mrs~:[~*~;~:(~a~)~]Relation>~%      ~
-      <tr><td class=mrsPredicate colspan=2>~(~a~)"
-     class class pred)
+    (let* ((pred (string-downcase pred))
+           (pred (remove-right-sequence *sem-relation-suffix* pred)))
+      (format 
+       stream 
+       "    <td><table class=mrs~:[~*~;~:(~a~)~]Relation>~%      ~
+        <tr><td class=mrsPredicate colspan=2>~(~a~)"
+       class class pred))
     (output-lnk lnk :stream stream)
     (format stream "</td>~%")
     (incf i)))
@@ -952,6 +954,167 @@ higher and lower are handle-variables
         finally (format stream "</script>~%"))))
      
 
+;;; 
+;;; LaTeX output-type class
+;;;
+(defun latex-escape-string (string)
+  (if (and string (or (stringp string) (symbolp string)))
+    (loop
+        with string = (string string)
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (member c '(#\_ #\% #\# #\{ #\}) :test #'char=) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    string))
+
+(defclass latex (output-type) 
+  ((context :initform nil)
+   (variables :initform nil)
+   (memory :initform nil)))
+
+(defmethod initialize-display-structure ((class latex) mrs &optional n)
+  (declare (ignore mrs n)))
+    
+(defmethod mrs-output-start-fn ((mrs latex)))
+
+(defmethod mrs-output-end-fn ((mrs latex)))
+
+(defmethod mrs-output-start-psoa ((mrs latex))
+  (with-slots (stream) mrs
+    (format stream "\\sblock{")))
+
+(defmethod mrs-output-top-h ((mrs latex) handle
+			     &optional properties type id)
+  (declare (ignore properties type))
+  (with-slots (stream context) mrs
+    (push :mute context)
+    (when (and handle *rel-handel-path*)
+      (format stream "\\sh{~a}" id))))
+
+(defmethod mrs-output-index ((mrs latex) index 
+			     &optional properties type id)
+  (declare (ignore index properties type id)))
+
+(defmethod mrs-output-start-liszt ((mrs latex))
+  (declare (special *already-seen-vars*))
+  ;;
+  ;; because we do not include the (illegitimate) index in LaTeX output (at
+  ;; least not by default), we need to reset the set of seen variables at this
+  ;; point.
+  ;;
+  (setf *already-seen-vars* nil)
+  (with-slots (stream context) mrs
+    (format stream "}{%~%")
+    (setf context nil)))
+
+(defmethod mrs-output-var-fn ((mrs latex) variable 
+			      &optional properties type id)
+  (with-slots (stream context variables) mrs
+    (format
+     stream
+     "{\\svar{~a}{~a}~@[{}~*~]"
+     type id
+     (or (null properties)
+         (member variable variables :test #'equal)
+         (eq (first context) :mute)))
+    (pushnew variable variables :test #'equal)))
+
+(defmethod mrs-output-atomic-fn ((mrs latex) value)
+  (with-slots (stream) mrs (format stream "{\\sconst{~a}" value)))
+
+(defmethod mrs-output-start-rel ((mrs latex) pred firstp class
+				 &optional lnk str)
+  (declare (ignore firstp class lnk str))
+  (with-slots (memory stream context) mrs
+    (if (eq (first context) :ep)
+      (format stream ",\\\\~%")
+      (push :ep context))
+    (format stream "  \\sep")
+    (let* ((pred (string-downcase pred))
+           (pred (remove-right-sequence *sem-relation-suffix* pred)))
+      (setf memory (latex-escape-string pred)))))
+
+(defmethod mrs-output-rel-handel ((mrs latex) handle 
+				  &optional properties sort id)
+  (declare (ignore handle properties sort))
+  (with-slots (stream memory) mrs
+    (format
+     stream
+     "{~@[\\sh{~a}~]}{\\spred{~:[\\srule~;~(~a~)~]}}{%~%"
+     id memory memory)))
+
+(defmethod mrs-output-label-fn  ((mrs latex) label)
+  (with-slots (stream context) mrs
+    (if (eq (first context) :roles)
+      (format stream "},~%")
+      (push :roles context))
+    (format stream "    \\srole{~:@(~a~)}" label)))
+
+(defmethod mrs-output-start-extra ((mrs latex) type)
+  (declare (ignore type))
+  (with-slots (stream context) mrs
+    (unless (eq (first context) :mute) (format stream "{"))))
+
+(defmethod mrs-output-extra-feat  ((mrs latex) feature)
+  (with-slots (stream context) mrs
+    (unless (eq (first context) :mute)
+      (if (eq (first context) :extras)
+        (format stream ", ")
+        (push :extras context))
+      (format stream "\\svp{~:@(~a~)}"  feature))))
+
+(defmethod mrs-output-extra-val  ((mrs latex) value)
+  (with-slots (stream context) mrs
+    (unless (eq (first context) :mute)
+      (format stream "{~(~a~)}" (latex-escape-string value)))))
+
+(defmethod mrs-output-end-extra ((mrs latex))
+  (with-slots (stream context) mrs
+    (unless (eq (first context) :mute)
+      (format stream "}")
+      (when (eq (first context) :extras) (pop context)))))
+
+(defmethod mrs-output-end-rel ((mrs latex))
+  (with-slots (stream context) mrs
+    (format stream "}}")
+    (when (eq (first context) :roles) (pop context))))
+
+(defmethod mrs-output-end-liszt ((mrs latex))
+  (with-slots (stream context) mrs
+    (format stream "}")
+    (when (eq (first context) :ep) (pop context))))
+
+(defmethod mrs-output-start-h-cons ((mrs latex))
+  (with-slots (stream) mrs (format stream "~%  {")))
+
+(defmethod mrs-output-outscopes ((mrs latex) relation higher lower firstp
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore higher lower firstp higher-sort lower-sort))
+  (when (string-equal relation "qeq")
+    (with-slots (stream context) mrs
+      (if (eq (first context) :hcons)
+        (format stream ", ")
+        (push :hcons context))
+      (format stream "\\sqeq{~a}{~a}" higher-id lower-id))))
+
+(defmethod mrs-output-end-h-cons ((mrs latex))
+  (with-slots (stream) mrs (format stream "}")))
+
+(defmethod mrs-output-end-psoa ((mrs latex)))
+     
 ;;; 
 ;;; maximally compact debugging output-type class
 ;;;
@@ -1442,11 +1605,11 @@ higher and lower are handle-variables
      (find-var-name (rel-handel rel) connected-p))
     (print-mrs-extra (rel-handel rel)
 		     :display-to display-to))
-  (loop for feat-val in (rel-flist rel)
+  (loop
+      for feat-val in (rel-flist rel)
       do
 	;; print feature
-	(mrs-output-label-fn display-to
-			     (fvpair-feature feat-val))
+	(mrs-output-label-fn display-to (fvpair-feature feat-val))
 	(let ((value (fvpair-value feat-val)))
 	  ;; print value struct
 	  (if (var-p value)
@@ -1461,20 +1624,19 @@ higher and lower are handle-variables
 (defun print-mrs-hcons (hcons-list connected-p display)
     (mrs-output-start-h-cons display)
     (let ((first-hcons t))
-      (loop for hcons in hcons-list
+      (loop
+          for hcons in hcons-list
+          for scarg = (hcons-scarg hcons)
+          for outscpd = (hcons-outscpd hcons)
           do
             (mrs-output-outscopes 
              display
              (hcons-relation hcons)
-             (find-var-name 
-              (hcons-scarg hcons) connected-p) 
-             (find-var-name 
-              (hcons-outscpd hcons) connected-p)
+             (find-var-name scarg connected-p) 
+             (find-var-name outscpd connected-p)
              first-hcons
-	     (var-id (hcons-scarg hcons))
-	     (var-type (hcons-scarg hcons))
-	     (var-id (hcons-outscpd hcons))
-	     (var-type (hcons-outscpd hcons)))
+	     (and scarg (var-id scarg)) (and scarg (var-type scarg))
+	     (and outscpd (var-id outscpd)) (and outscpd (var-type outscpd)))
             (setf first-hcons nil)))
     ;; extra info can be ignored here because all handels
     ;; will have appeared elsewhere
@@ -1802,7 +1964,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
               (let ((foo (read-mrs-extrapair istream)))
                 (when foo (push foo extra)))))
         (setf (var-type var) var-type)
-        (setf (var-extra var) extra)
+        (setf (var-extra var) (nreverse extra))
         (mrs-check-for #\] istream)))
       var)))
 

@@ -56,7 +56,7 @@
 
 (defstruct cpu 
   host spawn options encoding
-  architecture class task threshold name grammar template
+  architecture class task threshold name grammar template language
   edges analyses results wait quantum
   preprocessor tagger reader
   create complete)
@@ -512,7 +512,7 @@
 (defmacro message-corpse (message)
   `(rest (assoc :corpse ,message)))
 
-(defun shutdown (tid)
+(defun client-shutdown (tid)
   (pvm_transmit tid %pvm_lisp_message% '(:shutdown)))
 
 (defun tid-status (tid)

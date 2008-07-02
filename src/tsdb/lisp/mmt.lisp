@@ -20,6 +20,7 @@
                                   (task '(:parse :generate)))
   (let* ((binary (format nil "~a/bin/logon" root))
          (base (format nil "~a/franz/~a/base.dxl" root mk::%system-binaries%))
+         #-:runtime-standard
          (client (format nil "~a/lingo/client.lisp" root))
          (options (list #-:runtime-standard "--source" 
                         #+:runtime-standard "--binary"
@@ -45,6 +46,7 @@
                           &key (root *mmt-root*))
   (let* ((binary (format nil "~a/bin/logon" root))
          (base (format nil "~a/franz/~a/base.dxl" root mk::%system-binaries%))
+         #-:runtime-standard
          (client (format nil "~a/lingo/client.lisp" root))
          (options (list #-:runtime-standard "--source"
                         #+:runtime-standard "--binary"

@@ -133,7 +133,7 @@
                   (setf utgc (+ tgcu tgcs) utcpu (+ tu ts))
                   (incf treal tr))))
            (pairlis '(:treal :tcpu :tgc :readings
-                      :results :nresults :fragments :comment :error)
+                      :results :nresults :nfragments :comment :error)
                     (list treal (+ tcpu utcpu) (+ tgc utgc)
                           readings
                           (loop

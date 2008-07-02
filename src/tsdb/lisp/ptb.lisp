@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2007 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -26,8 +26,9 @@
             for (file . item) in set
             for ptb = (first (read-ptb-from-string item))
             for length = (length (extract-ptb-leaves ptb))
-            for category = (first ptb)
+            for category = (ignore-errors (first ptb))
             for origin = (format nil "~(~a~)" file)
+            when (and ptb category)
             collect (pairlis '(:i-id :i-origin :i-category
                                :i-wf :i-length :i-input)
                              (list id origin category

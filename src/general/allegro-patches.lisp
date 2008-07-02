@@ -36,15 +36,6 @@
 			   :directory '(:absolute)))
 
 ;;;
-;;; it seems, we may now have a path for UniCode issues in CLIM (using Motif);
-;;; try including that in our LOGON images.                     (10-oct-06; oe)
-;;;
-#+(and :compiler :logon :unix :clim (version>= 8 1))
-(load 
- (excl:compile-file-if-needed
-  (make-pathname :directory general-dir :name "clim")))
-
-;;;
 ;;; load the portable defsystem() from CMU
 ;;;
 

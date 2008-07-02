@@ -899,7 +899,8 @@
           (nconc item (acons :edges edges nil)))))
     (let* ((nanalyses (if exhaustive 
                         0 
-                        (if (and (integerp nanalyses) (>= nanalyses 1))
+                        (if (or (and (integerp nanalyses) (>= nanalyses 1))
+                                (and (eq type :translate) (stringp nanalyses)))
                           nanalyses
                           1)))
            (trees-hook (and *tsdb-write-tree-p* trees-hook))
@@ -1457,7 +1458,7 @@
          (timeup (get-field :timeup result))
          (unifications (get-field+ :unifications result 0))
          (copies (get-field+ :copies result 0))
-         (fragments (get-field :fragments result))
+         (nfragments (get-field :nfragments result))
          (gc (get-field :gc result))
          (gcs (get-field :gcs result))
          (error (get-field :error result))
@@ -1506,7 +1507,7 @@
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~]~@[</a>~].~%" 
        (eq format :html) timeup index
-       (and (integerp fragments) (> fragments 0))
+       (and (integerp nfragments) (> nfragments 0))
        (and unique (not (eql unique readings))) unique readings 
        tcpu (>= tgc 0.1) tgc first total 
        words edges 
@@ -1845,7 +1846,7 @@
 (defun accumulate-mt-statistics (result)
   (when %accumulated-mt-statistics%
     (incf (get-field :total %accumulated-mt-statistics%))
-    (let* ((fragmentp (let ((foo (get-field :fragments result)))
+    (let* ((fragmentp (let ((foo (get-field :nfragments result)))
                         (and (numberp foo) (> foo 0))))
            (fan (get-field :fan result))
            (nanalyses (first fan))

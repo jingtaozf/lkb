@@ -60,6 +60,11 @@
  "~/src/logon/uio/nw/compounds/compounds.logon"
  :simplex "/tmp/nn.mtr"
  :log "/tmp/nn.log")
+(process-kf 
+ "~/src/logon/uio/nw/compounds/compounds.logon"
+ :simplex "/tmp/lars.nn.mtr"
+ :log "/tmp/lars.nn.log"
+ :beam -1.0)
 |#
 
 
@@ -131,7 +136,7 @@
 (defun process-kf (kf
                    &key simplex mwe log
                         (source :norgram) (target :erg)
-                        active gaps)
+                        active gaps beam)
   (let* ((sstream (create-output-stream simplex))
          (mstream (if mwe (create-output-stream mwe) sstream))
          (lstream (create-output-stream log))
@@ -139,7 +144,7 @@
          (adjectivep (eq source (mrs:vsym "adjective_no")))
          (hash (make-hash-table :test #'equal)))
     (loop 
-        for entry in (if (stringp kf) (read-kf-entries kf) kf)
+        for entry in (if (stringp kf) (read-kf-entries kf :beam beam) kf)
         for in = (first entry)
         unless (upper-case-p (char in 0)) do
           (multiple-value-bind (smrss striggers)
@@ -155,7 +160,10 @@
                 for trigger in striggers
                 do (format lstream " ~(~a~)" (first trigger)))
             (format lstream "~%")
-            (when striggers
+            (when (or (null active)
+                      (loop
+                          for strigger in striggers
+                          thereis (smember (first strigger) active)))
               (loop
                   with mtrs = (make-array (length striggers))
                   with issues with match
@@ -248,7 +256,10 @@
             = #'(lambda (a b)
                   (or (> (first a) (first b))
                       (and (= (first a) (first b))
-                           (string< (second a) (second b)))))
+                           (> (second a) (second b)))
+                      (and (= (first a) (first b))
+                           (= (second a) (second b))
+                           (string< (third a) (third b)))))
             for key being each hash-key
             using (hash-value bucket) in hash
             do
@@ -257,33 +268,36 @@
                   when first do (push rest (gethash key gaps))
                   else do (push rest (gethash key holes)))
             finally
-              (loop
-                  with counts
-                  = (loop
-                        for key being each hash-key
-                        using (hash-value bucket) in gaps
-                        collect (list* (length bucket) key bucket))
-                  for (count target . sources)
-                  in (sort counts predicate)
-                  do
-                    (format
-                     stream
-                     "~a [~a] {~{|~a|~^ ~}}~%"
-                     target count sources))
-              (terpri stream)
-              (loop
-                  with counts
-                  = (loop
-                        for key being each hash-key
-                        using (hash-value bucket) in holes
-                        collect (list* (length bucket) key bucket))
-                  for (count target . sources)
-                  in (sort counts predicate)
-                  do
-                    (format
-                     stream
-                     "~a [~a] {~{|~a|~^ ~}}~%"
-                     target count sources)))))
+              (let ((hcounts
+                     (loop
+                         for key being each hash-key
+                         using (hash-value bucket) in holes
+                         for match = (length (gethash key gaps))
+                         collect (list* (length bucket) match key bucket)))
+                    (gcounts
+                     (loop
+                         for key being each hash-key
+                         using (hash-value bucket) in gaps
+                         unless (gethash key holes)
+                         collect (list* (length bucket) 0 key bucket))))
+                (loop
+                    for (hcount gcount target . sources)
+                    in (sort hcounts predicate)
+                    do
+                      (format
+                       stream
+                       "~a [~a:~a] {~{|~a|~^ ~}}~%"
+                       target hcount gcount sources))
+                (terpri stream)
+                (loop
+                    for (count foo target . sources)
+                    in (sort gcounts predicate)
+                    do
+                      (setf foo foo)
+                      (format
+                       stream
+                       "~a [~a] {~{|~a|~^ ~}}~%"
+                       target count sources))))))
     hash))
 
 (defun read-kf-file (file)
@@ -307,7 +321,7 @@
           (sys:os-wait nil pid)
           xml)))))
 
-(defun read-kf-entries (file)
+(defun read-kf-entries (file &key beam)
   (unless (probe-file file)
     (error "read-kf(): invalid input `~a'" (namestring file)))
   (with-open-file (stream file :direction :input)
@@ -321,7 +335,7 @@
         do
           (multiple-value-bind (foo bar starts ends) 
               (ppcre::scan
-               "^[0-9 \\t]*([^\\t]+)\\t+([^\\t]+)(?:\\t+([^\\t]+))?$"
+               "^[-0-9 \\t]*([^\\t]+)\\t+([^\\t]+)(?:\\t+([^\\t]+))?$"
                line)
             (declare (ignore foo bar))
             (if (or (null starts) (null ends)
@@ -339,7 +353,7 @@
                      targets)
                 #+:debug
                 (format
-                 t "{~a} --> {~a}~%" source targets)
+                 t "{~a} --> {~@[~a~]}~%" source targets)
                 (ppcre:do-scans
                     (foo bar starts ends "([^|]+)(?: \\| |$)" target)
                   (declare (ignore foo bar))
@@ -348,7 +362,9 @@
                       in (explode-kf-surface
                           (subseq target (aref starts 0) (aref ends 0)))
                       do (pushnew target targets :test #'string-equal)))
-                (push (cons source (nreverse targets)) result))))
+                (setf targets
+                  (filter-ranked-candidates (nreverse targets) beam))
+                (when targets (push (cons source targets) result)))))
         finally (return (nreverse result)))))
 
 (defun process-names (names &key file)
@@ -473,7 +489,8 @@
                                              :adjustable nil :fill-pointer 0)
                    for c across (subseq string 0 start)
                    when (char= c #\space) do (vector-push #\+ result)
-                   else unless (member c '(#\( #\) #\.))
+                   else when (or (alphanumericp c)
+                                 (smember c '(#\-)))
                    do (vector-push c result)
                    finally (return result)))))
     (let ((*package* (find-package mrs::*mrs-package*)))
@@ -605,21 +622,35 @@
     (setf strings
       (case key
         (:parentheses
+         ;;
+         ;; _fix_me_
+         ;; this fails to treat forms like `archeologic(al)' properly.  work
+         ;; on this more, to not insert spurious spaces.        (16-dec-07; oe)
+         ;;
          (multiple-value-bind (start end) (ppcre:scan "\\([^)]+\\)" string)
            (if (and start end)
              (let* ((match (subseq string (+ start 1) (- end 1)))
-                    (prefix (string-trim '(#\space) (subseq string 0 start)))
+                    (prefix (subseq string 0 start))
                     (prefix (and prefix (not (string= prefix "")) prefix))
-                    (suffix (string-trim '(#\space) (subseq string end)))
+                    (space (and prefix (char prefix (- (length prefix) 1))))
+                    (space (and space (char= space #\space)))
+                    (suffix (subseq string end))
                     (suffix (and suffix (not (string= suffix "")) suffix))
-                    (full (format
-                           nil
-                           "~@[~a ~]~a~@[ ~a~]"
-                           prefix match suffix))
-                    (reduced (format
-                              nil
-                              "~@[~a~]~:[~; ~]~@[~a~]"
-                              prefix (and prefix suffix) suffix)))
+                    (full (string-trim
+                           '(#\space)
+                           (format
+                            nil
+                            "~@[~a~]~a~@[~a~]"
+                            prefix match suffix)))
+                    (reduced (string-trim
+                              '(#\space)
+                              (format
+                               nil
+                               "~@[~a~]~@[~a~]"
+                               prefix 
+                               (if (and suffix space)
+                                 (string-left-trim '(#\space) suffix)
+                                 suffix)))))
                (list full reduced))
              (list string))))
         (:slash
@@ -659,6 +690,30 @@
             for string in strings
             append (explode-kf-surface string :slash))))
     strings))
+
+(defun filter-ranked-candidates (strings beam)
+  (loop
+      with result with last
+      for string in strings
+      do
+         (multiple-value-bind (start end) (ppcre:scan "{[0-9.e+-]+}" string)
+           (if (and start end)
+             (let* ((score (subseq string (+ start 1) (- end 1)))
+                    (score (ignore-errors (read-from-string score)))
+                    (string (subseq string 0 (- start 1))))
+               (cond
+                ((null score)
+                 (setf beam nil))
+                ((and beam (>= beam 0) (>= score beam))
+                 (push string result))
+                ((and beam (< beam 0)
+                      (or (null last) (>= (/ score last) (abs beam))))
+                 (push string result)
+                 (setf last score))
+                ((and beam last)
+                 (setf beam nil))))
+             (unless beam (push string result))))
+      finally (return (nreverse result))))
 
 (defun get-xml-elements (path tree)
   ;; parses in order so just take the first off the list if

@@ -52,24 +52,26 @@
 
 (defparameter %lui-eoc% (format nil " ~a" #\page))
 
-(defun lui-initialize (&key runtimep port)
+(defun lui-initialize (&key runtimep port lui)
   (declare (ignore runtimep))
   
   (lui-shutdown)
   (setf *lui-application*
-    (format
-     nil 
-     "exec ~a -p"
-     #-(or :darwin :macosx)
-     (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-				:name "yzlui"))
-     #+(or :darwin :macosx)
-     (namestring
-      (make-pathname 
-       :directory (pathname-directory
-		   (dir-append
-		    make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
-       :name "yzlui"))))
+    (let* ((directory 
+            #-(or :darwin :macosx)
+            (pathname-directory (pathname make::bin-dir))
+            #+(or :darwin :macosx)
+            (pathname-directory
+             (dir-append
+              make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS"))))
+           (lui
+            (and (stringp lui) (make-pathname :directory directory :name lui)))
+           (binary
+            (if (and lui (probe-file lui))
+              (namestring lui)
+              (namestring
+               (make-pathname :directory directory :name "yzlui")))))
+      (format nil "exec ~a -p" binary)))
 
   (if port
     (let* ((socket (socket:make-socket :connect :passive :local-port port))

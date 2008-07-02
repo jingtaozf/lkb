@@ -32,10 +32,11 @@
 
 (in-package "COMMON-LISP-USER")
 
-(defpackage "TSDB"
-  (:use "COMMON-LISP" "MAKE" #+:pvm "PVM"
-        #+:allegro "FOREIGN-FUNCTIONS" #+:allegro "MULTIPROCESSING")
-  (:nicknames "TSNLP")
+(defpackage :tsdb
+  (:use :common-lisp :make #+:pvm :pvm
+        #+:allegro :foreign-functions #+:allegro :multiprocessing
+        #+:drakma :net.aserve #+:drakma :net.html.generator)
+  (:nicknames :tsnlp :itsdb)
   (:export
    "*TSDB-HOME*" "*TSDB-DATA*" "*TSDB-IO*" 
    "*TSDB-TREES-HOOK*" "*TSDB-SEMANTIX-HOOK*"

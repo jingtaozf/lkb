@@ -111,6 +111,7 @@
       (setf (lkb::statistics-proactive lkb::*statistics*) tproactive)
       (setf (lkb::statistics-retroactive lkb::*statistics*) tretroactive)
       (let* ((strings (cross-product (nreverse outputs)))
+             #+:ppcre
              (strings (remove-if
                        #'(lambda (string) (ppcre:scan "^[.|/ ]*$" string))
                        strings)))

@@ -44,7 +44,7 @@
   (pushnew :bdb *features*)
   
   ;;
-  ;; for use in LOGON (on supported platforms), enable use of DRAKMA et al.
+  ;; for the on-line WWW demo (LOGON tree, select platforms), use DRAKMA et al.
   ;;
   #+(and :allegro :linux :logon)
   (pushnew :drakma *features*)
@@ -52,7 +52,7 @@
   ;;
   ;; the Alvey Tools package, unfortunately, comes without a unique feature to
   ;; identify it; invent one and hope for integration with future releases.
-  ;;                                                      (22-nov-99  -  oe)
+  ;;                                                        (22-nov-99  -  oe)
   ;;
   (when (and (find-symbol "*GDE-VERSION-NO" :common-lisp-user)
              (boundp (find-symbol "*GDE-VERSION-NO" :common-lisp-user)))
@@ -66,13 +66,14 @@
 				 '(:relative "tsdb"))
 
     
+    #+:drakma :initially-do #+:drakma (require :aserve)
+
     :finally-do
-    #+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
     (let ((display (system:getenv "DISPLAY")))
+      (funcall (intern "INITIALIZE-TSDB" :tsdb))
+      #+(and :allegro (or :linux :sparc :alpha :macosx) (not :slave))
       (when (and display (not (equal display "")))
-        (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium)))
-    #-(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx) (not :slave))
-    nil
+        (funcall (intern "TSDB" :tsdb) :podium)))
 
     :components
     (#+:dfki
@@ -116,7 +117,8 @@
       :source-extension "fasl"
       :load-only t
       :components
-      ((:file "drakma")))
+      (#+(and :allegro-version= (version= 8 0)) (:file "drakma80")
+       #+(and :allegro-version= (version= 8 1)) (:file "drakma81")))
      
      (:module "tsdb"
       :source-pathname "lisp"
@@ -160,6 +162,7 @@
        #+:allegro
        (:file "gc")
        (:file "yy")
+       (:file "fake")
        #+:lkb
        (:file "mt")
        #+:logon
@@ -182,6 +185,7 @@
        (:file "hunter")
        #+:lkb
        (:file "pcfg")
+       (:file "chasen")
        #+:null
        (:file "acache")
        #+:bdb
@@ -192,6 +196,8 @@
        (:file "learner")
        #+:lkb
        (:file "experiment")
+       #+(and :lkb :drakma)
+       (:file "www")
        #+:null
        (:file "tagger")))
      

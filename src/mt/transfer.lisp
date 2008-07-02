@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2004 -- 2007 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
 ;;; - think of a nice, declarative way to delete properties from indices.
 ;;;
 
-(defparameter *transfer-edge-limit* 800)
+(defparameter *transfer-edge-limit* 1000)
 
 (defparameter *transfer-debug-p* nil)
 
@@ -740,9 +740,9 @@
                 (push (cons match :equal) special)
                 (format
                  t
-                 "~&convert-dag-to-special(): ~
+                 "~&convert-dag-to-special(): `~(~a~)' ~
                   no match for EQUAL element # ~a.~%"
-                 i)))))
+                 id i)))))
     (when (lkb::dag-p subsume)
       (loop
           for i from 0
@@ -756,9 +756,9 @@
                 (push (cons match :subsume) special)
                 (format
                  t
-                 "~&convert-dag-to-special(): ~
+                 "~&convert-dag-to-special(): `~(~a~)' ~
                   no match for SUBSUME element # ~a.~%"
-                 i)))))
+                 id i)))))
     (when (mrs::is-valid-fs block)
       (let ((block (mrs::fs-type block)))
         (when (stringp block) (push (cons block :block) special))))
@@ -779,9 +779,9 @@
     (lkb::dag-subsumes-p dag constraint)))
 
 (defun compile-mtr (mtr)
-  #-:cl-ppcre
+  #-:ppcre
   mtr
-  #+:cl-ppcre
+  #+:ppcre
   (labels ((compile (mrs)
              (when mrs
                (loop
@@ -1649,7 +1649,7 @@
       value1)
      ((and (numberp value1) (numberp value2))
       (= value1 value2))
-     #+:cl-ppcre
+     #+:ppcre
      ((functionp variable2)
       (let ((string (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
         (multiple-value-bind (start end starts ends)
@@ -1796,7 +1796,7 @@
                  pred2)))
 
     (cond
-     #+:cl-ppcre
+     #+:ppcre
      ((functionp pred2)
       (let ((string (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
         (multiple-value-bind (start end starts ends) 

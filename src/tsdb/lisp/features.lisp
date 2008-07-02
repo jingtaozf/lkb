@@ -43,7 +43,7 @@
 ;;;      form; e.g. [11 (3 1) ^ n_proper_le v_np_trans_le].
 ;;;  42: language model score; the second integer is the number of bins used 
 ;;;      (if any), and the third the divisor used in scaling (*maxent-lm-p*), 
-;;;      e.g. [42 (0 10) 100]
+;;;      if any, e.g. [42 (0) -12.34].
 ;;;  43: experimental features in combining LOGON scores across components.
 ;;;
 ;;; also, we are using some pseudo-features to record additional information in
@@ -78,6 +78,8 @@
 
 #+:null
 (defparameter *feature-lm-normalize* '(:minmax 0 2))
+
+(defparameter *feature-dependencies* nil)
 
 (defparameter *feature-flags*
   (nconc
@@ -147,7 +149,7 @@
   (count 0)
   (size 512)
   parameters
-  stream
+  stream id task
   (minmax (make-array 512)))
 
 (defmethod print-object ((object model) stream)
@@ -463,6 +465,17 @@
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
       when (and (integerp readings) (> readings 0)) do
+        (when *feature-dependencies*
+          ;;
+          ;; when MRS-derived features are active, then reconstruct() needs to
+          ;; actually re-build complete AVMs, in which case a lot of garbage
+          ;; is generated, so we need to deliberately release quasi-destructive
+          ;; intermediate structures; this was hard to debug.   (21-nov-07; oe)
+          ;;
+          #+:debug (excl:print-type-counts)
+          (lkb::release-temporary-storage)
+          #+:debug (excl:gc)
+          #+:debug (excl:print-type-counts))
 	(loop
 	    with i = 0
             with *reconstruct-cache* = (make-hash-table :test #'eql)
@@ -658,14 +671,22 @@
                      (when sample (length sample)) n iid)))))
       finally (close-fc fc)))
 
-(defun result-to-event (result model &key rop)
+(defun result-to-event (result model &key rop (fcp t))
 
-  (let* ((derivationp (or (> *feature-grandparenting* 0)
-                          (> *feature-ngram-size* 0)))
+  (let* ((derivationp (unless *feature-flags*
+                        (or (>= *feature-grandparenting* 0)
+                            (> *feature-ngram-size* 0)
+                            *feature-dependencies*)))
          (derivation (and derivationp (get-field :derivation result)))
          (edge (or (get-field :edge result)
                    (when derivation
-                     (reconstruct derivation nil))))
+                     ;;
+                     ;; when MRS-derived features are requested, we need to
+                     ;; actually re-build complete feature structures, i.e.
+                     ;; ask reconstruct() to perform all the unifications.
+                     ;;
+                     (reconstruct derivation *feature-dependencies*))))
+         (mrs (and *feature-dependencies* edge (mrs::extract-mrs edge)))
          (event (make-event)))
 
     ;;
@@ -673,9 +694,15 @@
     ;; why abort here?  we could still score the LM feature, say for fragmented
     ;; realizations in the LOGON pipeline.                     (13-may-07; oe)
     ;;
+    #+:null
     (when (and derivationp (null edge)) (return-from result-to-event))
 
-    (when edge
+    ;;
+    ;; in the LOGON universe, at least, .edge. can correspond to a fragmented
+    ;; generator output, where there is no internal structure available besides
+    ;; the concatenated surface string of the component fragments.
+    ;;
+    (when (and edge (lkb::edge-children edge))
       ;;
       ;; first, extract the configurational features.
       ;;
@@ -687,7 +714,15 @@
       ;;
       (loop
           for feature in (edge-to-ngrams edge)
-          do (record-feature feature event model :rop rop)))
+          do (record-feature feature event model :rop rop))
+      
+      ;;
+      ;; semantic features extracted off the MRS of this edge.
+      ;;
+      (when mrs
+        (loop
+            for feature in (mrs-to-dependencies mrs)
+            do (record-feature feature event model :rop rop))))
 
     ;;
     ;; often in a different universe, use whatever :flags properties off each
@@ -696,20 +731,21 @@
     (loop
         for feature in (result-to-flags result)
         do (record-feature feature event model :rop rop))
+
     ;;
-    ;; finally, the feature(s) corresponding to LM score(s)
+    ;; finally, the feature(s) corresponding to LM score(s); for now, we record
+    ;; the raw LM score in the feature cache.  however, when creating an actual
+    ;; model, we want the scaling factor being part of the feature definition,
+    ;; as its second parameter, so as to make sure that a serialized model can
+    ;; be applied exactly the way it was trained.
     ;;
-    ;; _fix_me_
-    ;; we want to further generalize this, e.g. include multiple LM features,
-    ;; maybe include the scaling factor as a parameter.
-    ;;                                                 (27-jun-05; erik & oe)
     (let ((lm (get-field :lm result)))
-      (when (numberp lm)
+      (when (and (numberp lm)
+                 (numberp *feature-lm-p*) (not (= *feature-lm-p* 0)))
         (record-feature
          (make-feature :tid 42 
-                       :symbol (list 42) 
-                       :parameters 
-                       (list 0 (if (numberp *feature-lm-p*) *feature-lm-p* 0))
+                       :symbol (list 42)
+                       :parameters (if fcp (list 0) (list 0 *feature-lm-p*))
                        :count lm)
          event model :rop rop)))
     event))
@@ -908,6 +944,31 @@
                features))
       finally (return features)))
 
+(defun mrs-to-dependencies (mrs)
+  (let* ((eds (mrs::ed-convert-psoa mrs))
+	 (relations (and eds (mrs::eds-relations eds))))
+    (loop for rel in relations
+	for pred = (intern (mrs::ed-predicate rel) 'lkb)
+	for args = (mrs::ed-arguments rel)
+	for arg-list = (loop for arg in args
+			   collect (list (intern (car arg) 'lkb)
+					 (intern (if (stringp (cdr arg))
+						     (cdr arg)
+						   (mrs::ed-predicate (cdr arg))) 'lkb)))
+	collect (make-feature :tid 20 :parameters (list 0)
+			      :symbol `(0 ,pred
+					  ,@(loop for arg in arg-list
+						append (list (first arg) (second arg)))))
+	append (loop for arg in arg-list
+		   collect (make-feature :tid 21 :parameters (list 0)
+					 :symbol `(0 ,pred ,(first arg) ,(second arg))))
+	collect (make-feature :tid 22 :parameters (list 0)
+			      :symbol `(0 ,pred ,@(loop for arg in arg-list
+						      collect (second arg))))
+	append (loop for arg in arg-list
+		   collect (make-feature :tid 23 :parameters (list 0)
+					 :symbol `(0 ,pred ,(second arg)))))))
+
 (defun result-to-flags (result)
   (loop
       with flags = (let ((flags (get-field :flags result)))
@@ -992,29 +1053,37 @@
         do
           (record-features lfeatures event model)
           (record-features features event model))
-    (when *feature-lm-p*
-      (let ((features
-             (retrieve-features
-              fc iid rid 42 
-              (list 0 (if (numberp *feature-lm-p*) *feature-lm-p* 0)))))
-        ;; 
-        ;; _fix_me_
-        ;; if we were to retain the LM scaling set-up, here would be a good
-        ;; place to apply the scaling; for the time being, it gets applied in
-        ;; lm-item-enhancer() already.                  (5-jul-05; erik & oe)
-        ;;
-        
-        ;;
-        ;; _fix_me_
-        ;; incomplete code for normalization of LM values into a fixed range.
-        ;;
+    (when *feature-dependencies*
+      (loop for tid from 20 to 23
+	  for features = (retrieve-features fc iid rid tid (list 0))
+	  do (record-features features event model)))
+    (when (numberp *feature-lm-p*)
+      ;;
+      ;; the feature cache does /not/ record the scaling factor as a parameter
+      ;; to the LM feature template (currently, template #42).
+      ;;
+      (let ((features (retrieve-features fc iid rid 42 (list 0))))
         #+:null
         (when *feature-lm-normalize*
-          (loop                             
+          ;;
+          ;; _fix_me_
+          ;; incomplete code for normalization of LM values into a fixed range.
+          ;;
+          (loop 
               for feature in features
               for minmax = (aref (model-minmax model) (feature-code feature))))
-                            
         
+        ;;
+        ;; at this point, apply the LM scaling factor and record the actual
+        ;; value used as part of the LM feature(s), so as to ensure that the
+        ;; final model preserves this bit of information.
+        ;;
+        (loop
+            for feature in features
+            for count = (feature-count feature)
+            do 
+              (setf (feature-count feature) (divide count *feature-lm-p*))
+              (nconc (feature-parameters feature) (list *feature-lm-p*)))
         (record-features features event model)))
     (when *feature-flags*
       (loop
@@ -1047,25 +1116,30 @@
         with scores
         = #+:lm (mt::lm-score-strings strings :measure :logprob) #-:lm 0
         for result in (nreverse foo)
-        for score = (/ (rest (pop scores)) *feature-lm-p*)
+        for score = (rest (pop scores))
         do (nconc result (acons :lm score nil))))
   item)
 
-(defparameter %flags-ignore-fragments-p% nil)
+(defparameter %flags-ignore-fragments-p% t)
 
 (defun flags-item-enhancer (item &key (key :neva))
   (nconc
    item
    (loop
        with *package* = (find-package :lkb)
+       with length = (get-field :i-length item)
        with ranks
-       with fragmentp = nil
        for result in (get-field :results item)
+       for olength
+       = (let ((surface (get-field :surface result)))
+           (and surface (+ 1 (count #\space surface))))
        for flags = (let ((flags (get-field :flags result)))
                      (if (stringp flags)
                        (setf (get-field :flags result)
                          (ignore-errors (read-from-string flags)))
                        flags))
+       for fragmentp = (let ((fragments (get-field :fragments flags)))
+                         (and (numberp fragments) (> fragments 0)))
        for value = (get-field key flags)
        unless (numberp value) do
          (format
@@ -1073,29 +1147,21 @@
           "flags-item-enhancer(): no ~a score on item # ~a (result # ~a).~%"
           key (get-field :i-id item) (get-field :result-id result))
        and return nil
-       else do (push (acons key value result) ranks)
-       unless (get-field :nfragments flags) do
+       else do
          ;;
          ;; _fix_me_
-         ;; while finalizing the TMI submission, it emerges that realization
-         ;; scores are wrong in two respects: (a) generator edges fail to show
-         ;; morphological rules in the usual way and (b) the LM score was not
-         ;; scaled prior to summing ME weights.  the latter we can still fix.
-         ;; also, for fragmented translations, the RSCORE equals -PERPLEXITY, 
-         ;; (because there was no derivation for the full item), which is not
-         ;; really helpful; put a flag on these, so we can ignore them during
-         ;; training (or maybe even train separate models one fine day).
-         ;;                                                    (13-may-07; oe)
-         (let ((rscore (get-field :rscore flags))
-               (lm (get-field :lm flags))
-               (nfragments
-                (count (mrs:vsym "fragment") (get-field :mtrs flags))))
-           (setf (get-field :rscore flags)
-             (if (zerop nfragments)
-               (- rscore (- (* lm -1.04306) (* (/ lm 10) -1.04306)))
-               (* (/ lm 10) -1.04306)))
-           (nconc flags (acons :nfragments nfragments nil))
-           (unless (zerop nfragments) (setf fragmentp t)))
+         ;; it appears that the :ratio computation in translate-item() was not
+         ;; correct, hence the final HandOn profiles (and likely also the ones
+         ;; we used for the 2007 TMI paper) always have zero :ration values.
+         ;; not hard to (re-)compute at this point, so possibly we should even
+         ;; ditch the corresponding (and flawed) code in translate-item().
+         ;;                                                    (30-jun-08; oe)
+         (when olength
+           (let ((ratio (divide olength length)))
+             (if (get-field :ratio flags)
+               (setf (get-field :ratio flags) ratio)
+               (nconc flags (acons :ration ratio nil)))))
+         (push (acons key value result) ranks)
        finally
          (return
           (if (and fragmentp %flags-ignore-fragments-p%)
@@ -1139,6 +1205,10 @@
                        (setf (get-field :flags result)
                          (ignore-errors (read-from-string flags)))
                        flags)))
+         ;;
+         ;; _fix_me_
+         ;; maybe this should really be NEVA, nowadays?          (5-apr-08; oe)
+         ;;
          (or (get-field :bleu flags) 0)))
       (t 0))))
 
@@ -1202,19 +1272,31 @@
 (defun score-event (event model)
   (loop
       for feature in (event-features event)
-      for count = (or (feature-count feature) 0)
+      for count = (let ((count (or (feature-count feature) 0)))
+                    ;;
+                    ;; because the feature cache does /not/ include the scaling
+                    ;; of LM scores, we need to apply the scaling factor every
+                    ;; time we compute the contribution of the LM feature.
+                    ;;
+                    (if (= (feature-tid feature) 42)
+                      (divide count *feature-lm-p*)
+                      count))
       for score = (score-feature (feature-code feature) model)
       sum (* count score)))
 
 (defun mem-score-result (result &optional (model %model%) &key normalizep)
+  (unless (model-p model)
+    (setf model (rest (assoc model *models*))))
   (if model
-    (let ((event (result-to-event result model :rop t)))
+    (let ((event (result-to-event result model :rop t :fcp nil)))
       (when normalizep
         (normalize-features-n event :type normalizep :model model))
       (score-event event model))
     0.0))
 
 (defun mem-score-configuration (edge daughters &optional (model %model%))
+  (unless (model-p model)
+    (setf model (rest (assoc model *models*))))
   (if (model-p model)
     (let* ((event (make-event))
            (roots (if daughters

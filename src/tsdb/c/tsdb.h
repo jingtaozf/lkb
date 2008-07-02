@@ -326,6 +326,7 @@ typedef struct tsdb_key_list {
   int n_tuples;
   struct tsdb_tuple **tuples;
   struct tsdb_key_list *next;
+  struct tsdb_key_list *future;
 } Tsdb_key_list;
 
 typedef struct tsdb_selection {
@@ -532,7 +533,6 @@ Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *);
 Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list*);
 char* tsdb_translate_table() ;
 
-BOOL tsdb_insert_into_selection(Tsdb_selection *, Tsdb_tuple **);
 char** tsdb_condition_attributes(Tsdb_node *, char **, int *);
 int* tsdb_relation_match(Tsdb_selection *, Tsdb_selection *);
 Tsdb_relation *tsdb_create_relation(void);
@@ -561,6 +561,7 @@ Tsdb_selection *tsdb_complex_select(Tsdb_node *,
                                     Tsdb_value **, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_merge(Tsdb_selection *, Tsdb_selection *);
+BOOL tsdb_insert_into_selection(Tsdb_selection *, Tsdb_tuple **);
 Tsdb_selection *tsdb_simple_join(Tsdb_selection *, Tsdb_selection *);
 Tsdb_relation **tsdb_join_path(Tsdb_relation **, Tsdb_relation **);
 Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
@@ -593,4 +594,3 @@ int tsdb_client_close(int);
 #ifdef ALEP
 int tsdb_alep_client(char *);
 #endif
-

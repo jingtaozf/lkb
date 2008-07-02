@@ -201,7 +201,7 @@
                 (result  
                  (with-output-to-string (stream)
                    (case mode
-                     ((simple indexed prolog html mrs-xml)
+                     ((simple indexed prolog html latex mrs-xml)
                       (output-mrs1 psoa mode stream))
                      (scoped
                       (let ((scopes (make-scoped-mrs psoa)))

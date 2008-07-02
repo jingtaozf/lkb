@@ -473,7 +473,9 @@
             (when (consp thorough)
               (loop
                   for field in thorough
-                  for reader = (when readerp (find-attribute-reader field))
+                  for reader = (when (or (and (symbolp readerp) readerp)
+                                         (smember field readerp))
+                                 (find-attribute-reader field))
                   when reader
                   do
                     (loop
@@ -2395,8 +2397,7 @@
                            for field in '(:i-id :i-input :o-input 
                                           :readings :results :nfragments)
                            for i from 0
-                           do
-                             (setf (getf indices field) i)
+                           do (setf (getf indices field) i)
                            finally (return indices))
         for row from 2 by 1
         for item in items
