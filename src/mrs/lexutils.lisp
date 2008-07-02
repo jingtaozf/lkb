@@ -115,7 +115,16 @@
     (when (typep lkb::lex 'lkb::cdb-lex-database)
       (mrs::serialize-semantics-indices))
 
+    ;;
+    ;; _fix_me_
+    ;; the following seems undesirable to me, as if it were illegitime for a
+    ;; grammar to use semantically vacuous entries.  furthermore, the output
+    ;; suggested by the code below assumes file and type names that are not
+    ;; standardized, hence could be mis-leading.                (2-jul-08; oe)
+    ;;
+    
     ;; [bmw] dump trigger tdl
+    #-:logon
     (when mrs::*empty-semantics-lexical-entries*
       (format t "~%~%ADD THE FOLLOWING TO trigger.mtr:")
       (make-trigger-tdl mrs::*empty-semantics-lexical-entries*))
