@@ -474,7 +474,7 @@
                         *intersective-rule-names*))
                   (spelling-change-rule-p r)))
           possible-grules))
-        tgc tcpu conses symbols others yield consistent partial)
+        tgc tcpu conses symbols others consistent partial #+:logon yield)
     
    (with-parser-lock ()
       (clear-gen-chart)
