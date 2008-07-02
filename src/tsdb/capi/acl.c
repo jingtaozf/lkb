@@ -248,7 +248,7 @@ int pvm_create(char *task, char **argv, char *host, char *architecture) {
     where = (char *)NULL;
   } /* else */
 
-  if(where != NULL) {
+  if(flag == PvmTaskDefault || where != NULL) {
     if(pvm_spawn(task, argv, flag, where, 1, &tids[0]) == 1) {
       pvm_notify(PvmTaskExit, TASK_FAIL, 1, &tids[0]);
     } /* if */

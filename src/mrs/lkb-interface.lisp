@@ -8,7 +8,7 @@
 
 (eval-when (compile load eval)
   (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p
-            type-of-fs tdfs-indef lex-entry-id lex-entry-full-fs 
+            type-of-fs tdfs-p tdfs-indef lex-entry-id lex-entry-full-fs 
             dag-arcs subtype-p extend-typed-path path-p typed-path-p
             path-typed-feature-list typed-path-typed-feature-list
             type-feature-pair-p 
@@ -57,7 +57,8 @@
   ;; given a parse result (i.e. whatever structure the parser returns _after_
   ;; unpacking), extract the feature structure (DAG) that includes the MRS.
   ;;
-  (let ((fs (tdfs-indef (edge-dag edge))))
+  (let* ((tdfs (edge-dag edge))
+         (fs (and (tdfs-p tdfs) (tdfs-indef tdfs))))
     fs))
 
 (defun deref (fs)
