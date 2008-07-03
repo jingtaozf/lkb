@@ -831,7 +831,7 @@
        stream
        "~v,0t\\branch{~a}{~a}~%"
        indentation (max (length (edge-children edge)) 1)
-       (latex-escape-string
+       (mrs::latex-escape-string
         (if (eq format :derivation)
           (string-downcase (label edge))
           (get-string-for-edge tree)))))

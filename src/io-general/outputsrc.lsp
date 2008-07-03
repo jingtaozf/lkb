@@ -681,26 +681,3 @@
            "<instance name=\"~(~a~)\" type=\"~(~a~)\" status=\"~a\"/>~%"
            id type (if (inflectional-rule-p id) "irule" "lrule")))
     (when file (close stream))))
-
-(defun latex-escape-string (string)
-  (if (and string (or (stringp string) (symbolp string)))
-    (loop
-        with string = (string string)
-        with padding = 128
-        with length = (+ (length string) padding)
-        with result = (make-array length
-                                  :element-type 'character
-                                  :adjustable nil :fill-pointer 0)
-        for c across string
-        when (member c '(#\_ #\% #\# #\{ #\}) :test #'char=) do
-          (vector-push #\\ result)
-          (vector-push c result)
-          (when (zerop (decf padding))
-            (setf padding 42)
-            (incf length padding)
-            (setf result (adjust-array result length)))
-        else do
-          (vector-push c result)
-        finally
-          (return result))
-    string))

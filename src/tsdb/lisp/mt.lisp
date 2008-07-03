@@ -417,8 +417,9 @@
                                              ascore tscore rscore lm
                                              distortion distance
                                              lfn lnf bleu)))
-                             (score (mem-score-result
-                                     result %model% :normalizep :minmax)))
+                             (score (when (model-p %model%)
+                                      (mem-score-result
+                                       result %model% :normalizep :minmax))))
                         (when score
                           (nconc translation (acons :score score nil)))
                         (push translation translations))

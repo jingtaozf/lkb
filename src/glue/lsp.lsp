@@ -488,6 +488,7 @@
            ((tdfs-p (lspb-dag object)) (lspb-dag object))
            ((edge-p (lspb-edge object)) (edge-dag (lspb-edge object))))
           title)))
+      #+:lui
       ((:chart :edges)
        (when (and (lspb-tchart object) (lspb-chart object))
          (let ((*tchart* (lspb-tchart object))
