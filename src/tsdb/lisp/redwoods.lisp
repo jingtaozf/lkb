@@ -1325,7 +1325,7 @@
                       (loop
                           for tree in trees
                           maximize (get-field :t-version tree)))
-      for active = (when version
+      for active = (if version
                      (let ((foo (select '("result-id") '(:integer) 
                                         "preference" 
                                         (format 
@@ -1335,7 +1335,8 @@
                                         data)))
                        (loop 
                            for bar in foo 
-                           collect (get-field :result-id bar))))
+                           collect (get-field :result-id bar)))
+                     (list (get-field :result-id (first results))))
       for file = (format 
                   nil 
                   "~a/~@[~a.~]~d~@[.~a~]" 
@@ -1464,6 +1465,10 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :prolog *redwoods-export-values*))
           (mrs::output-mrs1 mrs 'mrs::prolog stream)
+          (format stream "~%"))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :mrx *redwoods-export-values*))
+          (mrs::output-mrs1 mrs 'mrs::mrs-xml stream)
           (format stream "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :rmrs *redwoods-export-values*))
