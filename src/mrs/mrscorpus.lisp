@@ -609,3 +609,56 @@
                       (mrs-liszts-subset-aux-p subset-liszt1
                                                (cdr superset-liszt2)
                                                syntactic-p bindings)))))))
+
+
+;;; Code for SciBorg
+
+(defun sciborg-mrs-match-results (resfile petdir)
+  (with-open-file (istream resfile :direction :input)
+    (loop 
+      (let ((resline (read-line istream nil nil)))
+	(unless resline (return))
+	(let ((item-number (get-item-number-from-res resline))
+	      (mrsstr (get-mrsstr-from-res resline)))
+	  (when (and item-number mrsstr)
+	    (with-input-from-string (istream mrsstr)
+	      (let ((mrs (read-mrs istream)))
+;;;		(output-mrs1 mrs 'simple t)))))))))
+		(let ((petsubdir 
+		       (concatenate 'string petdir 
+				    "item_" (format nil "~A/*" item-number))))
+		  ;;; /* so directory gives files
+		  (loop for file in (directory petsubdir)
+		      do
+			(let ((possible-match
+			       (read-single-mrs-xml-file file)))
+			  (when possible-match
+			    (mrs-equalp possible-match mrs nil t)
+			    (output-mrs1 mrs 'simple t)
+			    (output-mrs1 possible-match 'simple t)
+			    (return)))))))))))))
+			    
+;;;			    (when (mrs-equalp possible-match mrs)
+;;;			      (format t "~%Item ~A match ~A" item-number file))))))))))))))
+
+			      
+;;; this version of equality checking requires a loaded type hierarchy
+
+      #| (sciborg-mrs-match-results "C:/Users/Ann/Desktop/foraac/sciborg-b309733a/result" "C:/Users/Ann/Desktop/")
+      
+|#
+
+;;; parse the fine system result - mrs is at the end between two @
+;;; item is first thing, before first @
+
+(defun get-item-number-from-res (resline)
+  (let ((hashpos (position #\@ resline)))
+    (when hashpos 
+      (parse-integer (subseq resline 0 hashpos) :junk-allowed t))))
+	
+	    
+(defun get-mrsstr-from-res (resline)
+  (let* ((hashpos1 (position  #\@ resline :from-end t 
+			      :end (- (length resline) 1))))
+    (when hashpos1
+      (subseq resline (+ hashpos1 1) (- (length resline) 1)))))
