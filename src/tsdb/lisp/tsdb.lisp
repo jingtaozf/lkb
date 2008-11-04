@@ -311,9 +311,9 @@
                       (sleep 0.5)
                       (multiple-value-setq (status epid) (sys:os-wait t pid))
                       (when (null epid) (incf i))
-                    while (and (< i 100) (not status))
+                    while (and (< i 42) (not status))
                     finally
-                      (when (>= i 100)
+                      (when (>= i 42)
                         (format
                          *tsdb-io*
                          "call-tsdb(): failed to salvage tsdb(1) child ~d~%"

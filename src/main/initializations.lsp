@@ -168,6 +168,17 @@
           (with-package (:lkb) (load lkbrc))))
 
       ;;
+      ;; for runtime binaries, reset mk::bin-dir et al. according to current
+      ;; image location; assume standard runtime directory structure.
+      ;;
+      (when runtimep
+        (let* ((sys (truename (translate-logical-pathname "sys:")))
+               (home (make-pathname 
+                      :directory (butlast (pathname-directory sys)))))
+          (setf mk::sys-home (merge-pathnames home sys))
+          (mk::reset-system-paths)))
+
+      ;;
       ;; when part of the LOGON source tree, initialize appropriately
       ;;
       #+:logon
@@ -178,19 +189,11 @@
         (when (and lkbrc (probe-file lkbrc))
           (with-package (:lkb) (load lkbrc))))
       
+      ;;
+      ;; and see whether there is a per-user `.lkbrc' initialization file
+      ;;
       (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
         (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
-      
-      ;;
-      ;; for runtime binaries, reset mk::bin-dir et al. according to current
-      ;; image location; assume standard runtime directory structure.
-      ;;
-      (when runtimep
-        (let* ((sys (truename (translate-logical-pathname "sys:")))
-               (home (make-pathname 
-                      :directory (butlast (pathname-directory sys)))))
-          (setf mk::sys-home (merge-pathnames home sys))
-          (mk::reset-system-paths)))
       
       #+:allegro
       (tpl:setq-default *package* 

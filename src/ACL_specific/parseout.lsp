@@ -315,6 +315,8 @@
                     ("RMRS" :value rmrs :active ,*mrs-loaded*)
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
+                    #+:logon
+                    ("UTool MRS" :value utool :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
 		    ("FOL approximation" 
 		     :value fol :active ,*mrs-loaded*)
@@ -378,6 +380,8 @@
             (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
             (prolog (funcall 'show-mrs-prolog-window (prtree-edge tree)))
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
+            #+:logon
+            (utool (funcall 'show-mrs-utool-window (prtree-edge tree)))
             (rmrs (funcall 'show-mrs-rmrs-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))

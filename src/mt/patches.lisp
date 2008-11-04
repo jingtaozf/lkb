@@ -8,7 +8,7 @@
  #-:allegro eval-when #-:allegro  (:load-toplevel :execute)
             
   (defun determine-variable-type (dag)
-    (let ((type (fs-type dag)))
+    (let ((type (create-type (if (is-valid-fs dag) (fs-type dag) dag))))
       (cond 
        ((equal-or-subtype type *event-type*) "e")
        ((equal-or-subtype type *ref-ind-type*) "x")

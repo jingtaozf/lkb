@@ -1206,7 +1206,6 @@
   ;;
   ;; first, evaluate the pre-unification `quick-check' of predicates
   ;;
-  #-:null
   (unless (and ;;
                ;; _fix_me_
                ;; the mere presence of a PRED is not enough to demonstrate that
@@ -1687,8 +1686,6 @@
                   for match in (gethash value1 %transfer-variable-cache%)
                   when (eq (first match) value2)
                   return (rest match)))
-             #+:null
-             (match nil)
              (type (unless match
                      (unify-types 
                       (mrs::var-type value1) (mrs::var-type value2) 
@@ -1741,10 +1738,7 @@
                  type1)
                 (t   
                  (ignore-errors
-                  (lkb::greatest-common-subtype type1 type2))
-                 #+:null
-                 (and (lkb::is-valid-type type1) (lkb::is-valid-type type2)
-                      (lkb::greatest-common-subtype type1 type2))))))
+                  (lkb::greatest-common-subtype type1 type2))))))
     (when glb (if internp (string-downcase (string glb)) glb))))
 
 (defun unify-extras (extras1 extras2 &key subsumesp)
@@ -1846,12 +1840,6 @@
         do (return-from expand-solution)))
   
   (let* ((output (mtr-output mtr))
-         ;;
-         ;; _fix_me_
-         ;; LTOP and INDEX we used to take from the input MRS, which seems just
-         ;; wrong; being a tad nervous about this as a last-minute change for
-         ;; the 31-aug integration, keep the original code around for now.
-         ;;                                                     (31-aug-04; oe)
          (top (or (and output (mrs:psoa-top-h output)
                        (expand-value (mrs:psoa-top-h output) solution))
                   (when (mrs:psoa-top-h mrs) 
@@ -2089,6 +2077,13 @@
   ;; a little unsure about variable types too: is it possible for the default
   ;; part to have a less specific type than the variable already?
   ;;                                                           (22-jan-04; oe)
+  ;; --- and, indeed, now that we are attempting to process `internal' MRSs,
+  ;; i.e. ones using grammar-internal types, well-typing on generator fix-up
+  ;; and trigger rules causes all sorts of variables types to get in the way.
+  ;; as we expect to revise output overwriting from scratch, we might as well
+  ;; decide that current overwriting is limited to variable properties.  i.e.
+  ;; always leave variable types unchanged.                    (7-aug-08; oe)
+  ;;
   (when (null default) (return-from merge-values variable))
   (when (mtr-operator-p default)
     (return-from merge-values
@@ -2100,6 +2095,7 @@
        (t variable))))
   (when (and (stringp default) (char= (schar default 0) #\~))
     (return-from merge-values (expand-string (subseq default 1) solution)))
+  #+:null
   (when (and (mrs::var-type default)
              (or (null (mrs::var-type variable))
                  (not (member 
@@ -2276,18 +2272,9 @@
   ;; much like intersection(), except guarantee that all elements returned are
   ;; taken from .set1.
   ;;
-  ;; _fix_me_
-  ;; provide an actual implementation one day :-}.             (23-oct-03; oe)
-  ;;
   (loop
       for foo in set1
       when (member (funcall key foo) set2 :key key :test test)
-      collect foo)
-  #+:null
-  (loop
-      with intersection = (intersection set1 set2 :key key :test test)
-      for foo in set1
-      when (member (funcall key foo) intersection :key key :test test)
       collect foo))
 
 (defun read-derivation-from-string (string)

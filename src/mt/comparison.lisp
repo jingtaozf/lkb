@@ -289,9 +289,7 @@
          (when (and (mrs:is-valid-type type1) (mrs:is-valid-type type2))
            (if (eq type :subsumption)
              (mrs:equal-or-subtype type1 type2)
-             (eq type1 type2)
-             #+:null
-             (mrs:compatible-var-types type1 type2)))))))
+             (eq type1 type2)))))))
 
 (defun lookup-variable (variable solution)
   (getf (solution-variables solution) variable))

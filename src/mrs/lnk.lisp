@@ -83,7 +83,8 @@
                      for id = (unless (and c (char= c #\>))
                                 (read stream nil nil))
                      when (and c (char= c #\>))
-                     return (cons (or type :tokens) (nreverse ids))
+                     do (read-char stream nil nil)
+                     and return (cons (or type :tokens) (nreverse ids))
                      unless (numberp id) do (return-from read-lnk)
                      do (push id ids))))))))))))
                      

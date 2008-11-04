@@ -622,7 +622,8 @@
                          ;; the distance is determined as the second values()
                          ;; returned from the test predicate.   (13-feb-06; oe)
                          ;;
-                         (let ((mrs:*lnkp* :id))
+                         (let ((lnkp mrs:*lnkp*)
+                               (mrs:*lnkp* :id))
                            (selectively-unpack-edges
                             (loop
                                 for edge in candidates
@@ -632,7 +633,8 @@
                             :test #'(lambda (edge)
                                       (and
                                          (gen-filter-root-edges (list edge))
-                                         (gen-chart-check-compatible edge)))
+                                         (let ((mrs:*lnkp* lnkp))
+                                           (gen-chart-check-compatible edge))))
                             :robust 42
                             :limit (and (numberp nanalyses) (* 2 nanalyses)))))
                         (t
@@ -806,20 +808,19 @@
       ;; more time.                                              (4-jul-06; oe)
       ;;
       (let* ((input *generator-internal-mrs*)
-             (mrs (let ((mrs:*lnkp* :id)) (mrs::extract-mrs edge)))
-             (imrs (mt:map-mrs mrs :semi :backward)))
+             (mrs (let ((mrs:*lnkp* :id)) (mrs::extract-mrs edge))))
         (setf (edge-mrs edge) mrs)
         ;;
         ;; see the comment on extract-string-from-g-edge() for our rationale in
         ;; determining the surface string for this .edge. just here.  the side
-        ;; effect on the `lnk' value in EPs is destructive, but unfortunately
-        ;; EPs get copied in equate-all-qeqs(), and those copies end up in the
-        ;; solution returned by compare-mrss().  hence, it could be (even more)
-        ;; difficult to move from :id to :characters LNK values in those EPs
-        ;; later on.
+        ;; effect on the `lnk' value in EPs is destructive.  unfortunately, EPs
+        ;; get copied in equate-all-qeqs(), and those copies will end up in the
+        ;; solution returned by compare-mrss().  hence, we need to make sure to
+        ;; destructively set LNK values early enough.           (16-jul-08; oe)
         ;;
         (extract-string-from-g-edge edge)
-        (let* ((imrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs imrs) imrs))
+        (let* ((imrs (mt:map-mrs mrs :semi :backward))
+               (imrs (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs imrs) imrs))
                #+:logon
                (roles (list (mrs::vsym "TPC") (mrs::vsym "PSV")))
                ;;

@@ -579,11 +579,6 @@
 
       (let ((status (lkb::set-up-compare-frame 
                      frame lkb::*parse-record* :runp runp :display display)))
-        
-        (sleep 0.5)
-        #+:debug 
-        (break)
-
         ;;
         ;; _fix_me_
         ;; grey out `Save' button in compare frame, when we have a read-only

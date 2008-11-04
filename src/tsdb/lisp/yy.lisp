@@ -76,6 +76,7 @@
                    ((and (integerp start) (integerp end)
                          (zerop (mod start 100)) (zerop (mod end 100)))
                     (setf word (read-form))
+                    (read-form)
                     (skip-to #\))
                     (when (read-character #\))
                       (list start end word nil)))

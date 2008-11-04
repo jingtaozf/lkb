@@ -45,7 +45,7 @@
   ;; begin level 1
   (define-key map [menu-bar lkb redefine-type]
     (fi::menu "Redefine type"
-	      'redefine-type))  
+	      'lkb::redefine-type))  
   (define-key map [menu-bar lkb break] (name-keymap "---"))
   (define-key map [menu-bar lkb lexicon] (name-keymap "Lexicon"))
   (define-key map [menu-bar lkb generate] (name-keymap "Generate"))
@@ -57,74 +57,74 @@
   ;; (generate)
   (define-key map [menu-bar lkb lexicon batch_check]
     (fi::menu "Batch Check Lexicon"
-	      'batch-check-lexicon))
+	      'lkb::batch-check-lexicon))
   (define-key map [menu-bar lkb lexicon load_tdl]
     (fi::menu "Import TDL Entries to LexDB"
-	      'command-load-tdl-to-scratch))
+	      'lkb::command-load-tdl-to-scratch))
   ;; (generate)
   (define-key map [menu-bar lkb generate index]
     (fi::menu "Index"
-	      'index-for-generator))
+	      'lkb::index-for-generator))
   (define-key map [menu-bar lkb generate print_chart]
     (fi::menu "Print chart input"
-	      'print-gen-chart-input))
+	      'lkb::print-gen-chart-input))
   (define-key map [menu-bar lkb generate print_chart]
     (fi::menu "Print chart"
-	      'print-gen-chart))
+	      'lkb::print-gen-chart))
   (define-key map [menu-bar lkb generate show_chart]
     (fi::menu "Show chart"
-	      'show-gen-chart))
+	      'lkb::show-gen-chart))
   (define-key map [menu-bar lkb generate redisplay]
     (fi::menu "Redisplay realization"
-	      'show-gen-result))
+	      'lkb::show-gen-result))
   (define-key map [menu-bar lkb generate from_edge]
     (fi::menu "Generate..."
-	      'generate-from-edge))
+	      'lkb::generate-from-edge))
   ;; (parse)
   (define-key map [menu-bar lkb parse batch_parse]
     (fi::menu "Batch parse..."
-	      'parse-sentences-batch))
+	      'lkb::parse-sentences-batch))
   (define-key map [menu-bar lkb parse print_chart]
     (fi::menu "Print chart"
-	      'print-chart))
+	      'lkb::print-chart))
   (define-key map [menu-bar lkb parse show_chart]
     (fi::menu "Show chart"
-	      'show-chart))
+	      'lkb::show-chart))
   (define-key map [menu-bar lkb parse redisplay_parse]
     (fi::menu "Redisplay parse"
-	      'show-parse))
+	      'lkb::show-parse))
   (define-key map [menu-bar lkb parse parse_input]
     (fi::menu "Parse input..."
 	      'clim-user::do-parse-batch))
   ;; (view)
   (define-key map [menu-bar lkb view lexical_rule]
     (fi::menu "Lexical rule..."
-	      'show-lex-rule))
+	      'lkb::show-lex-rule))
   (define-key map [menu-bar lkb view grammar_rule]
     (fi::menu "Grammar rule..."
-	      'show-grammar-rule))
+	      'lkb::show-grammar-rule))
   (define-key map [menu-bar lkb view word_entries]
     (fi::menu "Word entries..."
-	      'show-words))
+	      'lkb::show-words))
   (define-key map [menu-bar lkb view lex_entry]
     (fi::menu "Lex entry..."
-	      'show-lex))
+	      'lkb::show-lex))
   (define-key map [menu-bar lkb view type_expanded]
     (fi::menu "Expanded type..."
-	      'show-type))
+	      'lkb::show-type))
   (define-key map [menu-bar lkb view type_definition]
     (fi::menu "Type definition..."
-	      'show-type-spec))
+	      'lkb::show-type-spec))
   (define-key map [menu-bar lkb view type_hierarchy]
     (fi::menu "Type hierarchy..."
-	      'show-type-tree))
+	      'lkb::show-type-tree))
   ;; (load)
   (define-key map [menu-bar lkb load reload]
     (fi::menu "Reload grammar"
-	      'reload-script-file))
+	      'lkb::reload-script-file))
   (define-key map [menu-bar lkb load complete]
     (fi::menu "Complete grammar..."
-	      'read-script-file)))
+	      'lkb::read-script-file)))
 
 (defun name-keymap (str) 
   (cons str (make-sparse-keymap str)))
@@ -172,31 +172,31 @@
 (defconst lkb-menu
     '("LKB"
       ("Load"
-       ["Complete grammar..." read-script-file t]
-       ["Reload grammar" reload-script-file t])
+       ["Complete grammar..." lkb::read-script-file t]
+       ["Reload grammar" lkb::reload-script-file t])
       ("View"
-       ["Type hierarchy..." show-type-tree t]
-       ["Type definition..." show-type-spec t]
-       ["Expanded type..." show-type t]
-       ["Lex entry..." show-lex t]
-       ["Word entries..." show-words t]
-       ["Grammar rule..." show-grammar-rule t]
-       ["Lexical rule..." show-lex-rule t])
+       ["Type hierarchy..." lkb::show-type-tree t]
+       ["Type definition..." lkb::show-type-spec t]
+       ["Expanded type..." lkb::show-type t]
+       ["Lex entry..." lkb::show-lex t]
+       ["Word entries..." lkb::show-words t]
+       ["Grammar rule..." lkb::show-grammar-rule t]
+       ["Lexical rule..." lkb::show-lex-rule t])
       ("Parse"
        ["Parse input..." clim-user::do-parse-batch t]
-       ["Redisplay pars" show-parse t]
-       ["Show chart" show-chart t]
-       ["Print chart" print-chart t]
-       ["Batch parse..." parse-sentences-batch t])
+       ["Redisplay pars" lkb::show-parse t]
+       ["Show chart" lkb::show-chart t]
+       ["Print chart" lkb::print-chart t]
+       ["Batch parse..." lkb::parse-sentences-batch t])
       ("Generate"
-       ["Generate..." generate-from-edge t]
-       ["Redisplay realization" show-gen-result t]
-       ["Show chart" show-gen-chart t]
-       ["Print chart" print-gen-chart t]
-       ["Print chart input" print-gen-chart-input t]
-       ["Index" index-for-generator t])
+       ["Generate..." lkb::generate-from-edge t]
+       ["Redisplay realization" lkb::show-gen-result t]
+       ["Show chart" lkb::show-gen-chart t]
+       ["Print chart" lkb::print-gen-chart t]
+       ["Print chart input" lkb::print-gen-chart-input t]
+       ["Index" lkb::index-for-generator t])
       "---"
-      ["Redefine type" redefine-type t]
+      ["Redefine type" lkb::redefine-type t]
 ))
       
 (add-hook 'fi:lisp-mode-hook 
@@ -218,18 +218,29 @@
 	     (eval-in-lisp ,(format "(%s)" com))))))
 
 (define-lisp-commands 
-    '(read-script-file reload-script-file show-type-tree show-type-spec 
-      show-type show-lex show-words show-grammar-rule show-lex-rule 
-      clim-user::do-parse-batch show-parse show-chart print-chart 
-      parse-sentences-batch generate-from-edge 
+    '(lkb::read-script-file 
+      lkb::reload-script-file 
+      lkb::show-type-tree
+      lkb::show-type-spec 
+      lkb::show-type 
+      lkb::show-lex lkb::show-words
+      lkb::show-grammar-rule 
+      lkb::show-lex-rule 
+      clim-user::do-parse-batch 
+      lkb::show-parse 
+      lkb::show-chart 
+      lkb::print-chart 
+      lkb::parse-sentences-batch 
+      lkb::generate-from-edge 
       ;; generator commands
-      show-gen-result 
-      show-gen-chart print-gen-chart
-      print-gen-chart-input
-      index-for-generator
+      lkb::show-gen-result 
+      lkb::show-gen-chart 
+      lkb::print-gen-chart
+      lkb::print-gen-chart-input
+      lkb::index-for-generator
       ;; lexicon commands
-      batch-check-lexicon
-      command-load-tdl-to-scratch))
+      lkb::batch-check-lexicon
+      lkb::command-load-tdl-to-scratch))
 
 
 (if

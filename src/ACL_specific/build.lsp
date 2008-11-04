@@ -74,26 +74,15 @@
   ;;
 (pushnew :psql *features*)
 
-;;;
-;;; include LUI support code (disabled by default, though) on 
-;;; those platforms supported
+;;; 
+;;; include LUI support code (disabled by default, though) on those platforms
+;;; supported
 ;;;
 #+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
 
 (compile-system "lkb" :force t)
 (setq make::*building-image-p* nil)
-
-;;;
-;;; even though, as of may-04, we build with the PSQL code in the image, we do
-;;; not want to operate in PSQL-mode unless explicitly requested, i.e. by the
-;;; end user running an image setting an environment variable PSQL (the same
-;;; strategy we use for turning on the LUI).  hence, drop :psql feature now and
-;;; leave it to start-lkb() to initialize PSQL and put it back on if requested.
-;;;
-;;; (bmw - 05jun05) the global *lexdb-params* achieves this purpose more 
-;;;                 cleanly
-;;(setf *features* (delete :psql *features*))
 
 (setf excl:*restart-init-function* 
   #'(lambda () (lkb::start-lkb t)))

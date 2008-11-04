@@ -167,7 +167,6 @@ an MRS from a FS representation of an MRS")
     correspond to the value of the pred - so they could be the
     type of the ep fs or the value of *rel-name-path*")
 
-
 ;;; types for variable naming in mrsoutput
 
 (defparameter *event-type* (vsym "event"))
@@ -177,6 +176,15 @@ an MRS from a FS representation of an MRS")
 (defparameter *ref-ind-type* (vsym "ref-ind"))
 (defparameter *deg-ind-type* (vsym "deg-ind"))
 (defparameter *non_event-type* (vsym "non_event"))
+;;;
+;;; _fix_me_
+;;; the above should soon be deprecated, due to the VPM extension. 
+;;;                                                            (29-jul-08; oe)
+;;;
+;;; determine which VPM to use in mapping MRS variable types; none by default,
+;;; for backwards compatibility (in an interim transition perioid, i hope).
+;;;
+(defparameter *variable-type-mapping* nil)
 
 ;;; used in mrsresolve (code for scoping MRSs)
 

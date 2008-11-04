@@ -136,6 +136,13 @@
       (debug-unify-arcs dag1 dag2 path)
       (setf (dag-copy dag1) nil))
      (t
+      ;;
+      ;; to build a robust unifier, would it be sufficient to
+      ;; - determine the most specific type subsuming both input types
+      ;; - recurse over features only that are appropriate for that type
+      ;; - discard any additional information from the two input structure
+      ;; --- we wonder ...
+      ;;
       (push (make-failure 
              :nature :type :path (reverse path)
              :type1 (unify-get-type dag1) :type2 (unify-get-type dag2))

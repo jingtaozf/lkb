@@ -27,13 +27,9 @@
 ;;;
 ;;; @ version
 ;;;
-;;; : token separator (also marks transition from string- to token-level rules)
+;;; : token separator (applied once string rewriting has saturated)
 ;;;
 ;;; - replace
-;;;
-;;; + augment (only in token-level mode)
-;;;
-;;; ^ ersatz (currently only in token-level mode)
 ;;;
 ;;; #42
 ;;;
@@ -43,32 +39,33 @@
 ;;;
 ;;; </foo/bar file inclusion: `/foo/bar' is read at this point
 ;;;
-;;; | continuation line for token-level rule, in pattern or substitution, e.g.
-;;;
-;;;   +it
-;;;   |'s			its
-;;;
-;;;   +its			it
-;;;   |				's
-;;;
 
 (in-package :lkb)
 
 (defparameter *repp-debug-p* t)
 
-(defparameter *repp* nil)
+(defparameter *repps* nil)
+
+(defparameter *repp-calls* nil)
+
+(defparameter *repp-interactive* nil)
+
+(defparameter *repp-iterations* 4711)
 
 (defstruct repp
+  id
   version
-  (tokenizer (ppcre:create-scanner "[ \\t]+"))
-  global
-  local)
+  tokenizer
+  rules
+  groups
+  legacy)
 
 (defmethod print-object ((object repp) stream)
   (format 
    stream 
-   "#[REPP (~d global, ~d token-level rules @ `~a')]"
-   (length (repp-global object)) (length (repp-local object)) 
+   "#[REPP ~(~a~) (~d rules~@[ @ `~a'~])]"
+   (repp-id object)
+   (length (repp-rules object))
    (repp-tokenizer object)))
 
 (defstruct fsr
@@ -77,17 +74,24 @@
   scanner
   target)
 
-(defun read-repp (file &key (repp (make-repp) reppp) (prefix ""))
+(defstruct token
+  id form start end from to class ersatz legacy)
+
+(defun read-repp (file &key id (repp (make-repp) reppp) (prefix ""))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
-             (type (pathname-type path)))
+             (type (pathname-type path))
+             (name (pathname-name path))
+             (id (or id (intern (string-upcase name) :keyword))))
+        (unless reppp (setf (repp-id repp) id))
         (format 
          t 
          "~&~aread-repp(): reading file `~a~@[.~a~]'.~%" 
-         prefix (pathname-name path) type)
+         prefix name type)
         (loop
             with separator = (ppcre:create-scanner "\\t+")
+            with repps = (list repp)
             for n from 1
             for line = (read-line stream nil nil)
             for length = (length line)
@@ -100,7 +104,7 @@
                          (version (if (string= version "$Date: " :end1 7)
                                     (subseq version 7 (- (length version) 2))
                                     version)))
-                    (setf (repp-version repp) 
+                    (setf (repp-version (first repps)) 
                       (string-trim '(#\Space) version))))
                  ((char= c #\<)
                   (let* ((name (subseq line 1 end))
@@ -109,13 +113,36 @@
                     (if file
                       (read-repp
                        file :repp repp :prefix (format nil "~a  " prefix))
-                        (format
-                         t
-                         "~aread-repp(): [~d] unable to include `~a'~%"
-                         prefix n name))))
+                      (format
+                       t
+                       "~aread-repp(): [~d] unable to include `~a'~%"
+                       prefix n name))))
+                 ((char= c #\>)
+                  (let* ((name (subseq line 1 end))
+                         (id (or (parse-integer name :junk-allowed t)
+                                 (intern (string-upcase name) :keyword)))
+                         (fsr (make-fsr :type :call :source id)))
+                    (push fsr (repp-rules (first repps)))))
                  ((char= c #\:)
                   (let ((tokenizer (subseq line 1 end)))
-                    (setf (repp-tokenizer repp) tokenizer)))
+                    (setf (repp-tokenizer (first repps)) tokenizer)))
+                 ((char= c #\#)
+                  (if (ppcre:scan "^#[ \\t]*$" line)
+                    (if (rest repps)
+                      (let ((repp (pop repps)))
+                        (setf (repp-rules repp) (nreverse (repp-rules repp)))
+                        (push repp (repp-groups (first repps))))
+                      (format
+                       t
+                       "~aread-repp(): [~d] spurious group close~%"
+                       prefix n))
+                    (let ((id (parse-integer line :start 1 :junk-allowed t)))
+                      (if (numberp id)
+                        (push (make-repp :id id) repps)
+                        (format
+                         t
+                         "~aread-repp(): [~d] invalid group identifier `~a'~%"
+                         prefix n (subseq line 1))))))
                  ((member c '(#\! #\- #\+ #\^) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
@@ -133,10 +160,16 @@
                                 (format nil "^~a$" source)))))
                            (match (make-fsr :type type :source source
                                             :scanner scanner :target target)))
+                      (unless (or (eq type :replace) (null (rest repps)))
+                        (format
+                         t
+                         "~aread-repp(): [~d] legacy `~a' invalid in group~%"
+                         prefix n c)
+                        (setf scanner nil))
                       (if scanner
                         (if (eq type :replace)
-                          (push match (repp-global repp))
-                          (push match (repp-local repp)))
+                          (push match (repp-rules (first repps)))
+                          (push match (repp-legacy (first repps))))
                         (format
                          t
                          "~aread-repp(): [~d] invalid pattern `~a'~%"
@@ -148,64 +181,139 @@
                  (t
                   (format
                    t
-                   "~aread-repp(): [~d] ~
-                    prefix ignoring unknown rule type `~a'~%"
-                   n c))))
+                   "~aread-repp(): [~d] ignoring unknown rule type `~a'~%"
+                   prefix n c))))
             when (null line) do
+              ;;
+              ;; _fix_me_
+              ;; check for left-over groups, i.e. ones not closed off by `#'
+              ;;
               (unless reppp
-                (setf (repp-global repp)
-                  (nreverse (repp-global repp)))
-                (setf (repp-local repp)
-                  (nreverse (repp-local repp))))
-              (unless reppp (format t "~a~%" repp))
-              (return (if reppp repp (setf *repp* repp))))))))
+                (setf (repp-rules repp)
+                  (nreverse (repp-rules repp)))
+                (setf (repp-legacy repp)
+                  (nreverse (repp-legacy repp))))
+              (unless reppp
+              #+:debug
+                (format t "~a~%" repp)
+                (push repp *repps*))
+              (return repp))))))
 
-(defun repp (string &key (repp *repp*) 
-                         (globalp t) (tokenp t)
+(defun repp (string &key (repp (first *repps*))
+                         (calls *repp-calls*)
                          (verbose *repp-debug-p*)
                          (format :pet))
-
-  (when (null repp)
-    (return-from repp (and (eq format :lkb) string)))
   
-  (let ((tokenizer (and repp (repp-tokenizer repp)))
-        (global (and repp (repp-global repp)))
-        (local (and repp (repp-local repp)))
-        (length 0)
-        result)
-    (when globalp
+  (when (keywordp repp)
+    (setf repp
       (loop
-          for rule in global
-          for scanner = (fsr-scanner rule)
-          for target = (fsr-target rule)
-          for match = (ppcre:regex-replace-all scanner string target)
-          when (and (eq verbose :trace) (not (string= string match))) do
-            (format
-             t
-             "~&|~a|~%  |~a|~%  |~a|~%~%"
-             (fsr-source rule) string match)
-          do
-            (setf string match)))
+          for foo in *repps*
+          when (eq (repp-id foo) repp) return foo)))
+  (when (null repp)
+    (return-from repp (and (eq format :string) string)))
+  
+  (let ((length 0)
+        tokens)
     (loop
-        with tokens = (ppcre:split tokenizer string)
+        with rules = (copy-list (repp-rules repp))
+        with repps = (list repp)
+        with matchp with counts
+        for rule = (pop rules)
+        while rule
+        #+:debug do
+          #+:debug
+          (format
+           t
+           "~&[~@[+~]~a ~a] ~a~%  :~(~a~) ~a~%~%"
+           matchp n (length rules) (first repps)
+           (fsr-type rule) (fsr-source rule))
+        when (eq (fsr-type rule) :call) do
+          (let* ((id (fsr-source rule))
+                 (repp
+                  (loop
+                      for repp 
+                      in (if (numberp id) (repp-groups (first repps)) *repps*)
+                      when (eql id (repp-id repp)) return repp)))
+            (unless repp
+              (error "repp(): invalid call target `~(~a~)'" id))
+            (when (or (numberp id)
+                      (and calls (symbolp calls))
+                      (smember id calls))
+              (push (make-fsr :type :pop) rules)
+              (setf rules (append (repp-rules repp) rules))
+              (push repp repps)
+              (push 0 counts)
+              (setf matchp nil)
+              (when (eq verbose :trace) (format t "~&>~(~a~)~%~%" id))))
+        else when (eq (fsr-type rule) :pop) do
+          (cond
+           ((and matchp
+                 (numberp (first counts))
+                 (or (null *repp-iterations*)
+                     (< (first counts) *repp-iterations*)))
+            (push (make-fsr :type :pop) rules)
+            (setf rules (append (repp-rules (first repps)) rules))
+            (incf (first counts))
+            (when (eq verbose :trace)
+              (format t ">~(~a~)~%~%" (repp-id (first repps)))))
+           (t
+            (when (eq verbose :trace)
+              (format t "<~(~a~)~%~%" (repp-id (first repps))))
+            (pop repps)
+            (pop counts)))
+          (setf matchp nil)
+        else do
+          (let* ((scanner (fsr-scanner rule))
+                 (target (fsr-target rule))
+                 (match (ppcre:regex-replace-all scanner string target)))
+            (unless (string= string match)
+              (setf matchp t)
+              (when (eq verbose :trace)
+                (format
+                 t
+                 "~&|~a|~%  |~a|~%  |~a|~%~%"
+                 (fsr-source rule) string match))
+              (setf string match))))
+    (setf tokens
+      (loop
+          with result
+          with i = 0
+          with id = 41
+          for form in (ppcre:split (repp-tokenizer repp) string)
+          unless (string= form "")
+          do
+            (let* ((id (incf id))
+                   (start i)
+                   (end (incf i))
+                   (token
+                    (make-token :id id :form form :start start :end end)))
+              (incf length)
+              (push token result)
+              (when verbose
+                (format t "  (~a) [~a:~a] |~a|~%" id start end form)))
+          finally (return (nreverse result))))
+    
+    ;;
+    ;; _fix_me_
+    ;; for a limited transition period, still apply the old (FSPP) legacy,
+    ;; token-level rules.  once the HandOn release is done, ditch this code.
+    ;;                                                         (17-oct-08; oe)
+    (loop
         for token in tokens
-        unless (string= token "") do
-          (incf length)
+        for form = (token-form token)
+        do
           (loop
-              with extra = nil
-              for rule in (when tokenp local)
+              for rule in (repp-legacy repp)
               for type = (fsr-type rule)
               for scanner = (fsr-scanner rule)
               for target = (fsr-target rule)
-              for match = (ppcre:regex-replace scanner token target)
-              when (and (eq verbose :trace) (not (string= token match))) do
+              for match = (ppcre:regex-replace scanner form target)
+              when (and (eq verbose :trace) (not (string= form match))) do
                 (format
                  t
                  "~&|~a|~%  |~a|~%  |~a|~%~%"
                  (fsr-source rule) token match)
-              when (eq type :substitute) do
-                (setf token match)
-              else unless (string= token match) do
+              unless (string= form match) do
                 ;;
                 ;; _fix_me_
                 ;; regex-replace() always returns a fresh string, even if the
@@ -221,65 +329,76 @@
                 ;; an ersatzing table and use non-string tokens (indices into
                 ;; the table) instead.                         (1-feb-03; oe)
                 ;;
-                (push (list type (if (eq type :ersatz) token match)) extra)
-                (when (eq type :ersatz) (setf token match))
-                
-              finally
-                (push (cons token extra) result)))
-    (loop
-        with tokens = (nreverse result)
-        with result = nil
-        with i = 0
-        with id = 41
-        for (form . extra) in tokens
-        for surface = (or (second (find :ersatz extra :key #'first)) form)
-        for start = i
-        for end = (incf i)
-        do
-          (push (list (incf id) start end form surface) result)
-          (unless (eq format :lkb)
-            (loop
-                for (type form) in extra
-                unless (eq type :ersatz) do 
-                  (push (list (incf id) start end form form) result)))
-        when verbose do
-          (format t "  (~a) [~a:~a] |~a|" id start end form)
-          (loop
-              for foo in extra
-              for type = (case (first foo)
-                           (:substitute #\-)
-                           (:augment #\+)
-                           (:ersatz #\^))
-              for form = (second foo)
-              do (format t " {~c |~a|}" type form)
-              finally (format t "~%"))
-        finally 
-          (return
-            (case format
-              (:lkb
+                (case type
+                  (:substitute
+                   (setf form (setf (token-form token) match)))
+                  (:ersatz
+                   (setf form (setf (token-ersatz token) match)))
+                  (:augment
+                   (push (cons type match) (token-legacy token))))))
+                          
+    #+:null
+    (repp-align string tokens)
+    (case format
+      ((:string :lkb)
+       (let ((forms (loop
+                        for token in tokens
+                        collect (or (token-ersatz token) (token-form token)))))
+         (if (eq format :string)
+           (values (format nil "~{~a~^ ~}" forms) (length forms))
+           (values forms length))))
+      (:pet
+       (loop
+           for token in tokens
+           for id = (token-id token)
+           for form = (escape-string (token-form token))
+           for start = (token-start token)
+           for end = (token-end token)
+           for yy = (format 
+                     nil 
+                     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
+                     id start end (or (token-ersatz token) form) form)
+           collect yy into yys
+           do
+             (loop
+                 for legacy in (token-legacy token)
+                 for yy = (format 
+                           nil 
+                           "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
+                           id start end (rest legacy) form)
+                 do (push yy yys))
+           finally 
+             (return
+               (values (format nil "~{~a~^ ~}" yys) length))))
+      (:list
+       (let (result)
+         (loop 
+             for token in tokens
+             for id = (token-id token)
+             for form = (token-form token)
+             for start = (token-start token)
+             for end = (token-end token)
+             for list = (list id start end form form)
+             do
+               (push list result)
                (loop
-                   for i = -1
-                   for token in (nreverse result)
-                   for start = (second token)
-                   for form = (fourth token)
-                   unless (= start i) collect form into forms
-                   finally 
-                     (return (values (format nil "~{~a~^ ~}" forms)
-                                     (length forms)))))
-              (:pet
-               (loop
-                   for (id start end form surface) in (nreverse result)
-                   for token = (format 
-                                nil 
-                                "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-                                id start end 
-                                (escape-string form) (escape-string surface))
-                   collect token into tokens
-                   finally 
-                     (return
-                       (values (format nil "~{~a~^ ~}" tokens) length))))
-              (:list
-               (values (nreverse result) length)))))))
+                   for legacy in (token-legacy token)
+                   for list = (list id start end (rest legacy) form)
+                   do (push list result)))
+         (values (nreverse result) length)))
+      (:raw
+       (values tokens length)))))
+
+#+:null
+(defun repp-align (string tokens)
+  (loop
+      with tokens = (copy-list tokens)
+      with token = (pop tokens)
+      with form = (token-form token)
+      for i from 0
+      for c = (char string i)
+      unless (char= c #\space) do
+        (let ((j (position c form))))))
 
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
@@ -306,34 +425,59 @@
     ""))
 
 (defun clear-repp ()
-  (setf *repp* nil))
+  (setf *repps* nil))
 
-(defun repp-for-pet (string &optional tagger)
-  (if (and tagger (consp tagger) (keywordp (first tagger)))
-    (multiple-value-bind (tokens length)
-        (case (first tagger)
-          (:tnt
-           (apply 
-            #'tnt
-            (repp string :format :list :verbose nil)
-            (rest tagger))))
-      (loop
-          for (id start end form surface . tags) in tokens
-          for token = (format 
-                       nil 
-                       "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\",~
-                       ~{ ~s ~,4f~})" 
-                       id start end 
-                       (escape-string form) (escape-string surface) tags)
-          collect token into tokens
-          finally 
-            (return (values (format nil "~{~a~^ ~}" tokens) length))))
-    (repp string :format :pet :verbose nil)))
+(defun repp-for-pet (string &optional tagger &rest arguments)
+  (let* ((*repp-calls* (or (getf arguments :calls) *repp-calls*))
+         (repp (or (getf arguments :repp) (first *repps*)))
+         (format (or (getf arguments :format) :pet))
+         (verbose (getf arguments :verbose))
+         (result
+          (if (or (keywordp tagger)
+                  (and (consp tagger) (keywordp (first tagger))))
+            (multiple-value-bind (tokens length)
+                (case (if (keywordp tagger) tagger (first tagger))
+                  (:tnt
+                   (apply 
+                    #'tnt
+                    (repp string :repp repp :format :list :verbose verbose)
+                    (unless (keywordp tagger) (rest tagger)))))
+              (loop
+                  for (id start end form surface . tags) in tokens
+                  for token = (format 
+                               nil 
+                               "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\",~
+                                ~{ ~s ~,4f~})" 
+                               id start end
+                               (escape-string form) (escape-string surface)
+                               tags)
+                  collect token into tokens
+                  finally 
+                    (return (values (format nil "~{~a~^ ~}" tokens) length))))
+            (repp string :repp repp :format format :verbose verbose))))
+    (let ((stream (getf arguments :stream)))
+      (cond
+       ((or (streamp stream) (eq stream t))
+        (format stream "~a~%" result))
+       ((stringp stream)
+        (with-open-file (stream stream
+                         :direction :output :if-exists :supersede)
+          (format stream "~a~%" result)))
+       (t                 
+        result)))))
 
 (defparameter *taggers*
+  #+:logon
+  '((:tnt "tnt -z100 ${LOGONROOT}/coli/tnt/models/wsj -" 2))
+  #-:logon
   '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
 
-(defun tnt (tokens &optional run &key (n 1))
+(defun tnt (tokens &optional run &key (n 1 np))
+  (unless (or run np)
+    (loop
+        for run in *taggers*
+        when (eq (first run) :tnt)
+        do (setf n (third run))))
   (labels ((commentp (string)
              (and (>= (length string) 2)
                   (characterp (char string 0)) (char= (char string 0) #\%)
@@ -342,8 +486,8 @@
     (let* ((run (or run 
 		    (loop
 			for run in *taggers*
-		       when (eq (first run) :tnt)
-			return (first (rest run)))
+                        when (eq (first run) :tnt)
+			return (second run))
 		    "tnt -z100 /user/oe/src/tnt/models/wsj -"))
 	   (command (format nil "exec ~a" run *taggers*))
 	   (input (format nil "/tmp/.tnt.in.~a" (current-user)))
@@ -387,7 +531,7 @@
                       (setf (fill-pointer buffer) 0)
                       (incf n))
                   else do
-                       (vector-push c buffer)
+                    (vector-push c buffer)
                   finally
                     (when (not (zerop (fill-pointer buffer)))
                       (push (read-from-string (copy-seq buffer)) foo))

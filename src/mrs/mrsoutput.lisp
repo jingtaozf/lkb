@@ -189,7 +189,7 @@ duplicate variables")
 (defun create-new-handle-var (gen)
   (let* ((idnumber (funcall gen)))
     (make-var 
-     :type "h"
+     :type (determine-variable-type *handle-type*)
      :id idnumber)))
 
 (defun create-variable (fs gen)
@@ -424,7 +424,7 @@ duplicate variables")
               unless (or (member feature *ignored-sem-features*)
                          (eql feature (car *rel-handel-path*))
                          (eql feature (car *rel-name-path*))
-                         #+:lkb(eql feature lkb::*recording-word*))
+                         #+:lkb (eql feature lkb::*recording-word*))
               collect 
                 (make-fvpair :feature feature
                              :value 
@@ -781,8 +781,8 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
 ;;; ************************************************************
 
 (defun determine-variable-type (fs)
-  (let ((type (create-type (fs-type fs))))
-    (cond ((equal-or-subtype type *event-type*) "e")
+  (let ((type (create-type (if (is-valid-fs fs) (fs-type fs) fs))))
+    (cond (*variable-type-mapping* (string-downcase type))
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *non_expl-ind-type*) "i")
           ((equal-or-subtype type *deg-ind-type*) "d")

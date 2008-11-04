@@ -324,29 +324,41 @@
           (return result))
     string))
 
-(defun sppp-for-pet (string &optional tagger)
+(defun sppp-for-pet (string &optional tagger &key stream)
   (declare (ignore tagger))
-  (with-output-to-string (stream)
-    (loop
-        with *package* = (find-package :lkb)
-        with id = -1
-        for token in (sppp string)
-        for form = (rest (assoc :form token))
-        for start = (rest (assoc :start token))
-        for end = (rest (assoc :end token))
-        do
-          (loop
-              for analysis in (rest (assoc :analyses token))
-              for stem = (rest (assoc :stem analysis))
-              for tag = (rest (assoc :tag analysis))
-              for probability
-              = (when tag (or (rest (assoc :probability analysis)) 0.0))
-              for rules = (loop
-                              for rule in (rest (assoc :rules analysis))
-                              collect (rest (assoc :id rule)))
-              do
-                (format
-                 stream
-                 "(~a, ~a, ~a, 0, ~s ~s, 0, ~{\"$~(~s~)\"~^ ~}~
-                  ~:[~;, ~s ~a~]) "
-                 (incf id) start end stem form rules tag tag probability)))))
+  (let ((result
+         (with-output-to-string (stream)
+           (loop
+               with *package* = (find-package :lkb)
+               with id = -1
+               for token in (sppp string)
+               for form = (rest (assoc :form token))
+               for start = (rest (assoc :start token))
+               for end = (rest (assoc :end token))
+               do
+                 (loop
+                     for analysis in (rest (assoc :analyses token))
+                     for stem = (rest (assoc :stem analysis))
+                     for tag = (rest (assoc :tag analysis))
+                     for probability
+                     = (when tag (or (rest (assoc :probability analysis)) 0.0))
+                     for rules = (loop
+                                     for rule in (rest (assoc :rules analysis))
+                                     collect (rest (assoc :id rule)))
+                     do
+                       (format
+                        stream
+                        "(~a, ~a, ~a, 0, ~s ~s, 0, ~{\"$~(~s~)\"~^ ~}~
+                         ~:[~;, ~s ~a~]) "
+                        (incf id) start end stem form rules
+                        tag tag probability))))))
+    (cond
+     ((or (streamp stream) (eq stream t))
+      (format stream "~a~%" result))
+     ((stringp stream)
+      (with-open-file (stream stream
+                       :direction :output :if-exists :supersede)
+        (format stream "~a~%" result)))
+     (t                 
+      result))))
+

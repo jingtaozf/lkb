@@ -438,6 +438,10 @@
                         nil 
                         "maximum number of active sessions exhausted"))))))
          (results (get-field :results item)))
+    ;;
+    ;; _fix_me_
+    ;; so, why not invoke the full enrich-result() here?        (10-oct-08; oe)
+    ;;
     (when results
       (nconc item (acons :unique (length results) nil))
       (setf (get-field :results item) results))

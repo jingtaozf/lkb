@@ -301,6 +301,8 @@
     (setf  *check-paths* nil)
     #+:preprocessor
     (preprocessor:clear-preprocessor)
+    #+:preprocessor
+    (clear-repp)
     (smaf:reset-conf)
     (mt:initialize-transfer))
 

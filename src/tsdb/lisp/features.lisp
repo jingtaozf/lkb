@@ -1152,7 +1152,7 @@
          ;; _fix_me_
          ;; it appears that the :ratio computation in translate-item() was not
          ;; correct, hence the final HandOn profiles (and likely also the ones
-         ;; we used for the 2007 TMI paper) always have zero :ration values.
+         ;; we used for the 2007 TMI paper) always have zero :ratio values.
          ;; not hard to (re-)compute at this point, so possibly we should even
          ;; ditch the corresponding (and flawed) code in translate-item().
          ;;                                                    (30-jun-08; oe)
@@ -1160,7 +1160,7 @@
            (let ((ratio (divide olength length)))
              (if (get-field :ratio flags)
                (setf (get-field :ratio flags) ratio)
-               (nconc flags (acons :ration ratio nil)))))
+               (nconc flags (acons :ratio ratio nil)))))
          (push (acons key value result) ranks)
        finally
          (return

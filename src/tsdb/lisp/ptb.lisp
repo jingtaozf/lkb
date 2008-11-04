@@ -17,23 +17,29 @@
 
 (defvar *ptb-use-pos-tags-p* t)
 
-(defun read-items-from-ptb-directory (path &key (base 1))
+(defun read-items-from-ptb-directory (path &key (base 1) (offset 20000000))
   (loop
       with id = base
       for set in (read-ptb-directory path)
       append
         (loop
+            with current with range
             for (file . item) in set
             for ptb = (first (read-ptb-from-string item))
             for length = (length (extract-ptb-leaves ptb))
             for category = (ignore-errors (first ptb))
-            for origin = (format nil "~(~a~)" file)
+            for origin = (format nil "~a" file)
+            unless (string= current file) do 
+              (setf range (parse-integer (ppcre:scan-to-strings "[0-9]+" file)))
+              (setf id 1)
+              (setf current file)
             when (and ptb category)
             collect (pairlis '(:i-id :i-origin :i-category
                                :i-wf :i-length :i-input)
-                             (list id origin category
-                                   1 length (write-to-string ptb)))
-            do (incf id))))
+                             (list (+ offset (* range 1000) id)
+                                   origin category
+                                   1 length (format nil "(~a)" ptb)))
+            and do (incf id))))
 
 (defun read-token (stream &optional breaks)
   (loop
@@ -59,14 +65,14 @@
   (let* ((path (if (stringp path) path (namestring path)))
          (pattern (make-pathname :directory path :name :wild))
          (files (directory pattern))
+         (files (sort files #'string< :key #'namestring))
          (buffer (make-array 4096
                              :element-type 'character
                              :adjustable t :fill-pointer 0))
          result)
       (loop
           for file in files
-          for base = (pathname-name (pathname file))
-          for name = (intern (string-upcase base))
+          for name = (pathname-name (pathname file))
           when (probe-file file) do
             (format t "~&now opening `~a':~%" file)
             (with-open-file (stream file :direction :input)
@@ -127,15 +133,13 @@
    (t nil)))
 
 (defun rewrite-ptb-token (token pos)
+  (declare (ignore pos))
   (cond
-   ((string-equal pos "nnp") "NameErsatz")
-   ((member pos '("``" "''" "," "\"") :test #'string=) "")
-   ((member token '("--" "...") :test #'string=) "")
+   #+:null
    ((string-equal pos "-lrb-") "(")
+   #+:null
    ((string-equal pos "-rrb-") ")")
-   (t (if lkb::*preprocessor*
-        (lkb::preprocess token :globalp nil :format :lkb :verbose nil)
-        token))))
+   (t token)))
 
 (defun ptb-preprocess (string 
                        &key rawp (plainp t) (posp *ptb-use-pos-tags-p*))
@@ -177,4 +181,12 @@
     #'(lambda (string)
         (let ((*package* (find-package :tsdb)))
           (ptb-preprocess string :plainp t)))))
-
+
+#+:null
+(loop
+    for i in '("00" "01" "02" "03" "04" "05" "06" "07"
+               "08" "09" "10" "11" "12" "13" "14" "15"
+               "16" "17" "18" "19" "20" "21" "22" "23" "24")
+    do (do-import-items
+         (format nil "/home/oe/src/ptb/mrg/~a" i)
+         (format nil "test/wsj~a" i) :format :ptb))

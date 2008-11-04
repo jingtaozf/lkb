@@ -139,6 +139,9 @@
     (translate :serverp serverp :file file)))
 
 (defun start-generator-server (&optional (forkp t) (gcp t))
+  (unless (first *translate-grid*)
+    (return-from start-generator-server))
+
   (when (and *generator-server* forkp) 
     (stop-generator-server)
     (with-open-file (log (merge-pathnames

@@ -1940,8 +1940,18 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   ;;
   (let* ((varname (read-mrs-atom istream))
          (name (and varname (string varname)))
-         (type (and name (string-downcase (subseq name 0 1))))
-         (id (and name (parse-integer name :start 1 :junk-allowed t)))
+         ;;
+         ;; _fix_me_
+         ;; while generator fix-up and trigger rules operate on internal MRSs,
+         ;; i.e. those using grammar-internal types, we need to be able to read
+         ;; such structures, if only for debugging using the multi-MRS browser.
+         ;; though, quite generally, i fail to see why the reader should have 
+         ;; to enforce one-character variable types anyway?      (7-aug-08; oe)
+         ;;
+         (split #-:logon 1
+                #+:logon (and name (position-if #'digit-char-p name)))
+         (type (when name (string-downcase (subseq name 0 split))))
+         (id (and name (parse-integer name :start split :junk-allowed t)))
          (existing (and name (assoc varname *already-read-vars*)))
          (var (or (cdr existing)
                   (make-var :id (if varname 

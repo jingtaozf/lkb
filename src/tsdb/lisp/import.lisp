@@ -330,7 +330,7 @@
                 (when (get-field :author extras)
                   (setf author (get-field :author extras)))
                 (when (get-field :date extras)
-                  (setf author (get-field :date extras)))
+                  (setf date (get-field :date extras)))
                 (let ((foo (get-field :index extras)))
                   (when (and (numberp foo) (not (= foo index)))
                     (format

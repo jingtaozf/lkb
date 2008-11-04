@@ -210,7 +210,7 @@ to something unexpected, so don't give people the temptation!
       
 
 (defun parse-wild-card-var (str)
-  ;;; expecting ! followed by a single character
+  ;;; expecting ? followed by a single character
   (let* ((pling-pos (position #\? str))
 	 (next-char (if pling-pos (elt str (+ 2 pling-pos)))))
     (if (and pling-pos (whitespacep next-char))

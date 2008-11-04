@@ -207,7 +207,7 @@
 ;; unusual return values cause system to hang...
 (defun cle-eval (str)
   (condition-case descr
-      (car (fi:eval-in-lisp "(list (eval-for-cle %s))" str))
+      (car (fi:eval-in-lisp "(list (lkb::eval-for-cle %s))" str))
     (error (princ (format "%s" descr))
 	   (sit-for 4))))
 

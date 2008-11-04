@@ -807,6 +807,8 @@
 		    (list "RMRS" :value 'rmrs :active mrsp)
                     (list "Indexed MRS" :value 'indexed :active mrsp)
                     (list "Scoped MRS" :value 'scoped :active mrsp)
+                    #+:logon
+                    (list "UTool MRS" :value 'utool :active mrsp)
                     (list "Dependencies" :value 'dependencies :active mrsp)
                     (list "Rephrase" :value 'rephrase :active mrsp))))
          (edge (ctree-edge tree)))
@@ -861,6 +863,10 @@
             (scoped
              (when edge
                (ignore-errors (funcall 'show-mrs-scoped-window edge))))
+            #+:logon
+            (utool
+             (when edge
+               (ignore-errors (funcall 'show-mrs-utool-window edge))))
             (dependencies
              (when edge
                (ignore-errors (funcall 'show-mrs-dependencies-window edge))))
@@ -1025,7 +1031,8 @@
   ;;
   ;; in case we are displaying the window with an uninitialized frame
   ;;
-  (when (null (compare-frame-edges frame))
+  (when (or (null (compare-frame-edges frame))
+            (null (compare-frame-discriminants frame)))
     (return-from draw-discriminants-window))
 
   (let ((discriminants (compare-frame-discriminants frame)))

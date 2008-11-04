@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2006 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2006 -- 2008 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -21,13 +21,10 @@
 (defstruct vpm
   id tms pms flags)
 
-(defstruct tm
-  lhs rhs)
-
 (defstruct pm
-  lhs rhs pmrs)
+  lhs rhs mrs)
 
-(defstruct pmr
+(defstruct mr
   left right (test :subsumption) (direction (cons t t)))
 
 (defparameter *vpms* nil)
@@ -54,7 +51,7 @@
                line)
             (declare (ignore foo bar))
             (when (and starts ends)
-              (when pm (setf (pm-pmrs pm) (nreverse (pm-pmrs pm))))
+              (when pm (setf (pm-mrs pm) (nreverse (pm-mrs pm))))
               (setf pm (make-pm))
               (let ((lhs (subseq line (aref starts 0) (aref ends 0)))
                     (rhs (subseq line (aref starts 1) (aref ends 1))))
@@ -74,51 +71,60 @@
               (setf (pm-rhs pm) (nreverse (pm-rhs pm)))
               (push pm (vpm-pms vpm))
               (setf line nil)))
-        when line
-        do
+        when line do
           (multiple-value-bind (foo bar starts ends) 
               (ppcre::scan
                "^\\s*(.+)\\s*([<>=]{2,3})\\s*(.+)\\s*$"
                line)
             (declare (ignore foo bar))
             (when (and starts ends)
-              (let ((pmr (make-pmr))
+              (let ((mr (make-mr))
                     (left (subseq line (aref starts 0) (aref ends 0)))
                     (test (subseq line (aref starts 1) (aref ends 1)))
                     (right (subseq line (aref starts 2) (aref ends 2))))
-                (setf (pmr-direction pmr)
+                (setf (mr-direction mr)
                   (if (string= test "==")
                     (cons t t)
                     (cons (position #\> test) (position #\< test))))
                 (when (position #\= test)
-                  (setf (pmr-test pmr) :equality))
+                  (setf (mr-test mr) :equality))
                 (ppcre:do-scans
                     (foo bar starts ends "([^ ]+)(?: |$)" left)
                   (declare (ignore foo bar))
                   (let* ((match (subseq left (aref starts 0) (aref ends 0)))
                          (n (length match)))
                     (push
-                     (if (and (char= (char match 0) #\[)
-                              (char= (char match (- n 1)) #\]))
-                       (cons :type (subseq match 1 (- n 1)))
-                       (mrs:vsym match))
-                     (pmr-left pmr))))
+                     (cond
+                      ((null pm) match)
+                      ((and (char= (char match 0) #\[)
+                            (char= (char match (- n 1)) #\]))
+                       (cons :type (subseq match 1 (- n 1))))
+                      (t (mrs:vsym match)))
+                     (mr-left mr))))
                 (ppcre:do-scans
                     (foo bar starts ends "([^ ]+)(?: |$)" right)
                   (declare (ignore foo bar))
                   (let* ((match (subseq right (aref starts 0) (aref ends 0)))
                          (n (length match)))
                     (push
-                     (if (and (char= (char match 0) #\[)
-                              (char= (char match (- n 1)) #\]))
-                       (cons :type (subseq match 1 (- n 1)))
-                       (mrs:vsym match))
-                     (pmr-right pmr))))
-                (setf (pmr-left pmr) (nreverse (pmr-left pmr)))
-                (setf (pmr-right pmr) (nreverse (pmr-right pmr)))
-                (push pmr (pm-pmrs pm)))))
+                     (cond
+                      ((null pm) match)
+                      ((and (char= (char match 0) #\[)
+                            (char= (char match (- n 1)) #\]))
+                       (cons :type (subseq match 1 (- n 1))))
+                      (t (mrs:vsym match)))
+                     (mr-right mr))))
+                (setf (mr-left mr) (nreverse (mr-left mr)))
+                (setf (mr-right mr) (nreverse (mr-right mr)))
+                (unless pm
+                  (setf (mr-left mr) (first (mr-left mr)))
+                  (setf (mr-right mr) (first (mr-right mr))))
+                (if pm
+                  (push mr (pm-mrs pm))
+                  (push mr (vpm-tms vpm))))))
         finally
-          (when pm (setf (pm-pmrs pm) (nreverse (pm-pmrs pm))))
+          (when pm (setf (pm-mrs pm) (nreverse (pm-mrs pm))))
+          (setf (vpm-tms vpm) (nreverse (vpm-tms vpm)))
           (setf (vpm-pms vpm) (nreverse (vpm-pms vpm)))
           (push vpm *vpms*)
           (return vpm))))
@@ -142,11 +148,29 @@
   
   (let ((%variables%)
         (copy (mrs::make-psoa)))
-    (labels ((map-variable (variable)
+    (labels ((map-type (type)
+               (loop
+                   for mr in (vpm-tms vpm)
+                   for left
+                   = (if (eq direction :forward) (mr-left mr) (mr-right mr))
+                   when (and (if (eq direction :forward)
+                               (first (mr-direction mr))
+                               (rest (mr-direction mr)))
+                             (or (eq (mrs:vsym left) *vpm-wildcard*)
+                                 (compare-types
+                                  type left :type (mr-test mr) :internp t)))
+                   return (let ((right (if (eq direction :forward)
+                                         (mr-right mr)
+                                         (mr-left mr))))
+                            (if (eq (mrs:vsym right) *vpm-wildcard*)
+                              type
+                              right))
+                   finally (return type)))
+             (map-variable (variable)
                (if (mrs::var-p variable)
                  (or (rest (assoc variable %variables%))
                      (let ((copy (mrs::make-var 
-                                  :type (mrs:var-type variable)
+                                  :type (map-type (mrs:var-type variable))
                                   :id (mrs:var-id variable))))
                        (setf (mrs:var-extra copy)
                          (map-properties
@@ -222,14 +246,14 @@
                        collect match)
       do
         (loop
-            for pmr in (pm-pmrs pm)
-            when (test-pmr type values pmr direction) do
+            for mr in (pm-mrs pm)
+            when (test-pmr type values mr direction) do
               (loop
                   for property in lhs
                   do (pushnew property mapped :test #'eq))
               (loop
                   with right 
-                  = (if (eq direction :forward) (pmr-right pmr) (pmr-left pmr))
+                  = (if (eq direction :forward) (mr-right mr) (mr-left mr))
                   for property in rhs
                   for new in right
                   do
@@ -248,12 +272,12 @@
               (loop-finish))
       finally (return (nreverse result))))
 
-(defun test-pmr (type values pmr &optional (direction :forward))
+(defun test-pmr (type values mr &optional (direction :forward))
   (unless (if (eq direction :forward)
-            (first (pmr-direction pmr))
-            (rest (pmr-direction pmr)))
+            (first (mr-direction mr))
+            (rest (mr-direction mr)))
     (return-from test-pmr))
-  (let ((left (if (eq direction :forward) (pmr-left pmr) (pmr-right pmr))))
+  (let ((left (if (eq direction :forward) (mr-left mr) (mr-right mr))))
     (loop
         for value in values
         for match in left
@@ -264,7 +288,7 @@
            ((eq match *vpm-wildcard*) value)
            ((eq match *vpm-blade*) (null value))
            (t 
-            (case (pmr-test pmr)
+            (case (mr-test mr)
               (:equality
                (eq value match))
               (:subsumption

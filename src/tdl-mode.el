@@ -144,7 +144,7 @@ with no args, if that value is non-nil."
   (setq imenu-generic-expression
 	'((nil
 	   "^:begin\\s-*:instance\\s-*:status\\s-*:\\([a-zA-Z0-9_-]+\\)\\s-*\\." 1)
-	  ("Definitions" "^\\([a-zA-Z0-9_&!*+-]+\\)\\s-*:=" 1)))
+	  ("Definitions" "^\\([a-zA-Z0-9_&!*+-]+\\)\\s-*:[=<+]" 1)))
   (run-hooks 'tdl-mode-hook))
 
 (if (>= emacs-major-version 20)
@@ -158,10 +158,10 @@ with no args, if that value is non-nil."
 	 ("\\b[$][a-zA-Z0-9---_]+\\b" . font-lock-variable-name-face) ; template variables
 	 ("[#][a-zA-Z0-9---_]+" . font-lock-variable-name-face)         ; re-entrancies
 	 ("\\(\\[\\|,\\)[ \t\n]*\\([a-zA-Z0-9---_.]+\\)\\b" (2 font-lock-builtin-face)) ; features
-	 ("^[ \t\n]*\\([a-zA-Z0-9---_]+\\)[ \t\n]*\\((\\|:[<=]\\)" 
+	 ("^[ \t\n]*\\([a-zA-Z0-9---_]+\\)[ \t\n]*\\((\\|:[=<+]\\)" 
 	  (1  font-lock-function-name-face))	; template names and types being defined
 	 ("'[a-zA-Z0-9---_]+" . font-lock-string-face) ; single quoted predicates
-	 ("\\(:[=<]\\|&\\)"    . font-lock-constant-face) ; background syntax
+	 ("\\(:[=<+]\\|&\\)"    . font-lock-constant-face) ; background syntax
 	 ("#|\\(|[^#]\\|[^|]\\)*|#" . (0 font-lock-comment-face t)))) ; comments
 ;; If this is on font-lock-global-modes, then tdl-mode has been loaded ...
      (eval-after-load "font-lock"
@@ -195,10 +195,11 @@ with no args, if that value is non-nil."
         (catch 'out
           (while (and (not (bobp)) 
                       (not (= brack 0))
-                      (re-search-backward "[][<>(){}=]" ubound t))
+                      (re-search-backward "[][<>(){}=+]" ubound t))
             (if (and (eq (preceding-char) ?:)
                      (or (eq (following-char) ?=)
-                         (eq (following-char) ?<)))
+                         (eq (following-char) ?<)
+			 (eq (following-char) ?+)))
                 (throw 'out (setq brack 1))
               (if (memq (following-char) '(?\( ?{ ?< ?\[ )) ;; Closing backwards
                   (setq brack (1- brack))
@@ -208,7 +209,8 @@ with no args, if that value is non-nil."
               (if (and (= brack 1)
                        (eq (preceding-char) ?:)
                        (or (eq (following-char) ?=)
-                           (eq (following-char) ?<))
+                           (eq (following-char) ?<)
+			   (eq (following-char) ?+))
                        (not (tdl-one-line-expr-p indent-point)))
                   ;;;(if (tdl-empty-definition-line-p indent-point)
                   ;;;    (progn (beginning-of-line)

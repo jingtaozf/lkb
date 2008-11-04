@@ -19,9 +19,26 @@
 ;;; the list lexicographically before output.
 ;;;
 
+;;;
+;;; to make MaxEnt experimentation across data sets (and generally reference) a
+;;; little easier, item identifiers need to be globally unique.  to accomodate
+;;; existing data sets in this scheme, dan and i came up with a break-down of
+;;; identifiers as follows
+;;;
+;;; [         1 --      1,999]  
+;;; [     2,000 --      9,999] --- The Cathedral and the Bazaar
+;;; [ 1,000,000 --  1,999,999] --- VerbMobil
+;;; [ 2,000,000 --  2,999,999] --- ecommerce
+;;; [ 3,000,000 --  3,999,999] --- LOGON
+;;; [ 4,000,000 --  4,999,999] --- SciBorg
+;;; [10,000,000 -- 19,999,999] --- WeScience
+;;; [20,000,000 -- 29,999,999] --- PTB
+;;; 
+
 (((:path . "english") (:content . "TSNLP Test Suite"))
  ((:path . "csli") (:content . "CSLI (LinGO) Test Suite"))
  ((:path . "mrs") (:content . "DELPH-IN MRS Test Suite"))
+ ((:path . "cb") (:content . "The Cathedral and the Bazaar"))
  ((:path . "vm97") (:content . "VerbMobil 97"))
  ((:path . "vm97p") (:content . "VerbMobil 97 (Partials)"))
  ((:path . "vm98") (:content . "VerbMobil 98"))
@@ -35,6 +52,30 @@
  ((:path . "aged") (:content . "Aged VerbMobil Data"))
  ((:path . "parc") (:content . "Wall Street Journal (PTB; PARC DB)"))
  ((:path . "wsj00") (:content . "Wall Street Journal (PTB; Section 0)"))
+ ((:path . "wsj01") (:content . "Wall Street Journal (PTB; Section 1)"))
+ ((:path . "wsj02") (:content . "Wall Street Journal (PTB; Section 2)"))
+ ((:path . "wsj03") (:content . "Wall Street Journal (PTB; Section 3)"))
+ ((:path . "wsj04") (:content . "Wall Street Journal (PTB; Section 4)"))
+ ((:path . "wsj05") (:content . "Wall Street Journal (PTB; Section 5)"))
+ ((:path . "wsj06") (:content . "Wall Street Journal (PTB; Section 6)"))
+ ((:path . "wsj07") (:content . "Wall Street Journal (PTB; Section 7)"))
+ ((:path . "wsj08") (:content . "Wall Street Journal (PTB; Section 8)"))
+ ((:path . "wsj09") (:content . "Wall Street Journal (PTB; Section 9)"))
+ ((:path . "wsj10") (:content . "Wall Street Journal (PTB; Section 10)"))
+ ((:path . "wsj11") (:content . "Wall Street Journal (PTB; Section 11)"))
+ ((:path . "wsj12") (:content . "Wall Street Journal (PTB; Section 12)"))
+ ((:path . "wsj13") (:content . "Wall Street Journal (PTB; Section 13)"))
+ ((:path . "wsj14") (:content . "Wall Street Journal (PTB; Section 14)"))
+ ((:path . "wsj15") (:content . "Wall Street Journal (PTB; Section 15)"))
+ ((:path . "wsj16") (:content . "Wall Street Journal (PTB; Section 16)"))
+ ((:path . "wsj17") (:content . "Wall Street Journal (PTB; Section 17)"))
+ ((:path . "wsj18") (:content . "Wall Street Journal (PTB; Section 18)"))
+ ((:path . "wsj19") (:content . "Wall Street Journal (PTB; Section 19)"))
+ ((:path . "wsj20") (:content . "Wall Street Journal (PTB; Section 20)"))
+ ((:path . "wsj21") (:content . "Wall Street Journal (PTB; Section 21)"))
+ ((:path . "wsj22") (:content . "Wall Street Journal (PTB; Section 22)"))
+ ((:path . "wsj23") (:content . "Wall Street Journal (PTB; Section 23)"))
+ ((:path . "wsj24") (:content . "Wall Street Journal (PTB; Section 24)"))
  ((:path . "cell") (:content . "DT Cell Phone Groups (Development Section)"))
  ((:path . "ecpa") (:content . "Ecommerce Email (Product Availability)"))
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
@@ -74,4 +115,19 @@
  ((:path . "tiltopps") (:content . "HandOn Corpus from http://www.tilltopps.com"))
  ((:path . "turistveg") (:content . "HandOn Corpus from http://www.turistveg.no"))
  
- ((:path . "shiken") (:content . "Embryonic JaEn MT Test Suite")))
+ ((:path . "shiken") (:content . "Embryonic JaEn MT Test Suite"))
+ ((:path . "ws01") (:content . "WeScience Articles 1 -- 9"))
+ ((:path . "ws02") (:content . "WeScience Articles 10 -- 16"))
+ ((:path . "ws03") (:content . "WeScience Articles 17 -- 23"))
+ ((:path . "ws04") (:content . "WeScience Articles 24 -- 28"))
+ ((:path . "ws05") (:content . "WeScience Articles 29 -- 33"))
+ ((:path . "ws06") (:content . "WeScience Articles 34 -- 42"))
+ ((:path . "ws07") (:content . "WeScience Articles 43 -- 54"))
+ ((:path . "ws08") (:content . "WeScience Articles 55 -- 66"))
+ ((:path . "ws09") (:content . "WeScience Articles 67 -- 76"))
+ ((:path . "ws10") (:content . "WeScience Articles 77 -- 84"))
+ ((:path . "ws11") (:content . "WeScience Articles 85 -- 94"))
+ ((:path . "ws12") (:content . "WeScience Articles 95 -- 104"))
+ ((:path . "ws13") (:content . "WeScience Articles 105 -- 111"))
+ ((:path . "ws14") (:content . "WeScience Articles 112 -- 115")))
+ 

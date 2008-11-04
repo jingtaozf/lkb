@@ -331,17 +331,19 @@
                          for size = (parse-tsdb-count-nodes parse)
                          for tree = (tsdb::call-hook trees-hook parse)
                          for mrs = (tsdb::call-hook semantix-hook parse)
+                         for score = (edge-score parse)
+                         for flags = (acons :ascore score (edge-flags parse))
                          while (>= (decf nresults) 0) collect
                            (pairlis '(:result-id :mrs :tree
                                       :derivation :r-redges :size
                                       :r-stasks :r-etasks 
                                       :r-ftasks :r-ctasks
-                                      :time)
+                                      :time :flags)
                                     (list i mrs tree
                                           derivation r-redges size
                                           -1 -1 
                                           -1 -1 
-                                          time))))
+                                          time flags))))
                    (when (< nresults 0)
                      (loop
                          for i from (- (length *parse-record*) 1)
@@ -543,7 +545,8 @@
                                         :derivation :score :size :flags)
                                       (list i mrs surface surface
                                             derivation score size flags))
-                     and do (push surface surfaces)))))) 
+                     and do (push surface surfaces)
+                     finally (release-temporary-storage :task :generate)))))) 
 
        (condition (condition)
          (unless stop (setf stop (get-internal-run-time)))

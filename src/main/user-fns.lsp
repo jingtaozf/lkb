@@ -16,12 +16,21 @@
   ;; split into words on spaces
   ;; in *characterize-p* mode keep track of character position pointers
   #+(or :preprocessor :xml)
-  (declare (special *sppp-stream* smaf:*e-stream*))
+  (declare (special *repp-interactive*
+                    #+:xml *sppp-stream*
+                    #+:preprocessor smaf:*e-stream*))
 
   #+:xml
   (when *sppp-stream*
     (return-from preprocess-sentence-string (sppp str)))
 
+  #+:preprocessor
+  (when *repp-interactive*
+    (return-from preprocess-sentence-string
+      (repp
+       str :repp (first *repp-interactive*)
+       :calls (rest *repp-interactive*) :format :lkb)))
+  
   #+:xml
   (when smaf:*e-stream*
     (return-from preprocess-sentence-string (smaf:e str)))

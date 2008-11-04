@@ -754,6 +754,27 @@
 
 (defun enrich-item (run item &key (parse-id 0) type verbose stream)
   
+  ;;
+  ;; _fix_me_
+  ;; over the years, we have accumulated multiple fields to record variants of
+  ;; the :i-input field.  from what i can re-construct, :o-input was part of
+  ;; the YY days, where (in passive mode) we captured strings in YY format; to
+  ;; convert these into `plain' strings, yy-read-input() was (globally) set as
+  ;; the reader for :i-input.  quite similarly, using a profile with inputs in
+  ;; YY format (which should be passed to the parser as is), a per-cpu reader
+  ;; can be provided to have the same effect.
+  ;;
+  ;; another relevant field is :p-input, which holds the pre-processor output,
+  ;; i.e. what is actually sent to the parser.  this is independent from what
+  ;; is used for logging (i.e. the print-out while processing), but there are
+  ;; various parameters in print-item() that determine which variant to use.
+  ;;
+  ;; it used to be that the `reader' was always applied to the original string,
+  ;; but to make it possible to pretty-print the results of a pre-processor, i
+  ;; am now re-ordering things, so that a pre-processor and reader can cascade.
+  ;; so far, we had /either/ a reader /or/ a pre-processor, hence this change
+  ;; should not have effects on existing users.                 (24-sep-08; oe)
+  ;;
   (when item
     (let* ((run-id (get-field :run-id run))
            (i-id (get-field :i-id item)) 
@@ -762,11 +783,6 @@
            (parse-id (if (>= parse-id i-id) parse-id i-id))
            (client (get-field :client run))
            (cpu (and client (client-cpu client)))
-           (o-input (or (get-field :o-input item)
-                        (when (and (cpu-p cpu) (cpu-reader cpu))
-                          (call-hook (cpu-reader cpu) i-input))))
-           (o-input (when (and (stringp o-input) (not (string= o-input "")))
-                      o-input))
 	   (tagger (when (cpu-p cpu) (cpu-tagger cpu)))
            (p-input (cond
                      ((and (cpu-p cpu) (cpu-preprocessor cpu))
@@ -777,12 +793,19 @@
                       (call-hook 
 		       *tsdb-preprocessing-hook* i-input
 		       (when (consp tagger) tagger)))))
+           (p-input (when (and (stringp p-input) (not (string= p-input "")))
+                      p-input))
 	   (tags (cond
 		  ((and (cpu-p cpu) (cpu-tagger cpu)
 			(not (consp (cpu-tagger cpu))))
 		   (call-hook (cpu-tagger cpu) i-input))
 		  (*tsdb-tagging-hook*
 		   (call-hook *tsdb-tagging-hook* i-input))))
+           (o-input (or (get-field :o-input item)
+                        (when (and (cpu-p cpu) (cpu-reader cpu))
+                          (call-hook (cpu-reader cpu) (or p-input i-input)))))
+           (o-input (when (and (stringp o-input) (not (string= o-input "")))
+                      o-input))
            (strikes (get-field+ :strikes item 0)))
 
       (loop
@@ -819,10 +842,10 @@
   (declare (ignore interactive))
   
   (let* ((i-id (get-field :i-id item)) 
-         (i-input (or (when *process-raw-print-trace-p*
-                        (get-field :i-input item))
-                      (when *process-pretty-print-trace-p*
+         (i-input (or (when *process-pretty-print-trace-p*
                         (get-field :o-input item))
+                      (when *process-raw-print-trace-p*
+                        (get-field :i-input item))
                       (get-field :p-input item)
                       (get-field :i-input item)))
          (i-wf (get-field+ :i-wf item 1))
@@ -1663,18 +1686,7 @@
 
 (defun call-hook (hook &rest arguments)
   (when hook
-    ;;
-    ;; _fix_me_
-    ;; work out whether to use funcall() or apply and then call through to 
-    ;; call-raw-hook().                                    (francis; 6-feb-04)
-    ;;
-    (let* ((hook (typecase hook
-                   (null nil)
-                   (function hook)
-                   (symbol (and (fboundp hook) (symbol-function hook)))
-                   (string (ignore-errors 
-                            (symbol-function (read-from-string hook))))))
-           (result (when hook (ignore-errors (apply hook arguments)))))
+    (let ((result (apply #'call-raw-hook hook arguments)))
       (typecase result
         (null nil)
         (string result)
@@ -1682,12 +1694,15 @@
 
 (defun call-raw-hook (hook &rest arguments)
   (when hook
-    (let* ((hook (typecase hook
+    (let* ((extra (and (consp hook) (rest hook)))
+           (hook (if (consp hook) (first hook) hook))
+           (hook (typecase hook
                    (null nil)
                    (function hook)
                    (symbol (and (fboundp hook) (symbol-function hook)))
                    (string (ignore-errors 
-                            (symbol-function (read-from-string hook)))))))
+                            (symbol-function (read-from-string hook))))))
+           (arguments (append arguments extra)))
       (when hook (ignore-errors (apply hook arguments))))))
 
 (defun call-safe-hook (hook &rest arguments)

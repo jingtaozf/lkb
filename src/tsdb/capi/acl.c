@@ -1,6 +1,8 @@
 /*
  * [incr tsdb()] --- Competence and Performance Profiling Environment
+ *
  * Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+ * Copyright (c) 2006 -- 2008 Stephan Oepen (oe@ifi.uio.no)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +22,7 @@
  * have a suspicion that they involve copying and potential leaks), we play it
  * ultra-conservative: most larger objects are passed through temporary files;
  * as most machines have `/tmp' on swap these days, the overhead should barely
- * be noticeable.  anyway, this interface is not meant for at most one message
+ * be noticeable.  anyway, this interface is intended for at most one message
  * per second (if at all).                            (4-feb-99  -  oe@csli)
  *
  */
