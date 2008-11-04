@@ -1,764 +1,262 @@
-U README
-U Version.lisp
-U auxverbs.tdl
-U constructions.tdl
-U core.smi
-U english.tdl
-U erg.smi
-U fundamentals.tdl
-U gen-lex.tdl
-U handon-propers.tdl
-U idioms.mtr
-U inflr-pnct.tdl
-U inflr.tdl
-U inpmap-rules.tdl
-U irregs.tab
-U jhpstg.mem
-U letypes.tdl
-U lexdb.meta
-U lexdb.rev
-U lexicon.tdl
-U lexmap-rules.tdl
-U lexrules.tdl
 U lextypes.tdl
-U mtr.tdl
-U paraphraser.mtr
-U parse-nodes.tdl
-U preprocessor-min.fsr
-U preprocessor.fsr
-U roots.tdl
-U semi.vpm
 U syntax.tdl
-U trigger.mtr
 ? Version.lisp.fasl
-U gold/csli/decision.gz
-U gold/csli/item-phenomenon.gz
-U gold/csli/item.gz
-U gold/csli/parse.gz
-U gold/csli/phenomenon.gz
-U gold/csli/preference.gz
-U gold/csli/result.gz
-U gold/csli/run.gz
-U gold/csli/tree.gz
-U gold/csli/update.gz
-U gold/ecoc/decision.gz
-U gold/ecoc/item.gz
-U gold/ecoc/parse.gz
-U gold/ecoc/preference.gz
-U gold/ecoc/result.gz
-U gold/ecoc/run.gz
-U gold/ecoc/tree.gz
-U gold/ecoc/update.gz
-U gold/fracas/decision.gz
-U gold/fracas/item.gz
-U gold/fracas/parse.gz
-U gold/fracas/preference.gz
-U gold/fracas/result.gz
-U gold/fracas/run.gz
-U gold/fracas/tree.gz
-U gold/fracas/update.gz
-U gold/hike/decision.gz
-U gold/hike/item-set.gz
-U gold/hike/item.gz
-U gold/hike/parse.gz
-U gold/hike/preference.gz
-U gold/hike/result.gz
-U gold/hike/run.gz
-U gold/hike/tree.gz
-U gold/hike/update.gz
-U gold/iliad-0/analysis
-U gold/iliad-0/decision.gz
-U gold/iliad-0/edge
-U gold/iliad-0/fold
-U gold/iliad-0/item-phenomenon
-U gold/iliad-0/item-set
-U gold/iliad-0/item.gz
-U gold/iliad-0/output
-U gold/iliad-0/parameter
-U gold/iliad-0/parse.gz
-U gold/iliad-0/phenomenon
-U gold/iliad-0/preference.gz
-U gold/iliad-0/relations
-U gold/iliad-0/result.gz
-U gold/iliad-0/rule
-U gold/iliad-0/run.gz
-U gold/iliad-0/score
-U gold/iliad-0/set
-U gold/iliad-0/tree.gz
-U gold/iliad-0/update.gz
-U gold/jh0/decision.gz
-U gold/jh0/item-set.gz
-U gold/jh0/item.gz
-U gold/jh0/parse.gz
-U gold/jh0/preference.gz
-U gold/jh0/result.gz
-U gold/jh0/run.gz
-U gold/jh0/tree.gz
-U gold/jh0/update.gz
-U gold/jh1/decision.gz
-U gold/jh1/item-set.gz
-U gold/jh1/item.gz
-U gold/jh1/parse.gz
-U gold/jh1/preference.gz
-U gold/jh1/result.gz
-U gold/jh1/run.gz
-U gold/jh1/tree.gz
-U gold/jh1/update.gz
-U gold/jh2/decision.gz
-U gold/jh2/item-set.gz
-U gold/jh2/item.gz
-U gold/jh2/parse.gz
-U gold/jh2/preference.gz
-U gold/jh2/result.gz
-U gold/jh2/run.gz
-U gold/jh2/tree.gz
-U gold/jh2/update.gz
-U gold/jh3/decision.gz
-U gold/jh3/item-set.gz
-U gold/jh3/item.gz
-U gold/jh3/parse.gz
-U gold/jh3/preference.gz
-U gold/jh3/result.gz
-U gold/jh3/run.gz
-U gold/jh3/tree.gz
-U gold/jh3/update.gz
-U gold/jh4/decision.gz
-U gold/jh4/item-set.gz
-U gold/jh4/item.gz
-U gold/jh4/parse.gz
-U gold/jh4/preference.gz
-U gold/jh4/result.gz
-U gold/jh4/run.gz
-U gold/jh4/tree.gz
-U gold/jh4/update.gz
-U gold/jh5/decision.gz
-U gold/jh5/item-set.gz
-U gold/jh5/item.gz
-U gold/jh5/parse.gz
-U gold/jh5/preference.gz
-U gold/jh5/result.gz
-U gold/jh5/run.gz
-U gold/jh5/tree.gz
-U gold/jh5/update.gz
-U gold/jhk/analysis
-U gold/jhk/decision.gz
-U gold/jhk/edge
-U gold/jhk/fold
-U gold/jhk/item-phenomenon
-U gold/jhk/item-set.gz
-U gold/jhk/item.gz
-U gold/jhk/output
-U gold/jhk/parameter
-U gold/jhk/parse.gz
-U gold/jhk/phenomenon
-U gold/jhk/preference.gz
-U gold/jhk/relations
-U gold/jhk/result.gz
-U gold/jhk/rule
-U gold/jhk/run.gz
-U gold/jhk/score
-U gold/jhk/set
-U gold/jhk/tree.gz
-U gold/jhk/update.gz
-U gold/jhu/analysis
-U gold/jhu/decision.gz
-U gold/jhu/edge
-U gold/jhu/fold
-U gold/jhu/item-phenomenon
-U gold/jhu/item-set.gz
-U gold/jhu/item.gz
-U gold/jhu/output
-U gold/jhu/parameter
-U gold/jhu/parse.gz
-U gold/jhu/phenomenon
-U gold/jhu/preference.gz
-U gold/jhu/relations
-U gold/jhu/result.gz
-U gold/jhu/rule
-U gold/jhu/run.gz
-U gold/jhu/score
-U gold/jhu/set
-U gold/jhu/tree.gz
-U gold/jhu/update.gz
-U gold/logic/decision.gz
-U gold/logic/item-phenomenon.gz
-U gold/logic/item.gz
-U gold/logic/parse.gz
-U gold/logic/phenomenon.gz
-U gold/logic/preference.gz
-U gold/logic/result.gz
-U gold/logic/run.gz
-U gold/logic/tree.gz
-U gold/logic/update.gz
-U gold/mrs/decision.gz
-U gold/mrs/item-set.gz
-U gold/mrs/item.gz
-U gold/mrs/parse.gz
-U gold/mrs/preference.gz
-U gold/mrs/result.gz
-U gold/mrs/run.gz
-U gold/mrs/tree.gz
-U gold/mrs/update.gz
-U gold/ps/decision.gz
-U gold/ps/item-set.gz
-U gold/ps/item.gz
-U gold/ps/parse.gz
-U gold/ps/preference.gz
-U gold/ps/result.gz
-U gold/ps/run.gz
-U gold/ps/tree.gz
-U gold/ps/update.gz
-U gold/psk/analysis
-U gold/psk/decision.gz
-U gold/psk/edge
-U gold/psk/fold
-U gold/psk/item-phenomenon
-U gold/psk/item-set.gz
-U gold/psk/item.gz
-U gold/psk/output
-U gold/psk/parameter
-U gold/psk/parse.gz
-U gold/psk/phenomenon
-U gold/psk/preference.gz
-U gold/psk/relations
-U gold/psk/result.gz
-U gold/psk/rule
-U gold/psk/run.gz
-U gold/psk/score
-U gold/psk/set
-U gold/psk/tree.gz
-U gold/psk/update.gz
-U gold/psu/analysis
-U gold/psu/decision.gz
-U gold/psu/edge
-U gold/psu/fold
-U gold/psu/item-phenomenon
-U gold/psu/item-set.gz
-U gold/psu/item.gz
-U gold/psu/output
-U gold/psu/parameter
-U gold/psu/parse.gz
-U gold/psu/phenomenon
-U gold/psu/preference.gz
-U gold/psu/relations
-U gold/psu/result.gz
-U gold/psu/rule
-U gold/psu/run.gz
-U gold/psu/score
-U gold/psu/set
-U gold/psu/tree.gz
-U gold/psu/update.gz
-U gold/rondane/decision.gz
-U gold/rondane/item.gz
-U gold/rondane/parse.gz
-U gold/rondane/preference.gz
-U gold/rondane/result.gz
-U gold/rondane/run.gz
-U gold/rondane/tree.gz
-U gold/rondane/update.gz
-U gold/semcor1/analysis
-U gold/semcor1/decision.gz
-U gold/semcor1/edge
-U gold/semcor1/fold
-U gold/semcor1/item-phenomenon
-U gold/semcor1/item-set
-U gold/semcor1/item.gz
-U gold/semcor1/output
-U gold/semcor1/parameter
-U gold/semcor1/parse.gz
-U gold/semcor1/phenomenon
-U gold/semcor1/preference.gz
-U gold/semcor1/relations
-U gold/semcor1/result.gz
-U gold/semcor1/rule
-U gold/semcor1/run.gz
-U gold/semcor1/score
-U gold/semcor1/set
-U gold/semcor1/tree.gz
-U gold/semcor1/update.gz
-U gold/semcor2/analysis
-U gold/semcor2/decision.gz
-U gold/semcor2/edge
-U gold/semcor2/fold
-U gold/semcor2/item-phenomenon
-U gold/semcor2/item-set
-U gold/semcor2/item.gz
-U gold/semcor2/output
-U gold/semcor2/parameter
-U gold/semcor2/parse.gz
-U gold/semcor2/phenomenon
-U gold/semcor2/preference.gz
-U gold/semcor2/relations
-U gold/semcor2/result.gz
-U gold/semcor2/rule
-U gold/semcor2/run.gz
-U gold/semcor2/score
-U gold/semcor2/set
-U gold/semcor2/tree.gz
-U gold/semcor2/update.gz
-U gold/seval2/decision.gz
-U gold/seval2/item.gz
-U gold/seval2/parse.gz
-U gold/seval2/preference.gz
-U gold/seval2/result.gz
-U gold/seval2/run.gz
-U gold/seval2/tree.gz
-U gold/seval2/update.gz
-U gold/seval3/decision.gz
-U gold/seval3/item.gz
-U gold/seval3/parse.gz
-U gold/seval3/preference.gz
-U gold/seval3/result.gz
-U gold/seval3/run.gz
-U gold/seval3/tree.gz
-U gold/seval3/update.gz
-U gold/seval4/decision.gz
-U gold/seval4/item.gz
-U gold/seval4/parse.gz
-U gold/seval4/preference.gz
-U gold/seval4/result.gz
-U gold/seval4/run.gz
-U gold/seval4/tree.gz
-U gold/seval4/update.gz
-U gold/tg/decision.gz
-U gold/tg/item-set.gz
-U gold/tg/item.gz
-U gold/tg/parse.gz
-U gold/tg/preference.gz
-U gold/tg/result.gz
-U gold/tg/run.gz
-U gold/tg/tree.gz
-U gold/tg/update.gz
-U gold/tgk/analysis
-U gold/tgk/decision.gz
-U gold/tgk/edge
-U gold/tgk/fold
-U gold/tgk/item-phenomenon
-U gold/tgk/item-set.gz
-U gold/tgk/item.gz
-U gold/tgk/output
-U gold/tgk/parameter
-U gold/tgk/parse.gz
-U gold/tgk/phenomenon
-U gold/tgk/preference.gz
-U gold/tgk/relations
-U gold/tgk/result.gz
-U gold/tgk/rule
-U gold/tgk/run.gz
-U gold/tgk/score
-U gold/tgk/set
-U gold/tgk/tree.gz
-U gold/tgk/update.gz
-U gold/tgu/analysis
-U gold/tgu/decision.gz
-U gold/tgu/edge
-U gold/tgu/fold
-U gold/tgu/item-phenomenon
-U gold/tgu/item-set.gz
-U gold/tgu/item.gz
-U gold/tgu/output
-U gold/tgu/parameter
-U gold/tgu/parse.gz
-U gold/tgu/phenomenon
-U gold/tgu/preference.gz
-U gold/tgu/relations
-U gold/tgu/result.gz
-U gold/tgu/rule
-U gold/tgu/run.gz
-U gold/tgu/score
-U gold/tgu/set
-U gold/tgu/tree.gz
-U gold/tgu/update.gz
-U gold/trec/decision.gz
-U gold/trec/item.gz
-U gold/trec/parse.gz
-U gold/trec/preference.gz
-U gold/trec/result.gz
-U gold/trec/run.gz
-U gold/trec/tree.gz
-U gold/trec/update.gz
-U lkb/globals.lsp
 U lkb/patches.lsp
-U lkb/script
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U pet/common.set
-U pet/english.set
-U pet/global.set
+U customize/TODO
 U customize/choices.py
 U customize/customize.py
 U customize/deffile.py
+U customize/install
+U customize/matrix.cgi
 U customize/matrix.css
 U customize/matrixdef
-U customize/tdl.py
+cvs update: customize/tolive is no longer in the repository
 U customize/validate.py
-U customize/unit-tests/add-unit-test.py
+U customize/sample-choices/empty
+U customize/sample-choices/minimal
 U customize/unit-tests/call-customize
-U customize/unit-tests/cvsadd-unit-test.sh
-U customize/unit-tests/one-unit-test.sh
+cvs update: customize/unit-tests/one-unit-test.sh is no longer in the repository
 U customize/unit-tests/run-unit-tests.sh
 U customize/unit-tests/unit-test-index
-U customize/unit-tests/unittestindex.py
-U customize/unit-tests/update-gold-standard.sh
-U customize/unit-tests/choices/README
-U customize/unit-tests/choices/case-erg-abs
-U customize/unit-tests/choices/case-fluid-s
-U customize/unit-tests/choices/case-focus
-U customize/unit-tests/choices/case-nom-acc
-U customize/unit-tests/choices/case-nom-acc-adp
-U customize/unit-tests/choices/case-none
-U customize/unit-tests/choices/case-split-n
-U customize/unit-tests/choices/case-split-s
-U customize/unit-tests/choices/case-split-v
-U customize/unit-tests/choices/case-tripartite
-U customize/unit-tests/choices/dir-inv-algonquian
-U customize/unit-tests/choices/dir-inv-fore
-U customize/unit-tests/choices/tiniest
-U customize/unit-tests/grammars/README
-U customize/unit-tests/home/current/README
-U customize/unit-tests/home/gold/README
-U customize/unit-tests/home/gold/case-erg-abs/analysis
-U customize/unit-tests/home/gold/case-erg-abs/daughter
-U customize/unit-tests/home/gold/case-erg-abs/decision
-U customize/unit-tests/home/gold/case-erg-abs/edge
-U customize/unit-tests/home/gold/case-erg-abs/fold
-U customize/unit-tests/home/gold/case-erg-abs/item
-U customize/unit-tests/home/gold/case-erg-abs/item-phenomenon
-U customize/unit-tests/home/gold/case-erg-abs/item-set
-U customize/unit-tests/home/gold/case-erg-abs/output
-U customize/unit-tests/home/gold/case-erg-abs/parameter
-U customize/unit-tests/home/gold/case-erg-abs/parse
-U customize/unit-tests/home/gold/case-erg-abs/phenomenon
-U customize/unit-tests/home/gold/case-erg-abs/preference
-U customize/unit-tests/home/gold/case-erg-abs/relations
-U customize/unit-tests/home/gold/case-erg-abs/result
-U customize/unit-tests/home/gold/case-erg-abs/rule
-U customize/unit-tests/home/gold/case-erg-abs/run
-U customize/unit-tests/home/gold/case-erg-abs/score
-U customize/unit-tests/home/gold/case-erg-abs/set
-U customize/unit-tests/home/gold/case-erg-abs/tree
-U customize/unit-tests/home/gold/case-erg-abs/update
-U customize/unit-tests/home/gold/case-fluid-s/analysis
-U customize/unit-tests/home/gold/case-fluid-s/daughter
-U customize/unit-tests/home/gold/case-fluid-s/decision
-U customize/unit-tests/home/gold/case-fluid-s/edge
-U customize/unit-tests/home/gold/case-fluid-s/fold
-U customize/unit-tests/home/gold/case-fluid-s/item
-U customize/unit-tests/home/gold/case-fluid-s/item-phenomenon
-U customize/unit-tests/home/gold/case-fluid-s/item-set
-U customize/unit-tests/home/gold/case-fluid-s/output
-U customize/unit-tests/home/gold/case-fluid-s/parameter
-U customize/unit-tests/home/gold/case-fluid-s/parse
-U customize/unit-tests/home/gold/case-fluid-s/phenomenon
-U customize/unit-tests/home/gold/case-fluid-s/preference
-U customize/unit-tests/home/gold/case-fluid-s/relations
-U customize/unit-tests/home/gold/case-fluid-s/result
-U customize/unit-tests/home/gold/case-fluid-s/rule
-U customize/unit-tests/home/gold/case-fluid-s/run
-U customize/unit-tests/home/gold/case-fluid-s/score
-U customize/unit-tests/home/gold/case-fluid-s/set
-U customize/unit-tests/home/gold/case-fluid-s/tree
-U customize/unit-tests/home/gold/case-fluid-s/update
-U customize/unit-tests/home/gold/case-focus/analysis
-U customize/unit-tests/home/gold/case-focus/daughter
-U customize/unit-tests/home/gold/case-focus/decision
-U customize/unit-tests/home/gold/case-focus/edge
-U customize/unit-tests/home/gold/case-focus/fold
-U customize/unit-tests/home/gold/case-focus/item
-U customize/unit-tests/home/gold/case-focus/item-phenomenon
-U customize/unit-tests/home/gold/case-focus/item-set
-U customize/unit-tests/home/gold/case-focus/output
-U customize/unit-tests/home/gold/case-focus/parameter
-U customize/unit-tests/home/gold/case-focus/parse
-U customize/unit-tests/home/gold/case-focus/phenomenon
-U customize/unit-tests/home/gold/case-focus/preference
-U customize/unit-tests/home/gold/case-focus/relations
-U customize/unit-tests/home/gold/case-focus/result
-U customize/unit-tests/home/gold/case-focus/rule
-U customize/unit-tests/home/gold/case-focus/run
-U customize/unit-tests/home/gold/case-focus/score
-U customize/unit-tests/home/gold/case-focus/set
-U customize/unit-tests/home/gold/case-focus/tree
-U customize/unit-tests/home/gold/case-focus/update
-U customize/unit-tests/home/gold/case-nom-acc/analysis
-U customize/unit-tests/home/gold/case-nom-acc/daughter
-U customize/unit-tests/home/gold/case-nom-acc/decision
-U customize/unit-tests/home/gold/case-nom-acc/edge
-U customize/unit-tests/home/gold/case-nom-acc/fold
-U customize/unit-tests/home/gold/case-nom-acc/item
-U customize/unit-tests/home/gold/case-nom-acc/item-phenomenon
-U customize/unit-tests/home/gold/case-nom-acc/item-set
-U customize/unit-tests/home/gold/case-nom-acc/output
-U customize/unit-tests/home/gold/case-nom-acc/parameter
-U customize/unit-tests/home/gold/case-nom-acc/parse
-U customize/unit-tests/home/gold/case-nom-acc/phenomenon
-U customize/unit-tests/home/gold/case-nom-acc/preference
-U customize/unit-tests/home/gold/case-nom-acc/relations
-U customize/unit-tests/home/gold/case-nom-acc/result
-U customize/unit-tests/home/gold/case-nom-acc/rule
-U customize/unit-tests/home/gold/case-nom-acc/run
-U customize/unit-tests/home/gold/case-nom-acc/score
-U customize/unit-tests/home/gold/case-nom-acc/set
-U customize/unit-tests/home/gold/case-nom-acc/tree
-U customize/unit-tests/home/gold/case-nom-acc/update
-U customize/unit-tests/home/gold/case-nom-acc-adp/analysis
-U customize/unit-tests/home/gold/case-nom-acc-adp/daughter
-U customize/unit-tests/home/gold/case-nom-acc-adp/decision
-U customize/unit-tests/home/gold/case-nom-acc-adp/edge
-U customize/unit-tests/home/gold/case-nom-acc-adp/fold
-U customize/unit-tests/home/gold/case-nom-acc-adp/item
-U customize/unit-tests/home/gold/case-nom-acc-adp/item-phenomenon
-U customize/unit-tests/home/gold/case-nom-acc-adp/item-set
-U customize/unit-tests/home/gold/case-nom-acc-adp/output
-U customize/unit-tests/home/gold/case-nom-acc-adp/parameter
-U customize/unit-tests/home/gold/case-nom-acc-adp/parse
-U customize/unit-tests/home/gold/case-nom-acc-adp/phenomenon
-U customize/unit-tests/home/gold/case-nom-acc-adp/preference
-U customize/unit-tests/home/gold/case-nom-acc-adp/relations
-U customize/unit-tests/home/gold/case-nom-acc-adp/result
-U customize/unit-tests/home/gold/case-nom-acc-adp/rule
-U customize/unit-tests/home/gold/case-nom-acc-adp/run
-U customize/unit-tests/home/gold/case-nom-acc-adp/score
-U customize/unit-tests/home/gold/case-nom-acc-adp/set
-U customize/unit-tests/home/gold/case-nom-acc-adp/tree
-U customize/unit-tests/home/gold/case-nom-acc-adp/update
-U customize/unit-tests/home/gold/case-none/analysis
-U customize/unit-tests/home/gold/case-none/daughter
-U customize/unit-tests/home/gold/case-none/decision
-U customize/unit-tests/home/gold/case-none/edge
-U customize/unit-tests/home/gold/case-none/fold
-U customize/unit-tests/home/gold/case-none/item
-U customize/unit-tests/home/gold/case-none/item-phenomenon
-U customize/unit-tests/home/gold/case-none/item-set
-U customize/unit-tests/home/gold/case-none/output
-U customize/unit-tests/home/gold/case-none/parameter
-U customize/unit-tests/home/gold/case-none/parse
-U customize/unit-tests/home/gold/case-none/phenomenon
-U customize/unit-tests/home/gold/case-none/preference
-U customize/unit-tests/home/gold/case-none/relations
-U customize/unit-tests/home/gold/case-none/result
-U customize/unit-tests/home/gold/case-none/rule
-U customize/unit-tests/home/gold/case-none/run
-U customize/unit-tests/home/gold/case-none/score
-U customize/unit-tests/home/gold/case-none/set
-U customize/unit-tests/home/gold/case-none/tree
-U customize/unit-tests/home/gold/case-none/update
-U customize/unit-tests/home/gold/case-split-n/analysis
-U customize/unit-tests/home/gold/case-split-n/daughter
-U customize/unit-tests/home/gold/case-split-n/decision
-U customize/unit-tests/home/gold/case-split-n/edge
-U customize/unit-tests/home/gold/case-split-n/fold
-U customize/unit-tests/home/gold/case-split-n/item
-U customize/unit-tests/home/gold/case-split-n/item-phenomenon
-U customize/unit-tests/home/gold/case-split-n/item-set
-U customize/unit-tests/home/gold/case-split-n/output
-U customize/unit-tests/home/gold/case-split-n/parameter
-U customize/unit-tests/home/gold/case-split-n/parse
-U customize/unit-tests/home/gold/case-split-n/phenomenon
-U customize/unit-tests/home/gold/case-split-n/preference
-U customize/unit-tests/home/gold/case-split-n/relations
-U customize/unit-tests/home/gold/case-split-n/result
-U customize/unit-tests/home/gold/case-split-n/rule
-U customize/unit-tests/home/gold/case-split-n/run
-U customize/unit-tests/home/gold/case-split-n/score
-U customize/unit-tests/home/gold/case-split-n/set
-U customize/unit-tests/home/gold/case-split-n/tree
-U customize/unit-tests/home/gold/case-split-n/update
-U customize/unit-tests/home/gold/case-split-s/analysis
-U customize/unit-tests/home/gold/case-split-s/daughter
-U customize/unit-tests/home/gold/case-split-s/decision
-U customize/unit-tests/home/gold/case-split-s/edge
-U customize/unit-tests/home/gold/case-split-s/fold
-U customize/unit-tests/home/gold/case-split-s/item
-U customize/unit-tests/home/gold/case-split-s/item-phenomenon
-U customize/unit-tests/home/gold/case-split-s/item-set
-U customize/unit-tests/home/gold/case-split-s/output
-U customize/unit-tests/home/gold/case-split-s/parameter
-U customize/unit-tests/home/gold/case-split-s/parse
-U customize/unit-tests/home/gold/case-split-s/phenomenon
-U customize/unit-tests/home/gold/case-split-s/preference
-U customize/unit-tests/home/gold/case-split-s/relations
-U customize/unit-tests/home/gold/case-split-s/result
-U customize/unit-tests/home/gold/case-split-s/rule
-U customize/unit-tests/home/gold/case-split-s/run
-U customize/unit-tests/home/gold/case-split-s/score
-U customize/unit-tests/home/gold/case-split-s/set
-U customize/unit-tests/home/gold/case-split-s/tree
-U customize/unit-tests/home/gold/case-split-s/update
-U customize/unit-tests/home/gold/case-split-v/analysis
-U customize/unit-tests/home/gold/case-split-v/daughter
-U customize/unit-tests/home/gold/case-split-v/decision
-U customize/unit-tests/home/gold/case-split-v/edge
-U customize/unit-tests/home/gold/case-split-v/fold
-U customize/unit-tests/home/gold/case-split-v/item
-U customize/unit-tests/home/gold/case-split-v/item-phenomenon
-U customize/unit-tests/home/gold/case-split-v/item-set
-U customize/unit-tests/home/gold/case-split-v/output
-U customize/unit-tests/home/gold/case-split-v/parameter
-U customize/unit-tests/home/gold/case-split-v/parse
-U customize/unit-tests/home/gold/case-split-v/phenomenon
-U customize/unit-tests/home/gold/case-split-v/preference
-U customize/unit-tests/home/gold/case-split-v/relations
-U customize/unit-tests/home/gold/case-split-v/result
-U customize/unit-tests/home/gold/case-split-v/rule
-U customize/unit-tests/home/gold/case-split-v/run
-U customize/unit-tests/home/gold/case-split-v/score
-U customize/unit-tests/home/gold/case-split-v/set
-U customize/unit-tests/home/gold/case-split-v/tree
-U customize/unit-tests/home/gold/case-split-v/update
-U customize/unit-tests/home/gold/case-tripartite/analysis
-U customize/unit-tests/home/gold/case-tripartite/daughter
-U customize/unit-tests/home/gold/case-tripartite/decision
-U customize/unit-tests/home/gold/case-tripartite/edge
-U customize/unit-tests/home/gold/case-tripartite/fold
-U customize/unit-tests/home/gold/case-tripartite/item
-U customize/unit-tests/home/gold/case-tripartite/item-phenomenon
-U customize/unit-tests/home/gold/case-tripartite/item-set
-U customize/unit-tests/home/gold/case-tripartite/output
-U customize/unit-tests/home/gold/case-tripartite/parameter
-U customize/unit-tests/home/gold/case-tripartite/parse
-U customize/unit-tests/home/gold/case-tripartite/phenomenon
-U customize/unit-tests/home/gold/case-tripartite/preference
-U customize/unit-tests/home/gold/case-tripartite/relations
-U customize/unit-tests/home/gold/case-tripartite/result
-U customize/unit-tests/home/gold/case-tripartite/rule
-U customize/unit-tests/home/gold/case-tripartite/run
-U customize/unit-tests/home/gold/case-tripartite/score
-U customize/unit-tests/home/gold/case-tripartite/set
-U customize/unit-tests/home/gold/case-tripartite/tree
-U customize/unit-tests/home/gold/case-tripartite/update
-U customize/unit-tests/home/gold/dir-inv-algonquian/analysis
-U customize/unit-tests/home/gold/dir-inv-algonquian/daughter
-U customize/unit-tests/home/gold/dir-inv-algonquian/decision
-U customize/unit-tests/home/gold/dir-inv-algonquian/edge
-U customize/unit-tests/home/gold/dir-inv-algonquian/fold
-U customize/unit-tests/home/gold/dir-inv-algonquian/item
-U customize/unit-tests/home/gold/dir-inv-algonquian/item-phenomenon
-U customize/unit-tests/home/gold/dir-inv-algonquian/item-set
-U customize/unit-tests/home/gold/dir-inv-algonquian/output
-U customize/unit-tests/home/gold/dir-inv-algonquian/parameter
-U customize/unit-tests/home/gold/dir-inv-algonquian/parse
-U customize/unit-tests/home/gold/dir-inv-algonquian/phenomenon
-U customize/unit-tests/home/gold/dir-inv-algonquian/preference
-U customize/unit-tests/home/gold/dir-inv-algonquian/relations
-U customize/unit-tests/home/gold/dir-inv-algonquian/result
-U customize/unit-tests/home/gold/dir-inv-algonquian/rule
-U customize/unit-tests/home/gold/dir-inv-algonquian/run
-U customize/unit-tests/home/gold/dir-inv-algonquian/score
-U customize/unit-tests/home/gold/dir-inv-algonquian/set
-U customize/unit-tests/home/gold/dir-inv-algonquian/tree
-U customize/unit-tests/home/gold/dir-inv-algonquian/update
-U customize/unit-tests/home/gold/dir-inv-fore/analysis
-U customize/unit-tests/home/gold/dir-inv-fore/daughter
-U customize/unit-tests/home/gold/dir-inv-fore/decision
-U customize/unit-tests/home/gold/dir-inv-fore/edge
-U customize/unit-tests/home/gold/dir-inv-fore/fold
-U customize/unit-tests/home/gold/dir-inv-fore/item
-U customize/unit-tests/home/gold/dir-inv-fore/item-phenomenon
-U customize/unit-tests/home/gold/dir-inv-fore/item-set
-U customize/unit-tests/home/gold/dir-inv-fore/output
-U customize/unit-tests/home/gold/dir-inv-fore/parameter
-U customize/unit-tests/home/gold/dir-inv-fore/parse
-U customize/unit-tests/home/gold/dir-inv-fore/phenomenon
-U customize/unit-tests/home/gold/dir-inv-fore/preference
-U customize/unit-tests/home/gold/dir-inv-fore/relations
-U customize/unit-tests/home/gold/dir-inv-fore/result
-U customize/unit-tests/home/gold/dir-inv-fore/rule
-U customize/unit-tests/home/gold/dir-inv-fore/run
-U customize/unit-tests/home/gold/dir-inv-fore/score
-U customize/unit-tests/home/gold/dir-inv-fore/set
-U customize/unit-tests/home/gold/dir-inv-fore/tree
-U customize/unit-tests/home/gold/dir-inv-fore/update
-U customize/unit-tests/home/gold/tiniest/analysis
-U customize/unit-tests/home/gold/tiniest/daughter
-U customize/unit-tests/home/gold/tiniest/decision
-U customize/unit-tests/home/gold/tiniest/edge
-U customize/unit-tests/home/gold/tiniest/fold
-U customize/unit-tests/home/gold/tiniest/item
-U customize/unit-tests/home/gold/tiniest/item-phenomenon
-U customize/unit-tests/home/gold/tiniest/item-set
-U customize/unit-tests/home/gold/tiniest/output
-U customize/unit-tests/home/gold/tiniest/parameter
-U customize/unit-tests/home/gold/tiniest/parse
-U customize/unit-tests/home/gold/tiniest/phenomenon
-U customize/unit-tests/home/gold/tiniest/preference
-U customize/unit-tests/home/gold/tiniest/relations
-U customize/unit-tests/home/gold/tiniest/result
-U customize/unit-tests/home/gold/tiniest/rule
-U customize/unit-tests/home/gold/tiniest/run
-U customize/unit-tests/home/gold/tiniest/score
-U customize/unit-tests/home/gold/tiniest/set
-U customize/unit-tests/home/gold/tiniest/tree
-U customize/unit-tests/home/gold/tiniest/update
-U customize/unit-tests/logs/README
-U customize/unit-tests/scratch/README
+U customize/unit-tests/choices/aux-f-vpcomp-nfconst-formfeat
+U customize/unit-tests/choices/aux-s-f-noinfl
+U customize/unit-tests/choices/aux-v-f-noinfl
+U customize/unit-tests/choices/aux-vp-f-noinfl
+U customize/unit-tests/choices/auxten-vpcompnfasp-tafeat
+U customize/unit-tests/choices/noaux-toblig-aopt-onv
+U customize/unit-tests/choices/nopaux-noinfl-vpcomp-f-formfeat
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/analysis
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/daughter
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/decision
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/edge
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/fold
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/item
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/item-phenomenon
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/item-set
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/output
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/parameter
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/parse
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/phenomenon
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/preference
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/relations
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/result
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/rule
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/run
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/score
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/set
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/tree
+U customize/unit-tests/home/gold/aux-f-vpcomp-nfconst-formfeat/update
+U customize/unit-tests/home/gold/aux-s-f-noinfl/analysis
+U customize/unit-tests/home/gold/aux-s-f-noinfl/daughter
+U customize/unit-tests/home/gold/aux-s-f-noinfl/decision
+U customize/unit-tests/home/gold/aux-s-f-noinfl/edge
+U customize/unit-tests/home/gold/aux-s-f-noinfl/fold
+U customize/unit-tests/home/gold/aux-s-f-noinfl/item
+U customize/unit-tests/home/gold/aux-s-f-noinfl/item-phenomenon
+U customize/unit-tests/home/gold/aux-s-f-noinfl/item-set
+U customize/unit-tests/home/gold/aux-s-f-noinfl/output
+U customize/unit-tests/home/gold/aux-s-f-noinfl/parameter
+U customize/unit-tests/home/gold/aux-s-f-noinfl/parse
+U customize/unit-tests/home/gold/aux-s-f-noinfl/phenomenon
+U customize/unit-tests/home/gold/aux-s-f-noinfl/preference
+U customize/unit-tests/home/gold/aux-s-f-noinfl/relations
+U customize/unit-tests/home/gold/aux-s-f-noinfl/result
+U customize/unit-tests/home/gold/aux-s-f-noinfl/rule
+U customize/unit-tests/home/gold/aux-s-f-noinfl/run
+U customize/unit-tests/home/gold/aux-s-f-noinfl/score
+U customize/unit-tests/home/gold/aux-s-f-noinfl/set
+U customize/unit-tests/home/gold/aux-s-f-noinfl/tree
+U customize/unit-tests/home/gold/aux-s-f-noinfl/update
+U customize/unit-tests/home/gold/aux-v-f-noinfl/analysis
+U customize/unit-tests/home/gold/aux-v-f-noinfl/daughter
+U customize/unit-tests/home/gold/aux-v-f-noinfl/decision
+U customize/unit-tests/home/gold/aux-v-f-noinfl/edge
+U customize/unit-tests/home/gold/aux-v-f-noinfl/fold
+U customize/unit-tests/home/gold/aux-v-f-noinfl/item
+U customize/unit-tests/home/gold/aux-v-f-noinfl/item-phenomenon
+U customize/unit-tests/home/gold/aux-v-f-noinfl/item-set
+U customize/unit-tests/home/gold/aux-v-f-noinfl/output
+U customize/unit-tests/home/gold/aux-v-f-noinfl/parameter
+U customize/unit-tests/home/gold/aux-v-f-noinfl/parse
+U customize/unit-tests/home/gold/aux-v-f-noinfl/phenomenon
+U customize/unit-tests/home/gold/aux-v-f-noinfl/preference
+U customize/unit-tests/home/gold/aux-v-f-noinfl/relations
+U customize/unit-tests/home/gold/aux-v-f-noinfl/result
+U customize/unit-tests/home/gold/aux-v-f-noinfl/rule
+U customize/unit-tests/home/gold/aux-v-f-noinfl/run
+U customize/unit-tests/home/gold/aux-v-f-noinfl/score
+U customize/unit-tests/home/gold/aux-v-f-noinfl/set
+U customize/unit-tests/home/gold/aux-v-f-noinfl/tree
+U customize/unit-tests/home/gold/aux-v-f-noinfl/update
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/analysis
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/daughter
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/decision
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/edge
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/fold
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/item
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/item-phenomenon
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/item-set
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/output
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/parameter
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/parse
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/phenomenon
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/preference
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/relations
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/result
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/rule
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/run
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/score
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/set
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/tree
+U customize/unit-tests/home/gold/aux-vp-f-noinfl/update
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/analysis
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/daughter
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/decision
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/edge
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/fold
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/item
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/item-phenomenon
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/item-set
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/output
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/parameter
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/parse
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/phenomenon
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/preference
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/relations
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/result
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/rule
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/run
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/score
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/set
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/tree
+U customize/unit-tests/home/gold/auxten-vpcompnfasp-tafeat/update
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/analysis
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/daughter
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/decision
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/edge
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/fold
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/item
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/item-phenomenon
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/item-set
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/output
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/parameter
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/parse
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/phenomenon
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/preference
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/relations
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/result
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/rule
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/run
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/score
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/set
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/tree
+U customize/unit-tests/home/gold/noaux-toblig-aopt-onv/update
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/analysis
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/daughter
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/decision
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/edge
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/fold
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/item
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/item-phenomenon
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/item-set
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/output
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/parameter
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/parse
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/phenomenon
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/preference
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/relations
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/result
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/rule
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/run
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/score
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/set
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/tree
+U customize/unit-tests/home/gold/nopaux-noinfl-vpcomp-f-formfeat/update
 U customize/unit-tests/skeletons/Index.lisp
-U customize/unit-tests/skeletons/Relations
-U customize/unit-tests/skeletons/case-erg-abs/item
-U customize/unit-tests/skeletons/case-erg-abs/relations
-U customize/unit-tests/skeletons/case-fluid-s/item
-U customize/unit-tests/skeletons/case-fluid-s/relations
-U customize/unit-tests/skeletons/case-focus/item
-U customize/unit-tests/skeletons/case-focus/relations
-U customize/unit-tests/skeletons/case-nom-acc/item
-U customize/unit-tests/skeletons/case-nom-acc/relations
-U customize/unit-tests/skeletons/case-nom-acc-adp/item
-U customize/unit-tests/skeletons/case-nom-acc-adp/relations
-U customize/unit-tests/skeletons/case-none/item
-U customize/unit-tests/skeletons/case-none/relations
-U customize/unit-tests/skeletons/case-split-n/item
-U customize/unit-tests/skeletons/case-split-n/relations
-U customize/unit-tests/skeletons/case-split-s/item
-U customize/unit-tests/skeletons/case-split-s/relations
-U customize/unit-tests/skeletons/case-split-v/item
-U customize/unit-tests/skeletons/case-split-v/relations
-U customize/unit-tests/skeletons/case-tripartite/item
-U customize/unit-tests/skeletons/case-tripartite/relations
-U customize/unit-tests/skeletons/dir-inv-algonquian/item
-U customize/unit-tests/skeletons/dir-inv-algonquian/relations
-U customize/unit-tests/skeletons/dir-inv-fore/item
-U customize/unit-tests/skeletons/dir-inv-fore/relations
-U customize/unit-tests/skeletons/tiniest/item
-U customize/unit-tests/skeletons/tiniest/relations
-U customize/unit-tests/txt-suites/README
-U customize/unit-tests/txt-suites/case-erg-abs
-U customize/unit-tests/txt-suites/case-fluid-s
-U customize/unit-tests/txt-suites/case-focus
-U customize/unit-tests/txt-suites/case-nom-acc
-U customize/unit-tests/txt-suites/case-nom-acc-adp
-U customize/unit-tests/txt-suites/case-none
-U customize/unit-tests/txt-suites/case-split-n
-U customize/unit-tests/txt-suites/case-split-s
-U customize/unit-tests/txt-suites/case-split-v
-U customize/unit-tests/txt-suites/case-tripartite
-U customize/unit-tests/txt-suites/dir-inv-algonquian
-U customize/unit-tests/txt-suites/dir-inv-fore
-U customize/unit-tests/txt-suites/tiniest
-cvs update: lisp/create-unit-test.lsp is no longer in the repository
+U customize/unit-tests/skeletons/aux-f-vpcomp-nfconst-formfeat/item
+U customize/unit-tests/skeletons/aux-f-vpcomp-nfconst-formfeat/relations
+U customize/unit-tests/skeletons/aux-s-f-noinfl/item
+U customize/unit-tests/skeletons/aux-s-f-noinfl/relations
+U customize/unit-tests/skeletons/aux-v-f-noinfl/item
+U customize/unit-tests/skeletons/aux-v-f-noinfl/relations
+U customize/unit-tests/skeletons/aux-vp-f-noinfl/item
+U customize/unit-tests/skeletons/aux-vp-f-noinfl/relations
+U customize/unit-tests/skeletons/auxten-vpcompnfasp-tafeat/item
+U customize/unit-tests/skeletons/auxten-vpcompnfasp-tafeat/relations
+U customize/unit-tests/skeletons/noaux-toblig-aopt-onv/item
+U customize/unit-tests/skeletons/noaux-toblig-aopt-onv/relations
+U customize/unit-tests/skeletons/nopaux-noinfl-vpcomp-f-formfeat/item
+U customize/unit-tests/skeletons/nopaux-noinfl-vpcomp-f-formfeat/relations
+U customize/unit-tests/txt-suites/aux-f-vpcomp-nfconst-formfeat
+U customize/unit-tests/txt-suites/aux-s-f-noinfl
+U customize/unit-tests/txt-suites/aux-v-f-noinfl
+U customize/unit-tests/txt-suites/aux-vp-f-noinfl
+U customize/unit-tests/txt-suites/auxten-vpcompnfasp-tafeat
+U customize/unit-tests/txt-suites/noaux-toblig-aopt-onv
+U customize/unit-tests/txt-suites/nopaux-noinfl-vpcomp-f-formfeat
 U lisp/matrix-unit-tests.lsp
-U Makefile
 ? doc
 ? linux.x86.32
 ? man
 ? include/mrs.h
+U lexdb/pg-interface.el
 M log/build
+U src/lkb.el
+U src/tdl-mode.el
 U src/version.lsp
 ? src/.l1cl
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
+U src/ACL_specific/build.lsp
+U src/ACL_specific/compare.lsp
+U src/ACL_specific/parseout.lsp
 ? src/general/clim.fasl
-U src/glue/lsp.lsp
-U src/io-general/outputsrc.lsp
-U src/io-general/tree-nodes.lsp
+U src/glue/dag.lsp
+U src/glue/repp.lsp
+U src/glue/sppp.lsp
+U src/io-general/utils.lsp
+U src/main/initializations.lsp
+U src/main/morph.lsp
+U src/main/user-fns.lsp
+U src/mrs/basemrs.lisp
+U src/mrs/generate.lisp
+U src/mrs/lnk.lisp
+U src/mrs/mrscorpus.lisp
+U src/mrs/mrsglobals.lisp
+U src/mrs/mrsoutput.lisp
+U src/mrs/translate.lisp
+U src/mt/comparison.lisp
+U src/mt/patches.lisp
+U src/mt/transfer.lisp
+U src/mt/version.lisp
+U src/mt/vpm.lisp
+U src/rmrs/rasp3/build_standalone_image.sh
+U src/systems/lkb.system
+U src/tsdb/capi/acl.c
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/mt.lisp
+U src/tsdb/lisp/features.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/import.lisp
+U src/tsdb/lisp/lkb-interface.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/ptb.lisp
+U src/tsdb/lisp/pvm.lisp
 U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/tsdb.lisp
+U src/tsdb/lisp/yy.lisp
+U src/tsdb/skeletons/deutsch/mrs/item
+U src/tsdb/skeletons/english/Index.lisp
+cvs update: src/tsdb/skeletons/english/wsj00/item is no longer in the repository
+cvs update: src/tsdb/skeletons/english/wsj00/relations is no longer in the repository
+U src/tsdb/skeletons/norsk/Index.lisp
 **********
 
   Remember to update the version number:
@@ -768,7 +266,7 @@ U src/tsdb/lisp/redwoods.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.577; previous revision: 1.576
+new revision: 1.579; previous revision: 1.578
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -2043,7 +1541,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Aug 7, 2008 8:50)
+8.1 [Linux (x86)] (Nov 4, 2008 7:28)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2936,6 +2434,10 @@ T
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/lui.fasl
 ;;; Fasl write complete
 ;   Fast loading /lingo/build/lkb/src/.l1cl/glue/lui.fasl
+;;; Compiling file /lingo/build/lkb/src/glue/repp.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/repp.fasl
+;;; Fasl write complete
+;   Fast loading /lingo/build/lkb/src/.l1cl/glue/repp.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/sppp.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/sppp.fasl
 ;;; Fasl write complete
@@ -3287,7 +2789,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-142829144 bytes have been tenured, next gc will be global.
+150638032 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -3466,7 +2968,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-8506016 bytes have been tenured, next gc will be global.
+8505976 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/ppcre/repetition-closures.fasl
 ;;; Fasl write complete
@@ -3896,6 +3398,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/lui.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/glue/lui.fasl
+;;; Compiling file /lingo/build/lkb/src/glue/repp.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/repp.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/glue/repp.fasl
 ;;; Compiling file /lingo/build/lkb/src/glue/sppp.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/glue/sppp.fasl
 ;;; Fasl write complete
@@ -4239,10 +3745,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/globals.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/globals.fasl
 ;;; Fasl write complete
+8767576 bytes have been tenured, next gc will be global.
+See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/globals.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/utilities.lisp
-8791368 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/utilities.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/utilities.fasl
@@ -4311,23 +3817,23 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-[08:53:14] gc-after-hook(): local; new: 2159800; old: 5312; efficiency: 91.
-[08:53:15] gc-after-hook(): local; new: 2337792; old: 12856; efficiency: 93.
+[07:31:44] gc-after-hook(): local; new: 3546504; old: 9816; efficiency: 88.
+[07:31:45] gc-after-hook(): local; new: 2331880; old: 6264; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
-[08:53:16] gc-after-hook(): local; new: 2074240; old: 6248; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
+[07:31:46] gc-after-hook(): local; new: 1811296; old: 9072; efficiency: 92.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-[08:53:17] gc-after-hook(): local; new: 1642744; old: 357976; efficiency: 92.
-[08:53:18] gc-after-hook(): local; new: 3069976; old: 168376; efficiency: 92.
+[07:31:47] gc-after-hook(): local; new: 2245792; old: 359888; efficiency: 91.
+[07:31:48] gc-after-hook(): local; new: 3398384; old: 165120; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
@@ -4341,15 +3847,15 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
-[08:53:19] gc-after-hook(): local; new: 1672456; old: 3552; efficiency: 91.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
+[07:31:49] gc-after-hook(): local; new: 1612136; old: 3432; efficiency: 91.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/hunter.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
-[08:53:20] gc-after-hook(): local; new: 846208; old: 1004648; efficiency: 91.
+[07:31:50] gc-after-hook(): local; new: 828336; old: 1032264; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
@@ -4365,7 +3871,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
-[08:53:21] gc-after-hook(): local; new: 928480; old: 62008; efficiency: 93.
+[07:31:51] gc-after-hook(): local; new: 923984; old: 40584; efficiency: 93.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/learner.fasl
 ;;; Fasl write complete
