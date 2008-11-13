@@ -1,0 +1,39 @@
+
+The following files are necessary to build and use a standalone Allegro Lisp
+image, that reads in RASP3 trees and returns RMRSs:
+
+LISP source:
+
+build_standalone.lsp
+standalone-image.lsp
+standalone-server.lsp
+
+Build script:
+
+build_standalone_image.sh
+
+Execution script:
+
+start_rasp3_rmrs_server.sh
+
+While these files assume an LKB source installation, they need some
+customisation:
+
+build_standalone_image.sh:	acl_home should be set
+
+start_rasp3_rmrs_server.sh:	lkb_home should be set
+
+Running build_standalone_image.sh requires the lkb_home path as an argument.
+(The distibution of input arguments and shell variables is just a 'historial
+accident'.)
+
+The socket interface is not packaged and requires a ctrl-q (\u0011) terminator
+in both directions. (Newer versions of RASP may annotate the tree results with
+the number of the analysis. This must be removed as the Lisp side of the
+socket uses the Lisp reader and expects a specific sequence of structures.
+This is a consequence of the original conversion code.)
+
+I hope these notes are clear and useful.
+
+C.J. Rupp 13.11.08 (Fortunately, not a Friday.)
+
