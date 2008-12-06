@@ -108,6 +108,9 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 Draw the nodes across the top, and create arcs as straight lines
 
+Fill the first line with links, trying shortest first, avoiding 
+overlaps and touching links.  Then next line etc till all done.
+
 NODE1            NODE2              NODE3         NODE4
 
   ----------------->                  <-------------
@@ -126,19 +129,25 @@ LTOPs indicated by *
 (defstruct dmrs-layout-node
   id
   label
+  ltop
   x)
 
 (defstruct dmrs-layout-link
   label
-  x1
-  x2
+  left-x
+  right-x
+  direction ;; :l :r or nil
   y)
 
 (defun layout-dmrs (dmrs)
   ;;; units have to be greater than character width
   (let* ((node-x 0)
+	 (start-y 0)
+	 (y-increment 10)
 	 (x-increment 10)
-	 (char-conversion 1)
+	 (char-conversion 2) ;; multiple of 2
+	 (tmp-links nil) ;; list organised by length
+	 (final-links nil)
 	 (layout-nodes
 	  (loop for node in (dmrs-nodes dmrs)
 	      collect
@@ -154,25 +163,98 @@ LTOPs indicated by *
 		       (node-width (* char-conversion 
 				      (length predstring)))
 		       (current-x (+ node-x (/ node-width 2))))
-		       ;;; round this
 		  (setf node-x (+ node-x node-width x-increment))
 		  (make-dmrs-layout-node :id id
 					 :label predstring
 					 :x node-x)))))
-    (dolist (link (sort-dmrs-links-by-from (dmrs-links dmrs) 
-					   (dmrs-nodes dmrs)))
-      (let ((from (dmrs-link-from link))
-	    (pre (dmrs-link-pre link))
-	    (post (dmrs-link-post link)))
-	(format t "~A ~A ~A~%" 
-	    (if (eql from 0) "LTOP" from)
-	    (cond ((and pre post) (format nil "~A/~A" pre post))
-		  (pre (format nil "~A" pre))
-		  (post (format nil "/~A" post))
-		  (t ""))
-	    (dmrs-link-to link))))
-))
-  
+    (dolist (link (dmrs-links dmrs))
+      (let* ((from (dmrs-link-from link))
+	     (to (dmrs-link-to link)))
+	(if (eql from 0) ;; LTOP
+	    (mark-ltop-node to layout-nodes)
+	  (let* ((pre (dmrs-link-pre link))
+		 (post (dmrs-link-post link))
+		 (link-label
+		  (cond ((and pre post) (format nil "~A/~A" pre post))
+			(pre (format nil "~A" pre))
+			(post (format nil "/~A" post))
+			(t "")))
+		 (from-x (find-dmrs-node-x from layout-nodes))
+		 (to-x (find-dmrs-node-x to layout-nodes))
+		 (left-x (if (< from-x to-x) from-x to-x))
+		 (right-x (if (< from-x to-x) to-x from-x))
+		 (new-link
+		  (make-dmrs-layout-link
+		   :label link-label
+		   :left-x left-x
+		   :right-x right-x
+		   :direction (if pre (if (< from-x to-x) :r :l)
+				nil)))
+		 (length (- right-x left-x))
+		 (length-set (assoc length tmp-links)))
+	    (if length-set (push new-link (cdr length-set))
+	      (push (cons length (list new-link)) tmp-links))))))
+    (dolist (length-set tmp-links)
+      (setf (cdr length-set) (sort (cdr length-set) 
+				   #'< :key #'left-x)))
+    (setf tmp-links (sort tmp-links #'< :key #'car))
+    (let ((current-y start-y))
+      (when tmp-links
+	(loop 
+	  (multiple-value-bind 
+	      (done-links new-tmp) 
+	      (fit-all-links tmp-links current-y)
+	    (setf final-links (append final-links done-links))
+	    (unless new-tmp (return))
+	    (setf tmp-links new-tmp)
+	    (setf current-y (+ current-y y-increment))))))
+    (construct-dmrs-diagram layout-nodes final-links)))
+
+(defun mark-ltop-node (node-id nodes)
+  (let ((node (find node-id layout-nodes :key #'dmrs-layout-node-id)))
+    (when node (setf (dmrs-layout-node-ltop node) t))))
+
+(defun find-dmrs-node-x (node-id nodes)
+  (let ((node (find node-id layout-nodes :key #'dmrs-layout-node-id)))
+    (if node (dmrs-layout-node-x node))))
+
+(defun fit-all-links (to-fit y)
+  ;;; fits all the links we can on one y, returns a list of fitted links
+  ;;; with the y set, and a list of ones that don't fit
+  (let ((y-set nil)
+	(unfitted nil))
+    (dolist (length-set to-fit)
+      ;; if speed were an issue, we would return when we'd 
+      ;; got to a point where we knew there could be no space
+      ;; in the y-set for links of a certain length, but ignore for
+      ;; now
+      (let ((unfitted-length nil))
+	(dolist (link (cdr length-set))
+	  (if (link-fits link y-set)
+	      (progn (setf (dmrs-layout-link-y link) y)
+		     (push link y-set))
+	    (if unfitted-length 
+		(push link (cdr unfitted-length))
+	      (setf unfitted-length (cons (car length-set) 
+					  (list link))))))
+	(when unfitted-length
+	  (setf (cdr unfitted-length)
+	    (nreverse (cdr unfitted-length)))
+	  (push unfitted-length
+		unfitted))))
+    (values y-set 
+	    (nreverse unfitted))))
+
+(defun link-fits (link fitted-set)
+  (let ((link-left (dmrs-layout-link-left-x link))
+	(link-right (dmrs-layout-link-right-x link)))
+    (loop for fitted-link in fitted-set
+	  all-satisfy
+	  (or (< link-right (dmrs-layout-link-left-x link)) 
+	      (> link-left (dmrs-layout-link-right-x link))))))
+
+
+
 |#
 
 
