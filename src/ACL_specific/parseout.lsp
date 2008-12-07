@@ -313,6 +313,7 @@
                     ("MRS" :value mrs :active ,*mrs-loaded*)
                     ("Prolog MRS" :value prolog :active ,*mrs-loaded*)
                     ("RMRS" :value rmrs :active ,*mrs-loaded*)
+;;;		    ("DMRS" :value dmrs :active ,*mrs-loaded*)
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     #+:logon
@@ -383,6 +384,7 @@
             #+:logon
             (utool (funcall 'show-mrs-utool-window (prtree-edge tree)))
             (rmrs (funcall 'show-mrs-rmrs-window (prtree-edge tree)))
+	    (dmrs (funcall 'show-mrs-dmrs-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
 	    (fol 
