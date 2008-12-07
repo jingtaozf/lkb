@@ -360,7 +360,8 @@
   (let ((dmrs (mrs-dmrs-dmrs mframe)))
     (if dmrs
 	(clim:with-text-style (stream (lkb-parse-tree-font))
-	  (mrs::layout-dmrs dmrs :clim stream)))))
+	  (mrs::layout-dmrs dmrs :clim stream))
+      (format stream "~%::: DMRS structure could not be extracted~%"))))
 
 ;;; layout-dmrs is in dmrs.lisp and produces an abstract 
 ;;; layout of the nodea and links

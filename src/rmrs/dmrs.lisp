@@ -369,9 +369,8 @@ CLIM rendering is in lkb-acl-rmrs.lisp
 		   :direction :input)
       (let ((rmrs (parse-xml-removing-junk istream)))
 	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
-	  (layout-dmrs 
-	   (rmrs-to-dmrs (read-rmrs rmrs nil))
-	   :latex t)))))
+	  (simple-output-dmrs
+	   (rmrs-to-dmrs (read-rmrs rmrs nil)))))))
 |#
 
 #|
@@ -450,28 +449,38 @@ FIX - not done (output only)
 
 (defun rmrs-to-dmrs (rmrs) 
   ;;; convert an RMRS to a DMRS
-  (let ((nodes (extract-rmrs-nodes rmrs))) 
-    (check-char-vars nodes) ;;; error if charvar property doesn't hold
-    (let* ((var-links (extract-rmrs-var-links rmrs nodes))
-	   (dgroups (determine-label-equality-sets nodes var-links))
-	   ;; nodes which share a lable
-	   (eqlinks (make-dmrs-eq-links var-links dgroups))
-	   (hlinks (make-dmrs-handel-links rmrs dgroups nodes))
-	   (ltoplinks (make-dmrs-ltop-links rmrs dgroups))
+  (let* ((nodes (extract-rmrs-nodes rmrs))
+	 (dup-errors
+	  (check-char-vars nodes)))
+    (if dup-errors 
+	(progn (format t "~A~%" dup-errors)
+	       nil)
+      (let* ((var-links (extract-rmrs-var-links rmrs nodes))
+	     (unlinked-errors
+	      (check-char-vars2 var-links nodes)))
+	(if unlinked-errors 
+	    (progn (format t "~A~%" unlinked-errors)
+		   nil)
+	  (let*
+	      ((dgroups (determine-label-equality-sets nodes var-links))
+	       ;; nodes which share a label
+	       (eqlinks (make-dmrs-eq-links var-links dgroups))
+	       (hlinks (make-dmrs-handel-links rmrs dgroups nodes))
+	       (ltoplinks (make-dmrs-ltop-links rmrs dgroups))
 	   ;;; link types are distinguished for convenience
-	   (dmrs
-      (make-dmrs :nodes nodes
-		 :links (append
-			 ltoplinks
-			 (loop for var-link in var-links
-			     collect
-			       (let ((post (dmrs-link-post var-link)))
-				 (unless post
-				   (setf (dmrs-link-post var-link) :neq))
-				 var-link))
-			 eqlinks 
-			 hlinks))))
-      dmrs)))
+	       (dmrs
+		(make-dmrs :nodes nodes
+			   :links (append
+				   ltoplinks
+				   (loop for var-link in var-links
+				       collect
+					 (let ((post (dmrs-link-post var-link)))
+					   (unless post
+					     (setf (dmrs-link-post var-link) :neq))
+					   var-link))
+				   eqlinks 
+				   hlinks))))
+	    dmrs))))))
 ;;;      (pprint dgroups)
 ;;;      (simple-output-dmrs dmrs)
 ;;;      (layout-dmrs dmrs))))
@@ -487,17 +496,22 @@ FIX - not done (output only)
 	 :charvar (if (or (and (realpred-p (rel-pred rel))
 			       (not (equal (realpred-pos (rel-pred rel)) "q")))
 			  (member (rel-pred rel)
-				  '("pron_rel") :test #'equal))
+				  '("pron_rel" 
+				    "generic_entity_rel"
+				    "part_of_rel") :test #'equal))
 		      (var-id (car (rel-flist rel))))
 	 :label (var-id (rel-handel rel)))))
 
 (defun check-char-vars (nodes)
-  (let ((vars nil))
+  (let ((vars nil)
+	(duplicates nil))
     (dolist (node nodes)
       (let ((char-var (dmrs-node-charvar node)))
 	(if (and char-var (member char-var vars))
-	    (error "~%Duplicate char var ~A in ~A" char-var nodes)
-	  (push char-var vars))))))
+	    (pushnew char-var duplicates)
+	  (push char-var vars))))
+    (if duplicates
+      (format nil "~%Duplicate char vars ~A in ~A" duplicates nodes))))
 
 (defun extract-rmrs-var-links (rmrs nodes)
   (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
@@ -513,7 +527,14 @@ FIX - not done (output only)
 	   :to (if to-node (dmrs-node-id to-node))
 	   :pre (rmrs-arg-arg-type rmrs-arg)))))
 
-
+(defun check-char-vars2 (links nodes)
+  (let ((unlinked nil))
+    (dolist (link links)
+      (unless (dmrs-link-to link)
+	(push (cons (dmrs-link-from link) (dmrs-link-pre link))
+	      unlinked)))
+    (if unlinked
+      (format nil "~%Unlinked vars ~A in ~A" unlinked nodes))))
 
 
 (defun determine-label-equality-sets (nodes links)
@@ -683,23 +704,25 @@ FIX - not done (output only)
 	  (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
 	      when (and (eql (var-id (rmrs-arg-label rmrs-arg)) from-node-id)
 			(not (equal (var-type (rmrs-arg-val rmrs-arg)) "h")))
-	      collect
+              append
 		(let* ((var (rmrs-arg-val rmrs-arg))
 		       (var-id (var-id var))
 		       (to-node
 			(car (member var-id nodes 
 				     :key #'dmrs-node-charvar))))
-		  (dmrs-node-id to-node))))
+		  (if to-node
+		      (list (dmrs-node-id to-node))))))
 	 (inherent-args
 	  (loop for rmrs-rel in (rmrs-liszt rmrs)
 	      when (eql (var-id (rel-anchor rmrs-rel)) from-node-id)
-	      collect
+	      append
 		(let* ((var (car (rel-flist rmrs-rel)))
 		       (var-id (var-id var))
 		       (to-node
 			(car (member var-id nodes 
 				     :key #'dmrs-node-charvar))))
-		  (dmrs-node-id to-node))))
+		  (if to-node
+		      (list (dmrs-node-id to-node))))))
 	 (non-char-args (loop for arg in inherent-args
 			    unless (eql arg from-node-id)
 			    collect arg))
