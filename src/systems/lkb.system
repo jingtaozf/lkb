@@ -487,6 +487,7 @@
        #+(and :clim (not :tty)) 	
        (:file "lkb-acl-rmrs")            ; display etc in CLIM
        (:file "testing") ;;; temporary file for testing
+       (:file "dmrs") ;;; dependency MRS
 ))
 
      (:module "redwoods"

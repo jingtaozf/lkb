@@ -102,6 +102,7 @@
        (:file "input") ;;; loads the underlying rmrs input code
        (:file "compare") ;;; RMRS comparison
        (:file "testing") ;;; temporary file for testing
+       (:file "dmrs") ;;; dependency MRS
        ))      
 
      (:module "redwoods"
