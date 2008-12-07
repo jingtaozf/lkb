@@ -445,6 +445,10 @@ make-dmrs-handel-links
 
 FIX - not done (output only)
 
+
+TO FIX - CARG values need to go somewhere - ignored for now
+
+TO FIX - better approach to deciding which constructions have char vars
 |#
 
 (defun rmrs-to-dmrs (rmrs) 
@@ -497,6 +501,7 @@ FIX - not done (output only)
 			       (not (equal (realpred-pos (rel-pred rel)) "q")))
 			  (member (rel-pred rel)
 				  '("pron_rel" 
+				    "named_rel"
 				    "generic_entity_rel"
 				    "part_of_rel") :test #'equal))
 		      (var-id (car (rel-flist rel))))
@@ -515,7 +520,8 @@ FIX - not done (output only)
 
 (defun extract-rmrs-var-links (rmrs nodes)
   (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
-      unless (or (equal (var-type (rmrs-arg-val rmrs-arg)) "h")
+      unless (or (not (var-p (rmrs-arg-val rmrs-arg)))
+		 (equal (var-type (rmrs-arg-val rmrs-arg)) "h")
 		 (equal (var-type (rmrs-arg-val rmrs-arg)) "u"))
       collect
 	(let* ((var (rmrs-arg-val rmrs-arg))
@@ -670,7 +676,8 @@ FIX - not done (output only)
 	  
 (defun make-dmrs-handel-links (rmrs ngroups nodes)
   (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
-      when (equal (var-type (rmrs-arg-val rmrs-arg)) "h")
+      when (and (var-p (rmrs-arg-val rmrs-arg))
+		(equal (var-type (rmrs-arg-val rmrs-arg)) "h"))
       append
 	;; BODY args won't have a qeq, so the code
 	;;; has to allow for this
