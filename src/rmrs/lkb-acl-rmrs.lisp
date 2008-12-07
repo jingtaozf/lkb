@@ -24,7 +24,7 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
-;;; new compare functionality
+;;; compare functionality
 
 (define-lkb-frame mrs-rmrs-compare
     ((rmrs1 :initform nil
@@ -35,6 +35,17 @@
 	    :accessor mrs-rmrs-compare-comparison-record))
   :display-function 'show-mrs-rmrs-compare
   :width (* 2 *parse-window-width*) 
+  :height *parse-window-height*)
+
+;;; DMRS
+
+(define-lkb-frame mrs-dmrs
+    ((mrsstruct :initform nil
+                :accessor mrs-dmrs-mrsstruct)
+     (rmrs :initform nil
+	   :accessor mrs-dmrs-dmrs))
+  :display-function 'show-mrs-dmrs  
+  :width *parse-window-width* 
   :height *parse-window-height*)
 
 ;;; end frames
@@ -58,6 +69,10 @@
 (define-mrs-rmrs-command (com-output-mrs-rmrs-xml :menu "Save as XML") 
     ()
   (save-rmrs-as-xml (mrs-rmrs-rmrs clim:*application-frame*)))
+
+(define-mrs-dmrs-command (com-output-dmrs-xml :menu "Save as XML") 
+    ()
+  (save-dmrs-as-xml (mrs-dmrs-dmrs clim:*application-frame*)))
 
 (defparameter *rmrs-xml-output-file* nil)
 
@@ -321,4 +336,71 @@
 
 ;; code moved to rmrs/compare.lisp since it isn't actually ACL specific
 
+;;; DMRS display from parser
 
+(defun show-mrs-dmrs-window (edge &key mrs dmrs title)
+  (mp:run-function "DMRS"
+    #'show-mrs-dmrs-window-really edge :mrs mrs :dmrs dmrs :title title))
+  
+(defun show-mrs-dmrs-window-really (edge &key mrs dmrs title)
+  (let ((mframe (clim:make-application-frame 'mrs-dmrs))
+        (mrsstruct (or mrs (when edge (mrs::extract-mrs edge)))))
+    (setf (mrs-dmrs-mrsstruct mframe) 
+      mrsstruct)
+    (setf (mrs-dmrs-dmrs mframe) 
+      (or dmrs
+	  (let ((rmrs (mrs::mrs-to-rmrs mrsstruct)))
+	    (if rmrs
+		(mrs::rmrs-to-dmrs rmrs)))))
+    (setf (clim:frame-pretty-name mframe) (or title "Dependency MRS"))
+    (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-dmrs (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((dmrs (mrs-dmrs-dmrs mframe)))
+    (if dmrs
+	(clim:with-text-style (stream (lkb-parse-tree-font))
+	  (mrs::layout-dmrs dmrs :clim stream)))))
+
+;;; layout-dmrs is in dmrs.lisp and produces an abstract 
+;;; layout of the nodea and links
+;;; for CLIM purposes
+;;; a) the y coordinates start with 0 at the top
+;;; b) the character position calculations are multiplied by 5
+;;;    for the default text (this needs FIXing)
+;;; c) the first arc line is at 20, subsequently at intervals of 30
+;;; d) the arc labels are at the arc line +6
+
+(defun construct-dmrs-clim-diagram (nodes links stream)
+  (clim:with-output-recording-options (stream :draw nil :record t)
+    (dolist (node nodes)
+      (move-to-x-y stream (* 5 (mrs::dmrs-layout-node-start-x node)) 0)
+      (format stream "~A" (mrs::dmrs-layout-node-label node)))
+    (dolist (link links)
+      (let* ((y-pos (+ 20 (* 30 (mrs::dmrs-layout-link-y link))))
+	    (arrow-direction (mrs::dmrs-layout-link-direction link))
+	    (left-x (+ (* 5 (mrs::dmrs-layout-link-left-x link)) 5))
+	    (right-x (- (* 5 (mrs::dmrs-layout-link-right-x link)) 5))
+	    (mid-point (+ left-x (truncate (- right-x left-x) 2)))
+	    (label (mrs::dmrs-layout-link-label link)))
+	;;; draw the label
+	(move-to-x-y stream (- mid-point (* 5 (truncate (length label) 2)))
+		     (+ y-pos 6))
+	(format stream "~A" label)
+	;;; draw the arrow or line
+	(if arrow-direction
+	    (clim:draw-arrow*   
+	 ;;; draw-arrow* x1 y1 x2 y2 - from-head is x1 y1
+	     stream
+	     left-x
+	     y-pos
+	     right-x
+	     y-pos
+	     :from-head (eql arrow-direction :l)
+	     :to-head (eql arrow-direction :r))
+	  (clim:draw-line*   
+	     stream
+	     left-x
+	     y-pos
+	     right-x
+	     y-pos))))))
