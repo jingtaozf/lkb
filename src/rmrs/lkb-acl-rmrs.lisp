@@ -376,7 +376,9 @@
   (clim:with-output-recording-options (stream :draw nil :record t)
     (dolist (node nodes)
       (move-to-x-y stream (* 5 (mrs::dmrs-layout-node-start-x node)) 0)
-      (format stream "~A" (mrs::dmrs-layout-node-label node)))
+      (format stream "~A~A" 
+	      (mrs::dmrs-layout-node-label node)
+	      (if (mrs::dmrs-layout-node-ltop node) "*" "")))
     (dolist (link links)
       (let* ((y-pos (+ 20 (* 30 (mrs::dmrs-layout-link-y link))))
 	    (arrow-direction (mrs::dmrs-layout-link-direction link))
