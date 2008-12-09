@@ -35,7 +35,8 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   cfrom
   cto
   charvar
-  label)
+  label
+  carg)
 
 (defstruct dmrs-link
   ;;; from and to are DMRS node ids, pre and post make up the arc
@@ -63,15 +64,18 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   (format stream "~%")
   (dolist (node (dmrs-nodes dmrs))
     (let ((pred (dmrs-node-pred node))
-	  (id (dmrs-node-id node)))
-    (format stream "~A:~A~%"
+	  (id (dmrs-node-id node))
+	  (carg (dmrs-node-carg node)))
+    (format stream "~A:~A~A~%"
 	    id
 	    (if (realpred-p pred)
 		(convert-realpred-to-string
 		 (realpred-lemma pred)
 		 (realpred-pos pred)
 		 (realpred-sense pred))
-	      pred))))
+	      pred)
+	    (if carg (format nil "/~A" carg)
+	      ""))))
     (format stream "~%")
   (dolist (link (sort-dmrs-links-by-from (dmrs-links dmrs) 
 					 (dmrs-nodes dmrs)))
@@ -159,17 +163,23 @@ drawing program (and recalculated so origin is bottom left)
 	 (tmp-links nil) ;; list organised by length
 	 (final-links nil)
 	 (layout-nodes
-	  (loop for node in (dmrs-nodes dmrs)
+	  (loop for node in (sort (copy-list (dmrs-nodes dmrs)) 
+				  #'sort-dmrs-pred)
 	      collect
 		(let* ((pred (dmrs-node-pred node))
 		       (id (dmrs-node-id node))
 		       (predstring
-			(if (realpred-p pred)
-			    (convert-realpred-to-string
-			     (realpred-lemma pred)
-			     (realpred-pos pred)
-			     (realpred-sense pred))
-			  pred))
+			(format nil "~A~A~A"
+				(if (realpred-p pred)
+				    (convert-realpred-to-string
+				     (realpred-lemma pred)
+				     (realpred-pos pred)
+				     (realpred-sense pred))
+				  pred)
+				(if (dmrs-node-carg node)
+				    "/" "")
+				(or (dmrs-node-carg node)
+				    "")))
 		       (node-width (length predstring)))
 		  (setf start-x next-x)
 		  (setf node-x (+ next-x (truncate node-width 2)))
@@ -226,6 +236,35 @@ drawing program (and recalculated so origin is bottom left)
        (lkb::construct-dmrs-clim-diagram layout-nodes final-links stream))
       (:latex 
        (construct-dmrs-latex-diagram layout-nodes final-links stream)))))
+
+(defun sort-dmrs-pred (node1 node2)
+  ;;; sortal order - < cfrom, then cto, then real 
+  ;;; before construction, then (assume both construction)
+  ;;; quantifier before non-quantifier, then alphabetic
+  ;;;
+  ;;; not entirely optimal
+  (let ((cfrom1 (dmrs-node-cfrom node1))
+	(cfrom2 (dmrs-node-cfrom node2)))
+    (if (or (null cfrom1) (null cfrom2) (eql cfrom1 cfrom2))
+	(let ((cto1 (dmrs-node-cto node1))
+	      (cto2 (dmrs-node-cto node2)))
+	  (if (or (null cto1) (null cto2) (eql cto1 cto2))
+	      (let* ((pred1 (dmrs-node-pred node1))
+		     (pred2 (dmrs-node-pred node2)))
+		(if (and (realpred-p pred1)
+			 (realpred-p pred2))
+		    (string-lessp (realpred-lemma pred1)
+				  (realpred-lemma pred2))
+		  (if (and (not (realpred-p pred1))
+			   (not (realpred-p pred2)))
+		      (let ((qp1 (quantifier-pred-p pred1))
+			    (qp2 (quantifier-pred-p pred2)))
+			(if (or qp1 qp2 (not (and qp1 qp2)))
+			    qp1
+			  (string-lessp pred1 pred2)))
+		    (realpred-p pred1))))
+	    (< cto1 cto2)))
+      (< cfrom1 cfrom2))))
 
 (defun mark-ltop-node (node-id nodes)
   (let ((node (find node-id nodes :key #'dmrs-layout-node-id)))
@@ -313,8 +352,9 @@ CLIM rendering is in lkb-acl-rmrs.lisp
     (dolist (node nodes)
       (let ((x (dmrs-layout-node-mid-x node))
 	    (label (dmrs-layout-node-label node)))
-	(format stream "\\put(~A,~A){\\makebox(0,0){~A}}~%"
-		x text-y (latex-escape-string label))))
+	(format stream "\\put(~A,~A){\\makebox(0,0){~A~A}}~%"
+		x text-y (latex-escape-string label) 
+		(if (dmrs-layout-node-ltop node) "*" ""))))
     (dolist (link links)
       (let* ((left-x (+ offset (dmrs-layout-link-left-x link)))
 	     (link-length (- (- (dmrs-layout-link-right-x link)
@@ -369,8 +409,8 @@ CLIM rendering is in lkb-acl-rmrs.lisp
 		   :direction :input)
       (let ((rmrs (parse-xml-removing-junk istream)))
 	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
-	  (simple-output-dmrs
-	   (rmrs-to-dmrs (read-rmrs rmrs nil)))))))
+	  (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
+	    (when dmrs (simple-output-dmrs dmrs)))))))
 |#
 
 #|
@@ -395,10 +435,11 @@ type of A (e.g., ARG1).
 done by extract-rmrs-var-links
 
 If the labels of P and P' are
-  equated, then the post-slash label is =.  If P has a hole argument
-  which is qeq the label of P', then the post-slash label is h.  If
-  P and P' have labels which are unrelated in the RMRS, the
-  post-slash label is neq.
+equated, then the post-slash label is =.  If P has a hole argument
+which is qeq the label of P', then the post-slash label is h.  
+If the hole argument is eq the label of P', then heq. If
+P and P' have labels which are unrelated in the RMRS, the 
+post-slash label is neq.
 
 4. For every case where a set S of predicates in the RMRS have equal
 labels and the linkages are not fully represented by equalities on
@@ -425,17 +466,18 @@ LTOP node in the DMRS is linked to each head predicate in that set.
 make-dmrs-ltop-links
 
 7. For every argument A which is anchored to a predicate P and has
-a hole value h, such that h is qeq a label lb which
+a hole value h, such that h is qeq (or =) a label lb which
 labels a set of predicates S:
 
 a) If P has exactly one argument A' with a value y such that P' = \charp(y) 
-is a member of S, then there is an ARG/h arc from P to P', where ARG is the 
-argument type of A. (Note that this covers the RSTR case because there 
-will be a BV argument.)
+is a member of S, then there is an ARG/h (or ARG/heq) arc from 
+P to P', where ARG is the argument type of A. (Note that 
+this covers the RSTR case because there will be a BV argument.)
 
 this condition is checked by char-var-selects
 
-b) Otherwise, there are ARG/h arcs from P to each of the head predicates in S.
+b) Otherwise, there are ARG/h (or ARG/heq) arcs from P to each of the 
+head predicates in S.
 
 make-dmrs-handel-links
 
@@ -444,11 +486,6 @@ make-dmrs-handel-links
 (e.g., we write RSTR, rather than RSTR/h).
 
 FIX - not done (output only)
-
-
-TO FIX - CARG values need to go somewhere - ignored for now
-
-TO FIX - better approach to deciding which constructions have char vars
 |#
 
 (defun rmrs-to-dmrs (rmrs) 
@@ -466,8 +503,8 @@ TO FIX - better approach to deciding which constructions have char vars
 	    (progn (format t "~A~%" unlinked-errors)
 		   nil)
 	  (let*
-	      ((dgroups (determine-label-equality-sets nodes var-links))
-	       ;; nodes which share a label
+	      ((dgroups (determine-label-equality-sets nodes var-links)) 
+	        ;; nodes which share a label
 	       (eqlinks (make-dmrs-eq-links var-links dgroups))
 	       (hlinks (make-dmrs-handel-links rmrs dgroups nodes))
 	       (ltoplinks (make-dmrs-ltop-links rmrs dgroups))
@@ -484,28 +521,47 @@ TO FIX - better approach to deciding which constructions have char vars
 					   var-link))
 				   eqlinks 
 				   hlinks))))
-	    dmrs))))))
+			dmrs))))))
+    
 ;;;      (pprint dgroups)
 ;;;      (simple-output-dmrs dmrs)
 ;;;      (layout-dmrs dmrs))))
 
 (defun extract-rmrs-nodes (rmrs)
-  (loop for rel in (rmrs-liszt rmrs)
-      collect
-	(make-dmrs-node
-	 :id (var-id (rel-anchor rel))
-	 :pred (rel-pred rel)
-	 :cfrom (rel-cfrom rel)
-	 :cto (rel-cto rel)
-	 :charvar (if (or (and (realpred-p (rel-pred rel))
-			       (not (equal (realpred-pos (rel-pred rel)) "q")))
-			  (member (rel-pred rel)
-				  '("pron_rel" 
-				    "named_rel"
-				    "generic_entity_rel"
-				    "part_of_rel") :test #'equal))
-		      (var-id (car (rel-flist rel))))
-	 :label (var-id (rel-handel rel)))))
+  ;;; FIX - the char var test is whether there's an ARG0 class variable
+  ;;; and the predicate is not a quantifier.  This is probably too generous.
+  (let ((nodes
+	 (loop for rel in (rmrs-liszt rmrs)
+	     collect
+	       (let ((pred (rel-pred rel))) 
+	       (make-dmrs-node
+		:id (var-id (rel-anchor rel))
+		:pred pred
+		:cfrom (rel-cfrom rel)
+		:cto (rel-cto rel)
+		:charvar (if (if (realpred-p pred)
+				 (not (equal (realpred-pos pred) 
+					     "q"))
+			       (not (quantifier-pred-p (rel-pred rel))))
+			     (var-id (car (rel-flist rel))))
+		:label (var-id (rel-handel rel)))))))
+    (dolist (rmrs-arg (rmrs-rmrs-args rmrs))
+      (when (and (stringp (rmrs-arg-val rmrs-arg))
+	       (equal (rmrs-arg-arg-type rmrs-arg) "CARG"))
+	  (let* ((node (car (member (var-id (rmrs-arg-label rmrs-arg))
+				    nodes :key #'dmrs-node-id))))
+	    (when (and node (dmrs-node-p node))
+	      (setf (dmrs-node-carg node)
+		(rmrs-arg-val rmrs-arg))))))
+    nodes))
+
+
+(defun quantifier-pred-p (pred)
+  (let ((qpos (position  #\q pred)))
+    (and qpos (> qpos 0) (< qpos (- (length pred) 1))
+	 (char= (elt pred (- qpos 1)) #\_)
+	 (char= (elt pred (+ qpos 1)) #\_))))
+	
 
 (defun check-char-vars (nodes)
   (let ((vars nil)
@@ -688,7 +744,8 @@ TO FIX - better approach to deciding which constructions have char vars
 				 (rmrs-h-cons rmrs) 
 				 :key #'(lambda (x) 
 					  (var-id (hcons-scarg x))))))
-	       (target-label (if qeq (var-id (hcons-outscpd qeq))))
+	       (target-label (if qeq (var-id (hcons-outscpd qeq))
+			       hole-id))
 	       (ngroup (car (member target-label ngroups 
 				    :key #'dmrs-ngroup-label)))
 	       (elements (if ngroup (dmrs-ngroup-elements ngroup)))
@@ -704,7 +761,7 @@ TO FIX - better approach to deciding which constructions have char vars
 		 :from from-node-id
 		 :to to-node-id
 		 :pre (rmrs-arg-arg-type rmrs-arg)
-		 :post :h)))))
+		 :post (if qeq :h :heq))))))
 
 (defun char-var-selects (from-node-id elements rmrs nodes)
   (let* ((main-args
