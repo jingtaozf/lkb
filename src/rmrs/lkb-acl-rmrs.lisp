@@ -74,6 +74,12 @@
     ()
   (save-dmrs-as-xml (mrs-dmrs-dmrs clim:*application-frame*)))
 
+(define-mrs-dmrs-command (com-output-dmrs-rmrs :menu "Convert to RMRS") 
+    ()
+  (show-rmrs-ordinary-window
+   (mrs::dmrs-to-rmrs (mrs-dmrs-dmrs clim:*application-frame*))
+   "Converted from DMRS"))
+
 (defparameter *rmrs-xml-output-file* nil)
 
 (defun save-rmrs-as-xml (rmrsstruct)

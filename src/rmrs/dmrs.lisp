@@ -34,9 +34,10 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   pred
   cfrom
   cto
-  charvar
-  label
-  carg)
+  carg
+  charvar ;; for RMRS to DMRS only
+  label ;; for RMRS to DMRS only
+)
 
 (defstruct dmrs-link
   ;;; from and to are DMRS node ids, pre and post make up the arc
@@ -483,9 +484,8 @@ make-dmrs-handel-links
 
 8 If the preslash label on the arc uniquely determines the
   postslash label, the slash and the postslash label may be omitted.
-(e.g., we write RSTR, rather than RSTR/h).
+(e.g., we write RSTR, rather than RSTR/h).FIX - not done (output only)
 
-FIX - not done (output only)
 |#
 
 (defun rmrs-to-dmrs (rmrs) 
@@ -812,3 +812,240 @@ FIX - not done (output only)
 ;;;; DMRS to RMRS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+#|
+
+1. Label each DMRS predicate with a distinct label and anchor.
+ 
+2. Associate each predicate with all possible arguments given by
+  SEM-I lookup (including the characteristic variables and the BVs of
+  quantifiers), keeping all argument names unique.
+
+3. For each ARG/= link between two predicates P and P':
+
+a) add an equality between the labels of the predicates P and P'
+
+b) add an equality between the ARG variable of P and the
+  characteristic variable of P' (the ARG variable is the value of
+  the argument labelled ARG).  (If there is no ARG variable associated
+  with P, or if it is a different type from the characteristic
+  variable of P', the DMRS is ill-formed according to the SEM-I.)
+
+4. For ARG/h link between predicates P and P'
+  add a qeq between the ARG hole of P and the label of P'.  (If
+  there is no ARG hole associated with P, the DMRS is ill-formed
+  according to the SEM-I.)
+
+5. For /= link between predicates P and P',
+  add an equality between the labels of the predicates P and P'
+  
+6. For each ARG/neq link between predicates P and P', add an
+  equality between the ARG variable of P and the characteristic
+  variable of P'. (If there is no ARG variable associated with P, or
+  if it is a different type from the characteristic variable of P',
+  the DMRS is ill-formed according to the SEM-I.)
+
+7. For each RSTR link between P and P', add an equality between the
+BV argument of P and the characteristic variable of P'.
+
+8. Make the LTOP of the RMRS the label of the predicate linked
+to LTOP in the DMRS.
+
+FIX - the SEM-I doesn't quite support this, unfortunately, so for now,
+go for a variant without the SEM-I
+
+1. Label each DMRS node P with a distinct label and anchor to 
+create an RMRS relation rel(P).  
+
+The anchor value is taken from the node id (which means if the 
+DMRS was created from an RMRS in the first place, this should 
+remain the same).
+
+For each P which has a CARG value V, create an RMRS arg
+anchor(rel(P)) CARG V
+
+(This is assuming that CARG is the only feature name used.for constants)
+
+For each P which is in a link P'->P (i.e., is the to of a link) with the
+label ARG/eq or ARG/neq, create an ARG0 variable of type i (it must be x or 
+e or i, but we don't know for sure which it is, though we could 
+ guess via the predicate name for the open class preds at least.)
+
+2. For each DMRS link (other than ltop and /eq links), 
+with label PRE/POST from node P to P', create an rmrs-arg, 
+with label anchor(rel(P)), arg label PRE, and value according to POST:
+if POST is eq or neq: arg0(rel(P'))
+if heq: label(rel(P'))
+if h - new hole variable, h. Also add h qeq label(rel(P'))
+
+3. For each DMRS link with from id 0 (i.e., LTOP) and with to node P1 ... Pn 
+set RMRS LTOP to label(rel(P1)) and set label(rel(P2)) ... label(rel(Pn))
+equal to label(rel(P1))
+
+4. For each DMRS PRE/eq or /eq link from P to P', 
+label(rel(P)) = label(rel(P'))
+
+5. For each DMRS link of type RSTR from P to P', ARG0(rel(P))=ARG0(rel(P'))
+(For well-formedness requirements, set any unset ARG0s of other rels 
+to a new variable)
+
+6. Create an RMRS with liszt consisting of rel(P)s, args the append of the 
+CARGs and step 3, ltop and h-cons as above and equalities from step 4.
+
+7. Remove the equalities by converting the RMRS into a canonical form.
+
+|#  
+
+(defun dmrs-to-rmrs (dmrs) 
+  ;;; version without SEM-I and with no explicit
+  ;;; equalities
+  (let* ((links (dmrs-links dmrs))
+	 (ltop nil) ;;; create as a side effect
+	 (qeqs nil) ;; ditto
+	 (cargs nil) ;; ditto
+	 (label-eqs nil) ;;; partially ditto
+	 (preds (loop for node in (dmrs-nodes dmrs)
+		    collect
+		      (let* ((pred (dmrs-node-pred node))
+			     (carg (dmrs-node-carg node))
+			     (id (dmrs-node-id node))
+			     (cfrom (dmrs-node-cfrom node))
+			     (cto (dmrs-node-cto node))
+			     (label (create-new-handle-var
+				     *variable-generator*))
+			     (anchor (make-var :type "h" :id id)))
+			(when carg
+			  (push (make-rmrs-arg :arg-type "CARG"
+					       :label anchor
+					       :val carg)
+				cargs))
+			(make-rel :pred pred
+				  :anchor anchor
+				  :handel label
+				  :cfrom cfrom
+				  :cto cto
+				  :flist 
+				  (construct-rmrs-flist id links)))))
+	 (args (loop for link in links
+		   unless ;; ltop
+		     (or 
+		      (let ((from (dmrs-link-from link))
+			    (to (dmrs-link-to link)))
+			(if (eql from 0)
+			    (let ((to-label 
+				   (retrieve-node-label to 
+							preds)))
+			      (if ltop
+				(push (list ltop to-label)
+				      label-eqs)
+				(setf ltop to-label))
+			      t)
+			  nil))
+		      (not (dmrs-link-pre link))) ;; eq labels with no arg
+		   collect
+		     (let* ((from (dmrs-link-from link))
+			    (from-pred 
+			     (find from preds 
+				   :key #'(lambda (pred) 
+					    (var-id (rel-anchor pred)))))
+			    (from-anchor 
+			     (if from-pred (rel-anchor from-pred)))
+			    (to (dmrs-link-to link))
+			    (arg (dmrs-link-pre link))
+			    (handel-relationship (dmrs-link-post link))
+			    (val (create-rmrs-arg-val
+				  handel-relationship
+				  to preds)))
+		       (when (eql handel-relationship :h)
+			 (push (make-hcons :relation "qeq" 
+					   :scarg val
+					   :outscpd 
+					   (retrieve-node-label to preds))
+			       qeqs))
+		       (make-rmrs-arg :arg-type arg
+				      :label from-anchor
+				      :val val)))))
+    (dolist (link links)
+      (when (eql (dmrs-link-post link) :eq)
+	  (push
+		(list 
+		 (retrieve-node-label
+		  (dmrs-link-to link) preds) 
+		 (retrieve-node-label
+		  (dmrs-link-from link) preds))
+		label-eqs)))
+    (dolist (pred preds)
+      (unless (rel-flist pred)
+	(let* ((rstr-to-id (find-rstr-from pred links))
+	       (rstr-node (if rstr-to-id
+			      (find rstr-to-id preds 
+				    :key #'(lambda (pred) 
+					     (var-id (rel-anchor pred)))))))
+	  (setf (rel-flist pred)
+	    (if (and rstr-node (rel-p rstr-node))
+		(copy-list (rel-flist rstr-node))
+	      (make-new-flist))))))
+    (let ((rmrs 
+	   (make-rmrs  :top-h ltop
+		:liszt preds 
+		:h-cons qeqs
+		:rmrs-args (append args cargs)
+		:bindings (close-bindings label-eqs))))
+      (canonicalise-rmrs rmrs) 
+      ;; close-bindings and canonicalise-rmrs 
+      ;; are in rmrs/comp.lisp
+      rmrs)))
+
+
+(defun retrieve-node-label (id preds)
+  (let ((pred (find id preds 
+		    :key #'(lambda (pred) 
+			     (var-id (rel-anchor pred))))))
+    (if pred
+	(rel-handel pred))))
+
+
+(defun construct-rmrs-flist (id links)
+  ;;; we are interested in cases where the id is a to on the links
+  ;;; and the link type is something/:eq or something/:neq
+  ;;;
+  ;;; RSTR/BV case is done after these are set up  
+  (dolist (link links)
+    (when (and (eql (dmrs-link-to link) id)
+	       (dmrs-link-pre link)
+	       (or (eql (dmrs-link-post link) :eq)
+		   (eql (dmrs-link-post link) :neq)))
+      (return (make-new-flist)))))
+
+(defun make-new-flist nil
+  (list (make-var :type "i"
+		  :id (funcall *variable-generator*))))
+	
+(defun find-rstr-from (pred links)
+  ;;; this is looking for cases where the pred has a rstr
+  ;;; link leading from it - we return the pred that the link goes
+  ;;; to so that its flist can be copied
+  (let* ((from (var-id (rel-anchor pred)))
+	 (to-id
+	  (dolist (link links)
+	    (when (and (eql (dmrs-link-from link) from)
+		       (equal (dmrs-link-pre link) "RSTR"))
+	      (return (dmrs-link-to link))))))
+    to-id))
+
+(defun create-rmrs-arg-val (handel-relationship
+			    to preds)
+  (let ((to-node 
+	 (find to preds 
+	       :key #'(lambda (pred) 
+			(var-id (rel-anchor pred))))))
+    ;; for :eq or :neq, we want the characteristic variable
+    ;; for :h we want a new hole, which will then be set qeq
+    ;; to the to-node
+    ;; for :heq we want the label
+    (ecase handel-relationship
+      (:eq (car (rel-flist to-node)))
+      (:neq (car (rel-flist to-node)))
+      (:h (create-new-handle-var *variable-generator*))
+      (:heq (rel-handel to-node)))))
