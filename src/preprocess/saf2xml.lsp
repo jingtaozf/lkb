@@ -96,7 +96,7 @@
 	       attr-to (xml-str to)
 	       (xml-str source)
 	       (xml-str target)
-	       content
+	       (xml-str content)
 	       elt
 	       )))))
     
