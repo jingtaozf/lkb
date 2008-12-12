@@ -1,6 +1,6 @@
 <!ELEMENT dmrs-list (dmrs)*>
 <!-- shares several components with rmrs -->
-<!ELEMENT dmrs (node|link)*)>
+<!ELEMENT dmrs (node|link)*>
 <!ATTLIST dmrs
           cfrom CDATA #REQUIRED
           cto   CDATA #REQUIRED 
