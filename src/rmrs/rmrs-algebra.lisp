@@ -128,8 +128,6 @@
 
 (defun add-rmrs-algebra-rule (rule)
   (let* ((rule-name (rmrs-algebra-rule-name rule))
-	 ;; [bmw] was (let* ((rule-name (rmrs-rule-name rule))
-	 ;;       type fixed to avoid sbcl complaint
 	 (rule-set (find rule-name *algebra-rule-instructions*
 				 :test #'equal :key #'rmrs-rule-set-name)))
     (if rule-set
