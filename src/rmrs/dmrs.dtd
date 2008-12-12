@@ -43,7 +43,7 @@
           refdistinct (plus|minus|u) #IMPLIED >
 
 
-<!ELEMENT link (rargname, post, nodeid, nodeid)>
+<!ELEMENT link (rargname, post)>
 <!ATTLIST link
           from CDATA #REQUIRED
           to   CDATA #REQUIRED > 
