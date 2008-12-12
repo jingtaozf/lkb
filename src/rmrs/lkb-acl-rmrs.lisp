@@ -98,6 +98,24 @@
        rmrsstruct
        'mrs::xml file-name))))
 
+(defparameter *dmrs-xml-output-file* nil)
+
+(defun save-dmrs-as-xml (dmrsstruct)
+  (let ((file-name (if *dmrs-xml-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Append to ~A?"
+						    *dmrs-xml-output-file*))))
+			 (if use-existing-p
+			     *dmrs-xml-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for DMRS XML dumps")))
+		       (ask-user-for-new-pathname "File for DMRS XML dumps"))))
+    (setf *dmrs-xml-output-file* file-name)
+    (when file-name
+      (mrs::output-dmrs
+       dmrsstruct
+       'mrs::dxml file-name))))
+
 ;;; ordinary window for one RMRS
 
 ;;; calling function (called from emacs)

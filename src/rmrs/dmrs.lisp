@@ -55,351 +55,6 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;; OUTPUT
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-(defun simple-output-dmrs (dmrs &optional (stream t))
-  (format stream "~%")
-  (dolist (node (dmrs-nodes dmrs))
-    (let ((pred (dmrs-node-pred node))
-	  (id (dmrs-node-id node))
-	  (carg (dmrs-node-carg node)))
-    (format stream "~A:~A~A~%"
-	    id
-	    (if (realpred-p pred)
-		(convert-realpred-to-string
-		 (realpred-lemma pred)
-		 (realpred-pos pred)
-		 (realpred-sense pred))
-	      pred)
-	    (if carg (format nil "/~A" carg)
-	      ""))))
-    (format stream "~%")
-  (dolist (link (sort-dmrs-links-by-from (dmrs-links dmrs) 
-					 (dmrs-nodes dmrs)))
-    (let ((from (dmrs-link-from link))
-	  (pre (dmrs-link-pre link))
-	  (post (dmrs-link-post link)))
-    (format stream "~A ~A ~A~%" 
-	    (if (eql from 0) "LTOP" from)
-	    (cond ((and pre post) (format nil "~A/~A" pre post))
-		  (pre (format nil "~A" pre))
-		  (post (format nil "/~A" post))
-		  (t ""))
-	    (dmrs-link-to link))))
-  (format stream "~%"))
-	    
-(defun sort-dmrs-links-by-from (links nodes)
-  (let ((ltop-links nil)
-	(non-ltop-links nil))
-    (dolist (link links)
-      (if (eql (dmrs-link-from link) 0)
-	  (push link ltop-links)
-	(push link non-ltop-links)))
-    (append ltop-links
-	    (sort non-ltop-links 
-		  #'(lambda (link1 link2)
-		      (member (dmrs-link-from link2)
-			      (member (dmrs-link-from link1)
-				      nodes :key #'dmrs-node-id)
-			      :key #'dmrs-node-id))))))
-
-;;; LaTeX output etc
-
-#|
-
-Draw the nodes across the top, and create arcs as straight lines
-
-Fill the first line with links, trying shortest first, avoiding 
-overlaps.  Then next line etc till all done.
-
-NODE1            NODE2              NODE3         NODE4*
-
-   --------------->                    <-----------
-       ARC                                  ARC
-
-   --------------------------------->
-       ARC     
-
-LTOPs indicated by *
-
-layout provides for x distances as starting at 0, calculated on basis
-of characters
-
-first node x (x1) is at half its width in characters
-x2 is at half node1 width, plus half node2 width, plus x increment
-
-y layout starts at 0 and increments by 1 - intention is that
-this is converted into appropriate factor for the actual
-drawing program (and recalculated so origin is bottom left)
-
-|#
-
-
-
-(defstruct dmrs-layout-node
-  id
-  label
-  ltop
-  start-x
-  mid-x)
-
-(defstruct dmrs-layout-link
-  label
-  left-x
-  right-x
-  direction ;; :l :r or nil
-  y)
-
-(defun layout-dmrs (dmrs layout-type stream)
-  (let* ((x-increment 10) 
-	 ;; constant - should be at least the length of the longest link label
-	 ;; in characters - e.g. ARG1/neq
-	 (node-x 0) ;; tmp variable - centre of node
-	 (start-x 0) ;; tmp variable - start of node
-	 (next-x 0) ;; tmp variable - start of next node
-	 (tmp-links nil) ;; list organised by length
-	 (final-links nil)
-	 (layout-nodes
-	  (loop for node in (sort (copy-list (dmrs-nodes dmrs)) 
-				  #'sort-dmrs-pred)
-	      collect
-		(let* ((pred (dmrs-node-pred node))
-		       (id (dmrs-node-id node))
-		       (predstring
-			(format nil "~A~A~A"
-				(if (realpred-p pred)
-				    (convert-realpred-to-string
-				     (realpred-lemma pred)
-				     (realpred-pos pred)
-				     (realpred-sense pred))
-				  pred)
-				(if (dmrs-node-carg node)
-				    "/" "")
-				(or (dmrs-node-carg node)
-				    "")))
-		       (node-width (length predstring)))
-		  (setf start-x next-x)
-		  (setf node-x (+ next-x (truncate node-width 2)))
-		  (setf next-x (+ next-x node-width x-increment))
-		  (make-dmrs-layout-node 
-		   :id id
-		   :label predstring
-		   :start-x start-x
-		   :mid-x node-x)))))
-    (dolist (link (dmrs-links dmrs))
-      (let* ((from (dmrs-link-from link))
-	     (to (dmrs-link-to link)))
-	(if (eql from 0) ;; LTOP
-	    (mark-ltop-node to layout-nodes)
-	  (let* ((pre (dmrs-link-pre link))
-		 (post (dmrs-link-post link))
-		 (link-label
-		  (cond ((and pre post) (format nil "~A/~A" pre post))
-			(pre (format nil "~A" pre))
-			(post (format nil "/~A" post))
-			(t "")))
-		 (from-x (find-dmrs-node-x from layout-nodes))
-		 (to-x (find-dmrs-node-x to layout-nodes))
-		 (left-x (if (< from-x to-x) from-x to-x))
-		 (right-x (if (< from-x to-x) to-x from-x))
-		 (new-link
-		  (make-dmrs-layout-link
-		   :label link-label
-		   :left-x left-x
-		   :right-x right-x
-		   :direction (if pre (if (< from-x to-x) :r :l)
-				nil)))
-		 (length (- right-x left-x))
-		 (length-set (assoc length tmp-links)))
-	    (if length-set (push new-link (cdr length-set))
-	      (push (cons length (list new-link)) tmp-links))))))
-    (dolist (length-set tmp-links)
-      (setf (cdr length-set) 
-	(sort (cdr length-set) 
-	      #'< :key #'dmrs-layout-link-left-x)))
-    (setf tmp-links (sort tmp-links #'< :key #'car))
-    (let ((current-y 0))
-      (when tmp-links
-	(loop 
-	  (multiple-value-bind 
-	      (done-links new-tmp) 
-	      (fit-all-links tmp-links current-y)
-	    (setf final-links (append final-links done-links))
-	    (unless new-tmp (return))
-	    (setf tmp-links new-tmp)
-	    (setf current-y (+ current-y 1))))))
-    (ecase layout-type
-      (:clim
-       (lkb::construct-dmrs-clim-diagram layout-nodes final-links stream))
-      (:latex 
-       (construct-dmrs-latex-diagram layout-nodes final-links stream)))))
-
-(defun sort-dmrs-pred (node1 node2)
-  ;;; sortal order - < cfrom, then cto, then real 
-  ;;; before construction, then (assume both construction)
-  ;;; quantifier before non-quantifier, then alphabetic
-  ;;;
-  ;;; not entirely optimal
-  (let ((cfrom1 (dmrs-node-cfrom node1))
-	(cfrom2 (dmrs-node-cfrom node2)))
-    (if (or (null cfrom1) (null cfrom2) (eql cfrom1 cfrom2))
-	(let ((cto1 (dmrs-node-cto node1))
-	      (cto2 (dmrs-node-cto node2)))
-	  (if (or (null cto1) (null cto2) (eql cto1 cto2))
-	      (let* ((pred1 (dmrs-node-pred node1))
-		     (pred2 (dmrs-node-pred node2)))
-		(if (and (realpred-p pred1)
-			 (realpred-p pred2))
-		    (string-lessp (realpred-lemma pred1)
-				  (realpred-lemma pred2))
-		  (if (and (not (realpred-p pred1))
-			   (not (realpred-p pred2)))
-		      (let ((qp1 (quantifier-pred-p pred1))
-			    (qp2 (quantifier-pred-p pred2)))
-			(if (or qp1 qp2 (not (and qp1 qp2)))
-			    qp1
-			  (string-lessp pred1 pred2)))
-		    (realpred-p pred1))))
-	    (< cto1 cto2)))
-      (< cfrom1 cfrom2))))
-
-(defun mark-ltop-node (node-id nodes)
-  (let ((node (find node-id nodes :key #'dmrs-layout-node-id)))
-    (when node (setf (dmrs-layout-node-ltop node) t))))
-
-(defun find-dmrs-node-x (node-id nodes)
-  (let ((node (find node-id nodes :key #'dmrs-layout-node-id)))
-    (if node (dmrs-layout-node-mid-x node))))
-
-(defun fit-all-links (to-fit y)
-  ;;; fits all the links we can on one y, returns a list of fitted links
-  ;;; with the y set, and a list of ones that don't fit
-  (let ((y-set nil)
-	(unfitted nil))
-    (dolist (length-set to-fit)
-      ;; if speed were an issue, we would return when we'd 
-      ;; got to a point where we knew there could be no space
-      ;; in the y-set for links of a certain length, but ignore for
-      ;; now
-      (let ((unfitted-length nil))
-	(dolist (link (cdr length-set))
-	  (if (link-fits link y-set)
-	      (progn (setf (dmrs-layout-link-y link) y)
-		     (push link y-set))
-	    (if unfitted-length 
-		(push link (cdr unfitted-length))
-	      (setf unfitted-length (cons (car length-set) 
-					  (list link))))))
-	(when unfitted-length
-	  (setf (cdr unfitted-length)
-	    (nreverse (cdr unfitted-length)))
-	  (push unfitted-length
-		unfitted))))
-    (values y-set 
-	    (nreverse unfitted))))
-
-(defun link-fits (link fitted-set)
-  (let ((link-left (dmrs-layout-link-left-x link))
-	(link-right (dmrs-layout-link-right-x link)))
-    (every #'(lambda (fitted-link)
-	       (or (<= link-right (dmrs-layout-link-left-x fitted-link)) 
-		   (>= link-left (dmrs-layout-link-right-x fitted-link))))
-	        fitted-set)))
-
-#|
-
-we now have something like:
-
-(#S(DMRS-LAYOUT-NODE :ID 10001 :LABEL "_the_q" :LTOP NIL :START-X 0 :MID-X 3)
- #S(DMRS-LAYOUT-NODE :ID 10002 :LABEL "_cat_n_1" :LTOP NIL :START-X 16 :MID-X 20)
- #S(DMRS-LAYOUT-NODE :ID 10003 :LABEL "_bark_v_1" :LTOP NIL :START-X 34 :MID-X 38)
- #S(DMRS-LAYOUT-NODE :ID 10004 :LABEL "_sleep_v_1" :LTOP T :START-X 53 :MID-X 58))
-(#S(DMRS-LAYOUT-LINK :LABEL "ARG1/EQ" :LEFT-X 20 :RIGHT-X 38 :DIRECTION :L :Y 0)
- #S(DMRS-LAYOUT-LINK :LABEL "RSTR/H" :LEFT-X 3 :RIGHT-X 20 :DIRECTION :R :Y 0)
- #S(DMRS-LAYOUT-LINK :LABEL "ARG1/NEQ" :LEFT-X 20 :RIGHT-X 58 :DIRECTION :L :Y 1))
-
-and we need to render it in our system of choice - and also in
-CLIM, though this is never the system of choice ...
-
-CLIM rendering is in lkb-acl-rmrs.lisp
-
-|#
-
-(defun construct-dmrs-latex-diagram (nodes links stream)
-  ;;; this produces a picture to be included in a LaTeX document
-  (let* ((y-factor 5)
-	 (y-start 4)
-	 (text-height 3)
-	 (offset 2)
-	 (picture-height (+ text-height
-			    y-start
-			    (* y-factor 
-			       (+ 1 (loop for link in links
-					maximize
-					  (dmrs-layout-link-y link))))))
-	 (picture-width 
-	  (+ 10 ; fudge factor - should really calculate width
-	     (loop for node in nodes
-		 maximize
-		   (dmrs-layout-node-mid-x node))))
-	 (text-y (- picture-height text-height)))
-    (format stream "\\setlength{\\unitlength}{0.3em}~%")
-    (format stream "\\begin{picture}(~A,~A)~%" picture-width picture-height)
-    (format stream "\\thicklines~%")
-    (dolist (node nodes)
-      (let ((x (dmrs-layout-node-mid-x node))
-	    (label (dmrs-layout-node-label node)))
-	(format stream "\\put(~A,~A){\\makebox(0,0){~A~A}}~%"
-		x text-y (latex-escape-string label) 
-		(if (dmrs-layout-node-ltop node) "*" ""))))
-    (dolist (link links)
-      (let* ((left-x (+ offset (dmrs-layout-link-left-x link)))
-	     (link-length (- (- (dmrs-layout-link-right-x link)
-				(dmrs-layout-link-left-x link))
-			     (* 2 offset)))
-	     (link-y (- text-y (+ y-start
-				  (* y-factor (dmrs-layout-link-y link)))))
-	     (label-y (- link-y 2))
-	     (label-x (+ left-x (truncate link-length 2)))
-	     (direction (dmrs-layout-link-direction link)))
-	(format stream "\\put(~A,~A){\\~A(~A,0){~A}}~%"
-		(if (eql direction :l) 
-		    (+ left-x link-length)
-		  left-x)
-		link-y
-		(if direction "vector" "line")
-		(if (eql direction :l) 
-		    -1 1)
-		link-length)
-	(format stream "\\put(~A,~A){\\makebox(0,0){{\\small ~A}}}~%"
-		label-x label-y 
-		(latex-escape-string (dmrs-layout-link-label link)))))
-    (format stream "\\end{picture}~%")))
-
-#|
-\setlength{\unitlength}{0.3em}
-\begin{picture}(78,17)
-\thicklines
-\put(3,14){\makebox(0,0){\_the\_q}}
-\put(20,14){\makebox(0,0){\_cat\_n\_1}}
-\put(38,14){\makebox(0,0){\_purr\_v\_1}}
-\put(58,14){\makebox(0,0){\_sleep\_v\_1}}
-\put(5,10){\vector(1,0){13}}
-\put(12,8){\makebox(0,0){{\small RSTR}}}
-\put(36,10){\vector(-1,0){14}}
-\put(29,8){\makebox(0,0){{\small ARG1/eq}}}
-\put(56,5){\vector(-1,0){34}}
-\put(39,3){\makebox(0,0){{\small ARG1/neq}}}
-\end{picture}
-|#
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;;;; RMRS to DMRS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1049,3 +704,497 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
       (:neq (car (rel-flist to-node)))
       (:h (create-new-handle-var *variable-generator*))
       (:heq (rel-handel to-node)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; OUTPUT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+(defun simple-output-dmrs (dmrs &optional (stream t))
+  (format stream "~%")
+  (dolist (node (dmrs-nodes dmrs))
+    (let ((pred (dmrs-node-pred node))
+	  (id (dmrs-node-id node))
+	  (carg (dmrs-node-carg node)))
+    (format stream "~A:~A~A~%"
+	    id
+	    (if (realpred-p pred)
+		(convert-realpred-to-string
+		 (realpred-lemma pred)
+		 (realpred-pos pred)
+		 (realpred-sense pred))
+	      pred)
+	    (if carg (format nil "/~A" carg)
+	      ""))))
+    (format stream "~%")
+  (dolist (link (sort-dmrs-links-by-from (dmrs-links dmrs) 
+					 (dmrs-nodes dmrs)))
+    (let ((from (dmrs-link-from link))
+	  (pre (dmrs-link-pre link))
+	  (post (dmrs-link-post link)))
+    (format stream "~A ~A ~A~%" 
+	    (if (eql from 0) "LTOP" from)
+	    (cond ((and pre post) (format nil "~A/~A" pre post))
+		  (pre (format nil "~A" pre))
+		  (post (format nil "/~A" post))
+		  (t ""))
+	    (dmrs-link-to link))))
+  (format stream "~%"))
+	    
+(defun sort-dmrs-links-by-from (links nodes)
+  (let ((ltop-links nil)
+	(non-ltop-links nil))
+    (dolist (link links)
+      (if (eql (dmrs-link-from link) 0)
+	  (push link ltop-links)
+	(push link non-ltop-links)))
+    (append ltop-links
+	    (sort non-ltop-links 
+		  #'(lambda (link1 link2)
+		      (member (dmrs-link-from link2)
+			      (member (dmrs-link-from link1)
+				      nodes :key #'dmrs-node-id)
+			      :key #'dmrs-node-id))))))
+
+;;; LaTeX output etc
+
+#|
+
+Draw the nodes across the top, and create arcs as straight lines
+
+Fill the first line with links, trying shortest first, avoiding 
+overlaps.  Then next line etc till all done.
+
+NODE1            NODE2              NODE3         NODE4*
+
+   --------------->                    <-----------
+       ARC                                  ARC
+
+   --------------------------------->
+       ARC     
+
+LTOPs indicated by *
+
+layout provides for x distances as starting at 0, calculated on basis
+of characters
+
+first node x (x1) is at half its width in characters
+x2 is at half node1 width, plus half node2 width, plus x increment
+
+y layout starts at 0 and increments by 1 - intention is that
+this is converted into appropriate factor for the actual
+drawing program (and recalculated so origin is bottom left)
+
+|#
+
+
+
+(defstruct dmrs-layout-node
+  id
+  label
+  ltop
+  start-x
+  mid-x)
+
+(defstruct dmrs-layout-link
+  label
+  left-x
+  right-x
+  direction ;; :l :r or nil
+  y)
+
+(defun layout-dmrs (dmrs layout-type stream)
+  (let* ((x-increment 10) 
+	 ;; constant - should be at least the length of the longest link label
+	 ;; in characters - e.g. ARG1/neq
+	 (node-x 0) ;; tmp variable - centre of node
+	 (start-x 0) ;; tmp variable - start of node
+	 (next-x 0) ;; tmp variable - start of next node
+	 (tmp-links nil) ;; list organised by length
+	 (final-links nil)
+	 (layout-nodes
+	  (loop for node in (sort (copy-list (dmrs-nodes dmrs)) 
+				  #'sort-dmrs-pred)
+	      collect
+		(let* ((pred (dmrs-node-pred node))
+		       (id (dmrs-node-id node))
+		       (predstring
+			(format nil "~A~A~A"
+				(if (realpred-p pred)
+				    (convert-realpred-to-string
+				     (realpred-lemma pred)
+				     (realpred-pos pred)
+				     (realpred-sense pred))
+				  pred)
+				(if (dmrs-node-carg node)
+				    "/" "")
+				(or (dmrs-node-carg node)
+				    "")))
+		       (node-width (length predstring)))
+		  (setf start-x next-x)
+		  (setf node-x (+ next-x (truncate node-width 2)))
+		  (setf next-x (+ next-x node-width x-increment))
+		  (make-dmrs-layout-node 
+		   :id id
+		   :label predstring
+		   :start-x start-x
+		   :mid-x node-x)))))
+    (dolist (link (dmrs-links dmrs))
+      (let* ((from (dmrs-link-from link))
+	     (to (dmrs-link-to link)))
+	(if (eql from 0) ;; LTOP
+	    (mark-ltop-node to layout-nodes)
+	  (let* ((pre (dmrs-link-pre link))
+		 (post (dmrs-link-post link))
+		 (link-label
+		  (cond ((and pre post) (format nil "~A/~A" pre post))
+			(pre (format nil "~A" pre))
+			(post (format nil "/~A" post))
+			(t "")))
+		 (from-x (find-dmrs-node-x from layout-nodes))
+		 (to-x (find-dmrs-node-x to layout-nodes))
+		 (left-x (if (< from-x to-x) from-x to-x))
+		 (right-x (if (< from-x to-x) to-x from-x))
+		 (new-link
+		  (make-dmrs-layout-link
+		   :label link-label
+		   :left-x left-x
+		   :right-x right-x
+		   :direction (if pre (if (< from-x to-x) :r :l)
+				nil)))
+		 (length (- right-x left-x))
+		 (length-set (assoc length tmp-links)))
+	    (if length-set (push new-link (cdr length-set))
+	      (push (cons length (list new-link)) tmp-links))))))
+    (dolist (length-set tmp-links)
+      (setf (cdr length-set) 
+	(sort (cdr length-set) 
+	      #'< :key #'dmrs-layout-link-left-x)))
+    (setf tmp-links (sort tmp-links #'< :key #'car))
+    (let ((current-y 0))
+      (when tmp-links
+	(loop 
+	  (multiple-value-bind 
+	      (done-links new-tmp) 
+	      (fit-all-links tmp-links current-y)
+	    (setf final-links (append final-links done-links))
+	    (unless new-tmp (return))
+	    (setf tmp-links new-tmp)
+	    (setf current-y (+ current-y 1))))))
+    (ecase layout-type
+      (:clim
+       (lkb::construct-dmrs-clim-diagram layout-nodes final-links stream))
+      (:latex 
+       (construct-dmrs-latex-diagram layout-nodes final-links stream)))))
+
+(defun sort-dmrs-pred (node1 node2)
+  ;;; sortal order - < cfrom, then cto, then real 
+  ;;; before construction, then (assume both construction)
+  ;;; quantifier before non-quantifier, then alphabetic
+  ;;;
+  ;;; not entirely optimal
+  (let ((cfrom1 (dmrs-node-cfrom node1))
+	(cfrom2 (dmrs-node-cfrom node2)))
+    (if (or (null cfrom1) (null cfrom2) (eql cfrom1 cfrom2))
+	(let ((cto1 (dmrs-node-cto node1))
+	      (cto2 (dmrs-node-cto node2)))
+	  (if (or (null cto1) (null cto2) (eql cto1 cto2))
+	      (let* ((pred1 (dmrs-node-pred node1))
+		     (pred2 (dmrs-node-pred node2)))
+		(if (and (realpred-p pred1)
+			 (realpred-p pred2))
+		    (string-lessp (realpred-lemma pred1)
+				  (realpred-lemma pred2))
+		  (if (and (not (realpred-p pred1))
+			   (not (realpred-p pred2)))
+		      (let ((qp1 (quantifier-pred-p pred1))
+			    (qp2 (quantifier-pred-p pred2)))
+			(if (or qp1 qp2 (not (and qp1 qp2)))
+			    qp1
+			  (string-lessp pred1 pred2)))
+		    (realpred-p pred1))))
+	    (< cto1 cto2)))
+      (< cfrom1 cfrom2))))
+
+(defun mark-ltop-node (node-id nodes)
+  (let ((node (find node-id nodes :key #'dmrs-layout-node-id)))
+    (when node (setf (dmrs-layout-node-ltop node) t))))
+
+(defun find-dmrs-node-x (node-id nodes)
+  (let ((node (find node-id nodes :key #'dmrs-layout-node-id)))
+    (if node (dmrs-layout-node-mid-x node))))
+
+(defun fit-all-links (to-fit y)
+  ;;; fits all the links we can on one y, returns a list of fitted links
+  ;;; with the y set, and a list of ones that don't fit
+  (let ((y-set nil)
+	(unfitted nil))
+    (dolist (length-set to-fit)
+      ;; if speed were an issue, we would return when we'd 
+      ;; got to a point where we knew there could be no space
+      ;; in the y-set for links of a certain length, but ignore for
+      ;; now
+      (let ((unfitted-length nil))
+	(dolist (link (cdr length-set))
+	  (if (link-fits link y-set)
+	      (progn (setf (dmrs-layout-link-y link) y)
+		     (push link y-set))
+	    (if unfitted-length 
+		(push link (cdr unfitted-length))
+	      (setf unfitted-length (cons (car length-set) 
+					  (list link))))))
+	(when unfitted-length
+	  (setf (cdr unfitted-length)
+	    (nreverse (cdr unfitted-length)))
+	  (push unfitted-length
+		unfitted))))
+    (values y-set 
+	    (nreverse unfitted))))
+
+(defun link-fits (link fitted-set)
+  (let ((link-left (dmrs-layout-link-left-x link))
+	(link-right (dmrs-layout-link-right-x link)))
+    (every #'(lambda (fitted-link)
+	       (or (<= link-right (dmrs-layout-link-left-x fitted-link)) 
+		   (>= link-left (dmrs-layout-link-right-x fitted-link))))
+	        fitted-set)))
+
+#|
+
+we now have something like:
+
+(#S(DMRS-LAYOUT-NODE :ID 10001 :LABEL "_the_q" :LTOP NIL :START-X 0 :MID-X 3)
+ #S(DMRS-LAYOUT-NODE :ID 10002 :LABEL "_cat_n_1" :LTOP NIL :START-X 16 :MID-X 20)
+ #S(DMRS-LAYOUT-NODE :ID 10003 :LABEL "_bark_v_1" :LTOP NIL :START-X 34 :MID-X 38)
+ #S(DMRS-LAYOUT-NODE :ID 10004 :LABEL "_sleep_v_1" :LTOP T :START-X 53 :MID-X 58))
+(#S(DMRS-LAYOUT-LINK :LABEL "ARG1/EQ" :LEFT-X 20 :RIGHT-X 38 :DIRECTION :L :Y 0)
+ #S(DMRS-LAYOUT-LINK :LABEL "RSTR/H" :LEFT-X 3 :RIGHT-X 20 :DIRECTION :R :Y 0)
+ #S(DMRS-LAYOUT-LINK :LABEL "ARG1/NEQ" :LEFT-X 20 :RIGHT-X 58 :DIRECTION :L :Y 1))
+
+and we need to render it in our system of choice - and also in
+CLIM, though this is never the system of choice ...
+
+CLIM rendering is in lkb-acl-rmrs.lisp
+
+|#
+
+(defun construct-dmrs-latex-diagram (nodes links stream)
+  ;;; this produces a picture to be included in a LaTeX document
+  (let* ((y-factor 5)
+	 (y-start 4)
+	 (text-height 3)
+	 (offset 2)
+	 (picture-height (+ text-height
+			    y-start
+			    (* y-factor 
+			       (+ 1 (loop for link in links
+					maximize
+					  (dmrs-layout-link-y link))))))
+	 (picture-width 
+	  (+ 10 ; fudge factor - should really calculate width
+	     (loop for node in nodes
+		 maximize
+		   (dmrs-layout-node-mid-x node))))
+	 (text-y (- picture-height text-height)))
+    (format stream "\\setlength{\\unitlength}{0.3em}~%")
+    (format stream "\\begin{picture}(~A,~A)~%" picture-width picture-height)
+    (format stream "\\thicklines~%")
+    (dolist (node nodes)
+      (let ((x (dmrs-layout-node-mid-x node))
+	    (label (dmrs-layout-node-label node)))
+	(format stream "\\put(~A,~A){\\makebox(0,0){~A~A}}~%"
+		x text-y (latex-escape-string label) 
+		(if (dmrs-layout-node-ltop node) "*" ""))))
+    (dolist (link links)
+      (let* ((left-x (+ offset (dmrs-layout-link-left-x link)))
+	     (link-length (- (- (dmrs-layout-link-right-x link)
+				(dmrs-layout-link-left-x link))
+			     (* 2 offset)))
+	     (link-y (- text-y (+ y-start
+				  (* y-factor (dmrs-layout-link-y link)))))
+	     (label-y (- link-y 2))
+	     (label-x (+ left-x (truncate link-length 2)))
+	     (direction (dmrs-layout-link-direction link)))
+	(format stream "\\put(~A,~A){\\~A(~A,0){~A}}~%"
+		(if (eql direction :l) 
+		    (+ left-x link-length)
+		  left-x)
+		link-y
+		(if direction "vector" "line")
+		(if (eql direction :l) 
+		    -1 1)
+		link-length)
+	(format stream "\\put(~A,~A){\\makebox(0,0){{\\small ~A}}}~%"
+		label-x label-y 
+		(latex-escape-string (dmrs-layout-link-label link)))))
+    (format stream "\\end{picture}~%")))
+
+#|
+\setlength{\unitlength}{0.3em}
+\begin{picture}(78,17)
+\thicklines
+\put(3,14){\makebox(0,0){\_the\_q}}
+\put(20,14){\makebox(0,0){\_cat\_n\_1}}
+\put(38,14){\makebox(0,0){\_purr\_v\_1}}
+\put(58,14){\makebox(0,0){\_sleep\_v\_1}}
+\put(5,10){\vector(1,0){13}}
+\put(12,8){\makebox(0,0){{\small RSTR}}}
+\put(36,10){\vector(-1,0){14}}
+\put(29,8){\makebox(0,0){{\small ARG1/eq}}}
+\put(56,5){\vector(-1,0){34}}
+\put(39,3){\makebox(0,0){{\small ARG1/neq}}}
+\end{picture}
+|#
+
+;;;; OUTPUT - parallel to rmrs/output.lisp
+;;; inherits from rmrs-output-type xml so can use code for preds etc
+
+;;; test the dxml output by starting file with
+;;; <?xml version='1.0'?> <!DOCTYPE dmrs SYSTEM "/homes/aac10/lingo/lkb/src/rmrs/dmrs.dtd" >
+;;; and then calling xmlnorm -Vs <file.
+
+
+(defclass dxml (xml) ())
+
+(defmethod dmrs-output-start-fn ((dmrsout dxml) cfrom cto
+                                 &optional surface ident)
+  (with-slots (stream) dmrsout
+    (terpri stream)
+    (write-string "<dmrs cfrom='" stream)
+    (princ (or cfrom -1) stream) 
+    (write-string "' cto='" stream)
+    (princ (or cto -1) stream) 
+    (write-char #\' stream)
+    (when surface
+      (write-string " surface='" stream)
+      (xml-escaped-output surface stream)
+      (write-char #\' stream))
+    (when ident
+      (write-string " ident='" stream)
+      (xml-escaped-output ident stream)
+      (write-char #\' stream))
+    (write-char #\> stream)
+    (terpri stream)))
+
+(defmethod dmrs-output-end-fn ((dmrsout dxml))
+  (with-slots (stream) dmrsout
+    (write-string "</dmrs>" stream)
+    (terpri stream)))
+
+(defmethod dmrs-output-start-node ((dmrsout dxml) id 
+				   cfrom cto surface base carg)
+  (with-slots (stream) dmrsout
+    (write-string "<node nodeid='" stream)
+    (princ id stream)
+    (write-string "' cfrom='" stream)
+    (princ (or cfrom -1) stream)
+    (write-string "' cto='" stream)
+    (princ (or cto -1) stream)
+    (write-char #\' stream)
+    (when surface
+      (write-string " surface='" stream)
+      (xml-escaped-output surface stream)
+      (write-char #\' stream))
+    (when base
+      (write-string " base='" stream)
+      (xml-escaped-output base stream)
+      (write-char #\' stream))
+    (when carg
+      (write-string " carg='" stream)
+      (xml-escaped-output carg stream)
+      (write-char #\' stream))
+    (write-char #\> stream)))
+
+(defmethod dmrs-output-end-node ((dmrsout dxml))
+  (with-slots (stream) dmrsout
+    (write-string "<sortinfo/></node>" stream)
+    (terpri stream)))
+
+
+
+;;; links
+
+(defmethod dmrs-output-link ((dmrsout dxml) from to pre post)
+  (with-slots (stream) dmrsout
+    (write-string "<link from='" stream)
+    (princ from stream)
+    (write-string "' to='" stream)
+    (princ to stream)
+    (write-string "'>" stream)
+    (write-string "<rargname>" stream)
+    (princ pre stream)
+    (write-string "</rargname> <post>" stream)
+    (princ post stream)
+    (write-string "</post>" stream)
+    (write-string "</link>" stream)
+    (terpri stream)))
+
+;;; Actual printing function for dmrs
+
+(defun output-dmrs (dmrs-instance device &optional file-name)
+     (if file-name
+	 (with-open-file (stream file-name :direction :output
+			  :if-exists :append
+			  :if-does-not-exist :create)
+         (output-dmrs1 dmrs-instance device stream))
+      (output-dmrs1 dmrs-instance device t)))
+
+(defun output-dmrs1 (dmrs-instance device stream)
+  (let ((dmrs-display-structure
+	 (def-rmrs-print-operations device 0 stream)))
+    (if (dmrs-p dmrs-instance)         
+	(print-dmrs dmrs-instance 
+		    dmrs-display-structure)
+      (format stream "~%::: ~A is not an dmrs structure~%" dmrs-instance))))
+
+(defun print-dmrs (dmrs dmrs-display-structure)
+  (dmrs-output-start-fn dmrs-display-structure
+			-1 -1
+		;;		 (dmrs-cfrom dmrs)
+		;;		 (dmrs-cto dmrs)
+			;;                 surface ident)
+			nil nil)
+  (let* ((nodes (dmrs-nodes dmrs))
+	 (links (sort-dmrs-links-by-from (dmrs-links dmrs) nodes)))
+    (dolist (node nodes) 
+	(print-dmrs-node node
+			 dmrs-display-structure))
+    (dolist (link links)
+	(print-dmrs-link link dmrs-display-structure)))
+  (dmrs-output-end-fn dmrs-display-structure))
+
+
+(defun print-dmrs-node (node dmrs-display-structure)
+  (let ((pred (dmrs-node-pred node))
+	(id (dmrs-node-id node))
+	(carg (dmrs-node-carg node)))
+    (dmrs-output-start-node dmrs-display-structure
+			    id
+			    (or (dmrs-node-cfrom node) -1)
+			    (or (dmrs-node-cto node) -1)
+			    nil
+			    nil
+			    carg)
+    (if (realpred-p pred)
+	(rmrs-output-realpred dmrs-display-structure
+			      (realpred-lemma pred)
+			      (realpred-pos pred)
+			      (realpred-sense pred))
+      (rmrs-output-gpred dmrs-display-structure pred))
+    (dmrs-output-end-node dmrs-display-structure)))
+    
+
+(defun print-dmrs-link (link dmrs-display-structure)
+  (let ((from (dmrs-link-from link))
+	(to (dmrs-link-to link))
+	(pre (dmrs-link-pre link))
+	(post (dmrs-link-post link)))
+    (dmrs-output-link dmrs-display-structure
+		      from to pre post)))
+
+      
+
