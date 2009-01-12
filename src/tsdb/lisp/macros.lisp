@@ -65,18 +65,6 @@
                             (list :relative ,language))))
      (namestring data)))
 
-(defmacro find-skeleton (name)
-  `(let* ((name (if (keywordp ,name) (string ,name) ,name)))
-     (find name *tsdb-skeletons* 
-           :key #'(lambda (foo) (get-field :path foo))
-           :test #'equal)))
-
-(defmacro find-skeleton-directory (skeleton)
-  `(let* ((path (if (consp ,skeleton) (get-field :path ,skeleton) ,skeleton))
-          (path (dir-append (namestring *tsdb-skeleton-directory*)
-                            (list :relative path))))
-     (namestring path)))
-
 (defmacro divide (numerator denominator)
   `(if (and (numberp ,numerator) (numberp ,denominator))
      (if (zerop ,denominator) 0 (/ ,numerator ,denominator))

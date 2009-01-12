@@ -522,7 +522,10 @@
     (format t "~%Unrecognised *morph-option* switch ~A: resetting to default"
 	    *morph-option*)
     (setf *morph-option* :default))
-  (when (and (listp input) (consp (first input)))
+  (when (and (listp input) (consp (first input))
+             (loop
+                 for token in input
+                 thereis (assoc :analyses token)))
     ;;; current test for sppp
     (setf *morph-option* :with-tokeniser-partial-tree))
   (if (or (eql *morph-option* :external-rule-by-rule)

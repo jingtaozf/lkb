@@ -38,6 +38,8 @@
 
 (defparameter *redwoods-trees-hook* nil)
 
+(defparameter *redwoods-shift* nil)
+
 (defparameter *redwoods-record-void-discriminants-p* nil)
 
 (defparameter *redwoods-trace* nil)
@@ -59,7 +61,7 @@
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
-                          gold strip inspect 
+                          gold (shift *redwoods-shift*) strip inspect 
                           (bestp *redwoods-thinning-normalize-p*)
                           (exactp *redwoods-update-exact-p*)
                           (cache *tsdb-cache-database-writes-p*)
@@ -160,13 +162,15 @@
                             (excl:tenuring
                              (browse-tree 
                               data i-id frame 
-                              :gold gold :strip strip :bestp bestp 
+                              :gold gold :shift shift
+                              :strip strip :bestp bestp 
                               :inspect inspect :exactp exactp
                               :cache cache :title title :display display
                               :verbose verbose :stream stream)))
                           (browse-tree 
                            data i-id frame 
-                           :gold gold :strip strip :bestp bestp 
+                           :gold gold :shift shift
+                           :strip strip :bestp bestp 
                            :inspect inspect :exactp exactp
                            :cache cache :title title :display display
                            :verbose verbose :stream stream)))
@@ -223,7 +227,7 @@
     
     (or frame t)))
 
-(defun browse-tree (data i-id frame &key gold strip bestp 
+(defun browse-tree (data i-id frame &key gold shift strip bestp 
                                          inspect exactp subset
                                          title cache verbose 
                                          (runp t) display stream)
@@ -366,10 +370,11 @@
                              (current-time :long :short)
                              (length decisions) (length decisions))
                             (reconstruct-discriminants decisions)))
+           (gi-id (if (functionp shift) (funcall shift i-id) i-id))
            (greadings (when (and gold (null strip))
                         (let ((items (select 
                                       '("readings") '(:integer) "parse" 
-                                      (format nil "i-id == ~a" i-id)
+                                      (format nil "i-id == ~a" gi-id)
                                       gold)))
                           (when (= (length items) 1)
                             (get-field :readings (first items))))))
@@ -379,7 +384,7 @@
                              '(:integer :integer 
                                :integer :string :date)
                              "tree" 
-                             (format nil "i-id == ~a" i-id) 
+                             (format nil "i-id == ~a" gi-id) 
                              gold :sort :parse-id)))
            (gversion (loop
                          for tree in gtrees
@@ -402,7 +407,7 @@
                                    (format 
                                     nil 
                                     "i-id == ~a && t-version == ~a" 
-                                    i-id gversion) 
+                                    gi-id gversion) 
                                    gold)))
            (gderivation (when (= (length gpreferences) 1)
                           (loop
@@ -438,7 +443,7 @@
                                    (format 
                                     nil 
                                     "i-id == ~a && t-version == ~a" 
-                                    i-id gversion) 
+                                    gi-id gversion) 
                                    gold))))
            (gdiscriminants (when gdecisions
                              #+:allegro

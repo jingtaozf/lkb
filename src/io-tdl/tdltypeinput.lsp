@@ -180,17 +180,21 @@
     (read-char istream)
     (let ((next-char2 (peek-char t istream nil 'eof)))
       (cond 
-       ((eql next-char2 #\=) 
-         (read-char istream)
-         (read-tdl-avm-def istream name augment)
-         (check-for #\. istream name))
-        ((eql next-char2 #\<) 
-         (read-char istream)
-         (read-tdl-subtype-def istream name augment)
-         (check-for #\. istream name))
-	;;;ERB 2004-08-10 New case to allow for addition of 
-	;;;information to existing types.
+       ((or (eql next-char2 #\=) (eql next-char2 #\<))
+        ;;
+        ;; in november 2008, following an email discussion on the `developers' 
+        ;; list, we decided to treat `:<' (originally a sub-type definition
+        ;; without local constraints) as a syntactic variant of `:='.  i apply
+        ;; the corresponding change to PET today.               (29-nov-08; oe)
+        ;;
+        (read-char istream)
+        (read-tdl-avm-def istream name augment)
+        (check-for #\. istream name))
 	((eql next-char2 #\+)
+         ;;
+         ;; ERB 2004-08-10 New case to allow for addition of information to
+         ;; existing types, dubbed a `type addendum'.
+         ;;
          (read-char istream)
          (read-tdl-avm-def istream name 'add-info)
          (check-for #\. istream name))
@@ -198,15 +202,6 @@
             "~%Syntax error following type name ~A" name)
            (ignore-rest-of-entry istream name))))))
 
-
-(defun read-tdl-subtype-def (istream name &optional augment)
-;;; Subtype-def ->  :< type 
-     (let* ((parent (lkb-read istream nil)))
-       (if augment
-         (unless
-           (amend-type-from-file name (list parent) nil nil nil)
-           (setf *amend-error* t))
-         (add-type-from-file name (list parent) nil nil nil))))
 
 (defparameter *tdl-coreference-table* (make-hash-table))
 (defparameter *tdl-default-coreference-table* (make-hash-table))

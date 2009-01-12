@@ -775,6 +775,16 @@
   ;; so far, we had /either/ a reader /or/ a pre-processor, hence this change
   ;; should not have effects on existing users.                 (24-sep-08; oe)
   ;;
+  ;; when looking more at the `statistics attribute reader' machinery, it turns
+  ;; out :o-input pre-dates the YY days: it is the field where the result of
+  ;; applying an :i-input reader (if defined) is recorded for display purposes,
+  ;; i.e. for everyone calling select() with a non-nil :readerp argument (this
+  ;; includes the ubiquitous analyze(), which calls select() internally).  not
+  ;; that i see reason to worry here, as the above comments apply to the batch
+  ;; processing unverse, where the latter only applies to profile analysis; for
+  ;; i can see the two universes are clearly separated, so a bit of overloading
+  ;; the :o-input field should do us no harm.                   (13-nov-08; oe)
+  ;;
   (when item
     (let* ((run-id (get-field :run-id run))
            (i-id (get-field :i-id item)) 
@@ -1332,6 +1342,23 @@
                                      (third content))))
                       
                  (setf (client-status client) :ready)
+                 ;;
+                 ;; _fix_me_
+                 ;; PET, for the time being, returns :score but not :flags.
+                 ;; patch this up, for a transition period.     (20-nov-08; oe)
+                 ;;
+                 (let ((cpu (when (cpu-p (client-cpu client))
+                              (client-cpu client))))
+                   (when (and cpu
+                              (or (null (cpu-task cpu))
+                                  (eq (first (cpu-task cpu)) :parse)))
+                     (loop
+                         for result in (get-field :results result)
+                         for score = (get-field :score result)
+                         for flags = (get-field :flags result)
+                         when (and score (null flags)) do
+                           (let ((flags (acons :ascore score nil)))
+                             (nconc result (acons :flags flags nil))))))
                  (return-from process-queue
                    (pairlis '(:pending :ready :item :result)
                             (list pending run item result)))))

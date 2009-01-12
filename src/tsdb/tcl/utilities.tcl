@@ -1,6 +1,7 @@
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment
 # Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 2006 -- 2008 Stephan Oepen (oe@ifi.uio.no)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -17,16 +18,34 @@ proc update_skeleton_list {} {
 
   global globals skeletons;
 
-  set menu .menu.file.menu.create 
-  $menu delete 0 end;
+  set base .menu.file.menu.create 
+  $base delete 0 end;
 
   foreach i [lsort -integer [array names skeletons]] {
     set item $skeletons($i);
-    set label "[lindex $item 1] \[[lindex $item 2] items\]";
-    $menu add command -label $label -command [list tsdb_file create $i];
+    set type [lindex $item 0];
+    set level [lindex $item 1];
+    set path [lindex $item 2];
+    set content [lindex $item 3];
+    set count [lindex $item 4];
+    if {$level == ""} { 
+      set menu $base;
+    } else {
+      set menu $base.$level;
+    }; #else
+    if {$type == 0} {
+      set cascade "$menu.$path";
+      catch {menu $cascade -tearoff 0};
+      $cascade delete 0 end;
+      $menu add cascade -label "$content \[$count skeletons\]" -menu $cascade;
+    } elseif {$type == 1} {
+      $menu add command -label "$content \[$count items\]" \
+      -command [list tsdb_file create $i];
+    }; #if
   }; # foreach
-  $menu add separator;
-  $menu add command -label "Null Test Suite Instance" \
+
+  $base add separator;
+  $base add command -label "Null Test Suite Instance" \
     -command "tsdb_file create -1";
 
   copyleft hide;
@@ -1286,7 +1305,7 @@ proc unlispify_string {string} {
 }; # unlispify-string()
 
 
-proc current-time {{long 0}} {
+proc current_time {{long 0}} {
 
   set now [clock seconds];
   set day [string trim [clock format $now -format "%d"] {"0"}];
@@ -1294,7 +1313,7 @@ proc current-time {{long 0}} {
   set time "$day-[clock format $now -format $format]";
   string tolower $time;
 
-}; # current-time()
+}; # current_time()
 
 #
 # set of utility functions to maintain (input) history for various entry types

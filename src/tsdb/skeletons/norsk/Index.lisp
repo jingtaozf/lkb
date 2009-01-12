@@ -51,7 +51,7 @@
  ((:path . "tgk") (:content . "LOGON Turglede Test Corpus (Known-Vocabulary)"))
  ((:path . "tgu") (:content . "LOGON Turglede Test Corpus (Unknown-Vocabulary)"))
  ((:path . "tg+") (:content . "LOGON Turglede Corpus (Left-Over)"))
- ((:path . "dnt.aktivitet") (:content . "HandOn Corpus from DNT Acitivties"))
+ ((:path . "dnt.aktivitet") (:content . "HandOn Corpus from DNT Activities"))
  ((:path . "dnt.artikkel") (:content . "HandOn Corpus from DNT Articles"))
  ((:path . "dnt.omraade") (:content . "HandOn Corpus from DNT Areas"))
  ((:path . "dnt.rute") (:content . "HandOn Corpus from DNT Trails"))

@@ -560,66 +560,130 @@
         (when meter (meter :value (get-field :end meter)))
         (return result)))
 
+(defun find-skeleton (name)
+  (let* ((name (if (keywordp name) (string-downcase name) name)))
+     (loop
+         with agenda = (copy-list *tsdb-skeletons*)
+         for skeleton = (pop agenda)
+         while skeleton
+         when (equal (get-field :path skeleton) name)
+         return skeleton
+         do (loop
+                for daughter in (get-field :daughters skeleton)
+                do (push daughter agenda)))))
+
+(defun find-skeleton-directory (skeleton)
+  (let* ((path (if (consp skeleton) (get-field :path skeleton) skeleton))
+         (folder (when (consp skeleton) (get-field :folder skeleton)))
+         (path (dir-append (namestring *tsdb-skeleton-directory*)
+                           (cons :relative (append folder (list path))))))
+    (namestring path)))
+
+(defun read-skeleton-index (&optional folder)
+  (let* ((base (if (pathnamep *tsdb-skeleton-directory*)
+                 (pathname-directory *tsdb-skeleton-directory*)
+                 (pathname-directory 
+                  (make-pathname :directory *tsdb-skeleton-directory*))))
+         (base (append base folder))
+         (file (make-pathname :directory base :name *tsdb-skeleton-index*))
+         (skeletons (when (probe-file file)
+                      (with-open-file (stream file :direction :input)
+                        (read stream nil nil)))))
+    (loop
+        for skeleton in skeletons
+        for path = (get-field :path skeleton)
+        for file = (make-pathname
+                    :directory (append base (list path))
+                    :name *tsdb-skeleton-index*)
+        for daughters
+        = (when (probe-file file)
+            (read-skeleton-index (append folder (list path))))
+        when daughters do
+          (nconc skeleton (acons :daughters daughters nil))
+        when folder do (nconc skeleton (acons :folder folder nil)))
+    (sort
+     skeletons
+     #'(lambda (foo bar)
+         (let* ((fdaughters (get-field :daughters foo))
+                (bdaughters (get-field :daughters bar))
+                (fpath (get-field :path foo))
+                (bpath (get-field :path bar)))
+           (or (and fdaughters (not bdaughters))
+               (and (or (and fdaughters bdaughters)
+                        (and (not fdaughters) (not bdaughters)))
+                    fpath bpath (string< fpath bpath))))))))
+
 (defun tsdb-do-skeletons (source &key (stream *tsdb-io*) 
                                       (prefix "  ")
                                       (format :ascii)
-                                      index meter)
+                                      (index 0) meter)
   
   (when meter (meter :value (get-field :start meter)))
+  (setf *tsdb-skeletons* (read-skeleton-index))
   (let* ((directory (if (pathnamep *tsdb-skeleton-directory*)
                       (pathname-directory *tsdb-skeleton-directory*)
                       (pathname-directory 
                        (make-pathname :directory *tsdb-skeleton-directory*))))
-         (file (make-pathname :directory directory 
-                              :name *tsdb-skeleton-index*))
-         (skeletons 
-          (when (probe-file file)
-            (with-open-file (stream file
-                             :direction :input :if-does-not-exist :create)
-              (read stream nil nil))))
-         (skeletons 
-          (sort skeletons #'string< 
-                :key #'(lambda (foo) (or (get-field :content foo) ""))))
-         (increment (when (and meter skeletons)
-                      (/ (mduration meter) (length skeletons)))))
-    
-    (cond
-     (source 
-      (when (member (string source) skeletons 
-                    :key #'(lambda (foo) (get-field :path foo)) :test #'equal)
-        (setf *tsdb-default-skeleton* (string source))))
-     (t
-      (setf *tsdb-skeletons* nil)
-      (loop
-          for skeleton in skeletons
-          for i from 0
-          for suffix = (pathname-directory 
-                        (make-pathname :directory (get-field :path skeleton)))
-          for path = (make-pathname 
-                      :directory (append directory (rest suffix)))
-          for name = (namestring path)
-          for content = (get-field :content skeleton)
-          for status = (verify-tsdb-directory name :absolute t :skeletonp t)
-          for items = (get-field :items status)
-          when increment do (meter-advance increment)
-          when status do
-            (push (acons :items items skeleton) *tsdb-skeletons*)
-            (case format
-              (:ascii
-               (format  
-                stream 
-                "~a~a (`~a'): ~a items;~%"
-                prefix
-                content (get-field :path skeleton) items))
-              (:tcl
-               (format 
-                stream 
-                "set skeletons(~d) {~s ~s ~d};~%"
-                (if index (+ index i) i)
-                (get-field :path skeleton) content items))))))
+         (increment (when (and meter *tsdb-skeletons*)
+                      (/ (mduration meter) (length *tsdb-skeletons*)))))
+    (labels ((print-skeleton (skeleton prefix)
+               (let ((daughters (get-field :daughters skeleton))
+                     (content  (get-field :content skeleton))
+                     (path (get-field :path skeleton)))
+                 (if daughters
+                   (loop
+                       initially
+                         (case format
+                           (:ascii
+                            (format  
+                             stream 
+                             "~a~a (`~a'): ~a skeleton~p:~%"
+                             prefix content path
+                             (length daughters) (length daughters)))
+                           (:tcl
+                            (format  
+                             stream 
+                             "set skeletons(~a) {0 \"~{~a~^.~}\" ~s ~s ~d};~%"
+                             index (get-field :folder skeleton)
+                             path content (length daughters))))
+                         (incf index)
+                       with indentation = (format nil "~a| " prefix)
+                       for daughter in daughters
+                       do (print-skeleton daughter indentation))
+                   (let* ((suffix
+                           (append (get-field :folder skeleton) (list path)))
+                          (name (make-pathname 
+                                 :directory (append directory suffix)))
+                          (name (namestring name))
+                          (status (verify-tsdb-directory
+                                   name :absolute t :skeletonp t))
+                          (items (get-field :items status)))
+                     (when status
+                       (nconc skeleton (acons :items items nil))
+                       (case format
+                         (:ascii
+                          (format  
+                           stream 
+                           "~a~a (`~a'): ~a item~p;~%"
+                           prefix content path items items))
+                         (:tcl
+                          (format  
+                           stream 
+                           "set skeletons(~a) {1 \"~{~a~^.~}\" ~s ~s ~d};~%"
+                           index (get-field :folder skeleton)
+                           path content items)))
+                       (incf index)))))))
+      (if source
+        (when (find-skeleton (string-downcase source))
+          (setf *tsdb-default-skeleton* (string-downcase source)))
+        (loop
+            for skeleton in *tsdb-skeletons*
+            when increment do (meter-advance increment)
+            do
+              (print-skeleton skeleton prefix))))
                      
     (when meter (meter :value (get-field :end meter)))
-    (when skeletons (format stream "~%"))))
+    (when *tsdb-skeletons* (format stream "~%"))))
 
 (defun tsdb-do-phenomena (&key (stream *tsdb-io*) 
                                (prefix "  ")

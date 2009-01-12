@@ -29,7 +29,7 @@
     (return-from preprocess-sentence-string
       (repp
        str :repp (first *repp-interactive*)
-       :calls (rest *repp-interactive*) :format :lkb)))
+       :calls (rest *repp-interactive*) :format :sppp)))
   
   #+:xml
   (when smaf:*e-stream*

@@ -35,9 +35,9 @@ proc tsdb_file {action {index -1}} {
     } else {
       set skeleton $skeletons($index);
       if {$skeleton != ""} {
-        set globals(skeleton) [lindex $skeleton 0];
-        tsdb_set "*tsdb-default-skeleton*" "\"[lindex $skeleton 0]\"";
-        set command "(create \"[lindex $skeleton 0]\")";
+        set globals(skeleton) [lindex $skeleton 2];
+        tsdb_set "*tsdb-default-skeleton*" "\"[lindex $skeleton 2]\"";
+        set command "(create \"[lindex $skeleton 2]\")";
         send_to_lisp :event $command;
       }; # else
     }; # if

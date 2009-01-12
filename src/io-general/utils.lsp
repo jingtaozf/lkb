@@ -643,15 +643,25 @@
 	  (decode-time-string time-str)))))
 
 (defun decode-time-string (time-str)
-  (let* ((slash1 (position #\/ time-str))
-	 (slash2 (if slash1 (position #\/ time-str 
-				      :start (+ 1 slash1))))
-	 (space (if slash2 (position #\space time-str)))
-	 (colon1 (if space (position #\: time-str)))
-	 (colon2 (if colon1 (position #\: time-str 
-				      :start (+ 1 colon1)))))
+  ;;
+  ;; _fix_me_
+  ;; it turns out that CVS and SVN differ slightly in how they replace the
+  ;; $Date$ keyword: specifically, SVN appears to use the current locale, i.e.
+  ;; when building in oslo, norway, we end up with a format different from the
+  ;; one we get in stanford, usa.  maybe we should just rewrite this function
+  ;; as a cascade of regular expressions (one per format we expect), but for
+  ;; now i believe i manage to generalize over the formats we see so far ...
+  ;;                                                           (18-nov-08; oe)
+  (let* ((slash1 (or (position #\/ time-str) (position #\- time-str)))
+         (slash2 (when slash1 
+                   (or (position #\/ time-str :start (+ 1 slash1))
+                       (position #\- time-str :start (+ 1 slash1)))))
+	 (space (when slash2 (position #\space time-str)))
+	 (colon1 (when space (position #\: time-str)))
+	 (colon2 (when colon1 (position #\: time-str :start (+ 1 colon1))))
+         (end (when colon2 (position #\space time-str :start (+ colon2 1)))))
     (if colon1
-	(let ((second (parse-integer (subseq time-str (+ 1 colon2))))
+	(let ((second (parse-integer (subseq time-str (+ 1 colon2) end)))
 	      (minute (parse-integer (subseq time-str (+ 1 colon1) colon2)))
 	      (hour (parse-integer (subseq time-str (+ 1 space) colon1)))
 	      (date (parse-integer (subseq time-str (+ 1 slash2) space)))

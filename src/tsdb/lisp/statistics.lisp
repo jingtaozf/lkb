@@ -481,9 +481,9 @@
                     (loop
                         for result in results
                         for value = (get-field field result)
-                        when (and reader value) do 
-                          (setf (get-field field result) 
-                            (funcall reader value)))))
+                        when (and reader value) do
+                          (let ((foo (ignore-errors (funcall reader value))))
+                            (when foo (setf (get-field field result) foo))))))
             ;;
             ;; _fix_me_
             ;; this is sort of hacky: since we fail to guarantee unique parse
@@ -2040,7 +2040,6 @@
             #+:cdebug 
             (format t " --- [~d ~d]~%" ooffset noffset)
 
-
             (cond 
              ((if sloppyp 
                 (and ooffset (zerop ooffset) noffset (zerop noffset))
@@ -2066,13 +2065,13 @@
                   (:tcl
                    (format
                     stream
-                    "cell ~d 1 -contents {~a} -format data~%"
-                    row oi-id)
+                    "cell ~d 1 -contents {~:[{~a}~;~:d~]} -format data~%"
+                    row (integerp oi-id) oi-id)
                    (when sloppyp
                      (format
                       stream
-                      "cell ~d 2 -contents {~a} -format data~%"
-                      row ni-id))
+                      "cell ~d 2 -contents {~:[{~a}~;~:d~]} -format data~%"
+                      row (integerp ni-id) ni-id))
                    (loop
                        for j from (if sloppyp 3 2)
                        for key in show for value in oshow
@@ -2185,8 +2184,8 @@
                   (:tcl
                    (format
                     stream
-                    "cell ~d ~d -contents {~a} -format data~%"
-                    row 1 oi-id)
+                    "cell ~d ~d -contents {~:[{~a}~;~:d~]} -format data~%"
+                    row 1 (integerp oi-id) oi-id)
                    (loop
                        for j from (if sloppyp 3 2)
                        for key in show for value in oshow
@@ -2260,8 +2259,8 @@
                   (:tcl
                    (format
                     stream
-                    "cell ~d ~d -contents {~a} -format data~%"
-                    row (if sloppyp 2 1) ni-id)
+                    "cell ~d ~d -contents {~:[{~a}~;~:d~]} -format data~%"
+                    row (if sloppyp 2 1) (integerp ni-id) ni-id)
                    (loop
                        for j from (if sloppyp 3 2)
                        for key in show for value in nshow
@@ -2483,7 +2482,10 @@
           (setf (get :value stag) surfaces)
           (case format
             (:tcl
-             (format stream "cell ~d 1 -contents {~a} -format data~%" row i-id)
+             (format 
+              stream 
+              "cell ~d 1 -contents {~:[{~a}~;~:d~]} -format data~%"
+              row (integerp i-id) i-id)
              (if (stringp data)
                (format 
                 stream

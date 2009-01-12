@@ -175,6 +175,7 @@
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)
+         (*repp-debug-p* nil)
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
@@ -184,7 +185,7 @@
                              (or (zerop nanalyses) nanalyses)
                              (if (integerp *first-only-p*) *first-only-p* 1))))
          (*do-something-with-parse* nil))
-    (declare (special *chasen-debug-p*))
+    (declare (special *chasen-debug-p* *repp-debug-p*))
     (multiple-value-bind (return condition)
       (#-:debug ignore-errors #+:debug progn
        (let* ((sent

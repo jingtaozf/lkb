@@ -18,7 +18,7 @@
                    (loop for parent in (cdr parents)
                         do
                         (format stream " & ~A" (string-downcase parent))))
-          (format stream "< ~A" (string-downcase (car parents))))
+          (format stream "= ~A" (string-downcase (car parents))))
       (progn (format stream "= ~A" (string-downcase (car parents)))
              (loop for parent in (cdr parents)
                   do

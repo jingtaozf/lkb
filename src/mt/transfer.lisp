@@ -30,6 +30,8 @@
 
 (defparameter *transfer-edge-limit* 1000)
 
+(defparameter *transfer-ignore* nil)
+
 (defparameter *transfer-debug-p* nil)
 
 (defparameter *transfer-debug-stream* 
@@ -1101,13 +1103,20 @@
       with all = (loop
                      for mtr in (mtrs-mtrs mtrs)
                      for rank = (mtr-rank mtr)
-                     when (or (null *transfer-maximum-rank*)
-                              (null rank)
-                              (not (member :optional (mtr-flags mtr)))
-                              (<= rank *transfer-maximum-rank*))
+                     when (and (not (member (mtr-id mtr) *transfer-ignore*))
+                               (or (null *transfer-maximum-rank*)
+                                   (null rank)
+                                   (not (member :optional (mtr-flags mtr)))
+                                   (<= rank *transfer-maximum-rank*)))
                      collect mtr)
       initially
         (when (and filter *transfer-preemptive-filter-p*)
+          ;;
+          ;; _fix_me_
+          ;; some entries in *transfer-lexicon* might be regular expressions,
+          ;; which we should (a) compile at the time the `lexicon' is built and
+          ;; (b) match properly at this point.                  (16-nov-08; oe)
+          ;;
           (loop
               with unknown
               with source = (tl-input *transfer-lexicon*)
@@ -1759,10 +1768,19 @@
               for value1 = (mrs::extrapair-value extra1)
               for extra2 = (find feature extras2 :key #'mrs::extrapair-feature)
               for value2 = (mrs::extrapair-value extra2)
+              for special = (loop
+                                for special in (mtr-special (current-mtr))
+                                when (eq extra2 (first special))
+                                return (rest special))
               for value = (if (and (stringp value1) (stringp value2))
                             (when (string-equal value1 value2) value1)
                             (unify-types value1 value2 :subsumesp subsumesp))
               unless value do (return-from unify-extras :fail)
+              when (and (member special '(:equal :subsume) :test #'eq)
+                        (not (unify-types
+                              value1 value2
+                              :internp t :special special)))
+              do (return-from unify-extras :fail)
               else collect (mrs::make-extrapair 
                             :feature feature :value value))))
     (loop
@@ -1773,8 +1791,14 @@
     (loop
         for extra in extras2
         for feature = (mrs::extrapair-feature extra)
+        for special = (loop
+                          for special in (mtr-special (current-mtr))
+                          when (eq extra (first special))
+                          return (rest special))
         unless (member feature common :key #'mrs::extrapair-feature :test #'eq)
-        do (push extra result))
+        do (if (member special '(:equal :subsume) :test #'eq)
+             (return-from unify-extras :fail)
+             (push extra result)))
     result))
 
 (defun unify-preds (pred1 pred2 solution &key subsumesp)

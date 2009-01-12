@@ -1,6 +1,6 @@
 #!/bin/sh
 # the next line restarts using wish(1) \
-exec $HOME/delphin/lkb/bin/linux.x86.32/swish++ "$0" "$@"
+exec $LOGONROOT/lingo/lkb/bin/linux.x86.32/swish++ "$0" "$@"
 
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment

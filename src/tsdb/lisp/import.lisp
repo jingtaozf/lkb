@@ -111,6 +111,7 @@
                (difficulty (or *import-difficulty* 1))
                (category (or *import-category* ""))
                comment 
+               shift
                (separator (or *import-separator* ";;"))
                (pseparator (or *import-phenomena-separator* ";;;"))
                encoding meter)
@@ -215,23 +216,20 @@
                               titem foo bar tis)
             (case format
               (:ascii
-               (read-items-from-ascii-file file
-                                           :base base
-                                           :origin origin
-                                           :register register
-                                           :difficulty difficulty
-                                           :category category
-                                           :comment comment
-                                           :separator separator
-                                           :pseparator pseparator
-                                           :encoding encoding
-                                           :meter rmeter))
+               (read-items-from-ascii-file
+                file
+                :base base :origin origin :register register
+                :difficulty difficulty :category category
+                :comment comment :shift shift
+                :separator separator :pseparator pseparator
+                :encoding encoding :meter rmeter))
               (:bitext
                (read-items-from-bitext-file
                 file
                 :base base :origin origin :register register
                 :difficulty difficulty :category category
-                :comment comment :separator separator :pseparator pseparator
+                :comment comment :shift shift
+                :separator separator :pseparator pseparator
                 :encoding encoding :meter rmeter))
               (:ptb
                (read-items-from-ptb-directory file :base base)) 
@@ -275,7 +273,8 @@
                                              (register "formal")
                                              (difficulty 1)
                                              (category "")
-                                             comment
+                                             comment 
+                                             shift
                                              (separator ";;")
                                              (pseparator ";;;")
                                              (p-id 1)
@@ -368,6 +367,8 @@
                                   ((get-field :header extras) -1)
                                   ((get-field :illformed extras) 0)
                                   (t 1))))
+                        (when (functionp shift)
+                          (setf id (funcall shift id)))
                         (push (pairlis '(:i-id :i-origin :i-register :i-format
                                          :i-difficulty :i-category :i-input
                                          :i-wf :i-length :i-comment
@@ -381,7 +382,7 @@
                         (when phenomenon
                           (push (pairlis '(:ip-id :i-id :p-id
                                            :ip-author :ip-date)
-                                         (list base base p-id
+                                         (list base id p-id
                                                author date))
                                 item-phenomenon))
                         (incf base)))))))
@@ -398,6 +399,7 @@
                                               (difficulty 1)
                                               (category "")
                                               comment
+                                              shift
                                               (separator ";;")
                                               (pseparator ";;;")
                                               (p-id 1)
@@ -490,6 +492,8 @@
                                 (get-field+ :category extras category))
                                (wf (if (get-field :illformed extras) 0 1))
                                (targetp (not (zerop (mod id 10)))))
+                          (when (functionp shift)
+                            (setf id (funcall shift id)))
                           (cond
                            (targetp
                             (push (pairlis '(:i-id 

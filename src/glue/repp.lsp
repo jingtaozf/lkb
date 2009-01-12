@@ -42,6 +42,8 @@
 
 (in-package :lkb)
 
+(defparameter *repp-characterize-p* nil)
+
 (defparameter *repp-debug-p* t)
 
 (defparameter *repps* nil)
@@ -75,7 +77,7 @@
   target)
 
 (defstruct token
-  id form start end from to class ersatz legacy)
+  id form from to (start -1) (end -1) class ersatz legacy)
 
 (defun read-repp (file &key id (repp (make-repp) reppp) (prefix ""))
   (when (probe-file file)
@@ -199,10 +201,10 @@
                 (push repp *repps*))
               (return repp))))))
 
-(defun repp (string &key (repp (first *repps*))
-                         (calls *repp-calls*)
-                         (verbose *repp-debug-p*)
-                         (format :pet))
+(defun repp (input &key (repp (first *repps*))
+                        (calls *repp-calls*)
+                        (verbose *repp-debug-p*)
+                        (format :pet))
   
   (when (keywordp repp)
     (setf repp
@@ -210,9 +212,10 @@
           for foo in *repps*
           when (eq (repp-id foo) repp) return foo)))
   (when (null repp)
-    (return-from repp (and (eq format :string) string)))
+    (return-from repp (and (eq format :string) input)))
   
-  (let ((length 0)
+  (let ((string input)
+        (length 0)
         tokens)
     (loop
         with rules = (copy-list (repp-rules repp))
@@ -283,14 +286,13 @@
           unless (string= form "")
           do
             (let* ((id (incf id))
-                   (start i)
-                   (end (incf i))
+                   (from i) (to (incf i))
                    (token
-                    (make-token :id id :form form :start start :end end)))
+                    (make-token :id id :form form :from from :to to)))
               (incf length)
               (push token result)
               (when verbose
-                (format t "  (~a) [~a:~a] |~a|~%" id start end form)))
+                (format t "  (~a) [~a:~a] |~a|~%" id from to form)))
           finally (return (nreverse result))))
     
     ;;
@@ -336,9 +338,29 @@
                    (setf form (setf (token-ersatz token) match)))
                   (:augment
                    (push (cons type match) (token-legacy token))))))
-                          
-    #+:null
-    (repp-align string tokens)
+
+    (when *repp-characterize-p*
+      (loop
+          with alignment = (repp-align input tokens)
+          with last = 0
+          with offset = 0
+          for token in tokens
+          for n = (length (token-form token))
+          for start = nil for end = nil
+          do
+            (loop
+                for i from offset to (+ offset n -1)
+                for index = (aref alignment i)
+                when index do
+                  (unless start (setf start index))
+                  (setf end index))
+            (when (null start) (setf start end))
+            (when (null start) (setf start last end last))
+            (setf (token-start token) start)
+            (setf (token-end token) end)
+            (setf last end)
+            (incf offset n)))
+    
     (case format
       ((:string :lkb)
        (let ((forms (loop
@@ -352,12 +374,12 @@
            for token in tokens
            for id = (token-id token)
            for form = (escape-string (token-form token))
-           for start = (token-start token)
-           for end = (token-end token)
+           for from = (token-from token)
+           for to = (token-to token)
            for yy = (format 
                      nil 
                      "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
-                     id start end (or (token-ersatz token) form) form)
+                     id from to (or (token-ersatz token) form) form)
            collect yy into yys
            do
              (loop
@@ -365,7 +387,7 @@
                  for yy = (format 
                            nil 
                            "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
-                           id start end (rest legacy) form)
+                           id from to (rest legacy) form)
                  do (push yy yys))
            finally 
              (return
@@ -376,29 +398,89 @@
              for token in tokens
              for id = (token-id token)
              for form = (token-form token)
-             for start = (token-start token)
-             for end = (token-end token)
-             for list = (list id start end form form)
+             for from = (token-from token)
+             for to = (token-to token)
+             for list = (list id from to form form)
              do
                (push list result)
                (loop
                    for legacy in (token-legacy token)
-                   for list = (list id start end (rest legacy) form)
+                   for list = (list id from to (rest legacy) form)
+                   do (push list result)))
+         (values (nreverse result) length)))
+      (:sppp
+       (let (result)
+         (loop 
+             for token in tokens
+             for form = (or (token-ersatz token) (token-form token))
+             for from = (token-from token)
+             for to = (token-to token)
+             for start = (token-start token)
+             for end = (token-end token)
+             for list = (pairlis '(:start :end :from :to :form)
+                                 (list from to start end form))
+             do
+               (push list result)
+               (loop
+                   for legacy in (token-legacy token)
+                   for list = (pairlis '(:start :end :from :to :form)
+                                        (list from to start end (rest legacy)))
                    do (push list result)))
          (values (nreverse result) length)))
       (:raw
        (values tokens length)))))
 
-#+:null
-(defun repp-align (string tokens)
-  (loop
-      with tokens = (copy-list tokens)
-      with token = (pop tokens)
-      with form = (token-form token)
-      for i from 0
-      for c = (char string i)
-      unless (char= c #\space) do
-        (let ((j (position c form))))))
+(defun repp-align (string tokens &optional (start 0) solutions)
+  (unless (stringp tokens)
+    (let ((forms (loop for token in tokens collect (token-form token))))
+      (setf tokens (format nil "~{~a~}" forms)))
+    (let* ((n (length tokens))
+           (solution (make-array (+ n 2))))
+      (setf (aref solution n) 0)
+      (setf solutions (list solution))))
+  (if (>= start (length tokens))
+    (loop
+        with n = (length tokens)
+        with top = (first solutions)
+        for solution in (rest solutions)
+        when (> (aref solution n) (aref top n))
+        do (setf top solution)
+        finally (return top))
+    (let ((n (length tokens))
+          matches)
+      (loop
+          for i from 0 to (- (length string) 1)
+          for c = (char string i)
+          when (char= c (char tokens start)) do
+            (loop
+                for solution in solutions
+                when (or (null (aref solution (+ n 1)))
+                         (< (aref solution (+ n 1)) i))
+                do
+                  ;;
+                  ;; we assume that .solutions. are ordered according to how
+                  ;; many alignment points they contain, with larger alignments
+                  ;; at the top of the list.  hence, if there is an earlier
+                  ;; match with the same alignment point for the current token
+                  ;; index (i.e. the same .i. at position .start.), then we are
+                  ;; guaranteed to find larger matches before smaller ones; for
+                  ;; example #(0 1 ...) prior to #(- 1 ...).
+                  ;;
+                  (unless (loop
+                              for match in matches
+                              thereis (and (eql (aref match start) i)
+                                           (> (aref match n)
+                                              (aref solution n))))
+                    (let ((copy (copy-seq solution)))
+                      (setf (aref copy start) i)
+                      (incf (aref copy n))
+                      (setf (aref copy (+ n 1)) i)
+                      (push copy matches)))))
+      (labels ((n (solution) (aref solution n)))
+        (let* ((solutions (sort (nconc matches solutions) #'> :key #'n))
+               (beam
+                (loop for solution in solutions repeat n collect solution)))
+          (repp-align string tokens (incf start) beam))))))
 
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
@@ -438,6 +520,11 @@
             (multiple-value-bind (tokens length)
                 (case (if (keywordp tagger) tagger (first tagger))
                   (:tnt
+                   ;;
+                   ;; _fix_me_
+                   ;; we should eliminate the :list output format, and make
+                   ;; tnt() use the `raw' tokens directly.     (22-nov-08; oe)
+                   ;;
                    (apply 
                     #'tnt
                     (repp string :repp repp :format :list :verbose verbose)

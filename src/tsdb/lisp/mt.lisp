@@ -235,7 +235,19 @@
         for i from 1 to n
         for result in analyses
         for aid = (get-field :result-id result)
-        for aflags = (get-field :flags result)
+        for aflags = (let* ((flags (get-field :flags result))
+                            (score (get-field :score result)))
+                       ;;
+                       ;; _fix_me_
+                       ;; PET (as of today) does not return a :flags field, but
+                       ;; it does return the parse ranking score (though with
+                       ;; only one significant bit, we neeed to fix that too).
+                       ;; hence, convert from old-style conversions to the new
+                       ;; :flags mechanism, but aim to update PET eventually.
+                       ;;                                        (18-nov-08; oe)
+                       (if (and (null flags) (numberp score))
+                         (acons :ascore score nil)
+                         flags))
         for ascore = (get-field :ascore aflags)
         for transfer
         = (pvm-process
@@ -1551,7 +1563,7 @@
                     #+:drakma
                     (:google
                      (let ((drakma::*drakma-default-external-format*
-                            :iso-8859-1)
+                            :utf-8)
                            (source (string-downcase (string source)))
                            (target (string-downcase (string target))))
                        (multiple-value-bind (body status headers uri stream)
@@ -1559,6 +1571,7 @@
                             gurl
                             :method :post :user-agent ua
                             :parameters `(("sl" . ,source) ("tl" . ,target)
+                                          ("ie" . "UTF-8")
                                           ("text" . ,input)))
                          (declare (ignore headers uri stream))
                          (when (= status 200)

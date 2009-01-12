@@ -227,24 +227,24 @@ duplicate variables")
 
 (defun create-index-property-list (fs &optional path-so-far)
   (when (is-valid-fs fs)
-    (setf fs (deref fs)))
-  (if (is-valid-fs fs)
-      (let ((label-list (fs-arcs fs)))
-        (if (and label-list (consp label-list))
-          (loop for feat-val in label-list
-               append
-               (let ((new-path (cons (car feat-val) path-so-far))
-                     (next-fs (cdr feat-val)))
-                 (unless (member (car feat-val) *ignored-extra-features*)
-                   (create-index-property-list 
-                    next-fs
-                    new-path))))
-          (if path-so-far
-              (list
-               (make-extrapair 
-                :feature (make-mrs-feature (reverse path-so-far))
-                :value (create-type 
-                        (fs-type fs)))))))))
+    (setf fs (deref fs))
+    (let ((label-list (fs-arcs fs)))
+      (if (and label-list (consp label-list))
+        (loop
+            for feat-val in label-list
+            append
+              (let ((new-path (cons (car feat-val) path-so-far))
+                    (next-fs (cdr feat-val)))
+                (unless (member (car feat-val) *ignored-extra-features*)
+                  (create-index-property-list next-fs new-path))))
+        (when path-so-far
+          (let ((pair
+                 (make-extrapair 
+                  :feature (make-mrs-feature (reverse path-so-far))
+                  :value (create-type (fs-type fs)))))
+            (when *mrs-record-all-nodes-p* (push (cons fs pair) *all-nodes*))
+            (list pair)))))))
+            
 
 (defun make-mrs-feature (flist)
   (if (cdr flist)

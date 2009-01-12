@@ -48,7 +48,7 @@
                         (pathname-name file) (pathname-type file))))
             (format
              t
-             "~&[~a] open-fc(): new BTree `~a'.~%"
+             "~&[~a] open-fc(): new BDB `~a'.~%"
              (current-time :long :short) name)))
         (when (probe-file file) (delete-file file))
         (db_open (namestring file) 1 cache))
