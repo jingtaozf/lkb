@@ -15,7 +15,7 @@ OBJ = o
 DOT =
 YACC_OUTPUT = y.tab
 LEX_OUTPUT = lex.yy
-CC = gcc $(CFLAGS) $(XCFLAGS) -Winline -O8 
+CC = gcc $(CFLAGS) $(XCFLAGS) -Winline
 YACC = bison -t -o $(YACC_OUTPUT).c
 LEX = flex -8
 MV = /bin/mv
@@ -48,7 +48,7 @@ XCFLAGS = -DDEBUG \
           -DSERVER \
 	  -DNOFREE \
           -DCOMPRESSED_DATA \
-          -g -O6 -Iinclude
+          -g -O8 -Iinclude
 
 #
 # dependendies

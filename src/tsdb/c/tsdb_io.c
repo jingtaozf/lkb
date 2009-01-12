@@ -700,7 +700,7 @@ void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
     fprintf(stream, "%s:\n", relation->name);
     for(i = 0; i < relation->n_fields; i++) {
       fprintf(stream, "  %s", relation->fields[i]);
-      switch(relation->types[i]) {
+      switch(relation->types[i] & TSDB_TYPE_MASK) {
         case TSDB_INTEGER:
           fprintf(stream, " :integer");
           break;
