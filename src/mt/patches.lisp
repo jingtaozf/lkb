@@ -9,7 +9,8 @@
             
   (defun determine-variable-type (dag)
     (let ((type (create-type (if (is-valid-fs dag) (fs-type dag) dag))))
-      (cond 
+      (cond
+       (*variable-type-mapping* (string-downcase type))
        ((equal-or-subtype type *event-type*) "e")
        ((equal-or-subtype type *ref-ind-type*) "x")
        ((equal-or-subtype type *non_expl-ind-type*) "i")

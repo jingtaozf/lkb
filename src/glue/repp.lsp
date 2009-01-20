@@ -77,7 +77,7 @@
   target)
 
 (defstruct token
-  id form from to (start -1) (end -1) class ersatz legacy)
+  id form from to (start -1) (end -1) tags class ersatz legacy)
 
 (defun read-repp (file &key id (repp (make-repp) reppp) (prefix ""))
   (when (probe-file file)
@@ -378,36 +378,30 @@
            for to = (token-to token)
            for yy = (format 
                      nil 
-                     "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
-                     id from to (or (token-ersatz token) form) form)
+                     "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                      1, \"~a\" \"~a\", 0, \"null\")"
+                     id from to 
+                     *repp-characterize-p* 
+                     (token-start token) (token-end token)
+                     (or (token-ersatz token) form) form)
            collect yy into yys
            do
              (loop
                  for legacy in (token-legacy token)
                  for yy = (format 
                            nil 
-                           "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")"
-                           id from to (rest legacy) form)
+                           "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                            1, \"~a\" \"~a\", 0, \"null\")"
+                           id from to 
+                           *repp-characterize-p* 
+                           (token-start token) (token-end token)
+                           (rest legacy) form)
                  do (push yy yys))
            finally 
              (return
                (values (format nil "~{~a~^ ~}" yys) length))))
       (:list
-       (let (result)
-         (loop 
-             for token in tokens
-             for id = (token-id token)
-             for form = (token-form token)
-             for from = (token-from token)
-             for to = (token-to token)
-             for list = (list id from to form form)
-             do
-               (push list result)
-               (loop
-                   for legacy in (token-legacy token)
-                   for list = (list id from to (rest legacy) form)
-                   do (push list result)))
-         (values (nreverse result) length)))
+       (error "repp(): output format :list is no longer supported."))
       (:sppp
        (let (result)
          (loop 
@@ -520,27 +514,29 @@
             (multiple-value-bind (tokens length)
                 (case (if (keywordp tagger) tagger (first tagger))
                   (:tnt
-                   ;;
-                   ;; _fix_me_
-                   ;; we should eliminate the :list output format, and make
-                   ;; tnt() use the `raw' tokens directly.     (22-nov-08; oe)
-                   ;;
                    (apply 
                     #'tnt
-                    (repp string :repp repp :format :list :verbose verbose)
+                    (repp string :repp repp :format :raw :verbose verbose)
                     (unless (keywordp tagger) (rest tagger)))))
               (loop
-                  for (id start end form surface . tags) in tokens
-                  for token = (format 
-                               nil 
-                               "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\",~
-                                ~{ ~s ~,4f~})" 
-                               id start end
-                               (escape-string form) (escape-string surface)
-                               tags)
-                  collect token into tokens
+                  for token in tokens
+                  for form = (token-form token)
+                  for ersatz = (token-ersatz token)
+                  for yy = (format 
+                            nil 
+                            "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                             1, \"~a\"~@[ \"~a\"~], 0, \"null\"~
+                             ~@[,~{ ~s ~,4f~}~])" 
+                            (token-id token)
+                            (token-from token) (token-to token)
+                            *repp-characterize-p* 
+                            (token-start token) (token-end token)
+                            (escape-string (or ersatz form))
+                            (when ersatz (escape-string form))
+                            (token-tags token))
+                  collect yy into result
                   finally 
-                    (return (values (format nil "~{~a~^ ~}" tokens) length))))
+                    (return (values (format nil "~{~a~^ ~}" result) length))))
             (repp string :repp repp :format format :verbose verbose))))
     (let ((stream (getf arguments :stream)))
       (cond
@@ -584,11 +580,12 @@
         (loop
             with i = -1
             for token in tokens
-            for start = (second token)
-            unless (= i start) do
-              (setf i start)
+            for from = (token-from token)
+            for form = (or (token-ersatz token) (token-form token))
+            unless (= i from) do
+              (setf i from)
               (incf length)
-              (format stream "~a~%" (fifth token))
+              (format stream "~a~%" form)
             finally (format stream "~%~%")))
       (run-process
        command :wait t 
@@ -632,11 +629,12 @@
           finally
             (loop
                 for token in tokens
-                for analysis = (aref tags (second token))
-                do (nconc token (loop
-                                    with n = (* 2 n)
-                                    for foo in analysis
-                                    while (< 0 n) 
-                                    collect foo do (decf n)))))
+                for from = (token-from token)
+                for analysis = (aref tags from)
+                do (setf (token-tags token)
+                     (loop
+                         with n = (* 2 n)
+                         for foo in analysis
+                         while (< 0 n) collect foo do (decf n)))))
       (values tokens length))))
 

@@ -416,7 +416,7 @@
 (defun blaze-discriminant (discriminant tag blaze)
   (let* ((key (intern (string-upcase (discriminant-key discriminant)) :lkb))
          (key (when (is-valid-type key) key))
-         (bucket (gethash tag blaze)))
+         (bucket (copy-list (gethash tag blaze))))
     (if (null key)
       (format
        (or #+:allegro excl:*initial-terminal-io* t)

@@ -50,11 +50,13 @@
              (skip-to (character)
                (let ((n (position character string :start i :test #'char=)))
                  (when n (setf i n))))
-             (read-character (character)
+             (seek-character (character)
                (when (< i length)
                  (skip whitespace)
-                 (when (char= (schar string i) character)
-                   (incf i))))
+                 (char= (schar string i) character)))
+             (read-character (character)
+               (when (seek-character character)
+                 (incf i)))
              (read-form ()
                (when (< i length)
                  (multiple-value-bind (form rest)
@@ -73,6 +75,10 @@
                   (setf end (read-form))
                   (read-character #\,)
                   (cond
+                   ;;
+                   ;; the first, temporary format (YY 0.0) is no longer in use.
+                   ;;
+                   #+:null
                    ((and (integerp start) (integerp end)
                          (zerop (mod start 100)) (zerop (mod end 100)))
                     (setf word (read-form))
@@ -83,8 +89,13 @@
                    ((and (integerp start) (integerp end))
                     (setf start end)
                     (setf end (read-form))
-                    (read-character #\,) (read-form)
-                    (read-character #\,) (setf word (read-form)) (read-form)
+                    (read-character #\,)
+                    (when (seek-character #\<)
+                      (skip-to #\,)
+                      (read-character #\,))
+                    (read-form)
+                    (read-character #\,) (setf word (read-form))
+                    (when (seek-character #\") (read-form))
                     (read-character #\,) (read-form)
                     (read-character #\,) (setf inflection (read-form))
                     (skip-to #\))

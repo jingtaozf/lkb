@@ -161,6 +161,12 @@ duplicate variables")
                               a-cons-fs nil *variable-generator*))))
 	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)
 		 psoa))
+         ;;
+         ;; finally, use the variable property mapping (VPM) to map grammar-
+         ;; internal names into external, SEM-I-compliant ones.  this includes
+         ;; variable types (as of late 2008, when activated through a non-nil
+         ;; *variable-type-mapping*), property names, and value names.
+         ;;
          (psoa (mt:map-mrs psoa :semi :forward)))
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
@@ -188,9 +194,7 @@ duplicate variables")
 
 (defun create-new-handle-var (gen)
   (let* ((idnumber (funcall gen)))
-    (make-var 
-     :type (determine-variable-type *handle-type*)
-     :id idnumber)))
+    (make-var :type "h" :id idnumber)))
 
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)

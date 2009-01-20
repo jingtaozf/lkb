@@ -48,15 +48,5 @@
 (setf *handle-type* (vsym "h"))
 (setf *ref-ind-type* (vsym "x"))
 
-(setf %mrs-extras-filter%
-  (list
-   (cons (vsym "NUM") (vsym "number"))
-   (cons (vsym "PERS") (vsym "person"))
-   (cons (vsym "NATGEND") (vsym "gender"))
-   (cons (vsym "TENSE") (vsym "tense"))
-   (cons (vsym "MOOD") (vsym "mood"))
-   (cons (vsym "PROG") (vsym "luk"))
-   (cons (vsym "PERF") (vsym "luk"))))
-
 (setf *semi-fragment-relations*
   (list "fragment_rel" (vsym "unspec_conj_rel")))
