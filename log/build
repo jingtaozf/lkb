@@ -1,3 +1,4 @@
+cvs update: lexdb.README is no longer in the repository
 ? Version.lisp.fasl
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
@@ -5,148 +6,24 @@
 ? lkb/mt.lsp.fasl
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
-U pet/smaf.conf
 ? doc
 ? linux.x86.32
 ? man
-U bin/linux.x86.32/tsdb
-U bin/linux.x86.64/tsdb
 ? include/mrs.h
 M log/build
-U src/version.lsp
 ? src/.l1cl
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
 ? src/general/clim.fasl
 U src/glue/repp.lsp
-U src/io-general/utils.lsp
-U src/io-tdl/tdloutput.lsp
-U src/io-tdl/tdltypeinput.lsp
-U src/main/parse.lsp
-U src/main/user-fns.lsp
+U src/main/discriminants.lsp
 U src/mrs/mrsoutput.lisp
-U src/mt/transfer.lisp
-U src/tsdb/c/Makefile
-U src/tsdb/c/tsdb.h
-U src/tsdb/c/tsdb_io.c
+U src/mt/mrsglobals.lisp
+U src/mt/patches.lisp
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/bdb.lisp
-U src/tsdb/lisp/commands.lisp
-U src/tsdb/lisp/globals.lisp
-U src/tsdb/lisp/import.lisp
-U src/tsdb/lisp/lkb-interface.lisp
-U src/tsdb/lisp/macros.lisp
-U src/tsdb/lisp/mt.lisp
-U src/tsdb/lisp/process.lisp
-U src/tsdb/lisp/redwoods.lisp
-U src/tsdb/lisp/statistics.lisp
-U src/tsdb/skeletons/english/Index.lisp
-cvs update: src/tsdb/skeletons/english/aged/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/aged/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/blend/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/blend/output is no longer in the repository
-cvs update: src/tsdb/skeletons/english/blend/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/cell/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/cell/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/demo/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/demo/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ec/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ec/item-phenomenon is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ec/phenomenon is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ec/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecoc/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecoc/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecos/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecos/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecpa/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecpa/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecpr/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ecpr/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/fuse/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/fuse/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/harmony/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/harmony/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/harmony/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/hike/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/hike/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/hike/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh0/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh0/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh0/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh1/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh1/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh1/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh2/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh2/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh2/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh3/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh3/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh3/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh4/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh4/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh4/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh5/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh5/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jh5/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhk/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhk/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhk/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhu/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhu/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/jhu/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/parc/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/parc/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ps/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ps/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/ps/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psk/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psk/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psk/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psu/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psu/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/psu/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/rondane/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/rondane/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/shiken/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/shiken/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tg/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tg/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tg/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgk/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgk/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgk/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgu/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgu/item-set is no longer in the repository
-cvs update: src/tsdb/skeletons/english/tgu/relations is no longer in the repository
-U src/tsdb/skeletons/english/trec9/item
-cvs update: src/tsdb/skeletons/english/vm13/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm13/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm31/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm31/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm32/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm32/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm6/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm6/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm97/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm97/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm97p/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm97p/relations is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm98/item is no longer in the repository
-cvs update: src/tsdb/skeletons/english/vm98/relations is no longer in the repository
-U src/tsdb/skeletons/espanol/Index.lisp
-U src/tsdb/skeletons/norsk/Index.lisp
-U src/tsdb/tcl/commands.tcl
-U src/tsdb/tcl/nshowtable.tcl
-U src/tsdb/tcl/podium.tcl
-U src/tsdb/tcl/showgraph.tcl
-U src/tsdb/tcl/showtable.tcl
-U src/tsdb/tcl/utilities.tcl
-U src/tsdb/tcl/yy.tcl
+U src/tsdb/lisp/yy.lisp
 **********
 
   Remember to update the version number:
@@ -156,7 +33,7 @@ U src/tsdb/tcl/yy.tcl
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.581; previous revision: 1.580
+new revision: 1.582; previous revision: 1.581
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1439,7 +1316,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Jan 12, 2009 4:33)
+8.1 [Linux (x86)] (Jan 20, 2009 4:38)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2691,7 +2568,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-153452024 bytes have been tenured, next gc will be global.
+153713080 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -3645,7 +3522,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/macros.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lkb-interface.lisp
-8730616 bytes have been tenured, next gc will be global.
+8731488 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/lkb-interface.fasl
 ;;; Fasl write complete
@@ -3723,13 +3600,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-[04:35:52] gc-after-hook(): local; new: 2197328; old: 6800; efficiency: 91.
-[04:35:53] gc-after-hook(): local; new: 2362456; old: 12856; efficiency: 92.
+[04:40:57] gc-after-hook(): local; new: 2201736; old: 6800; efficiency: 92.
+[04:40:58] gc-after-hook(): local; new: 2364504; old: 12856; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
-[04:35:54] gc-after-hook(): local; new: 2142280; old: 6248; efficiency: 92.
+[04:40:59] gc-after-hook(): local; new: 2151776; old: 6248; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
@@ -3738,8 +3615,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-[04:35:55] gc-after-hook(): local; new: 2617912; old: 357912; efficiency: 90.
-[04:35:56] gc-after-hook(): local; new: 2265560; old: 144552; efficiency: 92.
+[04:41:00] gc-after-hook(): local; new: 2621072; old: 357976; efficiency: 90.
+[04:41:01] gc-after-hook(): local; new: 2259312; old: 145232; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
@@ -3752,7 +3629,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
-[04:35:57] gc-after-hook(): local; new: 1853424; old: 28360; efficiency: 91.
+[04:41:02] gc-after-hook(): local; new: 1853240; old: 28360; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
@@ -3760,7 +3637,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
-[04:35:58] gc-after-hook(): local; new: 797664; old: 1012328; efficiency: 91.
+[04:41:03] gc-after-hook(): local; new: 797584; old: 1012328; efficiency: 90.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
@@ -3774,7 +3651,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
-[04:35:59] gc-after-hook(): local; new: 1076992; old: 61880; efficiency: 93.
+[04:41:04] gc-after-hook(): local; new: 1076136; old: 61880; efficiency: 94.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
@@ -4753,7 +4630,6 @@ erg/trigger.mtr
 erg/idioms.mtr
 erg/erg.smi
 erg/chpt.mem
-erg/lexdb.README
 erg/gcide.fsr
 erg/jhpstg.mem
 erg/lexicon-small.tdl
