@@ -1603,16 +1603,9 @@ relatively limited.
       finally
 	(return entries)))
 
-(defvar *ersatzes-with-no-carg*)
 ;; takes lex-entry + injection specs
 (defun get-injected-lex-entry (e-orig l-content-injects)
-  ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
-  ;; REMOVE_ME as soon as lex entries in ERG fixed
-  (if (member (lex-entry-id e-orig)
-	      *ersatzes-with-no-carg*)
-      e-orig
-    (inject-lex-entry e-orig l-content-injects
-		      :e-orig e-orig)))
+  (inject-lex-entry e-orig l-content-injects :e-orig e-orig))
 
 (defun inject-lex-entry (e l-content-injects &key e-orig)
   (setf (lex-entry-full-fs e) nil) ;; ensure NO full-fs yet
@@ -1624,10 +1617,6 @@ relatively limited.
 
 
 
-;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
-;; REMOVE_ME as soon as lex entries in ERG fixed
-(defparameter *ersatzes-with-no-carg* nil)
-
 (defvar smaf::*ersatz-carg-path*)
 ;; tests whether lex-entry should be treated as an ersatz
 ;; (ersatz's undergo CARG-injection)
@@ -1636,17 +1625,13 @@ relatively limited.
   ;; if parameter is unset ersatzes get no special treatment
   (unless smaf::*ersatz-carg-path*
     (return-from lex-entry-is-ersatz nil))
-  ;; temporary hack to avoid instantiating carg on 'ersatzes' with no carg slot
-  ;; REMOVE_ME as soon as lex entries in ERG fixed
-  (unless (member (lex-entry-id entry)
-		  *ersatzes-with-no-carg*)
-    (loop
-	for word in (lex-entry-orth entry)
-	for len = (if (stringp word) (length word) 0)
-	when (and (> len 6)
-                  (string= "ersatz" 
-		      (string-downcase (subseq word (max 0 (- len 6)) len))))
-	return t)))
+  (loop
+      for word in (lex-entry-orth entry)
+      for len = (if (stringp word) (length word) 0)
+      when (and (> len 6)
+                (string= "ersatz" 
+                         (string-downcase (subseq word (max 0 (- len 6)) len))))
+      return t))
 
 ;; version of above that disallows MWE ersatz's
 #+:null

@@ -354,7 +354,7 @@
                                 for name = (cpu-name cpu)
                                 when name collect name))
                      (names (remove-duplicates names :test #'string-equal)))
-                (when (= (length names) 1) (first names)))))
+                (when (null (rest names)) (first names)))))
         ((and (member :page *features* :test #'eq) 
               (not (member :lkb *features* :test #'eq)))
          "PAGE")

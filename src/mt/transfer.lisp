@@ -605,7 +605,21 @@
     ;; the generator-internal trigger rules further from the type hierarchy.
     ;; think this over more asap.                              (23-jun-06; oe)
     ;;
-    (let* ((*vpms* nil)
+    ;; however, as of january 2009, the VPM also comprises the variable type
+    ;; mappings (e.g. `event' <-> `e').  and we need those, as we always want
+    ;; MRSs and MTRs to operate in the pure, external (aka SEM-I) namespace.
+    ;; a grammar may have many different intermediate variable types, and for
+    ;; MTR unifcation or MRS comparison, we must never have to consider these.
+    ;; MRS variable type operations using the SEM-I namespace are possible,
+    ;; even though we do not yet `import' the SEM-I into its own hierarchy,
+    ;; because all grammars include the `u', `h', `i', `e', `x', et al. types.
+    ;;                                                         (22-jan-09; oe)
+    (let* ((*vpms* (loop
+                       for vpm in *vpms*
+                       when (eq (vpm-id vpm) :semi)
+                       return (let ((vpm (copy-vpm vpm)))
+                                (setf (vpm-pms vpm) nil)
+                                (list vpm))))
            (filter (mrs::path-value lhs *mtr-filter-path*))
            (filter (and filter 
                         (not (vacuous-constraint-p *mtr-filter-path* filter))

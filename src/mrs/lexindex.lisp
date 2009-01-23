@@ -451,10 +451,11 @@ we assume that there will generally only be one feature
               do
                 (format
                  t 
-                 "~%Warning: ~A contains an underdetermined PRED (`~(~a~)')"
-                 id pred))
-          (add-semantics-record id new-record)
-  	  )
+                 "~%Warning: ignoring `~a' for its invalid PRED (`~(~a~)')"
+                 id pred)
+              and return t
+              finally
+                (add-semantics-record id new-record)))
       (progn (unless (or #+:mt
                          (gethash id mt::*transfer-triggers*)
                          (member id *gen-rule-ids*))

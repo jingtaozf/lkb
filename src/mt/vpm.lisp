@@ -149,8 +149,16 @@
   (let ((%variables%)
         (copy (mrs::make-psoa)))
     (labels ((map-type (type)
+               ;;
+               ;; for a transition period, until we can import the full SEM-I
+               ;; hierarchy and use it for MRS comparison, only map variable
+               ;; types in :forward direction.  this is backwards-comparible
+               ;; with what the LKB used to do, in the sense that comparsing
+               ;; MRSs post-generation will end up using MRS variable types
+               ;; (`e', `x', et al.) but SEM-I variable properties.
+               ;;                                               (22-jan-09; oe)
                (loop
-                   for mr in (vpm-tms vpm)
+                   for mr in (and (eq direction :forward) (vpm-tms vpm))
                    for left
                    = (if (eq direction :forward) (mr-left mr) (mr-right mr))
                    when (and (if (eq direction :forward)
@@ -231,6 +239,18 @@
 ;;;
 (defun map-properties (type properties vpm &optional (direction :forward))
   (when (null properties) (return-from map-properties))
+  ;;
+  ;; _fix_me_
+  ;; a special case: when there are no property mappings, in principle we might
+  ;; opt to delete all properties, as the VPM definition states that only those
+  ;; matched explicitly will be preserved.  however, in our `dual' universe of
+  ;; grammar-internal and SEM-I namespaces and our current half-assed approach
+  ;; to using grammar-internal names for MTR matching, convert-dag-to-mtr() may
+  ;; manufacture a VPM with variable type but no property mappings for creation
+  ;; of MTRs.  to make that work, treat nil property mappings as the identity
+  ;; mapping.                                                   (23-jan-09; oe)
+  ;;
+  (when (null (vpm-pms vpm)) (return-from map-properties properties))
   (loop
       with result with mapped
       for pm in (vpm-pms vpm)

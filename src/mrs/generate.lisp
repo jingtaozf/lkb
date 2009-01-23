@@ -249,13 +249,13 @@
                     finally (when result
                               (return (sort result #'string-lessp)))))))))
 
-(define-condition generation/compliance-ambiguity (error) 
+(define-condition generation/fixup-ambiguity (error) 
   ((mrss :initarg :mrss :initform nil))
   (:report (lambda (condition stream) 
              (with-slots (mrss) condition
                (format
                 stream
-                "grammar compliance ambiguity: ~a outputs"
+                "input fix-up ambiguity: ~a outputs"
                 (length mrss))))))
 
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical
@@ -294,6 +294,26 @@
   #+:arboretum
   (populate-found-configs)
 
+  ;;
+  ;; inside the generator, apply the VPM in reverse mode to map to grammar-
+  ;; internal variable types, properties, and values.  the internal MRS, beyond
+  ;; doubt, is what we should use for lexical instantiations and Skolemization.
+  ;; regarding trigger rules and the post-generation MRS compatibility test, on
+  ;; the other hand, we have a choice.  in principle, these should operate in
+  ;; the external (SEM-I) MRS namespace (the real MRS layer); however, trigger
+  ;; rules are created from FSs (using grammar-internal nomenclature) and, more
+  ;; importantly, the post-generation test uses the grammar-internal hierarchy
+  ;; to test for predicate, variable type, and property subsumption.  hence, it
+  ;; is currently convenient to apply these MRS-level operations with grammar-
+  ;; internal names, i.e. at an ill-defined intermediate layer.
+  ;;
+  ;; _fix_me_
+  ;; the proper solution to all this mysery will be to create separate SEM-I
+  ;; hierarchies, i.e. enrich the SEM-I files with whatever underspecifications
+  ;; the grammar wants to provide at the MRS level, and then import that file
+  ;; into its own, grammar-specific namespace.  one day soon, i hope, i might
+  ;; actually get to implementing this design ...               (22-jan-09; oe)
+  ;;
   (setf input-sem (mt:map-mrs input-sem :semi :backward))
   
   ;;
@@ -337,11 +357,11 @@
                  (mrs:rel-flist ep)))))
                           
   #+:null
-  (let ((compliance (mt::transfer-mrs mrs :filter nil :task :comply)))
-    (when (rest compliance)
-      (error 'generation/compliance-ambiguity :mrss compliance))
-    (when compliance
-      (setf mrs (mt::edge-mrs (first compliance)))))
+  (let ((fixup (mt::transfer-mrs input-sem :filter nil :task :generate)))
+    (when (rest fixup)
+      (error 'generation/fixup-ambiguity :mrss fixup))
+    (when fixup
+      (setf input-sem (mt::edge-mrs (first fixup)))))
   
   (setf *generator-internal-mrs* input-sem)
   (with-package (:lkb)
@@ -802,7 +822,7 @@
       ;; at this point, we will try do confirm that the candidate realization
       ;; has a semantics compatible to our input.  in order for the comparison
       ;; to take advantage of the grammar-internal type hierarchy, we actually
-      ;; compare interal MRSs; however, to get default values (and `purity' and
+      ;; compare internal MRSs.  still, to get default values (and `purity' and
       ;; such), go through the SEM-I VPM twice: extract-mrs() does the forward
       ;; mapping by default, so to return to internal values, run backwards one
       ;; more time.                                              (4-jul-06; oe)

@@ -793,6 +793,10 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
           ((equal-or-subtype type *handle-type*) "h")  
           ((equal-or-subtype type *non_event-type*) "p")
           ((equal-or-subtype type *event_or_index-type*) "i")
+          ;;
+          ;; an `anti' type to block MTR application against a bound variable
+          ;;
+          ((equal-or-subtype type (mrs::vsym "a")) "a")
           (t "u"))))
 
 (defun ep-shorthand (ep)

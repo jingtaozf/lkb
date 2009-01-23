@@ -98,13 +98,15 @@
                #+:allegro (excl:gc)
                #+:gcdebug (system::gsgc-parameters)
                #+:gcdebug (excl:print-type-counts))
-             (expand-psort-entry entry)
-             (let ((new-fs (lex-entry-full-fs entry)))
-               (if (and new-fs 
-                        (not (eq new-fs :fail)))
+             (unless (smember (lex-entry-id entry) *duplicate-lex-ids*)
+               (expand-psort-entry entry)
+               (let ((new-fs (lex-entry-full-fs entry)))
+                 (if (and new-fs (not (eq new-fs :fail)))
                    (mrs::extract-lexical-relations entry)
-                 (format t "~%No feature structure for ~A~%" 
-                         (lex-entry-id entry))))
+                   (format
+                    t
+                    "~%No feature structure for ~A~%"
+                    (lex-entry-id entry)))))
              (forget-psort lex (lex-entry-id entry))))
 
         #+:allegro
