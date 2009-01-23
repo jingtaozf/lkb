@@ -6,7 +6,7 @@
 <!ATTLIST saf   addressing CDATA #REQUIRED
                 document CDATA #REQUIRED >
 
-<!ELEMENT fsm   (state* , annot*)>
+<!ELEMENT fsm   (annot*)>
 <!ATTLIST fsm   initial IDREF #IMPLIED
                 final IDREF #IMPLIED>
 
