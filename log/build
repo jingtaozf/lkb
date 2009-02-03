@@ -15,19 +15,8 @@ M log/build
 ? src/.l8cl
 ? src/.lecl
 ? src/general/clim.fasl
-U src/glue/dag.lsp
-U src/glue/repp.lsp
-U src/main/globals.lsp
-U src/mrs/basemrs.lisp
-U src/systems/tsdb.system
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/derivations.lisp
-U src/tsdb/lisp/features.lisp
-U src/tsdb/lisp/lkb-interface.lisp
-U src/tsdb/lisp/redwoods.lisp
-U src/tsdb/lisp/statistics.lisp
-U src/tsdb/lisp/tnt-interface.lisp
 **********
 
   Remember to update the version number:
@@ -37,7 +26,7 @@ U src/tsdb/lisp/tnt-interface.lisp
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.584; previous revision: 1.583
+new revision: 1.585; previous revision: 1.584
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1320,7 +1309,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Feb 3, 2009 4:57)
+8.1 [Linux (x86)] (Feb 3, 2009 5:23)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -3604,13 +3593,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-[05:09:56] gc-after-hook(): local; new: 2191680; old: 7024; efficiency: 91.
-[05:09:57] gc-after-hook(): local; new: 2356720; old: 12856; efficiency: 93.
+[05:26:34] gc-after-hook(): local; new: 2191680; old: 7024; efficiency: 91.
+[05:26:35] gc-after-hook(): local; new: 2356720; old: 12856; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
-[05:09:58] gc-after-hook(): local; new: 2450696; old: 6248; efficiency: 91.
+[05:26:36] gc-after-hook(): local; new: 2450696; old: 6248; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
@@ -3619,8 +3608,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-[05:09:59] gc-after-hook(): local; new: 2073976; old: 357888; efficiency: 91.
-[05:10:00] gc-after-hook(): local; new: 2000152; old: 145456; efficiency: 93.
+[05:26:37] gc-after-hook(): local; new: 2073976; old: 357888; efficiency: 92.
+[05:26:38] gc-after-hook(): local; new: 2000152; old: 145456; efficiency: 92.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
@@ -3633,7 +3622,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
-[05:10:01] gc-after-hook(): local; new: 1840872; old: 28360; efficiency: 91.
+[05:26:39] gc-after-hook(): local; new: 1840872; old: 28360; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
@@ -3641,7 +3630,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
-[05:10:02] gc-after-hook(): local; new: 799784; old: 1012352; efficiency: 92.
+[05:26:40] gc-after-hook(): local; new: 799784; old: 1012352; efficiency: 91.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
@@ -3655,7 +3644,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
-[05:10:03] gc-after-hook(): local; new: 1088968; old: 63808; efficiency: 92.
+[05:26:41] gc-after-hook(): local; new: 1088968; old: 63808; efficiency: 93.
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
