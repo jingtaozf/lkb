@@ -106,6 +106,7 @@
           #\tab
           (derivation-preterminal deriv)
           #\tab))
+        #+:null
 	((inflectional-rule-p deriv)
 	 (format 
 	  stream 

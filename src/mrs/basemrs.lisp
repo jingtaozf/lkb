@@ -920,11 +920,11 @@ higher and lower are handle-variables
      stream 
      "<span class=\"mrsVariable~a~:(~a~)\" ~
             onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\" ~
-            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>~%~
-      ~a ~
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>~
+      &thinsp;~a&thinsp;~
       <span class=\"mrsVariable~a~:(~a~)\" ~
             onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\" ~
-            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>~%"
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>"
      id higher id higher id higher higher 
      (if (string-equal (string relation) "qeq")
        "=q"

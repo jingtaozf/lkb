@@ -224,3 +224,67 @@
                            (debug-copy-dag (dag-arc-value arc) path))
               collect (make-dag-arc :attribute feature :value copy)))
         (setf (dag-copy dag) new))))))
+
+;;;
+;;;
+;;;
+(defun read-dag (stream &key path coreferences)
+  (when (stringp stream)
+    (return-from read-dag
+      (with-input-from-string (stream stream)
+        (read-dag stream :path path :coreferences coreferences))))
+  (if (null coreferences)
+    (let ((*package* (find-package *lkb-package*))
+          (*readtable* (copy-readtable)))
+      (set-syntax-from-char #\= #\( *readtable*)
+      (progn;ignore-errors
+       (read-dag stream :coreferences (make-hash-table :test #'eql))))
+    (let ((c (peek-char t stream nil nil))
+          unifications)
+      (when (and c (char= c #\#))
+        (read-char stream)
+        (let ((id (read stream nil nil)))
+          (unless id
+            (error
+             "read-dag(): incomplete coreference label at `~{~a~^.~}'."
+             (reverse path)))
+          (push path (gethash id coreferences))
+          (let ((c (peek-char t stream nil nil)))
+            (if (and c (char= c #\=))
+              (read-char stream)
+              (return-from read-dag nil)))))
+      (let* ((type (read stream nil nil))
+             (c (peek-char t stream nil nil)))
+        (when type
+          (let ((path (create-path-from-feature-list (reverse path)))
+                (value (make-u-value :type type)))
+            (push (make-unification :lhs path :rhs value) unifications)))
+        (when (and c (char= c #\[))
+          (read-char stream)
+          (loop
+              for feature = (read stream nil nil)
+              for value = (read-dag
+                           stream :path (cons feature path)
+                           :coreferences coreferences)
+              for c = (peek-char t stream nil nil)
+              when value do (nconc unifications value)
+              until (or (null c) (char= c #\]))
+              finally (when (and c (char= c #\])) (read-char stream)))))
+      (if (null path)
+        (loop
+            for paths being each hash-value in coreferences
+            do
+              (loop
+                  with base = (first paths)
+                  with lhs = (create-path-from-feature-list (reverse base))
+                  for path in (rest paths)
+                  for rhs = (create-path-from-feature-list (reverse path))
+                  for unifiation = (make-unification :lhs lhs :rhs rhs)
+                  do (push unifiation unifications))
+            finally
+              (let* ((*standard-output* (make-string-output-stream))
+                     (dag (process-unifications unifications))
+                     (tdfs (and dag (make-tdfs :indef dag))))
+                (return tdfs)))
+        unifications))))
+                

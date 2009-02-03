@@ -1092,11 +1092,12 @@
           do (record-features features event model)))
     event))
 
-(defun edge-root (edge)
+(defun edge-root (edge &optional
+                       (preterminals *feature-use-preterminal-types-p*))
   (typecase (lkb::edge-rule edge)
     (lkb::rule (lkb::rule-id (lkb::edge-rule edge)))
     (string (let ((instance (first (lkb::edge-lex-ids edge))))
-              (if *feature-use-preterminal-types-p*
+              (if preterminals
                 (type-of-lexical-entry instance)
                 instance)))
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))

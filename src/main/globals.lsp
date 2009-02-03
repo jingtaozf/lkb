@@ -68,6 +68,16 @@
 
 (def-lkb-parameter *key-daughter-type* '+)
 
+;;;
+;;; as we move into the chart mapping universe, lexical entries behave similar
+;;; to rules: the list of input tokens that license a lexical entry are unified
+;;; into *lexicon-tokens-path* (when set).  furthermore, to give the grammarian
+;;; easier access to the token in the right periphery, the last element of the 
+;;; tokens list is made re-entrant with *lexicon-last-token-path*.
+;;;
+(def-lkb-parameter *lexicon-tokens-path* nil)
+(def-lkb-parameter *lexicon-last-token-path* nil)
+
 (def-lkb-parameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")

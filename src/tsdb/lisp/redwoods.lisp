@@ -319,7 +319,8 @@
                         for result in results
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
-                        for mrs = (get-field :mrs result)
+                        for mrs = (let ((mrs (get-field :mrs result)))
+                                    (and mrs (not (equal mrs "")) mrs))
                         for edge = (when (or (null subset) (member id subset))
                                      (if (and derivation 
                                               (not (equal derivation "")))

@@ -853,6 +853,7 @@
                 (when (and dag (dag-inflected-p dag))             
                   (push (compute-derivation-tree edge) derivations)))
               (cond
+               #+:null
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
                 (incf i-stasks)
                 (incf words))
@@ -892,6 +893,7 @@
                 (when (and dag (dag-inflected-p dag))             
                   (push (compute-derivation-tree edge) derivations)))
               (cond
+               #+:null
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
                 (incf i-stasks)
                 (incf words))
@@ -1041,7 +1043,8 @@
   #+:tty
   nil)
 
-(defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
+(defun tsdb::find-lexical-entry (form instance 
+                                 &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
          (name (string-upcase (string instance)))
@@ -1128,6 +1131,34 @@
                  :children edges
                  :from (edge-from (first edges)) 
                  :to (edge-to (first (last edges))))
+      (values status %failure%))))
+
+(defun tsdb::instantiate-lexical-entry (edge tokens &optional (dagp t))
+  (let* ((dagp (smember dagp '(:rule t)))
+         (*unify-debug* :return)
+         (%failure% nil)
+         (status -1)
+         (result (when dagp (edge-dag edge))))
+    (when (and result *lexicon-tokens-path* *lexicon-last-token-path*)
+      (with-unification-context (foo)
+        (loop
+            for token in tokens
+            for path = *lexicon-tokens-path*
+            then (append path *list-tail*)
+            for i from 0
+            while result do
+              (setf result (yadu! result token (append path *list-head*)))
+              (incf status)
+                                  
+            finally
+              (when result
+                (let ((token (first (last tokens))))
+                  (setf result
+                    (yadu! result token *lexicon-last-token-path*)))
+                (when result
+                  (setf (edge-dag edge) (copy-tdfs-elements result)))))))
+    (if (or result (null dagp))
+      edge
       (values status %failure%))))
 
 ;;;

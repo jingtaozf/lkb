@@ -31,7 +31,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(in-package "MAKE")
+(in-package :make)
 
 (eval-when (:load-toplevel :execute)
   (pushnew :tsdb *features*)

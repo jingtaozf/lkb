@@ -30,9 +30,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "TSDB")
-
-(defparameter *inflectional-rule-suffix* "_infl_rule")
+(in-package :tsdb)
 
 (defparameter *derivations-comparison-level* :all)
 
@@ -138,7 +136,8 @@
      (if (integerp (first ,derivation))
        (rest (rest (rest (rest (rest ,derivation)))))
        (if (integerp (second ,derivation))
-         (rest (rest (rest ,derivation)))
+         (unless (stringp (third ,derivation))
+           (rest (rest (rest ,derivation))))
          (rest ,derivation)))))
 
 (defun derivation-depth (derivation)
@@ -168,6 +167,21 @@
             for daughter in daughters
             nconc (derivation-leafs daughter))))))
 
+(defun derivation-tokens (derivation)
+  (unless (null derivation)
+    (let ((daughters (derivation-daughters derivation)))
+      (if (null daughters)
+        (when (and (stringp (first derivation))
+                   (integerp (second derivation))
+                   (stringp (third derivation)))
+          (loop
+              for tokens = (rest (rest derivation))
+              then (rest (rest tokens))
+              while tokens collect (first tokens)))
+        (loop 
+            for daughter in daughters
+            nconc (derivation-tokens daughter))))))
+
 (defun derivation-nodes (derivation)
   (unless (null derivation)
     (let ((id (derivation-id derivation))
@@ -179,23 +193,6 @@
             (loop
                 for daughter in (derivation-daughters derivation)
                 nconc (derivation-nodes daughter))))))
-
-(defun inflectional-rule-p (derivation)
-  (let* ((root (cond
-                ((stringp derivation) derivation)
-                ((symbolp derivation) (symbol-name derivation))
-                ((consp derivation) 
-                 (let ((root (derivation-root derivation)))
-                   (if (symbolp root) 
-                     (symbol-name root)
-                     root)))
-                (t 
-                 (error 
-                  "inflectional-rule-p(): invalid call `~s'." 
-                  derivation))))
-         (break (max 0 (- (length root) (length *inflectional-rule-suffix*)))))
-    (when (string-equal root *inflectional-rule-suffix* :start1 break)
-      (subseq root 0 break))))
 
 (defun derivation-equal (gold blue 
                          &optional (level *derivations-comparison-level*))
@@ -296,8 +293,7 @@
 (defun reconstruct-item (i-id i-input derivation)
   (let* ((*package* (or (find-package :disco)
                         (find-package :common-lisp-user))))
-    (multiple-value-bind (result failure)
-        (reconstruct derivation)
+    (multiple-value-bind (result failure) (reconstruct derivation)
       (cond
        (failure
         (let ((*package* (find-package :tsdb))
@@ -309,6 +305,8 @@
         (case (third failure)
           (:noaffix
            (format t "  no affix ~a.~%" (fourth failure)))
+          (:notoken
+           (format t "  invalid token ~a.~%" (fourth failure)))
           (:noentry
            (format t "  no lexical entry ~a.~%" (fourth failure)))
           (:norule
@@ -340,7 +338,8 @@
               (funcall hook result i-input)))
           (format
            t
-           "~&~%(~d) `~a' --- success.~%")))))))
+           "~&~%(~d) `~a' --- success.~%"))))
+      result)))
 
 (defun reconstruct (derivation &optional (dagp t) &key counter (cachep t))
   (if *derivations-reconstructor*
@@ -399,9 +398,13 @@
                       #+:lkb (setf %derivation-offset% (lkb::edge-to edge))
                       (return edge)))
               (cond
-               ((and (= (length daughters) 1)
+               ((and (null (rest daughters))
                      (null (derivation-daughters (first daughters))))
                 (let* ((surface (derivation-root (first daughters)))
+                       #+:lkb
+                       (tokens (derivation-tokens (first daughters)))
+                       #-:lkb
+                       (tokens nil)
                        (entry 
                         (find-lexical-entry surface root id start end)))
                   (incf %derivation-offset%)
@@ -413,7 +416,25 @@
                                   0
                                   :noentry
                                   (format nil "`~a' (`~a')" root surface))))
-                    entry)))
+                    (if tokens
+                      (let ((tokens
+                             (loop
+                                 for token in tokens
+                                 for i from 0
+                                 for dag = (lkb::read-dag token)
+                                 unless dag do
+                                   (throw :fail
+                                     (values
+                                      nil
+                                      (list derivation i :notoken token)))
+                                 collect dag)))
+                        (multiple-value-bind (result failure)
+                            (instantiate-lexical-entry entry tokens)
+                          (if (null failure)
+                            result
+                            (throw :fail 
+                              (values nil (list derivation result failure))))))
+                      entry))))
                (t
                 (let* ((items
                         (loop
@@ -432,9 +453,8 @@
                       (if (null failure)
                         result
                         (throw :fail 
-                               (values nil 
-                                       (list derivation 
-                                             result failure))))))))))))
+                               (values
+                                nil (list derivation result failure))))))))))))
     (when (and *reconstruct-cache* edge)
       (push edge (gethash id *reconstruct-cache*)))
     #+:lkb

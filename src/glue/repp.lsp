@@ -373,17 +373,19 @@
        (loop
            for token in tokens
            for id = (token-id token)
-           for form = (escape-string (token-form token))
+           for form = (token-form token)
+           for ersatz = (token-ersatz token)
            for from = (token-from token)
            for to = (token-to token)
            for yy = (format 
                      nil 
                      "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                      1, \"~a\" \"~a\", 0, \"null\")"
+                      1, \"~a\"~@[ \"~a\"~], 0, \"null\")"
                      id from to 
                      *repp-characterize-p* 
                      (token-start token) (token-end token)
-                     (or (token-ersatz token) form) form)
+                     (escape-string (or ersatz form))
+                     (when ersatz (escape-string form)))
            collect yy into yys
            do
              (loop

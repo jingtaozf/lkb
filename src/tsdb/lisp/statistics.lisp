@@ -951,7 +951,8 @@
                                  dimension class)
                                 (format
                                  nil
-                                 "~(~a~) &isin; [~d &ndash; ~d|"
+                                 "~(~a~)&thinsp;&isin;&thinsp;~
+                                  [~d&thinsp;&ndash;&thinsp;~d|"
                                  dimension class (+ class aggregate)))))))
                 (when (>= (length data) threshold)
                   (push (cons class (cons name data)) result))))
