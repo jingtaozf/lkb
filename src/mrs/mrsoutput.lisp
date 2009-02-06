@@ -787,6 +787,7 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
 (defun determine-variable-type (fs)
   (let ((type (create-type (if (is-valid-fs fs) (fs-type fs) fs))))
     (cond (*variable-type-mapping* (string-downcase type))
+	  ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *non_expl-ind-type*) "i")
           ((equal-or-subtype type *deg-ind-type*) "d")
