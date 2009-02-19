@@ -80,6 +80,10 @@
    (mrs::dmrs-to-rmrs (mrs-dmrs-dmrs clim:*application-frame*))
    "Converted from DMRS"))
 
+(define-mrs-dmrs-command (com-output-dmrs-latex :menu "Save as LaTeX") 
+        ()
+  (save-dmrs-as-latex (mrs-dmrs-dmrs clim:*application-frame*)))
+
 (defparameter *rmrs-xml-output-file* nil)
 
 (defun save-rmrs-as-xml (rmrsstruct)
@@ -115,6 +119,25 @@
       (mrs::output-dmrs
        dmrsstruct
        'mrs::dxml file-name))))
+
+(defparameter *dmrs-latex-output-file* nil)
+
+(defun save-dmrs-as-latex (dmrsstruct)
+  (let ((file-name (if *dmrs-latex-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Overwrite ~A?"
+						    *dmrs-latex-output-file*))))
+			 (if use-existing-p
+			     *dmrs-latex-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for DMRS LaTeX")))
+		       (ask-user-for-new-pathname "File for DMRS LaTeX"))))
+    (setf *dmrs-latex-output-file* file-name)
+    (when file-name
+      (with-open-file (ostream file-name :direction :output
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+	(mrs::layout-dmrs dmrsstruct :latex ostream)))))
 
 ;;; ordinary window for one RMRS
 
