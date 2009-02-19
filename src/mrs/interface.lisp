@@ -177,6 +177,10 @@
 ;;; see convert.lisp
 |#
 
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-dmrs)
+;;; see dmrs.lisp
+|#
 
 #|
 (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-scoped-mrs)
