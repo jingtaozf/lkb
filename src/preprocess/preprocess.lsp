@@ -861,7 +861,7 @@
 	 :name (format nil "~a.out" (pathname-name (pathname filename))))
 	(pathname filename))
        :direction :output
-       :if-exists :overwrite
+       :if-exists :supersede
        :if-does-not-exist :create)
     (format t "~&;;; Input sentence file: ~a" filename)
     (format t "~&;;; Output file: ~a" (namestring ofile))
