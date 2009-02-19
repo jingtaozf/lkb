@@ -53,6 +53,52 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   targets)
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; Crossing links
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+#|
+(let ((*package* (find-package :mrs)))
+  (with-open-file (istream "~/lingo/erg/data/cross.rmrs" 
+		   :direction :input)
+      (let ((rmrs (parse-xml-removing-junk istream)))
+	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
+	  (let* ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil)))
+		(crossing-links
+		 (dmrs-crossing-links dmrs)))
+	       (simple-output-dmrs dmrs)
+	       (when crossing-links
+		 (format t "~%Crossing links ~A" crossing-links)))))))
+|#
+
+(defun dmrs-crossing-links (dmrs)
+  (let ((node-vec (loop for node in (dmrs-nodes dmrs)
+		      and count from 0
+		      collect
+			(cons (dmrs-node-id node) count))))
+    (loop for link in (dmrs-links dmrs)
+	unless (eql (dmrs-link-from link) 0)
+	when (let* ((from (cdr (assoc (dmrs-link-from link) node-vec)))
+		   (to (cdr (assoc (dmrs-link-to link) node-vec)))
+		   (left (if (< from to) from to))
+		   (right (if (< from to) to from)))
+	       (loop for link2 in (dmrs-links dmrs)
+		     thereis 	
+		    (let* ((from2 (cdr (assoc (dmrs-link-from link2) node-vec)))
+			  (to2 (cdr (assoc (dmrs-link-to link2) node-vec)))
+			  (left2 (if (< from2 to2) from2 to2))
+			  (right2 (if (< from2 to2) to2 from2)))
+		      (and (< left left2)
+			   (< left2 right)
+			   (> right2 right)))))
+	collect link)))
+					 
+    
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;; RMRS to DMRS
@@ -254,6 +300,8 @@ make-dmrs-handel-links
       (format nil "~%Unlinked vars ~A in ~A" unlinked nodes))))
 
 
+(defparameter *dmrs-warnings* nil)
+
 (defun determine-label-equality-sets (nodes links)
   ;;; returns nodes grouped by equality of labels,
   ;;; with the target nodes identified
@@ -278,7 +326,10 @@ make-dmrs-handel-links
 		  (when (and (eql (dmrs-link-from link) element)
 			     (member (dmrs-link-to link) elements))
 		    (return t)))
-	      collect element))))
+	      collect element))
+	(when (and *dmrs-warnings*
+		   (cdr (dmrs-ngroup-targets ngroup)))
+	  (pprint "Multiple targets"))))
     ngroups))
 
 
@@ -829,7 +880,11 @@ drawing program (and recalculated so origin is bottom left)
 				     (realpred-lemma pred)
 				     (realpred-pos pred)
 				     (realpred-sense pred))
-				  pred)
+				  (let ((l (length pred)))
+					(if (equal (subseq pred (- l 4))
+						   "_rel")
+					    (subseq pred 0 (- l 4))
+					  pred)))
 				(if (dmrs-node-carg node)
 				    "/" "")
 				(or (dmrs-node-carg node)
@@ -1114,8 +1169,6 @@ CLIM rendering is in lkb-acl-rmrs.lisp
     (write-string "<sortinfo/></node>" stream)
     (terpri stream)))
 
-
-
 ;;; links
 
 (defmethod dmrs-output-link ((dmrsout dxml) from to pre post)
@@ -1127,7 +1180,7 @@ CLIM rendering is in lkb-acl-rmrs.lisp
     (write-string "'>" stream)
     (write-string "<rargname>" stream)
     (princ pre stream)
-    (write-string "</rargname> <post>" stream)
+    (write-string "</rargname><post>" stream)
     (princ post stream)
     (write-string "</post>" stream)
     (write-string "</link>" stream)
@@ -1196,5 +1249,27 @@ CLIM rendering is in lkb-acl-rmrs.lisp
     (dmrs-output-link dmrs-display-structure
 		      from to pre post)))
 
-      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;
+;;;;;;    Testing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#+:lkb
+(defun batch-output-dmrs nil  
+  (let ((ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (when *parse-record*
+          (let* ((parse (car *parse-record*))
+                 (mrs-struct (extract-mrs parse))
+                 (rmrs-struct 
+		  (mrs-to-rmrs mrs-struct))
+		 (dmrs-struct
+		  (rmrs-to-dmrs rmrs-struct))
+		 (crossing-links
+		  (dmrs-crossing-links dmrs-struct)))
+            (simple-output-dmrs dmrs-struct)
+	    (when crossing-links
+		(format t "~%Crossing links ~A" crossing-links))))
+    (finish-output ostream)))
