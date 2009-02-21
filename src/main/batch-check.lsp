@@ -162,8 +162,9 @@
 	 (null (top-level-features-of list-dag))
 	 (null (top-level-features-of last-dag))
 	 (eq-or-subtype list-dag *list-type*)
-	 (eq-or-subtype last-dag *list-type*))
-      (format *batch-check-diff-list-strict* "~%WARNING: malformed but 'acceptable' difference list at ~a in ~a" (reverse path) id)
+	 (eq-or-subtype last-dag *list-type*)
+	 (not (eq list-dag last-dag)))
+      (format ostream "~%WARNING: malformed empty difference list at ~a in ~a" (reverse path) id)
       (return-from check-dag-diff-list))
     (loop
 	with rest-dag

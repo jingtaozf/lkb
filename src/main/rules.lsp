@@ -296,10 +296,17 @@ base fs plus rule (except the type itself, of course)
 
 ;;; expanding rules - also called from type redefinition functions
 
+(defparameter *c-cont-check-path* nil)
+      ;;; (setf lkb::*c-cont-check-path* '(C-CONT))
+
 (defun expand-rule (id rule non-def def rule-persistence lexical-p)
   (process-unif-list id non-def def rule rule-persistence)
   (let ((fs (rule-full-fs rule)))  
     (when fs
+      (when *c-cont-check-path*
+	(sanitize (existing-dag-at-end-of (tdfs-indef fs) 
+					  *c-cont-check-path*)
+		  id *c-cont-check-path* t))
       (setf (rule-rtdfs rule) (copy-tdfs-partially fs))
       (if lexical-p 
 	  (progn
