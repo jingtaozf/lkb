@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (1-feb-09; beta)")
+(defparameter *tsdb-version* "2.0 (22-feb-09; beta)")
 
 (defparameter
   *tsdb-application*
@@ -191,6 +191,8 @@
 (defparameter *pvm-clients* nil)
 
 (defparameter *process-default-task* :parse)
+
+(defparameter *process-custom* nil)
 
 (defparameter *process-suppress-duplicates* '(:mrs))
 

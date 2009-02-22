@@ -29,7 +29,7 @@
 ;;;
 ;;; : token separator (applied once string rewriting has saturated)
 ;;;
-;;; - replace
+;;; ! replace
 ;;;
 ;;; #42
 ;;;
@@ -223,7 +223,7 @@
         with matchp with counts
         for rule = (pop rules)
         while rule
-        #+:debug do
+          #+:debug do
           #+:debug
           (format
            t
@@ -249,6 +249,13 @@
               (setf matchp nil)
               (when (eq verbose :trace) (format t "~&>~(~a~)~%~%" id))))
         else when (eq (fsr-type rule) :pop) do
+          ;;
+          ;; _fix_me_
+          ;; i think we should not call external groups iteratively, they are
+          ;; primarily there to modularize the rule set; if we actually wanted
+          ;; to iterate an external group, the group call could be put into an
+          ;; internal, numeric group.                            (3-feb-09; oe)
+          ;;
           (cond
            ((and matchp
                  (numberp (first counts))

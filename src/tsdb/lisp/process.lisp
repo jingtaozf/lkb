@@ -966,6 +966,7 @@
                     (mrs::psoa
                      (with-output-to-string (stream)
                        (mrs::output-mrs1 mrs 'mrs::simple stream))))))
+           (custom (rest (assoc type *process-custom*)))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
                       tid 
@@ -982,7 +983,7 @@
                       :verbose nil)
                      (process_item 
                       tid (nconc item (acons :mrs mrs nil))
-                      nanalyses nresults interactive))))
+                      nanalyses nresults interactive custom))))
       (case status
         (:ok 
          (setf (client-status client) (cons (get-universal-time) item))

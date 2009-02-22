@@ -130,10 +130,8 @@ proc tsdb_file {action {index -1}} {
     }; # if
   } elseif {$action == "compress"} {
 
-#    if {$selection == ""} {
-      if {[verify_ts_selection]} {return 1};
-      set selection "\"$globals(data)\"";
-#    }; # if
+    if {[verify_ts_selection]} {return 1};
+    set selection "\"$globals(data)\"";
 
     foreach profile $selection {
       set old $profile;
@@ -167,7 +165,7 @@ proc tsdb_file {action {index -1}} {
             if {$name != "relations" && [file size $target] > 0} {
               status "compressing file `$name' ...";
               if {"$globals(user)" != "bender" && "$globals(user)" != "danf"} {
-                after 300;
+                after 200;
               }; # if
               if {[catch [eval "exec $globals(zipper) $target"]]} {
                 tsdb_beep;

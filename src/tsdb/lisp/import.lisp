@@ -110,8 +110,7 @@
                (register (or *import-register* "formal"))
                (difficulty (or *import-difficulty* 1))
                (category (or *import-category* ""))
-               comment 
-               shift
+               comment shift
                (separator (or *import-separator* ";;"))
                (pseparator (or *import-phenomena-separator* ";;;"))
                encoding meter)
@@ -233,6 +232,8 @@
                 :encoding encoding :meter rmeter))
               (:ptb
                (read-items-from-ptb-directory file :base base)) 
+              (:conll
+               (read-items-from-conll-file file :shift shift)) 
               (:rasp
                (read-items-from-rasp-file file
                                           :base base
@@ -246,13 +247,14 @@
           (declare (ignore foo bar))
           (cond
            (item
-            (insert path "item" item 
-                    :absolute t 
-                    :meter (if item-phenomenon 
-                             imeter
-                             (when (and imeter ipmeter)
-                               (make-meter (get-field :start imeter) 
-                                           (get-field :end ipmeter)))))
+            (insert
+             path "item" item :absolute t 
+             :normalize (not (smember format '(:conll)))
+             :meter (if item-phenomenon 
+                      imeter
+                      (when (and imeter ipmeter)
+                        (make-meter (get-field :start imeter) 
+                                    (get-field :end ipmeter)))))
             (when (and phenomenon item-phenomenon)
               (insert path "phenomenon" phenomenon :absolute t)
               (insert path "item-phenomenon" item-phenomenon 

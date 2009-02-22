@@ -51,13 +51,14 @@
 (def-foreign-call 
     (_process_item "process_item")
     ((tid :int integer)
-     (i_id :int integer)
-     (i_input (* :char) string)
+     (id :int integer)
+     (input (* :char) string)
      (parse_id :int integer)
      (edges :int integer)
      (nanalyses :int integer)
      (nresults :int integer)
-     (interactive :int integer))
+     (interactive :int integer)
+     (custom (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -68,7 +69,7 @@
                  integer integer integer integer integer)
     :return-type :integer)
 
-(defun process_item (tid item nanalyses nresults interactive)
+(defun process_item (tid item nanalyses nresults interactive custom)
   
   (let* ((i-id (get-field :i-id item))
          (i-input (or (get-field :mrs item)
@@ -78,9 +79,10 @@
          (edges (or (get-field :edges item) 0))
          (nanalyses (if (integerp nanalyses) nanalyses 0))
          (interactive (if interactive 1 0))
+         (custom (if (stringp custom) custom ""))
          (status 
           (_process_item tid i-id i-input parse-id 
-                         edges nanalyses nresults interactive)))
+                         edges nanalyses nresults interactive custom)))
     (cond
      ((zerop status) :ok)
      (t :error))))
@@ -121,7 +123,8 @@
         :ok))))
 
 (let ((lock (mp:make-process-lock)))
-  (defun allocate-client (item &key protocol (task :parse) class (wait 42))
+  (defun allocate-client (item
+                          &key protocol (task :parse) class flags (wait 42))
     (loop
         for i from 1 to wait do
           (loop
@@ -136,11 +139,16 @@
                         (or (null class)
                             (eq class (cpu-class cpu))
                             (when (consp (cpu-class cpu))
-                              (smember class (cpu-class cpu)))))
+                              (smember class (cpu-class cpu))))
+                        (loop
+                            for foo = flags then (rest (rest foo))
+                            for value = (getf (cpu-flags cpu) (first foo))
+                            while foo
+                            always (equal value (second foo))))
               do
                 (mp:with-process-lock (lock) 
                   (when (eq (client-status client) :ready)
                     (setf (client-status client)
                       (cons (get-universal-time) item))
                     (return-from allocate-client client))))
-          (sleep 1))))
+          (sleep 0.5))))

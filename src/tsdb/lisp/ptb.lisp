@@ -142,7 +142,8 @@
    (t token)))
 
 (defun ptb-preprocess (string 
-                       &key rawp (plainp t) (posp *ptb-use-pos-tags-p*))
+                       &key rawp (plainp t) (posp *ptb-use-pos-tags-p*)
+                            (characterize t))
   (let ((length 0)
         (result nil))
     (loop
@@ -163,16 +164,58 @@
            (t
             (push (format 
                    nil 
-                   "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\"~
+                   "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                     1, \"~a\" \"~a\", 0, \"null\"~
                     ~:[~*~;, \"~a\" 1.00~])" 
-                   (incf id) i (incf i) form raw posp pos)
-                  result)))
+                   (incf id) i (+ i 1)
+                   characterize i (+ i 1) form raw posp pos)
+                  result)
+            (incf i)))
           (incf length))
     (values (and result (format nil "~{~a~^ ~}" (nreverse result))) length)))
 
-(defun ptb-preprocess-for-pet (string &optional tagger)
+(defun ptb-for-pet (string &optional tagger)
   (declare (ignore tagger))
   (ptb-preprocess string :rawp nil :plainp nil :posp t))
+
+(defun read-items-from-conll-file (file &key (base 1) (offset 0) shift)
+  (when (probe-file file)
+    (with-open-file (stream file :direction :input)
+      (loop
+          with id = base
+          with input = nil
+          for line = (read-line stream nil nil)
+          while line
+          when (string= line "")
+          collect (let ((i id)
+                        (length (length input))
+                        (string (format nil "~{~a~^~%~}" (nreverse input))))
+                    (when (functionp shift) (setf i (funcall shift i)))
+                    (incf id)
+                    (setf input nil)
+                    (pairlis '(:i-id :i-wf :i-length :i-input)
+                             (list (+ offset i) 1 length string)))
+          else do (push line input)))))
+
+(defun conll-for-pet (string &optional tagger
+                      &key pos (ppos t) (characterize t))
+  (declare (ignore tagger))
+  (loop
+      with result
+      for i from 0
+      for token in (ppcre:split "\\n" string)
+      for conll = (ppcre:split "\\t" token)
+      for id = (first conll)
+      for form = (second conll)
+      for tag = (if pos (fifth conll) (and ppos (sixth conll)))
+      for yy = (format 
+                nil 
+                "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                  1, \"~a\", 0, \"null\"~@[, ~s 1.0~])"
+                id i (+ i 1) characterize i (+ i 1) form tag)
+      do (push yy result)
+      finally (return (values (format nil "~{~a~^ ~}" (nreverse result)) i))))
+
 
 #+:null         
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
@@ -190,3 +233,11 @@
     do (do-import-items
          (format nil "/home/oe/src/ptb/mrg/~a" i)
          (format nil "test/wsj~a" i) :format :ptb))
+
+#+:null
+(loop
+    for i from 2 to 21
+    for shift = #'(lambda (id) (+ id 2000000 (* i 10000)))
+    do (do-import-items
+         (format nil "/home/oe/src/conll09/09~2,'0d.txt" i)
+         (format nil "test/conll~2,'0d" i) :format :conll :shift shift))

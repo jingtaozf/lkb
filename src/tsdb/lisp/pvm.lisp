@@ -344,7 +344,7 @@
       (excl:exit 1 :no-unwind t :quiet t))))
 
 (defun pvm-process (item &optional (type :parse)
-                    &key class
+                    &key class flags
                          (trees-hook :local)
                          (semantix-hook :local)
                          (exhaustive *tsdb-exhaustive-p*)
@@ -352,7 +352,8 @@
                          (nresults 
                           (if *tsdb-write-passive-edges-p*
                             -1
-                            *tsdb-maximal-number-of-results*)) 
+                            *tsdb-maximal-number-of-results*))
+                         roots
                          (filter *process-suppress-duplicates*)
                          (i-id 0) (parse-id 0)
                          result-id
@@ -373,7 +374,8 @@
                  (pairlis '(:i-id :parse-id :i-input) 
                           (list i-id parse-id item))
                  item))
-         (client (allocate-client item :task type :class class :wait wait))
+         (client (allocate-client
+                  item :task type :class class :flags flags :wait wait))
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (client-tid client)))
          (protocol (and client (client-protocol client)))
@@ -390,10 +392,14 @@
                          *tsdb-preprocessing-hook* input
                          (when (consp tagger) tagger)))))))
          (item (acons :p-input p-input item))
+         (custom (if (and (eq protocol :raw) roots)
+                   (let ((roots (loop for root in roots collect (second root))))
+                     (format nil "start-symbols := ~{~a~^ ~}." roots))
+                   (rest (assoc type *process-custom*))))
          (status (if tid 
                    (case protocol
                      (:raw
-                      (process_item tid item nanalyses nresults nil))
+                      (process_item tid item nanalyses nresults nil custom))
                      (:lisp
                       (revaluate 
                        tid 

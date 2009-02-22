@@ -120,7 +120,9 @@
   (clrhash *edge-registry*))
 
 (defun register-edge (edge)
-  (setf (gethash (edge-id edge) *edge-registry*) edge))
+  (if (hash-table-p *edge-registry*)
+    (setf (gethash (edge-id edge) *edge-registry*) edge)
+    edge))
 
 (defun retrieve-edge (&key id)
   (when (numberp id)

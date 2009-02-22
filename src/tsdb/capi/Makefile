@@ -28,16 +28,6 @@ LD = ld -G -z defs
 AR = ar -cr
 RANLIB = ranlib
 
-solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
-	$(LD) -o ../../pvm/solaris/pvm.so acl.o $(SOLARIS_LIBS)
-	$(LD) -o ../solaris/capi.so capi.o acl.o $(SOLARIS_LIBS)
-	$(LD) -o ../solaris/gc.so gc.o $(SOLARIS_LIBS)
-	$(LD) -o ../../../lib/solaris/libitsdb.so \
-	  client.o acl.o mfile.o $(SOLARIS_LIBS)
-	$(AR) ../../../lib/solaris/libitsdb.a \
-	  client.o acl.o mfile.o 5lib/getloadavg.o \
-	  ../../../lib/solaris/libpvm3.a
-
 linux.x86.32: 
 	make clean;
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) acl.c
@@ -73,6 +63,16 @@ linux.x86.64:
 	$(AR) ../../../lib/linux.x86.64/libitsdb.a \
 	  client.o acl.o mfile.o
 	$(RANLIB) ../../../lib/linux.x86.64/libitsdb.a
+
+solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
+	$(LD) -o ../../pvm/solaris/pvm.so acl.o $(SOLARIS_LIBS)
+	$(LD) -o ../solaris/capi.so capi.o acl.o $(SOLARIS_LIBS)
+	$(LD) -o ../solaris/gc.so gc.o $(SOLARIS_LIBS)
+	$(LD) -o ../../../lib/solaris/libitsdb.so \
+	  client.o acl.o mfile.o $(SOLARIS_LIBS)
+	$(AR) ../../../lib/solaris/libitsdb.a \
+	  client.o acl.o mfile.o 5lib/getloadavg.o \
+	  ../../../lib/solaris/libpvm3.a
 
 osf: 
 	make clean;

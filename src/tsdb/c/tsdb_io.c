@@ -1006,7 +1006,7 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
     n += strlen(&buf[n]);
   } /* while() */
 
-  for(bar = strchr(buf ,tsdb.fs), n = 0;
+  for(bar = strchr(buf, tsdb.fs), n = 0;
       bar != NULL;
       bar = strchr(bar + 1, tsdb.fs), n++);
   if(n + 1 != relation->n_fields) {

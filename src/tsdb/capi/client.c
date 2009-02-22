@@ -45,10 +45,12 @@ static int (*callbacks[4])() = {
 static struct MFILE *client_output;
 static int self = 0;
 
-int capi_register(int (*create_run)(char *, int, char *, int, int, char *),
-                  int (*process_item)(int, char *, int, int, int, int, int),
-                  int (*reconstruct_item)(char *),
-                  int (*complete_run)(int, char *)) {
+int capi_register(int (*create_run)(const char *, int, const char *, 
+                                    int, int, const char *),
+                  int (*process_item)(int, const char *, int, int, 
+                                      int, int, int, const char *),
+                  int (*reconstruct_item)(const char *),
+                  int (*complete_run)(int, const char *)) {
 
   int master;
 
@@ -293,10 +295,10 @@ struct MFILE *client_create_run() {
 
 struct MFILE *client_process_item() {
 
-  int i_id, parse_id, edges, nanalyses, derivationp, interactive, length;
-  char *i_input;
+  int id, parse_id, edges, nanalyses, derivationp, interactive, length;
+  char *input, *custom;
 
-  if(pvm_upkint(&i_id, 1, 1) < 0) {
+  if(pvm_upkint(&id, 1, 1) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
@@ -311,13 +313,13 @@ struct MFILE *client_process_item() {
     pvm_quit();
     return 0;
   } /* if */
-  i_input = (char *)malloc(length + 1);
-  if(pvm_upkstr(i_input) < 0) {
+  input = (char *)malloc(length + 1);
+  if(pvm_upkstr(input) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
 
@@ -326,7 +328,7 @@ struct MFILE *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
 
@@ -335,7 +337,7 @@ struct MFILE *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
 
@@ -344,7 +346,7 @@ struct MFILE *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
   
@@ -353,7 +355,7 @@ struct MFILE *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
   
@@ -362,13 +364,31 @@ struct MFILE *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    free(i_input);
+    free(input);
+    return 0;
+  } /* if */
+
+  if(pvm_upkint(&length, 1, 1) < 0) {
+    pvm_perror("create_run()");
+    fprintf(stderr, "process_item(): unable to read receive buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    free(input);
+    return 0;
+  } /* if */
+  custom = (char *)malloc(length + 1);
+  if(pvm_upkstr(custom) < 0) {
+    pvm_perror("create_run()");
+    fprintf(stderr, "process_item(): unable to read receive buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    free(input); free(custom);
     return 0;
   } /* if */
   
   if((client_output = mopen()) == NULL) {
     fprintf(stderr, "process_item(): unable to create output mfile.\n");
-    free(i_input);
+    free(input);
     return 0;
   } /* if */
   
@@ -377,18 +397,19 @@ struct MFILE *client_process_item() {
               "  (:edges . %d) (:nanalyses . %d)"
               "  (:derivationp . %d) (:interactive . %d)\n"
               "  (:i-load . %d)\n",
-              i_id, parse_id,
+              id, parse_id,
               edges, nanalyses, 
               derivationp, interactive,
               load_average() * 100);
   if(callbacks[C_PROCESS_ITEM] != NULL) {
-    if(callbacks[C_PROCESS_ITEM](i_id, i_input, parse_id, edges, 
-                                 nanalyses, derivationp, interactive) < 0) {
+    if(callbacks[C_PROCESS_ITEM](id, input, parse_id, edges, 
+                                 nanalyses, derivationp, interactive,
+                                 custom) < 0) {
       fprintf(stderr, "process_item(): erroneous client return value.\n");
     } /* if */
   } /* if */
   capi_printf("  (:a-load . %d)))", load_average() * 100);
-  free(i_input);
+  free(input);
   return(client_output);
   
 } /* client_process_item() */
@@ -497,12 +518,12 @@ int client_send_item_summary() {
 
 } /* client_send_item_summary() */
 
-int capi_printf(char *format, ...) {
+int capi_printf(const char *format, ...) {
   va_list ap;
   int n;
 
   va_start(ap, format);
-  n = vmprintf(client_output, format, ap);
+  n = vmprintf(client_output, (char *)format, ap);
   va_end(ap);
   return(n);
 

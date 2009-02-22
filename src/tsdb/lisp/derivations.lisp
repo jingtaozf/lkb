@@ -87,112 +87,142 @@
 
 (defparameter *derivations-ignore-leafs-p* t)
 
-(defparameter *derivations-reconstructor* nil)
+(defparameter *derivations-ignore-tokens-p* nil)
 
 (defparameter *derivations-reconstruct-lnk-p* nil)
 
+(defparameter *derivations-reconstructor* nil)
+
+(defmacro with-derivation ((output input) &body body)
+  `(let ((,output
+          (if (and (symbolp (first ,input))
+                   (or (consp (third ,input))
+                       (and (third ,input) (symbolp (third ,input)))))
+            (rest ,input)
+            ,input)))
+     ,@body))
+
 (defmacro derivation-sponsor (derivation)
-  `(when (consp (second ,derivation))
-     (first ,derivation)))
+  `(with-derivation (derivation ,derivation)
+     (when (consp (second derivation))
+       (first derivation))))
 
 (defmacro derivation-id (derivation)
-  `(if (consp (second ,derivation))
-     (first (second ,derivation))
-     (when (integerp (first ,derivation))
-       (first ,derivation))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (first derivation))
+       (when (integerp (first derivation))
+         (first derivation)))))
 
 (defmacro derivation-root (derivation)
-  `(if (consp (second ,derivation))
-     (second (second ,derivation))
-     (if (integerp (first ,derivation)) 
-       (second ,derivation)
-       (first ,derivation))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (second derivation))
+       (if (integerp (first derivation)) 
+         (second derivation)
+         (first derivation)))))
 
 (defmacro derivation-score (derivation)
-  `(if (consp (second ,derivation))
-     (third (second ,derivation)) 
-     (when (integerp (first ,derivation))
-       (third ,derivation))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (third derivation)) 
+       (when (integerp (first derivation))
+         (third derivation)))))
 
 (defmacro derivation-start (derivation)
-  `(if (consp (second ,derivation))
-     (fourth (second ,derivation))
-     (if (integerp (first ,derivation)) 
-       (fourth ,derivation)
-       (when (integerp (second ,derivation))
-         (second ,derivation)))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (fourth derivation))
+       (if (integerp (first derivation)) 
+         (fourth derivation)
+         (when (integerp (second derivation))
+           (second derivation))))))
 
 (defmacro derivation-end (derivation)
-  `(if (consp (second ,derivation))
-     (fifth (second ,derivation))
-     (if (integerp (first ,derivation)) 
-       (fifth ,derivation)
-       (when (integerp (second ,derivation))
-         (third ,derivation)))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (fifth derivation))
+       (if (integerp (first derivation)) 
+         (fifth derivation)
+         (when (integerp (second derivation))
+           (third derivation))))))
 
 (defmacro derivation-daughters (derivation)
-  `(if (consp (second ,derivation))
-     (rest (rest (rest (rest (rest (second ,derivation))))))
-     (if (integerp (first ,derivation))
-       (rest (rest (rest (rest (rest ,derivation)))))
-       (if (integerp (second ,derivation))
-         (unless (stringp (third ,derivation))
-           (rest (rest (rest ,derivation))))
-         (rest ,derivation)))))
+  `(with-derivation (derivation ,derivation)
+     (if (consp (second derivation))
+       (with-derivation (derivation (second derivation))
+         (rest (rest (rest (rest (rest derivation))))))
+       (if (integerp (first derivation))
+         (rest (rest (rest (rest (rest derivation)))))
+         (if (integerp (second derivation))
+           (unless (stringp (third derivation))
+             (rest (rest (rest derivation))))
+           (rest derivation))))))
 
 (defun derivation-depth (derivation)
-  (if (consp (second derivation))
-    (derivation-depth (second derivation))
-    (if (null derivation)
-      0
-      (+ 1 (loop 
-               for son in (derivation-daughters derivation)
-               maximize (derivation-depth son))))))
+  (with-derivation (derivation derivation)
+    (if (consp (second derivation))
+      (derivation-depth (second derivation))
+      (if (null derivation)
+        0
+        (+ 1 (loop 
+                 for son in (derivation-daughters derivation)
+                 maximize (derivation-depth son)))))))
 
 (defun derivation-yield (derivation)
-  (unless (null derivation)
-    (let ((daughters (derivation-daughters derivation)))
-      (if (null (derivation-daughters (first daughters)))
-        (list (derivation-root derivation))
-        (loop 
-            for daughter in daughters
-            nconc (derivation-yield daughter))))))
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((daughters (derivation-daughters derivation)))
+        (if (null (derivation-daughters (first daughters)))
+          (list (derivation-root derivation))
+          (loop 
+              for daughter in daughters
+              nconc (derivation-yield daughter)))))))
 
 (defun derivation-leafs (derivation)
-  (unless (null derivation)
-    (let ((daughters (derivation-daughters derivation)))
-      (if (null daughters)
-        (list (derivation-root derivation))
-        (loop 
-            for daughter in daughters
-            nconc (derivation-leafs daughter))))))
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((daughters (derivation-daughters derivation)))
+        (if (null daughters)
+          (list (derivation-root derivation))
+          (loop 
+              for daughter in daughters
+              nconc (derivation-leafs daughter)))))))
 
 (defun derivation-tokens (derivation)
-  (unless (null derivation)
-    (let ((daughters (derivation-daughters derivation)))
-      (if (null daughters)
-        (when (and (stringp (first derivation))
-                   (integerp (second derivation))
-                   (stringp (third derivation)))
-          (loop
-              for tokens = (rest (rest derivation))
-              then (rest (rest tokens))
-              while tokens collect (first tokens)))
-        (loop 
-            for daughter in daughters
-            nconc (derivation-tokens daughter))))))
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((daughters (derivation-daughters derivation)))
+        (if (null daughters)
+          (when (and (stringp (first derivation))
+                     (integerp (second derivation))
+                     (stringp (third derivation))
+                     (null *derivations-ignore-tokens-p*))
+            (loop
+                for tokens = (rest (rest derivation))
+                then (rest (rest tokens))
+                while tokens collect (first tokens)))
+          (loop 
+              for daughter in daughters
+              nconc (derivation-tokens daughter)))))))
 
 (defun derivation-nodes (derivation)
-  (unless (null derivation)
-    (let ((id (derivation-id derivation))
-          (root (derivation-root derivation))
-          (score (derivation-score derivation))
-          (start (derivation-start derivation))
-          (end (derivation-end derivation)))
-      (cons (list id root score start end)
-            (loop
-                for daughter in (derivation-daughters derivation)
-                nconc (derivation-nodes daughter))))))
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((id (derivation-id derivation))
+            (root (derivation-root derivation))
+            (score (derivation-score derivation))
+            (start (derivation-start derivation))
+            (end (derivation-end derivation)))
+        (cons (list id root score start end)
+              (loop
+                  for daughter in (derivation-daughters derivation)
+                  nconc (derivation-nodes daughter)))))))
 
 (defun derivation-equal (gold blue 
                          &optional (level *derivations-comparison-level*))
@@ -362,13 +392,15 @@
           %edges%)
       (declare (special %derivation-offset% %edges%))
       (when derivation
-        (if (or (numberp (first derivation))
-                (and (consp (second derivation))
-                     (numberp (first (second derivation)))))
-          (catch :fail
-            (reconstruct-derivation
-             derivation dagp t :counter counter :cachep cachep))
-          (reconstruct-cfg-derivation derivation))))))
+        (with-derivation (derivation derivation)
+          (if (or (numberp (first derivation))
+                  (and (consp (second derivation))
+                       (with-derivation (derivation (second derivation))
+                         (numberp (first derivation)))))
+            (catch :fail
+              (reconstruct-derivation
+               derivation dagp t :counter counter :cachep cachep))
+            (reconstruct-cfg-derivation derivation)))))))
 
 (defun reconstruct-derivation (derivation
                                &optional (dagp t) topp

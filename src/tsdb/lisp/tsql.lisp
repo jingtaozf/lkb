@@ -381,7 +381,7 @@
          (count (and result (read-from-string result))))
     (and (numberp count) count)))
 
-(defun insert (data relation tuples &key absolute meter)
+(defun insert (data relation tuples &key absolute meter (normalize t))
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((path (if absolute (namestring data) (find-tsdb-directory data)))
@@ -430,7 +430,8 @@
                     (let* ((value (or (get-field key tuple)
                                       (if (eq type :integer) -1 "")))
                            (value (if (eq type :string)
-                                    (normalize-string value :escape t)
+                                    (normalize-string
+                                     value :escape t :normalize normalize)
                                     value)))
                       (unless start (write-char *tsdb-ofs* stream))
                       (if (eq type :integer)

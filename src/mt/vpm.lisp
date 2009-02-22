@@ -148,37 +148,12 @@
   
   (let ((%variables%)
         (copy (mrs::make-psoa)))
-    (labels ((map-type (type)
-               ;;
-               ;; for a transition period, until we can import the full SEM-I
-               ;; hierarchy and use it for MRS comparison, only map variable
-               ;; types in :forward direction.  this is backwards-comparible
-               ;; with what the LKB used to do, in the sense that comparsing
-               ;; MRSs post-generation will end up using MRS variable types
-               ;; (`e', `x', et al.) but SEM-I variable properties.
-               ;;                                               (22-jan-09; oe)
-               (loop
-                   for mr in (and (eq direction :forward) (vpm-tms vpm))
-                   for left
-                   = (if (eq direction :forward) (mr-left mr) (mr-right mr))
-                   when (and (if (eq direction :forward)
-                               (first (mr-direction mr))
-                               (rest (mr-direction mr)))
-                             (or (eq (mrs:vsym left) *vpm-wildcard*)
-                                 (compare-types
-                                  type left :type (mr-test mr) :internp t)))
-                   return (let ((right (if (eq direction :forward)
-                                         (mr-right mr)
-                                         (mr-left mr))))
-                            (if (eq (mrs:vsym right) *vpm-wildcard*)
-                              type
-                              right))
-                   finally (return type)))
-             (map-variable (variable)
+    (labels ((map-variable (variable)
                (if (mrs::var-p variable)
                  (or (rest (assoc variable %variables%))
                      (let ((copy (mrs::make-var 
-                                  :type (map-type (mrs:var-type variable))
+                                  :type (map-type
+                                         (mrs:var-type variable) vpm direction)
                                   :id (mrs:var-id variable))))
                        (setf (mrs:var-extra copy)
                          (map-properties
@@ -315,4 +290,35 @@
                (or (eq value match)
                    (and (mrs::is-valid-type value) (mrs::is-valid-type match)
                         (mrs::equal-or-subtype value match))))))))))
-                               
+
+(defun map-type (type vpm &optional (direction :forward))
+  (when (consp vpm)
+    (setf direction (second vpm))
+    (setf vpm (find (first vpm) *vpms* :key #'vpm-id)))
+  (when (symbolp vpm)
+    (setf vpm (find vpm *vpms* :key #'vpm-id)))
+  (when (null vpm) (return-from map-type type))
+  ;;
+  ;; for a transition period, until we can import the full SEM-I hierarchy and
+  ;; use it for MRS comparison, only map variable types in :forward direction.
+  ;; this is backwards-compatible with what the LKB used to do, in the sense
+  ;; that comparsing MRSs post-generation will end up using MRS variable types
+  ;; (`e', `x', et al.) but SEM-I variable properties.         (22-jan-09; oe)
+  ;;
+  (loop
+      for mr in (and (eq direction :forward) (vpm-tms vpm))
+      for left
+      = (if (eq direction :forward) (mr-left mr) (mr-right mr))
+      when (and (if (eq direction :forward)
+                  (first (mr-direction mr))
+                  (rest (mr-direction mr)))
+                (or (eq (mrs:vsym left) *vpm-wildcard*)
+                    (compare-types
+                     type left :type (mr-test mr) :internp t)))
+      return (let ((right (if (eq direction :forward)
+                            (mr-right mr)
+                            (mr-left mr))))
+               (if (eq (mrs:vsym right) *vpm-wildcard*)
+                 type
+                 right))
+      finally (return type)))

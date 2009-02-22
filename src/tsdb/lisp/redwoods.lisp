@@ -88,7 +88,9 @@
                                          (and bestp '("result"))))
       (return-from browse-trees nil)))
 
-  (let* ((condition (if (and condition (not (equal condition "")))
+  (let* (#+:null
+         (*tsdb-connection-expiry* 200)
+         (condition (if (and condition (not (equal condition "")))
                       (concatenate 'string "(readings >= 1) && " condition)
                       "readings >= 1"))
          (items
@@ -247,6 +249,7 @@
      (current-time :long :short) data gold i-id)
 
     (let* ((lkb::*chart-packing-p* nil)
+           (lkb::*edge-registry* nil)
            (*reconstruct-cache* (make-hash-table :test #'eql))
            (lkb::*tree-update-match-hook* #'update-match-p)
            (lkb::*tree-automatic-update-p* 
@@ -2795,7 +2798,8 @@
   (cond
    ((consp profiles)
     (loop
-        with *tsdb-connection-expiry* = 50
+        with lkb::*edge-registry* = nil
+        with *tsdb-connection-expiry* = 200
         with gc = (install-gc-strategy nil :tenure nil :verbose verbose)
         with condition
         = (case task
@@ -3080,7 +3084,8 @@
 
   (when (and overwrite target) (purge-test-run target :action :score))
   
-  (let* ((gc (install-gc-strategy 
+  (let* ((lkb::*edge-registry* nil)
+         (gc (install-gc-strategy 
               nil :tenure *tsdb-tenure-p* :burst nil :verbose t))
          (condition
           (if resolvedp

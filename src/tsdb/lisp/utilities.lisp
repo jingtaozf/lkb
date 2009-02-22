@@ -143,7 +143,14 @@
         ;; files directly, we have to obey tsdb(1) escape conventions; thus,
         ;; the `@' --> `\s' translation should usually be deactivated.
         ;;                                              (26-aug-99  -  oe)
-        when (and escape (or (char= c *tsdb-ofs*) (char= c #\\))) do
+        when (and escape (not normalize) (char= c #\Newline)) do
+          (vector-push #\\ result) (vector-push #\n result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+          (setf space t)
+        else when (and escape (or (char= c *tsdb-ofs*) (char= c #\\))) do
           (vector-push #\\ result)
           (vector-push (if (char= c *tsdb-ofs*) #\s #\\) result)
           (when (zerop (decf padding))

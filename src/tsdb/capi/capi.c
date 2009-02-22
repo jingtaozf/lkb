@@ -31,17 +31,17 @@
 #include "pvm3.h"
 #include "itsdb.h"
 
-int create_run(int, char *, int, char *, int, int, char *);
-int process_item(int, int, char *, int, int, int, int, int);
-int reconstruct_item(int, char *);
-int complete_run(int, int, char *);
+int create_run(int, char *, int, const char *, int, int, const char *);
+int process_item(int, int, char *, int, int, int, int, int, const char*);
+int reconstruct_item(int, const char *);
+int complete_run(int, int, const char *);
 
 extern void pvm_flush(void);
 extern int pvm_quit(void);
 
 int create_run(int tid,
-               char *data, int run_id, char *comment,
-               int interactive, int protocol, char *custom) {
+               char *data, int run_id, const char *comment,
+               int interactive, int protocol, const char *custom) {
 
   int code, length, n;
   
@@ -73,7 +73,7 @@ int create_run(int tid,
     pvm_quit();
     return(-1);
   } /* if */
-  if(pvm_pkstr(data) < 0) {
+  if(pvm_pkstr((char *)data) < 0) {
     pvm_perror("create_run()");
     fprintf(stderr, "create_run(): unable to write send buffer.\n");
     fflush(stderr);
@@ -97,7 +97,7 @@ int create_run(int tid,
     pvm_quit();
     return(-1);
   } /* if */
-  if(pvm_pkstr(comment) < 0) {
+  if(pvm_pkstr((char *)comment) < 0) {
     pvm_perror("create_run()");
     fprintf(stderr, "create_run(): unable to write send buffer.\n");
     fflush(stderr);
@@ -129,7 +129,7 @@ int create_run(int tid,
     pvm_quit();
     return(-1);
   } /* if */
-  if(pvm_pkstr(custom) < 0) {
+  if(pvm_pkstr((char *)custom) < 0) {
     pvm_perror("create_run()");
     fprintf(stderr, "create_run(): unable to write send buffer.\n");
     fflush(stderr);
@@ -151,8 +151,9 @@ int create_run(int tid,
 } /* create_run() */
 
 int process_item(int tid, 
-                 int i_id, char *i_input, int parse_id, int edges, 
-                 int nanalyses, int derivationp, int interactive) {
+                 int id, char *input, int parse_id, int edges, 
+                 int nanalyses, int derivationp, int interactive,
+                 const char *custom) {
 
   int code, length, n;
   
@@ -175,7 +176,7 @@ int process_item(int tid,
     return(-1);
   } /* if */
 
-  if(pvm_pkint(&i_id, 1, 1) < 0) {
+  if(pvm_pkint(&id, 1, 1) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to write send buffer.\n");
     fflush(stderr);
@@ -183,7 +184,7 @@ int process_item(int tid,
     return(-1);
   } /* if */
   
-  length = strlen(i_input);
+  length = strlen(input);
   if(pvm_pkint(&length, 1, 1) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to write send buffer.\n");
@@ -191,7 +192,7 @@ int process_item(int tid,
     pvm_quit();
     return(-1);
   } /* if */
-  if(pvm_pkstr(i_input) < 0) {
+  if(pvm_pkstr((char *)input) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to write send buffer.\n");
     fflush(stderr);
@@ -239,6 +240,22 @@ int process_item(int tid,
     return(-1);
   } /* if */
 
+  length = strlen(custom);
+  if(pvm_pkint(&length, 1, 1) < 0) {
+    pvm_perror("process_item()");
+    fprintf(stderr, "process_item(): unable to write send buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+  if(pvm_pkstr((char *)custom) < 0) {
+    pvm_perror("process_item()");
+    fprintf(stderr, "process_item(): unable to write send buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+
   if((n = pvm_send(tid, C_MESSAGE)) < 0 ) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to send message.\n");
@@ -252,13 +269,13 @@ int process_item(int tid,
 
 } /* process_item() */
 
-int reconstruct_item(int tid, char *derivation) {
+int reconstruct_item(int tid, const char *derivation) {
 
   return(0);
 
 } /* reconstruct_item() */
 
-int complete_run(int tid, int run_id, char *custom) {
+int complete_run(int tid, int run_id, const char *custom) {
 
   int code, n, length;
 
@@ -298,7 +315,7 @@ int complete_run(int tid, int run_id, char *custom) {
     pvm_quit();
     return(-1);
   } /* if */
-  if(pvm_pkstr(custom) < 0) {
+  if(pvm_pkstr((char *)custom) < 0) {
     pvm_perror("complete_run()");
     fprintf(stderr, "complete_run(): unable to write send buffer.\n");
     fflush(stderr);

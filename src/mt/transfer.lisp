@@ -603,9 +603,9 @@
     ;; SEM-I variable property mapping; however, we surely could, and it would
     ;; probably make transfer rules look cleaner, but (for example) disconnect 
     ;; the generator-internal trigger rules further from the type hierarchy.
-    ;; think this over more asap.                              (23-jun-06; oe)
+    ;; think this over more asap.                               (23-jun-06; oe)
     ;;
-    ;; however, as of january 2009, the VPM also comprises the variable type
+    ;; well, as of january 2009, the SEM-I VPM also comprises the variable type
     ;; mappings (e.g. `event' <-> `e').  and we need those, as we always want
     ;; MRSs and MTRs to operate in the pure, external (aka SEM-I) namespace.
     ;; a grammar may have many different intermediate variable types, and for
@@ -613,13 +613,14 @@
     ;; MRS variable type operations using the SEM-I namespace are possible,
     ;; even though we do not yet `import' the SEM-I into its own hierarchy,
     ;; because all grammars include the `u', `h', `i', `e', `x', et al. types.
-    ;;                                                         (22-jan-09; oe)
-    (let* ((*vpms* (loop
-                       for vpm in *vpms*
-                       when (eq (vpm-id vpm) :semi)
-                       return (let ((vpm (copy-vpm vpm)))
-                                (setf (vpm-pms vpm) nil)
-                                (list vpm))))
+    ;;                                                          (22-jan-09; oe)
+    ;; _fix_me_
+    ;; the problem in this approach is that map-vpm() creates a copy, hence the
+    ;; correspondences from FS elements to MRS sub-structures no longer holds,
+    ;; which breaks the FLAGS :equal and :subsume mechanisms.   (10-feb-09; oe)
+    ;;
+    (let* ((vpms *vpms*)
+           (*vpms* nil)
            (filter (mrs::path-value lhs *mtr-filter-path*))
            (filter (and filter 
                         (not (vacuous-constraint-p *mtr-filter-path* filter))
@@ -641,55 +642,59 @@
            (defaults 
                (and defaults
                     (not (vacuous-constraint-p *mtr-output-path* defaults))
-                    (mrs::construct-mrs defaults generator)))
-           (dag (and lhs (mrs::path-value lhs *mtr-flags-path*)))
-           (flags (and dag
-                       (not (vacuous-constraint-p *mtr-flags-path* dag))
-                       (convert-dag-to-flags dag)))
-           (flags (if (and optional (not (member :obligatory flags)))
-                    (adjoin :optional flags)
-                    (remove :obligatory flags)))
-           (rank (convert-dag-to-rank dag))
-           (special (and dag 
+                    (mrs::construct-mrs defaults generator))))
+      ;;
+      ;; now that all MRSs are constructed, without any use of the VPM, apply
+      ;; variable type mappings, if needed.  this is our attempt at avoiding
+      ;; the creation of copies when applying the VPM; not really pretty!
+      ;;
+      (when mrs::*variable-type-mapping*
+        (let ((vpm (find mrs::*variable-type-mapping* vpms :key #'vpm-id)))
+          (when vpm
+            (loop
+                for pair in mrs::*all-nodes*
+                for mrs = (rest pair)
+                when (mrs:var-p mrs) do
+                  (setf (mrs:var-type mrs)
+                    (map-type (mrs:var-type mrs) vpm :forward))))))
+      (let* ((dag (and lhs (mrs::path-value lhs *mtr-flags-path*)))
+             (flags (and dag
                          (not (vacuous-constraint-p *mtr-flags-path* dag))
-                         (convert-dag-to-special dag :id id))))
+                         (convert-dag-to-flags dag)))
+             (flags (if (and optional (not (member :obligatory flags)))
+                      (adjoin :optional flags)
+                      (remove :obligatory flags)))
+             (rank (convert-dag-to-rank dag))
+             (special (and dag 
+                           (not (vacuous-constraint-p *mtr-flags-path* dag))
+                           (convert-dag-to-special dag :id id))))
 
-      ;;
-      ;; for later postprocessing, look up relations that were requested for
-      ;; OUTPUT copy, and record them in their MTR.
-      ;;
-      (loop
-          for path in copies
-          for dag = (mrs::path-value lhs path)
-          for ep = (rest (assoc dag mrs::*all-nodes* :test #'eq))
-          unless ep do
-            (format
-             t
-             "~&convert-dag-to-mtr(): no EP for +copy+ path `~{~(~a~)~^ ~}'.~%"
-             path)
-          else do (push ep %transfer-copy-eps%))
+        ;;
+        ;; for later postprocessing, look up relations that were requested for
+        ;; OUTPUT copy, and record them in their MTR.
+        ;;
+        (loop
+            for path in copies
+            for dag = (mrs::path-value lhs path)
+            for ep = (rest (assoc dag mrs::*all-nodes* :test #'eq))
+            unless ep do
+              (format
+               t
+               "~&convert-dag-to-mtr(): ~
+                no EP for +copy+ path `~{~(~a~)~^ ~}'.~%"
+               path)
+            else do (push ep %transfer-copy-eps%))
       
-      (unless (or output rhs (eq task :trigger)
-                  (mtr-block nil special) (mtr-warn nil special))
-        ;;
-        ;; warn: rule with no output specification
-        ;;
-        (format
-         t
-         "~&convert-dag-to-mtr(): ~
-          `~(~a~)' has empty output specification.~%"
-         id))
-      ;;
-      ;; _fix_me_
-      ;; since our current treatment of FILTER components is wrong anyway, give
-      ;; a warning and ignore rules that try to use filters.    (8-jan-04; oe)
-      ;; 
-      (if (and nil filter)
-        (format
-         t
-         "~&convert-dag-to-mtr(): ~
-          ignoring `~(~a~)' because it contains a FILTER.~%"
-         id)
+        (unless (or output rhs (eq task :trigger)
+                    (mtr-block nil special) (mtr-warn nil special))
+          ;;
+          ;; warn: rule with no output specification
+          ;;
+          (format
+           t
+           "~&convert-dag-to-mtr(): ~
+            `~(~a~)' has empty output specification.~%"
+           id))
         (let* ((vector (ash 1 %transfer-rule-id%))
                (mtr (make-mtr :id id :filter filter :context context
                               :input input :output output :defaults defaults
