@@ -288,6 +288,12 @@
 			  "\C-cr" 'lkb-mt-interactive)
 		      (define-key fi:inferior-common-lisp-mode-map 
 			"\C-cg" 'lkb-rsa)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			"\C-cG" 'lkb-reload)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			"\C-ci" 'lkb-index)
+		      (define-key fi:inferior-common-lisp-mode-map 
+			"\C-cI" 'lkb-reload-and-index)
 		      )))
 
 (defun lkb-do-parse ()
@@ -331,6 +337,28 @@
   (goto-char (point-max))
   (insert-string "(lkb::read-script-file-aux \"/lkb/script\")")
   (backward-char 13))
+
+(defun lkb-reload ()
+    "reload the current grammar and put the command in the ring"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(lkb::reload-script-file)")
+  (fi:inferior-lisp-newline))
+
+(defun lkb-index ()
+    "reload the current grammar and put the command in the ring"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(lkb::index-for-generator)")
+  (fi:inferior-lisp-newline))
+
+(defun lkb-reload-and-index ()
+    "reload the current grammar and put the command in the ring"
+  (interactive)
+  (goto-char (point-max))
+  (insert-string "(progn (lkb::reload-script-file)(lkb::index-for-generator~")
+  (fi:inferior-lisp-newline))
+
 
 
 ;;; RMRS display utility
