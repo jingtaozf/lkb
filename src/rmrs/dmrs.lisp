@@ -838,7 +838,7 @@ x2 is at half node1 width, plus half node2 width, plus x increment
 
 y layout starts at 0 and increments by 1 - intention is that
 this is converted into appropriate factor for the actual
-drawing program (and recalculated so origin is bottom left)
+drawing program (and recalculated so origin is bottom left in some cases)
 
 |#
 
@@ -944,7 +944,9 @@ drawing program (and recalculated so origin is bottom left)
       (:clim
        (lkb::construct-dmrs-clim-diagram layout-nodes final-links stream))
       (:latex 
-       (construct-dmrs-latex-diagram layout-nodes final-links stream)))))
+       (construct-dmrs-latex-diagram layout-nodes final-links stream))
+      (:svg 
+       (construct-dmrs-svg-diagram layout-nodes final-links stream)))))
 
 (defun sort-dmrs-pred (node1 node2)
   ;;; sortal order - < cfrom, then cto, then real 
@@ -1104,6 +1106,94 @@ CLIM rendering is in lkb-acl-rmrs.lisp
 \put(39,3){\makebox(0,0){{\small ARG1/neq}}}
 \end{picture}
 |#
+
+(defun dmrs-svg-preamble (stream)
+  ;;; in a separate fn to avoid clutter below
+  (format stream
+	  "<?xml version=\"1.0\" standalone=\"no\"?>")
+  (format stream
+	  "~%<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"") 
+  (format stream
+	  "~%\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">")
+  
+  (format stream
+	  "~%~%<svg width=\"100%\" height=\"100%\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">")
+;;; definition of an arrow head
+ (format stream "~%<defs>
+<marker id=\"Triangle\"
+      viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" 
+      markerUnits=\"strokeWidth\"
+      markerWidth=\"5\" markerHeight=\"4\"
+      orient=\"auto\">
+      <path d=\"M 0 0 L 10 5 L 0 10 z\" />
+    </marker>
+  </defs>"
+	 ))
+
+
+#|
+   NODE1            NODE2              NODE3         NODE4*
+
+      --------------->                    <-----------
+          ARCLABEL                           ARCLABEL
+   
+      --------------------------------->  <---------------------
+                   ARCLABEL     
+
+generic output has top line of arcs with y=0, next with y=1, etc
+SVG arcs start at start-y, next at (+ start-y (* scale y-incr))
+and so on
+
+|#
+
+
+(defun construct-dmrs-svg-diagram (nodes links stream)
+  ;; appearance can be adjusted by changing the following parameters
+  (let* ((y-incr 5) ;; multiplier for y units
+	 (scale 10) ;; multiplier for the abstract units
+         (text-y 50) ;; y coordinate for the node labels (NODE1 etc above)
+	 (start-y 80) ;; y coordinate for the topmost link
+         (y-to-text 20) ;; distance between link and link label
+         (start-x 20) ;; beginning x position (0 tends to be too close to edge)
+	 (offset 10) ;; offset from centre position of node for link start/end
+	 ;; so if two links go to/from the same node, the link ends
+	 ;; are (* 2 offset) apart
+	 )
+    (dmrs-svg-preamble stream)
+    (dolist (node nodes)
+      (let ((x (+ (* scale (dmrs-layout-node-start-x node)) start-x))
+	    (label (dmrs-layout-node-label node)))
+	(format stream 
+"~%<text id=\"TextElement\" x=\"~A\" y=\"~A\" style=\"font-family:Verdana\;font-size:18\">~A~A</text>" 
+x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
+    (dolist (link links)
+      (let* ((left-x (+ start-x 
+			offset (* scale (dmrs-layout-link-left-x link))))
+	     (link-length (- (* scale (- (dmrs-layout-link-right-x link)
+				(dmrs-layout-link-left-x link)))
+			     (* 2 offset)))
+	     (right-x (+ left-x link-length))
+	     (link-y (+ start-y (* scale 
+				   (* y-incr (dmrs-layout-link-y link)))))
+	     (label-y (+ link-y y-to-text))
+	     (label-x (- (+ left-x (truncate link-length 2))
+			 (truncate (* scale 
+				      (length (dmrs-layout-link-label link))) 
+				   2)))
+	     (direction (dmrs-layout-link-direction link)))
+	(format stream 
+                "~%<line x1=\"~A\" y1=\"~A\" x2=\"~A\" y2=\"~A\" marker-end=\"url(#Triangle)\" style=\"stroke:rgb(99,99,99)\;stroke-width:2\"/>"
+		  (if (eql direction :l) 
+                      right-x left-x) 
+                  link-y 
+                  (if (eql direction :l) left-x right-x) 
+		  link-y)
+	(format stream 
+"~%<text id=\"TextElement\" x=\"~A\" y=\"~A\" style=\"font-family:Verdana\;font-size:16\">~A</text>"
+		label-x label-y 
+		(dmrs-layout-link-label link))))
+    (format stream "~%</svg>~%")))
+
 
 ;;;; OUTPUT - parallel to rmrs/output.lisp
 ;;; inherits from rmrs-output-type xml so can use code for preds etc

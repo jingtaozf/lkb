@@ -84,6 +84,10 @@
         ()
   (save-dmrs-as-latex (mrs-dmrs-dmrs clim:*application-frame*)))
 
+(define-mrs-dmrs-command (com-output-dmrs-svg :menu "Save as SVG") 
+        ()
+  (save-dmrs-as-svg (mrs-dmrs-dmrs clim:*application-frame*)))
+
 (defparameter *rmrs-xml-output-file* nil)
 
 (defun save-rmrs-as-xml (rmrsstruct)
@@ -138,6 +142,25 @@
 			  :if-exists :supersede
 			  :if-does-not-exist :create)
 	(mrs::layout-dmrs dmrsstruct :latex ostream)))))
+
+(defparameter *dmrs-svg-output-file* nil)
+
+(defun save-dmrs-as-svg (dmrsstruct)
+  (let ((file-name (if *dmrs-svg-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Overwrite ~A?"
+						    *dmrs-svg-output-file*))))
+			 (if use-existing-p
+			     *dmrs-svg-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for DMRS svg")))
+		       (ask-user-for-new-pathname "File for DMRS svg"))))
+    (setf *dmrs-svg-output-file* file-name)
+    (when file-name
+      (with-open-file (ostream file-name :direction :output
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+	(mrs::layout-dmrs dmrsstruct :svg ostream)))))
 
 ;;; ordinary window for one RMRS
 
