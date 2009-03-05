@@ -313,7 +313,7 @@
                     ("MRS" :value mrs :active ,*mrs-loaded*)
                     ("Prolog MRS" :value prolog :active ,*mrs-loaded*)
                     ("RMRS" :value rmrs :active ,*mrs-loaded*)
-;;;		    ("DMRS" :value dmrs :active ,*mrs-loaded*)
+		    ("DMRS" :value dmrs :active ,*mrs-loaded*)
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     #+:logon
