@@ -139,8 +139,9 @@
 
 (defparameter *rmrs-output-type* 'xml)
 
-(defparameter *anchor-rmrs-p* nil)
+(defparameter *anchor-rmrs-p* t)
 ;;; if t, uses new style composition
+;;; set to nil for old style
 ;;; FIX - to be removed once the new code is working
 ;;; and we can delete the old version
 
