@@ -14,45 +14,10 @@ M log/build
 ? src/.l7cl
 ? src/.l8cl
 ? src/.lecl
-U src/ACL_specific/compare.lsp
-cvs update: src/general/clim.lisp is no longer in the repository
 ? src/general/clim.fasl
-U src/main/globals.lsp
-U src/main/rules.lsp
-U src/systems/tsdb.system
-cvs update: src/texmacros/README is no longer in the repository
-cvs update: src/texmacros/delph-in.sty is no longer in the repository
-cvs update: src/texmacros/lkbavm.sty is no longer in the repository
-cvs update: src/texmacros/mrs.sty is no longer in the repository
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
-U src/tsdb/lisp/allegro.lisp
-U src/tsdb/lisp/bdb.lisp
-U src/tsdb/lisp/commands.lisp
-U src/tsdb/lisp/derivations.lisp
-U src/tsdb/lisp/experiment.lisp
-U src/tsdb/lisp/features.lisp
-U src/tsdb/lisp/globals.lisp
-U src/tsdb/lisp/learner.lisp
-U src/tsdb/lisp/mt.lisp
-U src/tsdb/lisp/ptb.lisp
-U src/tsdb/lisp/redwoods.lisp
-U src/tsdb/lisp/statistics.lisp
-U src/tsdb/lisp/tsdb.lisp
-U src/tsdb/lisp/utilities.lisp
-U src/tsdb/lisp/yy.lisp
-U src/tsdb/skeletons/deutsch/Index.lisp
-U src/tsdb/skeletons/english/cb/item
-U src/tsdb/skeletons/english/cb/relations
-U src/tsdb/skeletons/english/fracas/item
-U src/tsdb/skeletons/english/fracas/relations
-U src/tsdb/skeletons/espanol/Index.lisp
-U src/tsdb/skeletons/nihongo/Index.lisp
-U src/tsdb/tcl/podium.tcl
-U tex/README
-U tex/delph-in.sty
-U tex/lkbavm.sty
-U tex/mrs.sty
+U src/tsdb/lisp/conll.lisp
 **********
 
   Remember to update the version number:
@@ -62,7 +27,7 @@ U tex/mrs.sty
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.589; previous revision: 1.588
+new revision: 1.590; previous revision: 1.589
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1349,7 +1314,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Mar 24, 2009 4:26)
+8.1 [Linux (x86)] (Mar 24, 2009 5:14)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -3625,7 +3590,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
-[04:29:42] gc-after-hook(): {L#1 N=1.4m O=38k E=91%} [S=115m R=108m].
+[05:17:06] gc-after-hook(): {L#1 N=1.4m O=38k E=92%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/yy.fasl
@@ -3634,13 +3599,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-[04:29:43] gc-after-hook(): {L#2 N=9.6m O=13k E=82%} [S=115m R=108m].
-[04:29:44] gc-after-hook(): {L#3 N=4.0m O=6.8k E=85%} [S=115m R=108m].
+[05:17:07] gc-after-hook(): {L#2 N=9.6m O=13k E=83%} [S=115m R=108m].
+[05:17:08] gc-after-hook(): {L#3 N=4.0m O=6.8k E=85%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
-[04:29:45] gc-after-hook(): {L#4 N=2.0m O=316k E=90%} [S=115m R=108m].
+[05:17:08] gc-after-hook(): {L#4 N=2.0m O=316k E=90%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
@@ -3649,10 +3614,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-[04:29:46] gc-after-hook(): {L#5 N=2.7m O=119k E=90%} [S=115m R=108m].
-[04:29:46] gc-after-hook(): {L#6 N=2.0m O=84k E=93%} [S=115m R=108m].
+[05:17:09] gc-after-hook(): {L#5 N=2.7m O=119k E=91%} [S=115m R=108m].
+[05:17:10] gc-after-hook(): {L#6 N=2.0m O=84k E=95%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
-[04:29:47] gc-after-hook(): {L#7 N=2.2m O=4.7k E=91%} [S=115m R=108m].
+[05:17:11] gc-after-hook(): {L#7 N=2.2m O=4.7k E=93%} [S=115m R=108m].
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
@@ -3663,23 +3628,49 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/ptb.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/ptb.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/conll.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/conll.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/conll.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/rasp.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/chasen.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/chasen.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/chasen.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/hunter.lisp
+[05:17:12] gc-after-hook(): {L#8 N=1.3m O=987k E=90%} [S=115m R=108m].
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
+[05:17:13] gc-after-hook(): {L#9 N=1012k O=604k E=91%} [S=115m R=108m].
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/pcfg.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/bdb.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
+[05:17:14] gc-after-hook(): {L#10 N=962k O=6.1k E=93%} [S=115m R=108m].
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/learner.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/learner.fasl
+;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/experiment.lisp
+;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/experiment.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/experiment.fasl
+; Loading /home/oe/.tsdbrc
 
-;      - Source file not found. Not compiling file
-;        "/lingo/build/lkb/src/tsdb/lisp/conll.lisp"
-;      - Source file /lingo/build/lkb/src/tsdb/lisp/conll.lisp and binary file
-;        /lingo/build/lkb/src/.l1cl/tsdb/conll.fasl not found, not loading.
-Error: 
-Source file "/lingo/build/lkb/src/tsdb/lisp/conll.lisp" and binary file
-       "/lingo/build/lkb/src/.l1cl/tsdb/conll.fasl" do not exist.
-
-Restart actions (select using :continue):
- 0: Continue, ignoring missing files.
- 1: Return to Top Level (an "abort" restart).
- 2: Abort entirely from this (lisp) process.
-[1c] CL-USER(11): :pop
-CL-USER(11): EOF
-Really exit lisp [n]? 
-; Exiting
+(#<MODULE: tsdb>)
+CL-USER(11): ; Exiting
 make[2]: Leaving directory `/lingo/build/lkb'
 ( \
 	  if [ ! -f /lingo/build//.yes ]; then exit 1; fi; \
@@ -4750,6 +4741,7 @@ src/.l1cl/tsdb/learner.fasl
 src/.l1cl/tsdb/experiment.fasl
 src/.l1cl/tsdb/fake.fasl
 src/.l1cl/tsdb/chasen.fasl
+src/.l1cl/tsdb/conll.fasl
 src/.l1cl/fad/
 src/.l1cl/fad/packages.fasl
 src/.l1cl/fad/fad.fasl
@@ -6460,6 +6452,7 @@ src/tsdb/lisp/filter.lisp
 src/tsdb/lisp/commands.lisp
 src/tsdb/lisp/acache.lisp
 src/tsdb/lisp/features.lisp
+src/tsdb/lisp/conll.lisp
 src/tsdb/lisp/experiment.lisp
 src/tsdb/lisp/kf.lisp
 src/tsdb/lisp/hunter.lisp
