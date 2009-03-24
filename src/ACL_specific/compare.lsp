@@ -3,7 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;;
-;;; Tools to help build a tree bank
+;;; Tools to help build a treebank
 ;;;
 
 ;;;
