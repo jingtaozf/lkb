@@ -336,7 +336,9 @@
                     for rscore = (or (get-field :score result)
                                      (when (consp rflags)
                                        (get-field :rscore rflags)))
-                    for lm = (and (consp rflags) (- (get-field :lm rflags)))
+                    for lm 
+                    = (let ((lm (and (consp rflags) (get-field :lm rflags))))
+                        (when (numberp lm) (- lm)))
                     for distortion
                     = (and (consp rflags) (get-field :distortion rflags))
                     for distance = (let ((foo (when (consp rflags)

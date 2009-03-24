@@ -489,10 +489,9 @@
                          :output "/dev/null" :if-output-exists :append
                          :input "/dev/null" :error-output "/dev/null"
                          :if-error-output-exists :append) 
-            (run-process (format nil "exec sort -n '~a'" target)
+            (run-process (format nil "exec sort -n -T '~a' '~a'" (tmp) target)
                          :output source :if-output-exists :supersede
-                         :input "/dev/null" :error-output "/dev/null"
-                         :if-error-output-exists :append)
+                         :input "/dev/null" :error-output nil)
             (when (probe-file target) (delete-file target))))
     (when verbose
       (format *tsdb-io* " done.~%")

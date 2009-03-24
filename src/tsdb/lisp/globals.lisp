@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (22-feb-09; beta)")
+(defparameter *tsdb-version* "2.0 (24-mar-09; beta)")
 
 (defparameter
   *tsdb-application*
@@ -118,7 +118,7 @@
 
 (defparameter *tsdb-tenured-bytes* 0)
 
-(defparameter *tsdb-tenured-bytes-limit* (* 32 1024 1024))
+(defparameter *tsdb-tenured-bytes-limit* (* #-:64bit 32 #+:64bit 128 1024 1024))
 
 (defparameter *tsdb-gc-verbosity* nil)
 

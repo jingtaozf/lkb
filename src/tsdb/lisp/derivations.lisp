@@ -93,6 +93,8 @@
 
 (defparameter *derivations-reconstructor* nil)
 
+(defparameter *derivation-heads* nil)
+
 (defmacro with-derivation ((output input) &body body)
   `(let ((,output
           (if (and (symbolp (first ,input))
@@ -448,7 +450,8 @@
                                   0
                                   :noentry
                                   (format nil "`~a' (`~a')" root surface))))
-                    (if tokens
+                    #+:lkb 
+                    (if (and tokens (null *derivations-ignore-tokens-p*))
                       (let ((tokens
                              (loop
                                  for token in tokens
@@ -466,7 +469,9 @@
                             result
                             (throw :fail 
                               (values nil (list derivation result failure))))))
-                      entry))))
+                      entry)
+                    #-:lkb
+                    entry)))
                (t
                 (let* ((items
                         (loop
@@ -495,6 +500,56 @@
         (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge))))
     edge))
 
+(defstruct node
+  id root score start end from to head nucleus daughters)
+
+(defun derivation-to-node (derivation)
+  (let* ((daughters (derivation-daughters derivation))
+         (daughters
+          (unless (and (null (rest daughters))
+                       (null (derivation-daughters (first daughters))))
+            (loop
+                for derivation in daughters
+                collect (derivation-to-node derivation))))
+         (tokens (unless daughters (derivation-tokens derivation)))
+         (from (if tokens
+                 (let* ((token (first tokens))
+                        (from
+                         (ppcre:scan-to-strings "\\+FROM \"[0-9]+\"" token)))
+                   (when from (parse-integer from :start 7 :junk-allowed t)))
+                 (node-from (first daughters))))
+         (to (if tokens
+               (let* ((token (first tokens))
+                      (from
+                       (ppcre:scan-to-strings "\\+TO \"[0-9]+\"" token)))
+                 (when from (parse-integer from :start 5 :junk-allowed t)))
+               (node-to (first (last daughters)))))
+         #+:lkb
+         (head (let* ((rule (intern (derivation-root derivation) :lkb))
+                      (rule (gethash rule lkb::*rules*)))
+                 (if rule (lkb::rule-head rule) 0)))
+         #-:lkb
+         (head 0)
+         (head (nth head daughters))
+         (head (when head (or (node-head head) head))))
+    (make-node
+     :id (derivation-id derivation)
+     :root (derivation-root derivation) :score (derivation-score derivation)
+     :start (derivation-start derivation) :end (derivation-end derivation)
+     :from from :to to :head head :daughters daughters)))
+
+(defun read-heads (file)
+  (setf *derivation-heads*
+    (when (probe-file file)
+      (with-open-file (stream file :direction :input)
+        (loop
+            with *package* = (find-package :tsdb)
+            for rule = (read stream nil nil)
+            for arity = (read stream nil nil)
+            for head = (read stream nil nil)
+            while (and rule arity head)
+            collect (cons rule (pairlis
+                                '(:arity :head) (list arity head))))))))
 ;;;
 ;;; interface function for RASP: given a RASP derivation tree, create (LKB)
 ;;; edge structures from it, so we can draw and compare trees. 

@@ -103,6 +103,11 @@
 (let ((foo (allocate-fobject '(:array :int 2) :c)))
 
   (defun store-feature (fc iid rid feature)
+    ;;
+    ;; _fix_me_
+    ;; on the surface at least, this code appears not thread safe: it probably
+    ;; should wrap a process lock around the whole function.    (29-feb-09; oe)
+    ;;
     (unless (numberp (fc-db fc))
       (error "store-feature(): invalid feature cache handle."))
     (when (> (length (feature-parameters feature)) 2)
@@ -157,6 +162,11 @@
        (foo (allocate-fobject '(:array :int 2) :c)))
 
   (defun retrieve-features (fc iid rid tid parameters)
+    ;;
+    ;; _fix_me_
+    ;; on the surface at least, this code appears not thread safe: it probably
+    ;; should wrap a process lock around the whole function.    (29-feb-09; oe)
+    ;;
     (declare (special *feature-float-valued-tids*))
     (unless (numberp (fc-db fc))
       (error "retrieve-features(): invalid feature cache handle."))

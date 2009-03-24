@@ -28,7 +28,7 @@
 ;;; we interpret that as 26944 events in 600 contexts; 283752 total features of
 ;;; which 149774 have some property; and 24071755 actual (non-zero) feature 
 ;;; counts, i.e. actually observed feature occurences.  a day later, we think
-;;; that relevant property of the 149774 sub-set of features might be that they
+;;; the relevant property of the 149774 sub-set of features might be that they
 ;;; are attested in active events, but this remains guesswork.
 ;;;
 
@@ -377,20 +377,20 @@
   (let* ((model (or model (make-model)))
          (events (format 
                   nil
-                  "/tmp/.model.~a.~a.events"
-                  (current-user) (current-pid)))
+                  "~a/.model.~a.~a.events"
+                  (tmp) (current-user) (current-pid)))
          (trace (format 
                  nil
-                 "/tmp/.model.~a.~a.trace"
-                 (current-user) (current-pid)))
+                 "~a/.model.~a.~a.trace"
+                 (tmp) (current-user) (current-pid)))
          (source (get-field :source (first items)))
          (cache (profile-find-context-cache source identity)))
     (unless (model-parameters model)
       (setf (model-parameters model)
         (format 
          nil
-         "/tmp/.model.~a.~a.weights"
-         (current-user) (current-pid))))
+         "~a/.model.~a.~a.weights"
+         (tmp) (current-user) (current-pid))))
     (with-open-file (out events :direction :output
                      :if-does-not-exist :create
                      :if-exists :supersede
@@ -435,9 +435,8 @@
            (variances (when  (numberp *maxent-variance*)
                         (let ((name (format 
                                      nil
-                                     "/tmp/.model.~a.~a.variances"
-                                     (current-user)
-                                     (current-pid))))
+                                     "~a/.model.~a.~a.variances"
+                                     (tmp) (current-user) (current-pid))))
                           (with-open-file (stream name
                                            :direction :output
                                            :if-exists :supersede)
@@ -546,8 +545,8 @@
   (let* ((parameters (model-parameters model))
          (events (format 
                   nil
-                  "/tmp/.model.~a.~a.events"
-                  (current-user) (current-pid)))
+                  "~a/.model.~a.~a.events"
+                  (tmp) (current-user) (current-pid)))
          (source (get-field :source (first items)))
          (cache (profile-find-context-cache source identity))
          active)
@@ -591,12 +590,12 @@
     (setf active (nreverse active))
     (let* ((scores (format 
                     nil
-                    "/tmp/.model.~a.~a.scores"
-                    (current-user) (current-pid)))
+                    "~a/.model.~a.~a.scores"
+                    (tmp) (current-user) (current-pid)))
            (output (format 
                     nil
-                    "/tmp/.model.~a.~a.output"
-                    (current-user) (current-pid)))
+                    "~a/.model.~a.~a.output"
+                    (tmp) (current-user) (current-pid)))
            (command 
             (case type
               (:mem            
@@ -605,9 +604,10 @@
                 "evaluate -s '~a' '~a' '~a'"
                 scores parameters events))
               (:perf
-               (format nil 
-                       "svm_perform_classify ~a ~a ~a" 
-                       events parameters scores))
+               (format
+                nil 
+                "svm_perform_classify ~a ~a ~a" 
+                events parameters scores))
               (:svm 
                (format
                 nil 
@@ -736,14 +736,7 @@
                       (float (/ rsum nitems)) ;;average # results
                       nitems))))              ;;# items
 
-(defmacro do-grid (params &body body)
-  (if (null (cdr params))
-      `(dolist ,(first params)
-         ,@body)
-    `(dolist ,(first params)
-       (do-grid ,(cdr params) ,@body))))
-
-(defun print-score-file (&key (output "/tmp/scores")
+(defun print-score-file (&key (output (format nil "~a/scores" (tmp)))
                               gold name pattern condition
                               (similarities '(:bleu)))
   (with-open-file (stream output :direction :output :if-exists :supersede)
@@ -775,8 +768,8 @@
             (force-output stream))))
   (purge-profile-cache gold))
 
-(defun summarize-folds 
-    (&key (output "/tmp/folds") name pattern (score :accuracy) (type :total))
+(defun summarize-folds (&key (output (format nil "~a/folds" (tmp)))
+                             name pattern (score :accuracy) (type :total))
   (with-open-file (stream output :direction :output :if-exists :supersede
                           :if-not-exists :create)
     (let* ((key (if (and (eq type :total)
@@ -803,35 +796,34 @@
                                         foo (read-from-string 
                                              (get-field key scores) nil))))))))
       (loop
-       for profile in (cond
-                       ((not (null pattern))
-                        (mapcar #'(lambda(db) (get-field :database db))
-                                (find-tsdb-directories 
-                                 *tsdb-home* :pattern pattern :name name)))
-                       ((and name (listp name)) name)
-                       ((stringp name) (list name))
-                       (t (error "summarize-folds():~
-                                  name or pattern argument missing.")))
-       for values = (select (list (format nil "~(~a~)" key))
-                            '(:string) "fold" nil profile)
-       for scores = (when values
-                      (map 'list selector values))
-       when (and scores (notany 'null scores))
-       do
-       (let* ((n (length scores))
-              (sum (sum scores))
-              (mean (/ sum n))
-              (min (apply #'min scores))
-              (max (apply #'max scores))
-              (range (- max min))
-              (var (if (= n 1) 0 
-                     (/ (sum 
-                         (mapcar 
-                          #'(lambda (x) 
-                              (expt (- x mean) 2))
-                          scores))
-                        (- n 1))))
-              (std-dev (sqrt var)))
+          for profile in (cond
+                          ((not (null pattern))
+                           (mapcar #'(lambda(db) (get-field :database db))
+                                   (find-tsdb-directories 
+                                    *tsdb-home* :pattern pattern :name name)))
+                          ((and name (listp name)) name)
+                          ((stringp name) (list name))
+                          (t (error "summarize-folds():~
+                                     name or pattern argument missing.")))
+          for values = (select (list (format nil "~(~a~)" key))
+                         '(:string) "fold" nil profile)
+          for scores = (when values (map 'list selector values))
+          when (and scores (notany 'null scores))
+          do
+            (let* ((n (length scores))
+                   (sum (sum scores))
+                   (mean (/ sum n))
+                   (min (apply #'min scores))
+                   (max (apply #'max scores))
+                   (range (- max min))
+                   (var (if (= n 1) 0 
+                          (/ (sum 
+                              (mapcar 
+                               #'(lambda (x) 
+                                   (expt (- x mean) 2))
+                               scores))
+                             (- n 1))))
+                   (std-dev (sqrt var)))
          (purge-profile-cache profile)
          (format stream "~,6f ~,6f ~,6f `~a'~%" 
                  mean std-dev range profile)

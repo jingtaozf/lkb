@@ -53,8 +53,8 @@
                                     (sys:gsgc-switch :stats)
                                     (sys:gsgc-switch :verbose)
                                     (sys:gsgc-parameter :auto-step))))
-        (statsp (member :stats verbosity :test #'eq))
-        (verbosep (member :verbose verbosity :test #'eq))
+        (statsp (smember :stats verbosity))
+        (verbosep (smember :verbose verbosity))
         (*tsdb-tenured-bytes-limit* nil))
     (setf (system:gsgc-switch :dump-on-error) t)
     (setf (sys:gsgc-switch :print) (or verbosep statsp))
@@ -211,6 +211,8 @@
             (setf padding 42)
             (incf length padding)
             (setf result (adjust-array result length)))
+        else when (char= c #\Newline) do
+          (vector-push #\Space result)
         else do
           (vector-push c result)
         finally
@@ -351,7 +353,15 @@
                        when grammar collect grammar))
          (grammars 
           (remove-duplicates grammars :test #'string-equal)))
-    (when (= (length grammars) 1) (first grammars))))
+    (when (null (rest grammars)) (first grammars))))
+
+(defun tmp (&optional (context :redwoods))
+  (case context
+    (:redwoods
+     (let* ((tmp (getenv "REDWOODSTMP"))
+            (tmp (and tmp (namestring (parse-namestring tmp)))))
+       (or tmp "/tmp")))
+    (t "/tmp")))
 
 (defun current-application ()
   (cond ((and *pvm-clients*
@@ -509,10 +519,15 @@
 
 
 (defun pprint-potentially-large-integer (n)
-  (cond ((zerop n) "")
-        ((>= n (expt 2 30)) (format nil "~,1fG" (/ n (expt 2 30))))
-        ((>= n (expt 2 20)) (format nil "~,1fM" (/ n (expt 2 20))))
-        ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
+  (cond #+:null
+        ((zerop n) "")
+        ((not (numberp n)) "")
+        ((>= n (* (expt 2 30) 10)) (format nil "~dg" (round n (expt 2 30))))
+        ((>= n (expt 2 30)) (format nil "~,1fg" (/ n (expt 2 30))))
+        ((>= n (* (expt 2 20) 10)) (format nil "~dm" (round n (expt 2 20))))
+        ((>= n (expt 2 20)) (format nil "~,1fm" (/ n (expt 2 20))))
+        ((>= n (* (expt 2 10) 10)) (format nil "~dk" (round n (expt 2 10))))
+        ((>= n (expt 2 10)) (format nil "~,1fk" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 
 (defun create-output-stream (file 

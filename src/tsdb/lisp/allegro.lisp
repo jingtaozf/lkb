@@ -3,6 +3,7 @@
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
 ;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2006 -- 2009 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +31,9 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "TSDB")
+(in-package :tsdb)
+
+(defparameter *tsdb-gc-debug* nil)
 
 (eval-when (:load-toplevel :execute)
   ;;
@@ -45,39 +48,73 @@
                    excl:*initial-terminal-io*
                    (ignore-errors
                     (let ((file (format nil "/tmp/acl.debug.~a.~a" user pid)))
-                      (when (probe-file file)
-                        (delete-file file))
+                      (when (probe-file file) (delete-file file))
                       (open file :direction :output
                             :if-exists :supersede 
                             :if-does-not-exist :create)))))
+         (scavenges 0)
+         (gcs 0)
         global-gc-p)
     (setf excl:*gc-after-hook*
       #'(lambda (global new old efficiency pending)
+          (if global (incf gcs) (incf scavenges))
           (when (and *tsdb-gc-message-p* (output-stream-p stream))
-            (format
-             stream
-             "~&[~a] gc-after-hook(): ~:[local~;global~]~@[ (r)~*~]; ~
-              new: ~a; old: ~a~@[; efficiency: ~d~].~%" 
-             (current-time :long :short) global global-gc-p new old
-             (and (integerp efficiency) efficiency))
-            #+:gcdebug
-            (let ((*print-readably* nil)
-                  (*print-miser-width* 40)
-                  (*print-pretty* t)
-                  (tpl:*zoom-print-circle* t)
-                  (tpl:*zoom-print-level* nil)
-                  (tpl:*zoom-print-length* nil)
-                  (*terminal-io* stream)
-                  (*standard-output* stream))
-              (tpl::zoom-command
-               :from-read-eval-print-loop nil :all t :brief t)))
+            (let* ((statm (when (probe-file "/proc/self/statm")
+                            (with-open-file (stream "/proc/self/statm")
+                              (loop
+                                  for foo = (read stream nil nil)
+                                  while foo collect foo))))
+                   (size (when (first statm) (* (first statm) 4096)))
+                   (resident (when (second statm) (* (second statm) 4096))))
+              (format
+               stream
+               "~&[~a] gc-after-hook(): {~:[L~;G~]~@[R~*~]~
+                #~a N=~a O=~a~@[ E=~d%~]}~@[~* [S=~a R=~a]~].~%" 
+               (current-time :long :short) global global-gc-p 
+               (if global-gc-p gcs scavenges)
+               (pprint-potentially-large-integer new)
+               (pprint-potentially-large-integer old)
+               (and (integerp efficiency) efficiency)
+               (and (numberp size) (numberp resident))
+               (pprint-potentially-large-integer size)
+               (pprint-potentially-large-integer resident))))
           (when *tsdb-gc-statistics*
             (incf (gc-statistics (if global :global :scavenge)))
             (incf (gc-statistics :new) new)
             (incf (gc-statistics :old) old)
             (when (and (not global) (integerp efficiency))
               (push efficiency (gc-statistics :efficiency))))
-          (when (null global-gc-p)
+          (when (and *tsdb-gc-debug* (output-stream-p stream))
+            (let ((*print-readably* nil)
+                  (*print-pretty* t)
+                  (*terminal-io* stream)
+                  (*standard-output* stream)
+                  (n (if global gcs scavenges))
+                  (actions
+                   (if global (rest *tsdb-gc-debug*) (first *tsdb-gc-debug*))))
+              (when actions
+                (loop
+                    for action in actions
+                    for count = (first action)
+                    when (and (numberp count) (zerop (mod n count))) do
+                      (loop
+                          for action in (rest action)
+                          do
+                            (format
+                             stream
+                             "~&[~a] gc-after-hook(): executing `~(~a~)' ~
+                              for ~:[L~;G~]~@[R~*~]#~a:~%"
+                             (current-time :long :short) action
+                             global global-gc-p
+                             (if global-gc-p gcs scavenges))
+                            (case action
+                              ((:new :pan :notpan :old :malloc :holes)
+                               (excl:print-type-counts action))
+                              (:count
+                               (excl:print-type-counts t))
+                              (:room
+                               (room))))))))
+          (unless global-gc-p
             ;;
             ;; unfortunately, this breaks because of yet another bug in the
             ;; Allegro memory management: when newspace is expanded during a
@@ -111,9 +148,10 @@
                   (when (and *tsdb-gc-message-p* (output-stream-p stream))
                     (format 
                      stream
-                     "~&[~a] gc-after-hook(): ~d bytes tenured; ~
+                     "~&[~a] gc-after-hook(): ~a tenured; ~
                       forcing global gc().~%"
-                     (current-time :long :short) *tsdb-tenured-bytes*))
+                     (current-time :long :short) 
+                     (pprint-potentially-large-integer *tsdb-tenured-bytes*)))
                   (excl:gc t)
                   (setf global-gc-p nil)
                   (setf *tsdb-tenured-bytes* 0)
@@ -146,8 +184,7 @@
   (push '(ignore-errors (shutdown-podium)) sys:*exit-cleanup-forms*)
   ;;
   ;; with the latest set of CLIM patches, it appears this latter bit results in
-  ;; an `operation on closed stream' error, when shutting down the Lisp.  but
-  ;; it also appears unnecessary, as the podium swish++ ends up duly killed.
+  ;; an `operation on closed stream' error, when shutting down the Lisp.
   ;;                                                             (8-feb-08; oe)
   (when (find :compiler *features*)
     (excl:advise mp:process-kill :before nil nil 

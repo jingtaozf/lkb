@@ -178,14 +178,14 @@
        (:file "redwoods")
        #+:lkb
        (:file "lsp")
-       #+:lkb
        (:file "ptb")
+       (:file "conll")
        #+:lkb
        (:file "rasp")
+       (:file "chasen")
        (:file "hunter")
        #+:lkb
        (:file "pcfg")
-       (:file "chasen")
        #+:null
        (:file "acache")
        #+:bdb

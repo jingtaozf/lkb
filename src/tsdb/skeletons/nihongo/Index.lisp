@@ -19,7 +19,8 @@
 ;;; the list lexicographically before output.
 ;;;
 
-(((:path . "kihon") (:content . "Basic Japanese Constructions"))
+(((:path . "conll") (:content . "CoNLL 2009 Shared Task Data"))
+ ((:path . "kihon") (:content . "Basic Japanese Constructions"))
  ((:path . "ginkougyou") (:content . "Hand-Constructed Banking Data"))
  ((:path . "hizuke") (:content . "Date Expressions"))
  ((:path . "suuji") (:content . "Number Expressions"))

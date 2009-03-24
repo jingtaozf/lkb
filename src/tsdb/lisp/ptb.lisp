@@ -30,7 +30,8 @@
             for category = (ignore-errors (first ptb))
             for origin = (format nil "~a" file)
             unless (string= current file) do 
-              (setf range (parse-integer (ppcre:scan-to-strings "[0-9]+" file)))
+              (setf range
+                (parse-integer (ppcre:scan-to-strings "[0-9]+" file)))
               (setf id 1)
               (setf current file)
             when (and ptb category)
@@ -178,45 +179,6 @@
   (declare (ignore tagger))
   (ptb-preprocess string :rawp nil :plainp nil :posp t))
 
-(defun read-items-from-conll-file (file &key (base 1) (offset 0) shift)
-  (when (probe-file file)
-    (with-open-file (stream file :direction :input)
-      (loop
-          with id = base
-          with input = nil
-          for line = (read-line stream nil nil)
-          while line
-          when (string= line "")
-          collect (let ((i id)
-                        (length (length input))
-                        (string (format nil "~{~a~^~%~}" (nreverse input))))
-                    (when (functionp shift) (setf i (funcall shift i)))
-                    (incf id)
-                    (setf input nil)
-                    (pairlis '(:i-id :i-wf :i-length :i-input)
-                             (list (+ offset i) 1 length string)))
-          else do (push line input)))))
-
-(defun conll-for-pet (string &optional tagger
-                      &key pos (ppos t) (characterize t))
-  (declare (ignore tagger))
-  (loop
-      with result
-      for i from 0
-      for token in (ppcre:split "\\n" string)
-      for conll = (ppcre:split "\\t" token)
-      for id = (first conll)
-      for form = (second conll)
-      for tag = (if pos (fifth conll) (and ppos (sixth conll)))
-      for yy = (format 
-                nil 
-                "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                  1, \"~a\", 0, \"null\"~@[, ~s 1.0~])"
-                id i (+ i 1) characterize i (+ i 1) form tag)
-      do (push yy result)
-      finally (return (values (format nil "~{~a~^ ~}" (nreverse result)) i))))
-
-
 #+:null         
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
 	   #-:ansi-eval-when (load eval)
@@ -237,7 +199,7 @@
 #+:null
 (loop
     for i from 2 to 21
-    for shift = #'(lambda (id) (+ id 2000000 (* i 10000)))
+    for shift = #'(lambda (id) (+ id 20000000 (* i 100000)))
     do (do-import-items
          (format nil "/home/oe/src/conll09/09~2,'0d.txt" i)
          (format nil "test/conll~2,'0d" i) :format :conll :shift shift))

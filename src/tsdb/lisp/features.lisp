@@ -346,9 +346,11 @@
     (when (and (not rop) (>= (feature-code feature) (model-size model)))
       (let ((n (setf (model-size model)
                  (max (+ (feature-code feature) 1) (* (model-size model) 2)))))
-        (setf (model-minmax model) (adjust-array (model-minmax model) n))
-        (setf (model-counts model) (adjust-array (model-counts model) n))
-        (setf (model-weights model) (adjust-array (model-weights model) n)))))
+        (#+:allegro excl:tenuring #-:allegro progn
+         (setf (model-minmax model) (adjust-array (model-minmax model) n))
+         (setf (model-counts model) (adjust-array (model-counts model) n))
+         (setf (model-weights model)
+           (adjust-array (model-weights model) n))))))
   
   ;;
   ;; from here on, use either the original .code. or the .mapped. value as the
@@ -472,10 +474,15 @@
           ;; is generated, so we need to deliberately release quasi-destructive
           ;; intermediate structures; this was hard to debug.   (21-nov-07; oe)
           ;;
-          #+:debug (excl:print-type-counts)
+          #+:debug
+          (excl:print-type-counts)
           (lkb::release-temporary-storage)
-          #+:debug (excl:gc)
-          #+:debug (excl:print-type-counts))
+          #+:debug
+          (let ((*tsdb-gc-debug* nil))
+            (excl:print-type-counts)
+            (excl:gc)
+            (excl:print-type-counts)))
+
 	(loop
 	    with i = 0
             with *reconstruct-cache* = (make-hash-table :test #'eql)
@@ -666,9 +673,9 @@
                     (format 
                      stream
                      "~&[~a] cache-contexts(): ~
-                      ~a~@[ [~a]~] event~p recorded for item # ~d;~%" 
-                     (current-time :long :short) n
-                     (when sample (length sample)) n iid)))))
+                      item # ~d: ~a~@[ [~a]~] event~p;~%" 
+                     (current-time :long :short) 
+                     iid n (when sample (length sample)) n)))))
       finally (close-fc fc)))
 
 (defun result-to-event (result model &key rop (fcp t))
@@ -1199,6 +1206,16 @@
          (if surface
            (first
             (score-strings (list surface) (list gold) :type (first type)))
+           0)))
+      (:conll
+       (let* ((id (get-field :result-id result))
+              (score (item-to-conll item :result-id id :stream nil))
+              (total (get-field :total score))
+              (head (get-field :head score))
+              (power (or (second type) 1))
+              (factor (or (third type) 1)))
+         (if (and total head)
+           (* (expt (divide head total) power) factor)
            0)))
       (:flags
        (let* ((flags (get-field :flags result))

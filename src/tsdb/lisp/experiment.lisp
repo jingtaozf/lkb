@@ -151,24 +151,6 @@
             (*feature-ngram-tag* ngram-tag)
             (*redwoods-score-similarities* score-similarities))
         
-;;         (if (eq :ngram type)
-;;             (progn
-;;               (gridify ((*lm-options*
-;;                          (listify lm-options))
-;;                         (*lm-model*
-;;                          (listify lm-model)))
-;;                        (if 
-;;                            (execute-experiment 
-;;                             :target (format nil "~@[~a~]~a-~a.ngram" prefix)
-;;                             :recache nil)
-;;                            (incf run)
-;;                     (incf skipped))
-;;                        (incf total)
-;;                        (when verbose 
-;;                          (report experiment run skipped total recache))
-;;                        (incf experiment)))
-;;;;;;;;;;;; fix_me pick_up: ngrams        
-        
         ;;
         ;; from here on, essentially do two nested groups of loops (constructed
         ;; by virtue of an ingenious macro provided by erik :-): the outermost
@@ -278,18 +260,51 @@
         (return-from test-experiment)))))
   t)
 
-#+:null
-(batch-experiment
- :source "lingo/13-feb-06/csli/06-02-19/lkb" :skeleton "csli"
- :nfold 10 :niterations 2 :type :mem
- :prefix "test"
- :grandparenting '(0 1 2)
- :active-edges-p '(nil t)
- :lexicalization-p nil
- :constituent-weight '(0 1 2)
- :ngram-size '(0 1 2 3) :ngram-back-off-p '(nil t)
- :lm-p nil
- :random-sample-size nil
- :counts-absolute 0 :counts-contexts 0 :counts-events 0 :counts-relevant 1
- :variance '(nil 1e-2 1e-4 1e-6)
- :relative-tolerance '(1e-6 1e-8 1e-10))
+(defun summarize-experiments (&key (stream t)
+                                   pattern (score :accuracy))
+  (when (stringp stream)
+    (with-open-file (stream stream :direction :output :if-exists :supersede)
+      (return-from summarize-experiments
+        (summarize-experiments :stream stream :pattern pattern :score score))))
+  (loop
+      with key = (if (eq score :accuracy) :f-accuracy :f-extras)
+      with profiles
+      = (loop
+            for profile in (find-tsdb-directories *tsdb-home* :pattern pattern)
+            collect (get-field :database profile))
+      for profile in profiles
+      for values = (select
+                    (list (format nil "~(~a~)" key) "f-iterations")
+                    nil "fold" nil profile)
+      for iterations = 0
+      for scores = (loop
+                       for value in values
+                       for field = (get-field key value)
+                       for n = (get-field :f-iterations value)
+                       when (numberp n) do (incf iterations n)
+                       when (eq score :accuracy)
+                       collect (read-from-string field)
+                       else 
+                       collect (let* ((value (read-from-string field))
+                                      (field (get-field score value)))
+                                 (when (stringp field)
+                                   (read-from-string field))))
+      when (and scores (loop for score in scores always score))
+      do
+        (let* ((n (length scores))
+               (sum (sum scores))
+               (mean (/ sum n))
+               (min (loop for score in scores minimize score))
+               (max (loop for score in scores maximize score))
+               (range (- max min))
+               (variance
+                (if (= n 1)
+                  0
+                  (/ (loop for score in scores sum (expt (- score mean) 2))
+                     (- n 1))))
+               (iterations (divide iterations n)))
+          (format
+           stream
+           "~,6f ~,6f ~,6f ~,1f `~a'~%" 
+           mean (sqrt variance) range iterations profile)
+          (force-output stream))))

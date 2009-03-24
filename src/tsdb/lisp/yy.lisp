@@ -48,8 +48,18 @@
                    while (member (schar string i) characters :test #'char=)
                    do (incf i)))
              (skip-to (character)
-               (let ((n (position character string :start i :test #'char=)))
-                 (when n (setf i n))))
+               (loop
+                   with escape = nil with quote = nil
+                   while (< i length)
+                   when (and (char= (schar string i) #\") (not escape))
+                   do (setf quote (not quote))
+                   else when (and (char= (schar string i) #\\) (not escape))
+                   do (setf escape t)
+                   else when (and (char= (schar string i) character) 
+                                  (not quote))
+                   return i
+                   else do (setf escape nil)
+                   do (incf i)))
              (seek-character (character)
                (when (< i length)
                  (skip whitespace)
@@ -102,7 +112,6 @@
                     (when (read-character #\))
                       (list start end word inflection))))))))
                     
-                   
       (loop
           with result = (make-array length
                                     :element-type 'character
@@ -113,11 +122,11 @@
           for start = (first token)
           for end = (second token)
           for word = (third token)
-          for inflection = (fourth token)
           while word
-          when (and word 
-                    (numberp start) (numberp end)
+          when (and word (numberp start) (numberp end)
+                    #+:null
                     (if inflection (= (- end start) 1) (= (- end start) 100))
+                    #+:null
                     (or (null inflection) (string= inflection "null"))
                     (not (member start positions :test #'=)))
           do

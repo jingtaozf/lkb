@@ -301,7 +301,7 @@
                 &key condition meter message thorough trees extras 
                      (readerp t) siftp filter output
                      score gold taggingp
-		     commentp sloppyp scorep)
+		     commentp sloppyp scorep burst purge)
 
   (declare (ignore siftp)
            (optimize (speed 3) (safety 0) (space 0)))
@@ -315,7 +315,7 @@
          :trees trees :extras extras :readerp readerp
          :filter filter :output output
          :score score :gold gold :taggingp taggingp :commentp commentp
-         :sloppyp sloppyp :scorep scorep))))
+         :sloppyp sloppyp :scorep scorep :burst burst :purge purge))))
   
   (let* ((message (when message
                     (format nil "retrieving `~a' data ..." data)))
@@ -424,16 +424,46 @@
                                   "output" condition data
                                   :unique nil :sort :i-id)))
                (results (when thorough
-                          (select (append '("parse-id" "result-id")
-                                          (when (consp thorough)
-                                            (loop
-                                                for symbol in thorough
-                                                collect (format 
-                                                         nil 
-                                                         "~(~a~)" 
-                                                         symbol))))
-                                  nil "result" condition data 
-                                  :meter rmeter :sort :parse-id)))
+                          ;;
+                          ;; _fix_me_
+                          ;; for rank-profile() and friends, .conditions. will
+                          ;; typically include `readings > 1', or similar; the
+                          ;; join of `parse' and `result' in tsdb(1) is really
+                          ;; very slow for large relations (because `parse'
+                          ;; has multiple keys, and we end up inserting out-
+                          ;; of-order :-{).  it would probably pay off to do
+                          ;; more of the work on the Lisp side, e.g. select()
+                          ;; from `result' unconditionally (which may lead to
+                          ;; excessive memory usage), select() from `parse'
+                          ;; with .condition., and then njoin().  i should put
+                          ;; a little more thought into this!  (29-feb-09; oe)
+                          ;;
+                          (if burst
+                            (let ((parses
+                                   (select '("parse-id")
+                                    nil "parse" condition data
+                                    :sort :parse-id))
+                                  (results
+                                   (select (append '("parse-id" "result-id")
+                                             (loop
+                                                 for symbol in thorough
+                                                 collect (format 
+                                                          nil 
+                                                          "~(~a~)" 
+                                                          symbol)))
+                                    nil "result" nil data
+                                    :meter rmeter :sort :parse-id)))
+                              (njoin parses results :parse-id))
+                            (select (append '("parse-id" "result-id")
+                                            (when (consp thorough)
+                                              (loop
+                                                  for symbol in thorough
+                                                  collect (format 
+                                                           nil 
+                                                           "~(~a~)" 
+                                                           symbol))))
+                                    nil "result" condition data 
+                                    :meter rmeter :sort :parse-id))))
                (trees (when trees
                         (select '("parse-id" "t-active" "t-version")
                                 nil "tree" condition data
@@ -551,7 +581,9 @@
                   for foo = (funcall *statistics-result-filter* item)
                   when foo collect foo))))
         (setf (gethash key *tsdb-profile-cache*) result)))
-
+    (when (smember purge '(:cache :all))
+      (purge-profile-cache data :expiryp (eq purge :all)))
+    (when (eq purge :db) (close-connections :data data))
     (when message (status :text (format nil "~a done" message) :duration 2))
     (when meter (meter :value (get-field :end meter)))
     result))
@@ -560,7 +592,7 @@
                         &key condition meter message thorough trees extras 
                              (readerp t) filter output
                              score gold taggingp
-                             commentp sloppyp scorep)
+                             commentp sloppyp scorep burst purge)
   (when (probe-file data)
     (with-open-file (stream data :direction :input)
       ;;
@@ -580,7 +612,7 @@
              :trees trees :extras extras :readerp readerp :filter filter
              :output output :score score :gold gold  
              :taggingp taggingp :commentp commentp
-             :sloppyp sloppyp :scorep scorep)
+             :sloppyp sloppyp :scorep scorep :burst burst :purge purge)
           into result
           finally (return (sort
                            result #'<

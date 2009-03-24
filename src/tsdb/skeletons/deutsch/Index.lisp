@@ -19,7 +19,8 @@
 ;;; the list lexicographically before output.
 ;;;
 
-(((:path . "tub") (:content . "Esprit Corpus Data (TU Berlin)"))
+(((:path . "conll") (:content . "CoNLL 2009 Shared Task Data"))
+ ((:path . "tub") (:content . "Esprit Corpus Data (TU Berlin)"))
  ((:path . "german") (:content . "TSNLP Test Suite (DFKI)"))
  ((:path . "vm") (:content . "VerbMobil Reference Dialogue"))
  ((:path . "diet") (:content . "DiET version of TSNLP Test Suite"))

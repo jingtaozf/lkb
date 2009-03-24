@@ -25,7 +25,7 @@ if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
                         && ![string first "mv" $env(HOSTNAME)]
                         ? "/home/oe/src/logon/lingo/lkb" 
-                        : "/Users/oe/src/delphin/lkb"}];
+                        : "/logon/oe/src/logon/lingo/lkb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)

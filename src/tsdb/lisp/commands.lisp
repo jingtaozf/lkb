@@ -566,7 +566,8 @@
          with agenda = (copy-list *tsdb-skeletons*)
          for skeleton = (pop agenda)
          while skeleton
-         when (equal (get-field :path skeleton) name)
+         when (and (equal (get-field :path skeleton) name)
+                   (null (get-field :daughters skeleton)))
          return skeleton
          do (loop
                 for daughter in (get-field :daughters skeleton)

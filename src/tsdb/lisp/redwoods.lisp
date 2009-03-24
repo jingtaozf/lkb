@@ -1298,7 +1298,7 @@
       with target = (format 
                      nil 
                      "~a/~a"
-                     (or path "/lingo/oe/tmp") (directory2file data))
+                     (or path (tmp)) (directory2file data))
       with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze
@@ -1493,6 +1493,10 @@
                   (smember :triples *redwoods-export-values*))
           (ignore-errors
            (mrs::ed-output-psoa mrs :format :triples :stream stream)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :mtriples *redwoods-export-values*))
+          (ignore-errors
+           (mrs::ed-output-psoa mrs :format :triples :markp t :stream stream)))
         #+:cambridge
         (when (smember :qa *redwoods-export-values*)
           (mrs::output-rmrs-from-itsdb
@@ -1501,7 +1505,9 @@
            mrs))
         (format stream "~c~%" #\page)))
 
-(defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))
+(defun semantic-equivalence (data
+                             &key condition
+                                  (file (format nil "~a/equivalences" (tmp))))
   
   (loop
       with stream = (open file :direction :output :if-exists :supersede)
@@ -2852,7 +2858,18 @@
            active :condition condition :model model :task task :stream stream
            :initialp (and initialp (eq remaining profiles))
            :finalp (and finalp (null (rest remaining)))
-           :target target :internalp t :resolvedp resolvedp)))
+           :target target :internalp t :resolvedp resolvedp)
+          (when purgep
+            (purge-profile-cache active)
+            #+:allegro
+            (progn
+              (let ((*tsdb-gc-debug* nil))
+                (excl:print-type-counts :new) (excl:print-type-counts :old)
+                (excl:gc :tenure)
+                (excl:print-type-counts :new) (excl:print-type-counts :old)
+                (excl:gc t)
+                (excl:print-type-counts :old)
+                (excl:print-type-counts :holes))))))
    
    (recursep
     (when (eq task :unfc)
@@ -2905,6 +2922,9 @@
            profiles :condition foo :model model :task task :stream stream
            :internalp t :recursep nil :firstp (= i 1) :lastp (= i n)
            :target target :cache cache :resolvedp resolvedp)
+          ;;
+          ;; do not expire the DB yet, while running sub-sets of items from it
+          ;;
           (purge-profile-cache profiles :expiryp nil)
         finally (when cache (flush-cache cache :verbose verbose))))
    
@@ -3037,20 +3057,22 @@
              ;; the script should probably reside in the `bin' sub-directory,
              ;; side-by-side with the other SVM binaries.       (12-mar-07; oe)
              ;;
-             (:svm (let* ((output (format nil "/tmp/.model.~a.~a.svm_weights"
-                                          (current-user) (current-pid)))
+             (:svm (let* ((output (format
+                                   nil "~a/.model.~a.~a.svm_weights"
+                                   (tmp) (current-user) (current-pid)))
 
                           ;;
                           ;; _fix_me_
                           ;; svm2weights.pl will only work for linear kernels
                           ;;                                  (15-feb-07; erik)
-                          (command (format nil "~a/uio/svm2weights.pl ~a"
-                                           (system:getenv "LOGONROOT")
-                                           (model-parameters model))))
+                          (command (format
+                                    nil "~a/uio/svm2weights.pl ~a"
+                                    (getenv "LOGONROOT")
+                                    (model-parameters model))))
                      (unless (and (zerop 
-                                   (run-process command 
-                                                :wait t :output output 
-                                                :if-output-exists :supersede))
+                                   (run-process
+                                    command :wait t :output output 
+                                    :if-output-exists :supersede))
                                   (probe-file output))
                        (format
                         t
@@ -3108,7 +3130,7 @@
                    (analyze 
                     source 
                     :thorough thorough :condition condition :gold source
-                    :readerp nil :message meter)))
+                    :readerp nil :burst t :purge :db :message meter)))
          (nsifted 0)
          (data (loop
                    initially
