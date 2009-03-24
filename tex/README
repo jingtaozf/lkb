@@ -1,0 +1,21 @@
+The macros collected here are ones which have been created specifically for
+DELPH-IN.  They may not be mutually compatible.
+
+lkbavm.sty     Sanfilippo/Copestake AVM macros: as output by original LKB UI
+               and used in `Implementing Typed Feature Structure Grammars'
+               (also in data/avmmacros)
+
+mrs.sty        draft macros for typesetting MRSs by Stephan Oepen, these are
+               assumed by the on-line grammar demos
+               (DMRS output currently uses only standard LaTeX)
+
+delph-in.sty   ancilliary macros (maintained by Francis Bond)
+
+Other packaged assumed by various outputs produced from the LKB are:
+
+avm.sty        http://nlp.stanford.edu/~manning/tex/avm.sty
+qtree.sty      http://www.ctan.org/tex-archive/macros/latex/contrib/qtree/
+relsize        (required by mrs.sty)
+
+
+See http://wiki.delph-in.net/moin/LkbTex
