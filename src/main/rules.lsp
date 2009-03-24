@@ -366,7 +366,7 @@ base fs plus rule (except the type itself, of course)
         ;;
         (let* ((daughters (rest (rule-order rule)))
                (dag (tdfs-indef fs))
-               (daughter (existing-dag-at-end-of dag *head-daugher-path*))
+               (daughter (existing-dag-at-end-of dag *head-daughter-path*))
                (head (existing-dag-at-end-of dag *head-path*)))
           (setf (rule-head rule)
             (or (when daughter
