@@ -853,80 +853,30 @@
 ;;; extract info from comps list
 ;;;
 
-(defparameter *comps-path* 
-  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "VAL") ,(vsym "COMPS"))
-  "Following this path into a sign gets you to the COMPS list")
-
-(defparameter *comps-elt-key-path* 
-  `(,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "HEAD") ,(vsym "KEYS") ,(vsym "KEY"))
-  "Following this path into an element on the COMPS list gets you the KEY")
-
-(defparameter *comps-elt-index-path* 
-  `(,(vsym "LOCAL") ,(vsym "CONT") ,(vsym "HOOK") ,(vsym "INDEX"))
-  "Following this path into an element on the COMPS list gets you the INDEX")
-
-(defparameter *comps-elt-opt-path* 
-  `(,(vsym "OPT"))
-  "Following this path into an element on the COMPS list gets you the OPT value")
-
-(defparameter *semantics-to-rels-path* 
-  `(,(vsym "RELS"))
-  "Following this path from the start of the MRS structure gets you to the RELS list")
-
-(defparameter *semantics-to-message-path* 
-  `(,(vsym "MESSAGE"))
-  "Following this path from the start of the MRS structure gets you to the MESSAGE list")
-
 (defun get-dag-by-id (lex-id)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
   (let* ((entry (lkb::get-lex-entry-from-id lex-id))
 	 (dag (and
 	       entry
 	       (tdfs-indef (lex-entry-full-fs entry)))))
     dag))
 
-(defun get-comps-list-by-id (lex-id)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
-  (get-comps-list (get-dag-by-id lex-id)))
 
 (defun get-comps-list (dag)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
   (let* ((comps-path *comps-path*)
 	 (comps-dag (path-value dag 
 				comps-path)))
-    (lkb::dag-list-2-list comps-dag)))
-
-(defun get-rels-list-by-id (lex-id)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
-  (get-rels-list (get-dag-by-id lex-id)))
+    (dag-list-2-list comps-dag)))
 
 (defun get-rels-list (dag)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
   (let* ((rels-path 
 	  (append *initial-semantics-path* 
 		  *semantics-to-rels-path*))
-	 (rels-dag (lkb::unify-paths-dag-at-end-of1 dag rels-path)))
+	 (rels-dag (path-value dag rels-path)))
     (if rels-dag 
-	(lkb::dag-diff-list-2-list rels-dag)
+	(dag-diff-list-2-list rels-dag)
       (format t "~%; WARNING: diff-list not found at path ~a in ~a" rels-path dag))))
 
-(defun get-message (dag)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
-  (let* ((message-path 
-	  (append *initial-semantics-path* 
-		  *semantics-to-message-path*))
-	 (message-dag (lkb::unify-paths-dag-at-end-of1 dag message-path)))
-    message-dag))
-
 (defun extract-comps-info (dag)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
   (let* ((comps-list (get-comps-list dag))
 	 (rels-list (get-rels-list dag)))
     (mapcar
@@ -934,24 +884,20 @@
      comps-list)))
 
 (defun extract-comps-info-by-id (lex-id)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
-  (extract-comps-info (get-dag-by-id lex-id)))
+   (extract-comps-info (get-dag-by-id lex-id)))
 
 (defun extract-comps-elt-info (comps-elt rels-list)
-  (if lkb::*within-unification-context-p*
-      (error "this code is not safe inside a unification context"))
-  (let* ((comp-rel (lkb::dag-type 
+  (let* ((comp-rel (fs-type 
 	       (path-value comps-elt
 			   *comps-elt-key-path*)))
 	 (index (path-value comps-elt
 			    *comps-elt-index-path*))
-	 (opt (lkb::dag-type (path-value comps-elt
+	 (opt (fs-type (path-value comps-elt
 					 *comps-elt-opt-path*)))
 	 (coslot
 	  (loop
 	      for rel in rels-list
-	      for rel-pred = (lkb::dag-type
+	      for rel-pred = (fs-type
 			      (path-value rel *rel-name-path*))
 	      append
 		(loop
@@ -979,3 +925,49 @@
 
 (defun get-meta-semi nil
   *meta-semi*)
+
+
+;;; moved from batch-check.lsp - believed only used in code in this
+;;; file 
+
+(defvar *warn-dag-diff-list-2-list* nil)
+
+(defun dag-diff-list-2-list (dag)
+  (let ((last-dag (path-value dag (list lkb::*diff-list-last*)))
+	(list-dag (path-value dag (list lkb::*diff-list-list*))))
+    (loop
+	with rest-dag
+	while (not (eq list-dag last-dag))
+	do
+	  (setf rest-dag (path-value list-dag lkb::*list-tail*))
+	  (when (null rest-dag)
+	    (when *warn-dag-diff-list-2-list*
+	      (format t "~%WARNING: invalid difference list ~a" 
+		      out-list))
+	    (loop-finish))
+	collect (path-value list-dag lkb::*list-head*)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))
+
+(defun dag-list-2-list (dag)
+  (let* ((list-dag dag))
+    (loop
+	with rest-dag
+	while (not (equal (fs-type list-dag)
+			  lkb::*empty-list-type*))
+	do
+	  (setf rest-dag (path-value list-dag lkb::*list-tail*))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid list ~a in ~a" out-list dag)
+	    (loop-finish))
+	collect (path-value list-dag lkb::*list-head*)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))

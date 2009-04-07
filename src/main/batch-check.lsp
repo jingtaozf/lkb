@@ -35,7 +35,8 @@
 	  do
 	    (check-lex-entry id lexicon
 			     :unexpandp unexpandp
-			     :start-path start-path))))
+			     :start-path start-path
+			     :ostream *lkb-background-stream*))))
   (when check-duplicates
     (display-tdl-duplicates lexicon))
 ;  (format t "~%(emptying cache)")
@@ -102,8 +103,9 @@
       (tdl-val-str id))))
 
 (defun check-lex-entry (id lexicon &key unexpandp
-					start-path)
+					start-path ostream)
   (let* ((entry (read-psort lexicon id :cache (not unexpandp)))
+	 (output-stream (or ostream t))
 	 (lex-id id))
     (cond 
      ((null entry)
@@ -115,7 +117,7 @@
 	(if (eq :FAIL new-fs)
 	    (setf new-fs nil))
 	(unless new-fs
-	  (format lkb::*lkb-background-stream*
+	  (format output-stream
 		  "~%No feature structure for ~A~%" lex-id))
 	(when (and new-fs
 		   *grammar-specific-batch-check-fn*)
@@ -123,7 +125,8 @@
 	(when new-fs
 	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
 		    lex-id
-		    (reverse start-path)))
+		    (reverse start-path)
+		    output-stream))
 	new-fs)))))
 
 (defun sanitize (dag-instance id path &optional (ostream t))
@@ -141,7 +144,8 @@
        (setf (dag-visit real-dag) :sanitized)
        (unless (not (has-features real-dag))
          ; don't care about things without features
-         (when (eq-or-subtype real-dag *diff-list-type*)
+         (when 
+	     (subtype-or-equal (type-of-fs real-dag) *diff-list-type*)
            (check-dag-diff-list dag-instance id path-so-far ostream))
          (loop for label in (top-level-features-of real-dag)
               do
@@ -150,19 +154,15 @@
 			     (cons label path-so-far) 
 			     ostream))))))
 
-(defun eq-or-subtype (dag type)
-  (or (eq (type-of-fs dag) type)
-      (subtype-p (type-of-fs dag) type)))
-  
 (defun check-dag-diff-list (dag id path &optional (ostream t))
-  (let* ((list-dag (dag-path-val (list *diff-list-list*) dag))
-	 (last-dag (dag-path-val (list *diff-list-last*) dag)))
+  (let* ((list-dag (existing-dag-at-end-of dag (list *diff-list-list*)))
+	 (last-dag (existing-dag-at-end-of dag (list *diff-list-last*))))
     (when
 	(and
 	 (null (top-level-features-of list-dag))
 	 (null (top-level-features-of last-dag))
-	 (eq-or-subtype list-dag *list-type*)
-	 (eq-or-subtype last-dag *list-type*)
+	 (subtype-or-equal (type-of-fs list-dag) *list-type*)
+	 (subtype-or-equal (type-of-fs last-dag) *list-type*)
 	 (not (eq list-dag last-dag)))
       (format ostream "~%WARNING: malformed empty difference list at ~a in ~a" (reverse path) id)
       (return-from check-dag-diff-list))
@@ -171,7 +171,7 @@
 	while (not (eq list-dag
 		       last-dag))
 	do
-	  (setf rest-dag (dag-path-val '(rest) list-dag))
+	  (setf rest-dag (existing-dag-at-end-of list-dag *list-tail*))
 	  (when (null rest-dag)
 	    (format ostream "~%WARNING: malformed difference list at ~a in ~a" (reverse path) id)
 	    (return-from check-dag-diff-list))
@@ -230,79 +230,3 @@
       (if transformed-entries
           (try-all-morph-rules transformed-entries))))
 
-;;;
-;;; dag access
-;;;
-
-(defun dag-path-val (path dag)
-  (existing-dag-at-end-of dag path))
-
-;(defun dag-path-val (path dag)
-;  (cond
-;   ((null dag)
-;    nil)
-;   ((null path)
-;    dag)
-;   (t
-;    (dag-path-val
-;     (cdr path)
-;     (cdr (assoc (car path) (dag-arcs dag)))))))
-
-(defun dag-path-type (path dag)
-  (let ((val (dag-path-val path dag)))
-    (if (typep val 'dag)
-        (dag-type val)
-      nil)))
-
-(defvar *warn-dag-diff-list-2-list* nil)
-(defvar *current-lex-id* nil)
-(defun dag-diff-list-2-list (dag)
-  (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
-	 (list-dag (dag-path-val (list *diff-list-list*) dag)))
-    (loop
-	with rest-dag
-	while (not (eq list-dag
-		       last-dag))
-	do
-	  (setf rest-dag (dag-path-val '(rest) list-dag))
-	  (when (null rest-dag)
-	    (when *warn-dag-diff-list-2-list*
-	      (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*))
-	    (loop-finish))
-	collect (dag-path-val '(first) list-dag)
-	into out-list
-	do
-	  (setf list-dag rest-dag)
-	finally
-	  (return out-list)
-	  )))
-
-(defun dag-list-2-list (dag)
-  (let* ((list-dag dag))
-    (loop
-	with rest-dag
-	while (not (equal (dag-type list-dag)
-			  *empty-list-type*))
-	do
-	  (setf rest-dag (dag-path-val *list-tail* list-dag))
-	  (when (null rest-dag)
-	    (format t "~%WARNING: invalid list ~a in ~a" out-list dag)
-	    (loop-finish))
-	collect (dag-path-val *list-head* list-dag)
-	into out-list
-	do
-	  (setf list-dag rest-dag)
-	finally
-	  (return out-list)
-	  )))
-
-;; list redundant entries obtained from list of duplicates
-#+:null
-(defun redundant-entries (dups &key (s t))
-  (loop
-      for x in dups
-      do
-	(loop
-	    for y in (cdr x)
-	    do 
-	      (format s "~&~a" (normalize-orthkey (second y))))))
