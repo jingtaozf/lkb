@@ -129,7 +129,8 @@
         (t 
          (format nil "_~(~a~)_" abstraction))))))
 
-(defun ed-output-psoa (psoa &key (stream t) (format :ascii) markp)
+(defun ed-output-psoa (psoa &key (stream t) (format :ascii)
+                                 cargp markp lnkp collocationp abstractp)
   (if (psoa-p psoa)
     (case format
       (:ascii
@@ -138,7 +139,8 @@
        (let* ((eds (ed-convert-psoa psoa))
               (triples (ed-explode
                         eds
-                        :lnkp nil :cargp nil :collocationp t :abstractp t)))
+                        :lnkp lnkp :cargp cargp
+                        :collocationp collocationp :abstractp abstractp)))
          (loop
              with *package* = (find-package :lkb)
              initially (unless markp (format stream "{~%"))
@@ -620,7 +622,11 @@
                                return ed))
                    (result (when target
                              (list functor (vsym "ARG0")
-                                   (ed-linked-predicate target :lnkp lnkp))))
+                                   (format
+                                    nil
+                                    "~a~@[(~a)~]"
+                                    (ed-linked-predicate target :lnkp lnkp)
+                                    (and cargp (ed-carg target))))))
                    (abstraction (when (and target abstractp)
                                   (ed-linked-abstraction target :lnkp lnkp)))
                    (abstraction (when abstraction
