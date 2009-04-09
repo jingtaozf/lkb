@@ -696,17 +696,17 @@
           (setf %failure% 
             (list :clash (reverse path) 
                   (unify-get-type dag1) (unify-get-type dag2)))
-	(let ((msg 
-	       (format 
-		nil 
-		"~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-		(unify-get-type dag1) (unify-get-type dag2) 
-		(reverse path))))
-	  (when (eq *unify-debug* :window)
-	    (show-message-window msg))
-	  ;;; deliberately also show in the LKB top as before, since some
-	  ;;; people may have got used to it
-	  (format t "~A" msg))))
+        (let ((msg 
+               (format 
+                nil 
+                "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+                (unify-get-type dag1) (unify-get-type dag2) 
+                (reverse path))))
+          (when (eq *unify-debug* :window)
+            (show-message-window msg))
+          ;;; deliberately also show in the LKB top as before, since some
+          ;;; people may have got used to it
+          (format t "~A" msg))))
     (throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
@@ -773,8 +773,8 @@
 
 (defun may-copy-constraint-of (type-name)
   (let* ((type-record (get-type-entry type-name))
-	 (constraint (ltype-constraint type-record))
-	 (cache (ltype-constraint-mark type-record))
+         (constraint (ltype-constraint type-record))
+         (cache (ltype-constraint-mark type-record))
          (*safe-not-to-copy-p* nil)
          (*dag-recycling-p* nil))
     (unless (consp cache)
@@ -789,9 +789,9 @@
        type-name)
       (setf (car cache) *unify-generation*)
       (setf (cadr cache)
-	(nconc (cadr cache) (cddr cache))) ; old used copies become ready for use
+        (nconc (cadr cache) (cddr cache))) ; old used copies become ready for use
       (setf (cddr cache) nil)
-      constraint)			; first return constraint itself
+      constraint)                        ; first return constraint itself
      ((cadr cache)
       #+:cdebug
       (format 
@@ -799,8 +799,8 @@
        "~&may-copy-constraint-of(): `~(~a~)' cache hit;~%"
        type-name)
       (let ((pre (pop (cadr cache))))
-	(push pre (cddr cache))		; previously computed copy becomes used
-	pre))
+        (push pre (cddr cache))                ; previously computed copy becomes used
+        pre))
      (t
       #+:cdebug
       (format 
@@ -808,8 +808,8 @@
        "~&may-copy-constraint-of(): `~(~a~)' cache miss (~d);~%"
        type-name (+ (length (cadr cache)) (length (cddr cache))))
       (let ((new (copy-dag-completely constraint)))
-	(push new (cddr cache))		; new copy becomes used
-	new)))))
+        (push new (cddr cache))                ; new copy becomes used
+        new)))))
 
 
 ;;; Copy first feature structure after a successful unification, respecting
@@ -844,39 +844,39 @@
    ((and (null (dag-arcs dag)) (null (dag-comp-arcs dag)))
     (setf (dag-copy dag)
       (if (or (not (dag-safe-p dag))
-	      (and (dag-new-type dag)
-		   (not (eq (dag-new-type dag) (dag-type dag)))))
-	  (make-dag :type (unify-get-type dag) :arcs nil)
-	dag)))
+              (and (dag-new-type dag)
+                   (not (eq (dag-new-type dag) (dag-type dag)))))
+          (make-dag :type (unify-get-type dag) :arcs nil)
+        dag)))
    (t
     ;; would have liked to have put path here, but it would hang around after
     ;; a circularity was detected - bad news for stack allocated conses
     (setf (dag-copy dag) :inside)
     (let ((copy-p (or (not (dag-safe-p dag))
-		      (and (dag-new-type dag)
-			   (not (eq (dag-new-type dag) (dag-type dag))))
-		      (dag-comp-arcs dag)))
-	  (new-arcs (nreverse (dag-comp-arcs dag))))
+                      (and (dag-new-type dag)
+                           (not (eq (dag-new-type dag) (dag-type dag))))
+                      (dag-comp-arcs dag)))
+          (new-arcs (nreverse (dag-comp-arcs dag))))
       (do ((tail new-arcs (cdr tail))) 
-	  ((null tail))
-	;; top-level conses in comp-arcs can be re-used, but an arc needs to
-	;; be fresh structure if its value is changed
-	(let ((new-path (cons (dag-arc-attribute (car tail)) path)))
-	  (declare (dynamic-extent new-path))
-	  (let ((v (copy-dag1 (dag-arc-value (car tail)) new-path)))
-	    (unless (eq v (dag-arc-value (car tail)))
-	      (setf (car tail)
-		(make-dag-arc
-		 :attribute (dag-arc-attribute (car tail))
-		 :value v))))))
+          ((null tail))
+        ;; top-level conses in comp-arcs can be re-used, but an arc needs to
+        ;; be fresh structure if its value is changed
+        (let ((new-path (cons (dag-arc-attribute (car tail)) path)))
+          (declare (dynamic-extent new-path))
+          (let ((v (copy-dag1 (dag-arc-value (car tail)) new-path)))
+            (unless (eq v (dag-arc-value (car tail)))
+              (setf (car tail)
+                (make-dag-arc
+                 :attribute (dag-arc-attribute (car tail))
+                 :value v))))))
       (setq new-arcs
-	(copy-dag-arcs (dag-arcs dag) nil path nil (dag-arcs dag) new-arcs))
+        (copy-dag-arcs (dag-arcs dag) nil path nil (dag-arcs dag) new-arcs))
       (unless copy-p
-	(setq copy-p (not (eq new-arcs (dag-arcs dag)))))
+        (setq copy-p (not (eq new-arcs (dag-arcs dag)))))
       (setf (dag-copy dag)
-	(if copy-p
-	    (make-dag :type (unify-get-type dag) :arcs new-arcs)
-	  dag))))))
+        (if copy-p
+            (make-dag :type (unify-get-type dag) :arcs new-arcs)
+          dag))))))
 
 
 (defun copy-dag-arcs (arcs-tail vals path lower-copied-p arcs new-arcs)
@@ -1174,66 +1174,50 @@
 (defun replace-dag-types (dag-instance path replace-alist)
   (if *within-unification-context-p*
       (let ((dag (unify-paths-dag-at-end-of1 dag-instance path))) 
-	;; better to complain if path doesn't exist?
-	(replace-dag-types-aux dag replace-alist)
-	dag-instance)
+        ;; better to complain if path doesn't exist?
+        (replace-dag-types-aux dag replace-alist)
+        dag-instance)
     (with-unification-context (dag-instance)
       (let ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
-	(replace-dag-types-aux dag replace-alist)
-	(copy-dag dag-instance)))))
+        (replace-dag-types-aux dag replace-alist)
+        (copy-dag dag-instance)))))
 
 (defun replace-dag-types-aux (dag-instance replace-alist)
   (let* ((dag (deref-dag dag-instance)))
     ;; process permanent arcs
     (loop
-	with repl
-	for arc in (dag-arcs dag)
-	for dag2 = (deref-dag (dag-arc-value arc))
-	if (eq (or (dag-new-type dag2) (dag-type dag2))
-	       *toptype*)
-	do ;; if *toptype* give new type
-	  (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
-	  (when repl
-	    (setf (dag-new-type dag2) repl)
-	    ;(format t "~%set ~a -> ~a" (dag-arc-attribute arc) repl)
-	    )
-	else
-	do ;; recurse on arc values 
-	(replace-dag-types-aux dag2 replace-alist))
+        with repl
+        for arc in (dag-arcs dag)
+        for dag2 = (deref-dag (dag-arc-value arc))
+        for type = (or (dag-new-type dag2) (dag-type dag2))
+        if (or (eq type *toptype*) (eq type *string-type*))
+        do ;; if fully unspecific type, give new type
+          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+          (when repl
+            (setf (dag-new-type dag2) repl)
+            ;(format t "~%set ~a -> ~a" (dag-arc-attribute arc) repl)
+            )
+        else
+        do ;; recurse on arc values 
+        (replace-dag-types-aux dag2 replace-alist))
     ;; process temporary arcs
     (loop
-	with repl
-	for arc in (dag-comp-arcs dag)
-	for dag2 = (deref-dag (dag-arc-value arc))
-	if (eq (or (dag-new-type dag2) (dag-type dag2))
-	       *toptype*)
-	do ;; if *toptype* give new type
-	  (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
-	  (when repl
-	    (setf (dag-new-type dag2) repl)
-	    ;(format t "~%Tset ~a -> ~a" (dag-arc-attribute arc) repl)
-	    )
-	else
-	do ;; recurse on arc values 
-	(replace-dag-types-aux dag2 replace-alist))
+        with repl
+        for arc in (dag-comp-arcs dag)
+        for dag2 = (deref-dag (dag-arc-value arc))
+        for type = (or (dag-new-type dag2) (dag-type dag2))
+        if (or (eq type *toptype*) (eq type *string-type*))
+        do ;; if fully unspecific type, give new type
+          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+          (when repl
+            (setf (dag-new-type dag2) repl)
+            ;(format t "~%Tset ~a -> ~a" (dag-arc-attribute arc) repl)
+            )
+        else
+        do ;; recurse on arc values 
+        (replace-dag-types-aux dag2 replace-alist))
     dag))
     
-#+:null
-(defun replace-dag-types-aux (dag-instance replace-alist)
-  ;;; as revised by Bernd
-  ;;; walks over a dag, looking for types which are equal to *toptype*
-  ;;; if the feature pointing to the substructure with *toptype* is the in the
-  ;;; replace-alist reset the type to the cdr value
-  (let* ((real-dag (deref-dag dag-instance))
-         (sub-dag nil)
-         (replaceable nil))
-    (dolist (arc (dag-arcs real-dag))
-      (setq sub-dag (replace-dag-types-aux (dag-arc-value arc) replace-alist))
-      (when (and (eq (dag-type sub-dag) *toptype*)
-                 (setq replaceable
-                   (assoc (dag-arc-attribute arc) replace-alist)))
-        (setf (dag-new-type sub-dag) (cdr replaceable))))
-    real-dag))
 
 ;;; **********************************************************************
 
@@ -1301,7 +1285,7 @@
 (defun find-type-of-fs (real-dag current-type id path)
    (let* ((existing-features (top-level-features-of real-dag))
           (possible-type 
-	   (if existing-features
+           (if existing-features
                (maximal-type-of-list existing-features)
                *toptype*)))
       (cond

@@ -192,6 +192,16 @@
           (setf *tsdb-skeletons*
             (with-open-file (stream index :direction :input)
               (read stream nil nil)))))
+      ;;
+      ;; _fix_me_
+      ;; `derivations.lisp' establishes a reader that forces the package to be
+      ;; our own (:tsdb), presumably the code can also be run without the LKB.
+      ;; just now, however, the setting below overrides that reader, hence we
+      ;; end up reading into whatever package was active.  i wonder whether i
+      ;; will break something downstream, somewhere, by making sure we always
+      ;; read derivations into the :tsdb package?                (4-apr-09; oe)
+      ;;
+      #+:null
       (setf (gethash :derivation *statistics-readers*) "read-from-string")
       (setf (gethash :flags *statistics-readers*) "read-from-string")
       (when (find-package :lkb)

@@ -1398,7 +1398,7 @@
 (defun export-tree (item active 
                     &key complementp (offset 0) (stream *tsdb-io*))
 
-  #+:debug
+  #-:debug
   (setf %item% item %active% active)
   (loop
       with *package* = (find-package :lkb)
@@ -1437,7 +1437,8 @@
       for dag = (and edge (let ((tdfs (lkb::edge-dag edge)))
                             (and (lkb::tdfs-p tdfs)
                                  (lkb::tdfs-indef tdfs))))
-      for mrs = (or (get-field :mrs result)
+      for mrs = (or (let ((mrs (get-field :mrs result)))
+                      (mrs::read-mrs-from-string mrs))
                     (and edge (mrs::extract-mrs edge)))
       for ident = (format nil "~a @ ~a~@[ @ ~a~]" i-id result-id i-comment)
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
@@ -1492,11 +1493,22 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :triples *redwoods-export-values*))
           (ignore-errors
-           (mrs::ed-output-psoa mrs :format :triples :stream stream)))
+           (mrs::ed-output-psoa
+            mrs :format :triples :cargp nil :markp nil :lnkp nil
+            :collocationp t :abstractp t :stream stream)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mtriples *redwoods-export-values*))
           (ignore-errors
-           (mrs::ed-output-psoa mrs :format :triples :markp t :stream stream)))
+           (mrs::ed-output-psoa
+            mrs :format :triples :cargp nil :markp t :lnkp nil
+            :collocationp t :abstractp t
+            :stream stream)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :ltriples *redwoods-export-values*))
+          (ignore-errors
+           (mrs::ed-output-psoa
+            mrs :format :triples  :cargp t :markp nil :lnkp t
+            :collocationp nil :abstractp nil :stream stream)))
         #+:cambridge
         (when (smember :qa *redwoods-export-values*)
           (mrs::output-rmrs-from-itsdb

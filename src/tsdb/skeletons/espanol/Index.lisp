@@ -19,7 +19,7 @@
 ;;; the list lexicographically before output.
 ;;;
 
-(((:path . "conll") (:content . "CoNLL 2009 Shared Task Data"))
+(((:path . "ancora") (:content . "Spanish AnCora Corpus"))
  ((:path . "economia") (:content . "IULA Economy Corpus"))
  ((:path . "banca") (:content . "YY Banking Transactions"))
  ((:path . "mrs") (:content . "Spanish MRS Test Suite"))

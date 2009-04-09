@@ -752,6 +752,11 @@
 
 (defvar mrs::*psoa-liszt-path*)
 
+;; imported from erg/lkb/xmlify.lsp
+;; cfrom/cto replacement could be made more precise
+;; note that instantiated CFROM/CTO show up in parse tree FS
+;;  only for the lexically grounded preds 
+
 (defun set-characterization-tdfs (tdfs cfrom cto)
   (cond
    ((and cfrom cto)
@@ -762,54 +767,10 @@
    (t
     tdfs)))
 
-#+:null
-(defun set-characterization-tdfs-within-unification-context (tdfs cfrom cto)
-  (cond
-   ((and cfrom cto)
-    (let ((indef (set-characterization-indef-within-unification-context (tdfs-indef tdfs) cfrom cto)))
-      (when indef ;; is this necessary ???
-	(make-tdfs :indef indef
-		   :tail (copy-tdfs-tails tdfs)))))
-   (t
-    tdfs)))
-
-#+:null  
-(defun set-characterization-tdfs-within-unification-context (tdfs cfrom cto)
-  (cond
-   ((and cfrom cto)
-    (set-characterization-indef-within-unification-context (tdfs-indef tdfs) cfrom cto))
-   (t
-    tdfs)))
-  
 (defun set-characterization-indef (indef-dag cfrom cto)
   (with-unification-context (dummy)
     (set-characterization-indef-within-unification-context indef-dag cfrom cto)
     (copy-dag indef-dag)))
-
-;; must call copy-dag to get result
-#+:null
-(defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
-    (let* ((cfrom-str (2-str cfrom))
-	   (cto-str (2-str cto))
-	   (rels (mrs::get-rels-list indef-dag))
-	   (message (mrs::get-message indef-dag)))
-      (when message
-	(let* ((message-cfrom-dag (mrs::path-value message '(CFROM)))
-	       (message-cto-dag (mrs::path-value message '(CTO))))
-	  (when (and message-cfrom-dag message-cto-dag
-		     (or (eq *toptype* (dag-type message-cfrom-dag)) 
-			 (eq *toptype* (dag-type message-cto-dag))))
-	    (setf (dag-new-type message-cfrom-dag) cfrom-str)
-	    (setf (dag-new-type message-cto-dag) cto-str))))
-      (loop
-	  for rel in rels
-	  for rel-cfrom-dag = (mrs::path-value rel '(CFROM))
-	  for rel-cto-dag = (mrs::path-value rel '(CTO))
-	  when (or (eq *toptype* (dag-type rel-cfrom-dag)) 
-		   (eq *toptype* (dag-type rel-cto-dag)))
-	  do 
-	    (setf (dag-new-type rel-cfrom-dag) cfrom-str)
-	    (setf (dag-new-type rel-cto-dag) cto-str))))
 
 (defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
   (let ((*safe-not-to-copy* nil))
@@ -824,32 +785,6 @@
 			 (append mrs::*initial-semantics-path*
 				 mrs::*psoa-liszt-path*) 
 			 replace-alist))))
-
-;; imported from erg/lkb/xmlify.lsp
-;; cfrom/cto replacement could be made more precise
-;; note that instantiated CFROM/CTO show up in parse tree FS
-;;  only for the lexically grounded preds 
-#+:null
-(defun set-characterization (tdfs cfrom cto)
-  (let ((*safe-not-to-copy* nil))
-    (setf *safe-not-to-copy* *safe-not-to-copy*) ;; to avoid compiler warning
-    (when (and (tdfs-p tdfs) (integerp cfrom)
-	       (> cfrom -1) (integerp cto)
-	       (> cto -1)) 
-      (let* ((replace-alist (list (cons 'cfrom  
-					(format nil "~A" cfrom))
-				  (cons 'cto  
-					(format nil "~A" cto))))
-	     (new-dag (tdfs-indef tdfs))
-	     ;;; need to restrict replacement to the RELS list
-	     ;;; otherwise get MSG clashes
-	     (retyped-dag
-	      (replace-dag-types new-dag 
-				 (append mrs::*initial-semantics-path*
-				       mrs::*psoa-liszt-path*) 
-				 replace-alist)))
-	(when retyped-dag
-	  (setf (tdfs-indef tdfs) retyped-dag))))))
 
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the
@@ -1404,14 +1339,6 @@ relatively limited.
 	new-edge)
     nil))
 
-;; [bmw] factored into morpho-stem-edge-match + morpho-stem-edge=
-#+:null
-(defun morpho-stem-edge-match (edge cclist)
-  (member-if #'(lambda (x)
-		 (morpho-stem-edge= edge x))
-	     cclist 
-	     :key #'chart-configuration-edge))
-
 (defun morpho-stem-edge= (edge1 edge2)
   (and (morpho-stem-edge-p edge1) ;; both medges
        (morpho-stem-edge-p edge2)
@@ -1634,16 +1561,6 @@ relatively limited.
                 (string= "ersatz" 
                          (string-downcase (subseq word (max 0 (- len 6)) len))))
       return t))
-
-;; version of above that disallows MWE ersatz's
-#+:null
-(defun lex-entry-is-ersatz (entry)
-  (let ((orth (lex-entry-orth entry)))
-    (and
-     (= 1 (length orth))
-     (let* ((car (car orth))
-	    (len (length car)))
-     (string= "ersatz" (subseq car (- len 6) len))))))
 
 ;; [bmw] non-destructively, return result of injecting 'inject-unifs' into 'unifs'
 (defun inject-unifs (inject-unifs unifs &key entry)

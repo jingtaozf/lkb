@@ -359,7 +359,8 @@
                                :direction :output :if-exists :supersede)
                 (push
                  (mrs::ed-output-psoa
-                  mrs :format :triples :markp t :stream stream)
+                  mrs :format :triples :cargp nil :lnkp nil
+                  :collocationp t :abstractp t :markp t :stream stream)
                  lengths))
               (format 
                *tm-input*
