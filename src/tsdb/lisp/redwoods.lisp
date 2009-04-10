@@ -1398,7 +1398,7 @@
 (defun export-tree (item active 
                     &key complementp (offset 0) (stream *tsdb-io*))
 
-  #-:debug
+  #+:debug
   (setf %item% item %active% active)
   (loop
       with *package* = (find-package :lkb)
