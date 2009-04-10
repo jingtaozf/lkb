@@ -3,7 +3,7 @@
 ;;; see `licence.txt' for conditions.
 
 ;;; Composition via algebra for RMRS
-;;; This is (partly) and alternative to the code in comp.lisp and may
+;;; This is (partly) an alternative to the code in comp.lisp and may
 ;;; be moved there eventually.  It uses the same approach to
 ;;; variable bindings, but differs in applying the algebra `properly'.
 ;;; There is code here to convert the XML rule formalism to the algebra
