@@ -281,7 +281,7 @@ erg:
 	  cd ${ROOT}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/erg.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
-              --exclude "*.svn* \
+              --exclude "*.svn*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="tsdb*" --exclude="*.fasl" \
 	      erg; \
