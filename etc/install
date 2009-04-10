@@ -187,7 +187,7 @@ echo " done.";
 #
 # finally, a couple of grammars (and the Matrix `meta-grammar') ...
 #
-for i in erg.tgz matrix.tgz spanish.tgz; do
+for i in erg.tgz spanish.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
   if [ -f Archives/${i} ]; then

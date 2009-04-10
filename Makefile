@@ -11,7 +11,7 @@ LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
         itsdb_linux.x86.32.tgz itsdb_solaris.tgz itsdb_source.tgz \
-        erg.tgz matrix.tgz spanish.tgz
+        erg.tgz spanish.tgz
 
 CP=cp
 RM=rm
@@ -30,11 +30,7 @@ update:
 	  ${CVS} update -P -d -R; \
 	  ${CVS} rtag -F latest yzlui; \
 	  cd ${ROOT}/erg; \
-	  ${CVS} update -P -d -R; \
-	  ${CVS} rtag -F latest erg; \
-	  cd ${ROOT}/matrix; \
-	  ${CVS} update -P -d -R; \
-	  ${CVS} rtag -F latest matrix; \
+	  svn update; \
 	  cd ${ROOT}/spanish; \
 	  ${CVS} update -P -d -R; \
 	  ${CVS} rtag -F latest spanish; \
@@ -54,7 +50,7 @@ update:
           mail -s "automated LinGO build (${DATE})" \
 	    oe@ifi.uio.no \
 	    ann.copestake@cl.cam.ac.uk \
-	    ben.waldron@hf.ntnu.no \
+	    danf@csli.stanford.edu \
             < build; \
 	  cvs commit -m "" build; \
 	)
@@ -62,7 +58,7 @@ update:
 latest:
 	${CVS} update -P -d -R -r latest;
 
-all: lkb yzlui erg spanish itsdb # matrix
+all: lkb yzlui erg spanish itsdb
 
 windows: lkb_windows
 
@@ -285,25 +281,12 @@ erg:
 	  cd ${ROOT}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/erg.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude "*.svn* \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="tsdb*" --exclude="*.fasl" \
 	      erg; \
 	)
 
-
-#
-# MatriX Grammar Starter-Kit (Emily M. Bender et al.)
-#
-
-matrix:
-	( \
-	  cd ${ROOT}; \
-	  ${TAR} Svczf ${TARGET}/builds/${DATE}/matrix.tgz \
-	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-	      --exclude="matrix/doc*" --exclude="*.fasl" \
-	      matrix; \
-	)
 
 #
 # Spanish HPSG (Ana Paula Quirino Simoes)
