@@ -49,7 +49,10 @@
 	      (semstruct nil) (eqs nil) (inherit nil))
 	  (loop for next-el in (cdr rule)
               do
-                (unless (xml-whitespace-string-p next-el)
+                (unless (or (xml-whitespace-string-p next-el)
+			    (not (listp next-el)))
+		  ;;; empty comments appear as atoms - just
+		  ;;; ignore this
                   (let*  
                       ((next-tag (car next-el))
                        (tag-content (cdr next-el)))
