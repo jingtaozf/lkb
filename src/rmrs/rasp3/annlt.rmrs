@@ -1,0 +1,2259 @@
+<rmrs-list>
+
+<rmrs cfrom='0' cto='10'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='9'><realpred lemma='rain' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='14'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='bark' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='10'><realpred lemma='window' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='17'><realpred lemma='open' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='chase' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='14' cto='20'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='14' cto='20'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='35'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='hand' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='14' cto='20'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='14' cto='20'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='21' cto='24'><realpred lemma='the' pos='q'/><label vid='17'/><var sort='x' vid='16'/></ep>
+<ep cfrom='25' cto='34'><realpred lemma='cigarette' pos='n'/><label vid='18'/><var sort='x' vid='16' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='16' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='24'/></rarg>
+<ing><ing-a><var sort='h' vid='15'/></ing-a><ing-b><var sort='h' vid='18'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='18'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='38'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='hand' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='14' cto='17'><realpred lemma='the' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='18' cto='27'><realpred lemma='cigarette' pos='n'/><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='28' cto='30'><realpred lemma='to' pos='p'/><label vid='20'/><var sort='e' vid='21'/></ep>
+<ep cfrom='31' cto='37'><gpred>proper_q_rel</gpred><label vid='25'/><var sort='x' vid='23' num='sg'/></ep>
+<ep cfrom='31' cto='37'><gpred>named_rel</gpred><label vid='24'/><var sort='x' vid='23'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='20'/><var sort='e' vid='32'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='20'/><var sort='x' vid='23' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='25'/><var sort='h' vid='26'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='25'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='24'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='26'/></hi><lo><label vid='24'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='45'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='10'><realpred lemma='bet' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='11' cto='17'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='11' cto='17'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='18' cto='19'><realpred lemma='a' pos='q'/><label vid='17'/><var sort='x' vid='16'/></ep>
+<ep cfrom='20' cto='29'><realpred lemma='cigarette' pos='n'/><label vid='18'/><var sort='x' vid='16' num='sg'/></ep>
+<ep cfrom='35' cto='37'><gpred>pron_rel</gpred><label vid='31'/><var sort='x' vid='29' num='sg' gender='n'/></ep>
+<ep cfrom='35' cto='37'><gpred>pronoun_q_rel</gpred><label vid='30'/><var sort='x' vid='29'/></ep>
+<ep cfrom='38' cto='44'><realpred lemma='rain' pos='v'/><label vid='34'/><var sort='e' vid='35' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='16' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG4</rargname><label vid='7'/><var sort='h' vid='34'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='34'/><var sort='x' vid='29' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='30'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='30'/><var sort='h' vid='33'/></rarg>
+<ing><ing-a><var sort='h' vid='15'/></ing-a><ing-b><var sort='h' vid='18'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='18'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='32'/></hi><lo><label vid='31'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='11'><realpred lemma='know' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='17' cto='19'><gpred>pron_rel</gpred><label vid='14'/><var sort='x' vid='12' num='sg' gender='n'/></ep>
+<ep cfrom='17' cto='19'><gpred>pronoun_q_rel</gpred><label vid='13'/><var sort='x' vid='12'/></ep>
+<ep cfrom='20' cto='26'><realpred lemma='rain' pos='v'/><label vid='17'/><var sort='e' vid='18' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='7'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='x' vid='12' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='13'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='13'/><var sort='h' vid='16'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='17'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='24'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='intend' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='19' cto='23'><realpred lemma='bark' pos='v'/><label vid='11'/><var sort='e' vid='12'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='h' vid='20'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='31'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='intend' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='22'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='16' cto='22'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='26' cto='30'><realpred lemma='bark' pos='v'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='27'/></hi><lo><label vid='17'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='17'>
+<label vid='12'/>
+<ep cfrom='0' cto='5'><realpred lemma='every' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='6' cto='9'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='10' cto='16'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='26'>
+<label vid='12'/>
+<ep cfrom='0' cto='5'><realpred lemma='every' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='6' cto='9'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='10' cto='16'><realpred lemma='chase' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='17' cto='21'><realpred lemma='some' pos='q'/><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='22' cto='25'><realpred lemma='dog' pos='n'/><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='14'>
+<label vid='18'/>
+<ep cfrom='0' cto='2'><gpred>def_explicit_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='2'><gpred>poss_rel</gpred><label vid='1'/><var sort='e' vid='4'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='5'/><var sort='x' vid='6'/></ep>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='7'/><var sort='x' vid='6'/></ep>
+<ep cfrom='3' cto='6'><realpred lemma='cat' pos='n'/><label vid='10'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='bark' pos='v'/><label vid='18'/><var sort='e' vid='19' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='18'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='1'/><var sort='x' vid='6'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='5'/><var sort='h' vid='8'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='5'/><var sort='h' vid='9'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='10'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='8'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='10'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='9'><realpred lemma='bark' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='chase' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='17'><gpred>pron_rel</gpred><label vid='17'/><var sort='x' vid='15' num='sg' gender='n'/></ep>
+<ep cfrom='15' cto='17'><gpred>pronoun_q_rel</gpred><label vid='16'/><var sort='x' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='19'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='chase' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='21'><gpred>pron_rel</gpred><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<ep cfrom='15' cto='21'><gpred>pronoun_q_rel</gpred><label vid='16'/><var sort='x' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='19'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='chase' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='18'><gpred>non_temp_nom_rel</gpred><label vid='14'/><var sort='x' vid='15'/></ep>
+<ep cfrom='15' cto='18'><gpred>quant_rel</gpred><label vid='16'/><var sort='x' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='12'>
+<label vid='14'/>
+<ep cfrom='0' cto='4'><gpred>def_implicit_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='4'><gpred>generic_entity_rel</gpred><label vid='4'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='4'><gpred>poss_rel</gpred><label vid='5'/><var sort='e' vid='6'/></ep>
+<ep cfrom='0' cto='4'><gpred>pron_rel</gpred><label vid='7'/><var sort='x' vid='8'/></ep>
+<ep cfrom='0' cto='4'><gpred>pronoun_q_rel</gpred><label vid='9'/><var sort='x' vid='8'/></ep>
+<ep cfrom='5' cto='11'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='5'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='5'/><var sort='x' vid='8'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='13'/></rarg>
+<ing><ing-a><var sort='h' vid='4'/></ing-a><ing-b><var sort='h' vid='5'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='12'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='10'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='12'>
+<label vid='4'/>
+<ep cfrom='0' cto='4'><realpred lemma='that' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='5' cto='11'><realpred lemma='open' pos='v'/><label vid='4'/><var sort='e' vid='5' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='4'/><var sort='x' vid='2'/></rarg>
+</rmrs>
+
+<rmrs cfrom='0' cto='10'>
+<label vid='9'/>
+<ep cfrom='0' cto='4'><gpred>udef_q_rel</gpred><label vid='5'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='0' cto='4'><realpred lemma='cat' pos='n'/><label vid='1'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='5' cto='9'><realpred lemma='bark' pos='v'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='x' vid='2' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='5'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='5'/><var sort='h' vid='7'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='6'/></hi><lo><label vid='1'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='16'>
+<label vid='3'/>
+<ep cfrom='0' cto='15'><gpred>udef_q_rel</gpred><label vid='11'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='7'><realpred lemma='tobacco' pos='n'/><label vid='1'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='15'><realpred lemma='arrive' pos='v'/><label vid='3'/><var sort='e' vid='4' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='3'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='14'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='1'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='10'>
+<label vid='15'/>
+<ep cfrom='0' cto='4'><realpred lemma='some' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='5' cto='9'><realpred lemma='bark' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='27'/>
+<ep cfrom='0' cto='16'><gpred>part_of_rel</gpred><label vid='21'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='4'><realpred lemma='some' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='5' cto='7'><realpred lemma='of' pos='p'/><label vid='4'/><var sort='e' vid='5'/></ep>
+<ep cfrom='8' cto='11'><realpred lemma='the' pos='q'/><label vid='8'/><var sort='x' vid='7'/></ep>
+<ep cfrom='12' cto='16'><realpred lemma='cat' pos='n'/><label vid='9'/><var sort='x' vid='7' num='pl'/></ep>
+<ep cfrom='17' cto='21'><realpred lemma='bark' pos='v'/><label vid='27'/><var sort='e' vid='28'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='27'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='21'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='4'/><var sort='x' vid='7' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='6'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='6'/><var sort='h' vid='15'/></rarg>
+<ing><ing-a><var sort='h' vid='21'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='6'/></ing-a><ing-b><var sort='h' vid='9'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='24'/></hi><lo><label vid='21'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='14'/></hi><lo><label vid='9'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='14'>
+<label vid='12'/>
+<ep cfrom='0' cto='2'><realpred lemma='no' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='6'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='17'>
+<label vid='1'/>
+<ep cfrom='4' cto='7'><realpred lemma='the' pos='q'/><label vid='5'/><var sort='x' vid='4'/></ep>
+<ep cfrom='8' cto='16'><gpred>compound_rel</gpred><label vid='10'/><var sort='e' vid='13'/></ep>
+<ep cfrom='8' cto='16'><gpred>udef_q_rel</gpred><label vid='14'/><var sort='x' vid='7' num='sg'/></ep>
+<ep cfrom='8' cto='11'><realpred lemma='dog' pos='n'/><label vid='6'/><var sort='x' vid='7' num='sg'/></ep>
+<ep cfrom='12' cto='16'><realpred lemma='bark' pos='n'/><label vid='8'/><var sort='x' vid='4' num='sg'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='4' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='10'/><var sort='x' vid='7'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='17'/></rarg>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='10'/></ing-a><ing-b><var sort='h' vid='8'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='10'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='16'/></hi><lo><label vid='6'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='17'>
+<label vid='12'/>
+<ep cfrom='0' cto='5'><realpred lemma='which' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='6' cto='9'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='10' cto='16'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='17'>
+<label vid='18'/>
+<ep cfrom='0' cto='5'><gpred>def_implicit_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='5'><gpred>poss_rel</gpred><label vid='1'/><var sort='e' vid='4'/></ep>
+<ep cfrom='0' cto='5'><gpred>person_rel</gpred><label vid='5'/><var sort='x' vid='6'/></ep>
+<ep cfrom='0' cto='5'><gpred>which_q_rel</gpred><label vid='7'/><var sort='x' vid='6'/></ep>
+<ep cfrom='6' cto='9'><realpred lemma='dog' pos='n'/><label vid='10'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='10' cto='16'><realpred lemma='bark' pos='v'/><label vid='18'/><var sort='e' vid='19' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='18'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='1'/><var sort='x' vid='6'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='7'/><var sort='h' vid='8'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='7'/><var sort='h' vid='9'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='10'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='8'/></hi><lo><label vid='5'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='13'>
+<label vid='1'/>
+<ep cfrom='0' cto='12'><gpred>pronoun_q_rel</gpred><label vid='16'/><var sort='x' vid='17'/></ep>
+<ep cfrom='0' cto='12'><gpred>pron_rel</gpred><label vid='18'/><var sort='x' vid='17'/></ep>
+<ep cfrom='0' cto='5'><realpred lemma='chase' pos='v'/><label vid='1'/><var sort='e' vid='2'/></ep>
+<ep cfrom='6' cto='12'><gpred>proper_q_rel</gpred><label vid='6'/><var sort='x' vid='4' num='sg'/></ep>
+<ep cfrom='6' cto='12'><gpred>named_rel</gpred><label vid='5'/><var sort='x' vid='4'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='17'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='1'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='1'/><var sort='x' vid='4' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='6'/><var sort='h' vid='7'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='6'/><var sort='h' vid='8'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='5'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='19'/></hi><lo><label vid='18'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='7'/></hi><lo><label vid='5'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='33'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='wonder' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='21'><realpred lemma='which' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='22' cto='25'><realpred lemma='dog' pos='n'/><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='26' cto='32'><realpred lemma='bark' pos='v'/><label vid='20'/><var sort='e' vid='21' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='7'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='20'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='31'/></hi><lo><label vid='20'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='38'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='wonder' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='23'><realpred lemma='whether' pos='x'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<ep cfrom='24' cto='30'><gpred>proper_q_rel</gpred><label vid='14'/><var sort='x' vid='12' num='sg'/></ep>
+<ep cfrom='24' cto='30'><gpred>named_rel</gpred><label vid='13'/><var sort='x' vid='12'/></ep>
+<ep cfrom='31' cto='37'><realpred lemma='bark' pos='v'/><label vid='17'/><var sort='e' vid='18' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>SUBORD</rargname><label vid='9'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='x' vid='12' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='13'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='9'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='17'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='13'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='34'>
+<label vid='36'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='13' cto='19'><gpred>proper_q_rel</gpred><label vid='11'/><var sort='x' vid='9' num='sg'/></ep>
+<ep cfrom='13' cto='19'><gpred>named_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='20' cto='26'><realpred lemma='chase' pos='v'/><label vid='14'/><var sort='e' vid='15' tense='past'/></ep>
+<ep cfrom='27' cto='33'><realpred lemma='bark' pos='v'/><label vid='36'/><var sort='e' vid='37' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='36'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='33'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='34'/></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='9' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='10'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='4'/></ing-a><ing-b><var sort='h' vid='14'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='33'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='12'/></hi><lo><label vid='10'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='28'>
+<label vid='27'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='16'><realpred lemma='chase' pos='v'/><label vid='8'/><var sort='e' vid='9'/></ep>
+<ep cfrom='20' cto='27'><realpred lemma='bark' pos='v'/><label vid='27'/><var sort='e' vid='28'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='27'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='8'/><var sort='x' vid='2' num='sg'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='12' cto='18'><realpred lemma='chase' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<ep cfrom='19' cto='21'><realpred lemma='by' pos='p'/><label vid='16'/><var sort='e' vid='17'/></ep>
+<ep cfrom='22' cto='28'><gpred>proper_q_rel</gpred><label vid='21'/><var sort='x' vid='19' num='sg'/></ep>
+<ep cfrom='22' cto='28'><gpred>named_rel</gpred><label vid='20'/><var sort='x' vid='19'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='e' vid='15'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='16'/><var sort='x' vid='19' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='21'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='21'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='20'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='16'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='20'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='32'>
+<label vid='34'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='chase' pos='v'/><label vid='6'/><var sort='e' vid='7'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='by' pos='p'/><label vid='8'/><var sort='e' vid='9'/></ep>
+<ep cfrom='18' cto='24'><gpred>proper_q_rel</gpred><label vid='13'/><var sort='x' vid='11' num='sg'/></ep>
+<ep cfrom='18' cto='24'><gpred>named_rel</gpred><label vid='12'/><var sort='x' vid='11'/></ep>
+<ep cfrom='25' cto='31'><realpred lemma='bark' pos='v'/><label vid='34'/><var sort='e' vid='35' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='34'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='6'/><var sort='u' vid='27'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='6'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='e' vid='7'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='8'/><var sort='x' vid='11' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='13'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='13'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='12'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='4'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='6'/></ing-a><ing-b><var sort='h' vid='8'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='31'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='14'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='14'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='18'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='14'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='12' cto='18'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='13' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='16'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='17' cto='24'><realpred lemma='bark' pos='v'/><label vid='16'/><var sort='e' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='16'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='17' cto='24'><realpred lemma='bark' pos='v'/><label vid='16'/><var sort='e' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='12'><realpred lemma='will' pos='v'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='13' cto='17'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='14'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='16'><realpred lemma='go' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<ep cfrom='20' cto='24'><realpred lemma='bark' pos='v'/><label vid='18'/><var sort='e' vid='19'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='14'/><var sort='h' vid='27'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='27'/></hi><lo><label vid='18'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='13'><realpred lemma='could' pos='v'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='14' cto='18'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='13'><realpred lemma='could' pos='v'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='13' cto='16'><gpred>neg_rel</gpred><label vid='14'/><var sort='e' vid='15'/></ep>
+<ep cfrom='17' cto='21'><realpred lemma='bark' pos='v'/><label vid='16'/><var sort='e' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='h' vid='24'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='14'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='24'/></hi><lo><label vid='16'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='22'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='old' pos='j'/><label vid='4'/><var sort='e' vid='5'/></ep>
+<ep cfrom='8' cto='11'><realpred lemma='dog' pos='n'/><label vid='10'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='12' cto='18'><realpred lemma='bark' pos='v'/><label vid='22'/><var sort='e' vid='23' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='22'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='4'/><var sort='x' vid='2' num='sg'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='10'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='19'/></hi><lo><label vid='10'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='21'><realpred lemma='softly' pos='r'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='e' vid='13' tense='past'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='24'>
+<label vid='18'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='16'><realpred lemma='probably' pos='r'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='17' cto='23'><realpred lemma='bark' pos='v'/><label vid='18'/><var sort='e' vid='19' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='18'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='e' vid='19' tense='past'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='18'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='in' pos='p'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<ep cfrom='18' cto='21'><realpred lemma='the' pos='q'/><label vid='21'/><var sort='x' vid='20'/></ep>
+<ep cfrom='22' cto='28'><realpred lemma='garden' pos='n'/><label vid='22'/><var sort='x' vid='20'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='e' vid='13' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='17'/><var sort='x' vid='20'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='19'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='19'/><var sort='h' vid='28'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='19'/></ing-a><ing-b><var sort='h' vid='22'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='27'/></hi><lo><label vid='22'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='18'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='17'><gpred>unspec_loc_rel</gpred><label vid='27'/><var sort='e' vid='28'/></ep>
+<ep cfrom='8' cto='13'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='present'/></ep>
+<ep cfrom='14' cto='17'><gpred>_time_n</gpred><label vid='20'/><var sort='x' vid='18'/></ep>
+<ep cfrom='14' cto='17'><gpred>def_q_rel</gpred><label vid='21'/><var sort='x' vid='18'/></ep>
+<ep cfrom='14' cto='17'><realpred lemma='now' pos='r'/><label vid='19'/><var sort='u' vid='22'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='27'/><var sort='e' vid='13' tense='present'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='27'/><var sort='x' vid='18'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='21'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='21'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='19'/><var sort='x' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='27'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='20'/></ing-a><ing-b><var sort='h' vid='19'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='20'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='23'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='14'><gpred>compound_rel</gpred><label vid='8'/><var sort='e' vid='11'/></ep>
+<ep cfrom='4' cto='14'><gpred>udef_q_rel</gpred><label vid='12'/><var sort='x' vid='5'/></ep>
+<ep cfrom='4' cto='10'><realpred lemma='garden' pos='n'/><label vid='4'/><var sort='x' vid='5'/></ep>
+<ep cfrom='11' cto='14'><realpred lemma='dog' pos='n'/><label vid='6'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='15' cto='21'><realpred lemma='bark' pos='v'/><label vid='23'/><var sort='e' vid='24' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='23'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='8'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='8'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='15'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='8'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='8'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='8'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='14'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='30'>
+<label vid='34'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='22'><gpred>compound_rel</gpred><label vid='19'/><var sort='e' vid='22'/></ep>
+<ep cfrom='4' cto='22'><gpred>udef_q_rel</gpred><label vid='23'/><var sort='x' vid='5' num='sg'/></ep>
+<ep cfrom='4' cto='11'><realpred lemma='tobacco' pos='n'/><label vid='4'/><var sort='x' vid='5' num='sg'/></ep>
+<ep cfrom='12' cto='22'><gpred>compound_rel</gpred><label vid='10'/><var sort='e' vid='13'/></ep>
+<ep cfrom='12' cto='22'><gpred>udef_q_rel</gpred><label vid='14'/><var sort='x' vid='7'/></ep>
+<ep cfrom='12' cto='18'><realpred lemma='garden' pos='n'/><label vid='6'/><var sort='x' vid='7'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='dog' pos='n'/><label vid='8'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='23' cto='29'><realpred lemma='bark' pos='v'/><label vid='34'/><var sort='e' vid='35' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='34'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='19'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='19'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='23'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='23'/><var sort='h' vid='26'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='10'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='10'/><var sort='x' vid='7'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='17'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='19'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='19'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='10'/></ing-a><ing-b><var sort='h' vid='8'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='31'/></hi><lo><label vid='19'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='16'/></hi><lo><label vid='6'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='15'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='14'><realpred lemma='old' pos='j'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='14'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='13'><realpred lemma='in' pos='p'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<ep cfrom='14' cto='17'><realpred lemma='the' pos='q'/><label vid='18'/><var sort='x' vid='17'/></ep>
+<ep cfrom='18' cto='24'><realpred lemma='garden' pos='n'/><label vid='19'/><var sort='x' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='14'/><var sort='x' vid='17'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='25'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='16'/></ing-a><ing-b><var sort='h' vid='19'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='24'/></hi><lo><label vid='19'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='30'>
+<label vid='14'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='11'><realpred lemma='bark' pos='v'/><label vid='4'/><var sort='e' vid='5'/></ep>
+<ep cfrom='12' cto='15'><realpred lemma='dog' pos='n'/><label vid='6'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='16' cto='22'><realpred lemma='chase' pos='v'/><label vid='14'/><var sort='e' vid='15' tense='past'/></ep>
+<ep cfrom='23' cto='29'><gpred>proper_q_rel</gpred><label vid='19'/><var sort='x' vid='17' num='sg'/></ep>
+<ep cfrom='23' cto='29'><gpred>named_rel</gpred><label vid='18'/><var sort='x' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='14'/><var sort='x' vid='17' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='19'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='19'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='18'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='6'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='18'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='17'>
+<label vid='16'/>
+<ep cfrom='0' cto='11'><gpred>udef_q_rel</gpred><label vid='12'/><var sort='x' vid='4' num='pl'/></ep>
+<ep cfrom='0' cto='6'><realpred lemma='chase' pos='v'/><label vid='1'/><var sort='e' vid='2'/></ep>
+<ep cfrom='7' cto='11'><realpred lemma='dog' pos='n'/><label vid='3'/><var sort='x' vid='4' num='pl'/></ep>
+<ep cfrom='12' cto='16'><realpred lemma='bark' pos='v'/><label vid='16'/><var sort='e' vid='17'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='4' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='u' vid='8'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='1'/><var sort='x' vid='4' num='pl'/></rarg>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='1'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='5'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='23'>
+<label vid='17'/>
+<ep cfrom='0' cto='22'><gpred>udef_q_rel</gpred><label vid='28'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='22'><gpred>nominalization_rel</gpred><label vid='30'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='7'><realpred lemma='chase' pos='v'/><label vid='1'/><var sort='e' vid='2'/></ep>
+<ep cfrom='8' cto='11'><realpred lemma='the' pos='q'/><label vid='5'/><var sort='x' vid='4'/></ep>
+<ep cfrom='12' cto='15'><realpred lemma='cat' pos='n'/><label vid='6'/><var sort='x' vid='4' num='sg'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='old' pos='j'/><label vid='19'/><var sort='e' vid='20'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='28'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='28'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='30'/><var sort='h' vid='33'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='u' vid='35'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='1'/><var sort='x' vid='4' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='12'/></rarg>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='31'/></hi><lo><label vid='30'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='33'/></hi><lo><label vid='1'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='6'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='34'>
+<label vid='32'/>
+<ep cfrom='0' cto='33'><gpred>udef_q_rel</gpred><label vid='43'/><var sort='x' vid='44'/></ep>
+<ep cfrom='0' cto='33'><gpred>nominalization_rel</gpred><label vid='45'/><var sort='x' vid='44'/></ep>
+<ep cfrom='5' cto='8'><realpred lemma='the' pos='q'/><label vid='5'/><var sort='x' vid='4'/></ep>
+<ep cfrom='9' cto='12'><realpred lemma='cat' pos='n'/><label vid='6'/><var sort='x' vid='4' num='sg'/></ep>
+<ep cfrom='13' cto='19'><realpred lemma='chase' pos='v'/><label vid='14'/><var sort='e' vid='15' tense='present'/></ep>
+<ep cfrom='20' cto='26'><gpred>proper_q_rel</gpred><label vid='19'/><var sort='x' vid='17' num='sg'/></ep>
+<ep cfrom='20' cto='26'><gpred>named_rel</gpred><label vid='18'/><var sort='x' vid='17'/></ep>
+<ep cfrom='30' cto='33'><realpred lemma='old' pos='j'/><label vid='34'/><var sort='e' vid='35'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='43'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='43'/><var sort='h' vid='46'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='45'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='32'/><var sort='x' vid='44'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='4' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='11'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='14'/><var sort='x' vid='17' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='19'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='19'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='18'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='3'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='14'/></hi><lo><label vid='45'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='11'/></hi><lo><label vid='6'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='18'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='26'>
+<label vid='9'/>
+<ep cfrom='0' cto='4'><gpred>udef_q_rel</gpred><label vid='5'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='0' cto='4'><realpred lemma='dog' pos='n'/><label vid='1'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='5' cto='10'><realpred lemma='chase' pos='v'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<ep cfrom='11' cto='19'><gpred>free_relative_ever_q_rel</gpred><label vid='13'/><var sort='x' vid='12'/></ep>
+<ep cfrom='20' cto='25'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15' tense='present'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='x' vid='2' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='5'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='5'/><var sort='h' vid='7'/></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='9'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='12'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='6'/></hi><lo><label vid='1'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='24'><gpred>unspec_loc_rel</gpred><label vid='30'/><var sort='e' vid='31'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='20'><realpred lemma='every' pos='q'/><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='21' cto='24'><realpred lemma='day' pos='n'/><label vid='20'/><var sort='x' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='30'/><var sort='e' vid='13' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='30'/><var sort='x' vid='18'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='17'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='17'/><var sort='h' vid='26'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='30'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='17'/></ing-a><ing-b><var sort='h' vid='20'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='20'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='30'/>
+<ep cfrom='0' cto='4'><realpred lemma='when' pos='r'/><label vid='1'/><var sort='u' vid='2'/></ep>
+<ep cfrom='9' cto='12'><realpred lemma='the' pos='q'/><label vid='7'/><var sort='x' vid='6'/></ep>
+<ep cfrom='13' cto='21'><gpred>compound_rel</gpred><label vid='12'/><var sort='e' vid='15'/></ep>
+<ep cfrom='13' cto='21'><gpred>udef_q_rel</gpred><label vid='16'/><var sort='x' vid='9' num='sg'/></ep>
+<ep cfrom='13' cto='16'><realpred lemma='dog' pos='n'/><label vid='8'/><var sort='x' vid='9' num='sg'/></ep>
+<ep cfrom='17' cto='21'><realpred lemma='bark' pos='n'/><label vid='10'/><var sort='x' vid='6' num='sg'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='5'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='5'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='6' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='19'/></rarg>
+<ing><ing-a><var sort='h' vid='5'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='10'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='24'/></hi><lo><label vid='12'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='8'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='23'>
+<label vid='29'/>
+<ep cfrom='0' cto='17'><gpred>part_of_rel</gpred><label vid='23'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='5'><gpred>card_rel</gpred><label vid='1'/><var sort='u' vid='3'/></ep>
+<ep cfrom='6' cto='8'><realpred lemma='of' pos='p'/><label vid='6'/><var sort='e' vid='7'/></ep>
+<ep cfrom='9' cto='12'><realpred lemma='the' pos='q'/><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='13' cto='17'><realpred lemma='dog' pos='n'/><label vid='11'/><var sort='x' vid='9' num='pl'/></ep>
+<ep cfrom='18' cto='22'><realpred lemma='bark' pos='v'/><label vid='29'/><var sort='e' vid='30'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='29'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='23'/><var sort='x' vid='7'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='26'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='1'/><constant>three</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='6'/><var sort='x' vid='9' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='8'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='8'/><var sort='h' vid='17'/></rarg>
+<ing><ing-a><var sort='h' vid='23'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='8'/></ing-a><ing-b><var sort='h' vid='11'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='26'/></hi><lo><label vid='23'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='16'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='11'>
+<label vid='13'/>
+<ep cfrom='0' cto='5'><gpred>card_rel</gpred><label vid='1'/><var sort='u' vid='3'/></ep>
+<ep cfrom='6' cto='10'><realpred lemma='bark' pos='n'/><label vid='6'/><var sort='x' vid='7' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='1'/><constant>three</constant></rarg>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='21'/>
+<ep cfrom='0' cto='12'><gpred>def_explicit_q_rel</gpred><label vid='15'/><var sort='x' vid='12' num='sg'/></ep>
+<ep cfrom='0' cto='12'><gpred>poss_rel</gpred><label vid='16'/><var sort='u' vid='17'/></ep>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='9' cto='12'><realpred lemma='dog' pos='n'/><label vid='11'/><var sort='x' vid='12' num='sg'/></ep>
+<ep cfrom='13' cto='18'><realpred lemma='bark' pos='v'/><label vid='21'/><var sort='e' vid='22' tense='present'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='21'/><var sort='x' vid='12' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='12'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='16'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='16'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='16'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='15'>
+<label vid='24'/>
+<ep cfrom='0' cto='14'><gpred>def_explicit_q_rel</gpred><label vid='15'/><var sort='x' vid='12' num='pl'/></ep>
+<ep cfrom='0' cto='14'><gpred>poss_rel</gpred><label vid='16'/><var sort='u' vid='17'/></ep>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='9' cto='14'><realpred lemma='bark' pos='n'/><label vid='11'/><var sort='x' vid='12' num='pl'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='16'/><var sort='x' vid='12'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='16'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='16'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='16'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='23'>
+<label vid='15'/>
+<ep cfrom='0' cto='17'><gpred>udef_q_rel</gpred><label vid='11'/><var sort='x' vid='8' num='pl'/></ep>
+<ep cfrom='0' cto='6'><gpred>card_rel</gpred><label vid='1'/><var sort='u' vid='3'/></ep>
+<ep cfrom='7' cto='12'><gpred>card_rel</gpred><label vid='4'/><var sort='u' vid='6'/></ep>
+<ep cfrom='13' cto='17'><realpred lemma='dog' pos='n'/><label vid='7'/><var sort='x' vid='8' num='pl'/></ep>
+<ep cfrom='18' cto='22'><realpred lemma='bark' pos='v'/><label vid='15'/><var sort='e' vid='16'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='15'/><var sort='x' vid='8' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='1'/><constant>twenty</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='4'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='4'/><constant>three</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='12'/></hi><lo><label vid='7'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='20'/>
+<ep cfrom='0' cto='23'><gpred>udef_q_rel</gpred><label vid='16'/><var sort='x' vid='13' num='pl'/></ep>
+<ep cfrom='0' cto='3'><gpred>card_rel</gpred><label vid='1'/><var sort='u' vid='3'/></ep>
+<ep cfrom='4' cto='11'><gpred>card_rel</gpred><label vid='4'/><var sort='u' vid='6'/></ep>
+<ep cfrom='4' cto='11'><gpred>times_rel</gpred><label vid='7'/><var sort='u' vid='8'/></ep>
+<ep cfrom='12' cto='18'><gpred>card_rel</gpred><label vid='9'/><var sort='u' vid='11'/></ep>
+<ep cfrom='19' cto='23'><realpred lemma='dog' pos='n'/><label vid='12'/><var sort='x' vid='13' num='pl'/></ep>
+<ep cfrom='24' cto='28'><realpred lemma='bark' pos='v'/><label vid='20'/><var sort='e' vid='21'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='20'/><var sort='x' vid='13' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='1'/><constant>two</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='4'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='4'/><constant>hundred</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>FACTOR2</rargname><label vid='7'/><var sort='h' vid='4'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='x' vid='10'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='9'/><constant>twenty</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='14'><realpred lemma='arrive' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='15' cto='21'><gpred>implicit_q_rel</gpred><label vid='18'/><var sort='x' vid='15' num='sg'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='by' pos='p'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='18' cto='21'><realpred lemma='car' pos='n'/><label vid='14'/><var sort='x' vid='15' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='18'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='18'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15'/></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='20'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='11'><realpred lemma='keep' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='12' cto='19'><realpred lemma='bark' pos='v'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='7'/><var sort='h' vid='16'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='16'/></hi><lo><label vid='9'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='squeeze' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='19'><realpred lemma='the' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='20' cto='23'><realpred lemma='cat' pos='n'/><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='24' cto='26'><realpred lemma='in' pos='r'/><label vid='20'/><var sort='e' vid='21'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='20'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='20'/><var sort='x' vid='10'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='20'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='squeeze' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='18'><realpred lemma='in' pos='p'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='the' pos='q'/><label vid='13'/><var sort='x' vid='12'/></ep>
+<ep cfrom='23' cto='26'><realpred lemma='cat' pos='n'/><label vid='14'/><var sort='x' vid='12' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='9'/><var sort='x' vid='12' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='20'/></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='9'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='14'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='19'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='30'>
+<label vid='28'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='11'><realpred lemma='picture' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='12' cto='14'><realpred lemma='of' pos='p'/><label vid='6'/><var sort='e' vid='7'/></ep>
+<ep cfrom='15' cto='21'><gpred>proper_q_rel</gpred><label vid='11'/><var sort='x' vid='9' num='sg'/></ep>
+<ep cfrom='15' cto='21'><gpred>named_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<ep cfrom='22' cto='29'><realpred lemma='arrive' pos='v'/><label vid='28'/><var sort='e' vid='29' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='28'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='26'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='6'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='6'/><var sort='x' vid='9' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='10'/><constant>abrams</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='4'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='12'/></hi><lo><label vid='10'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='wipe' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='13' cto='16'><realpred lemma='the' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='17' cto='22'><realpred lemma='table' pos='n'/><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='23' cto='28'><realpred lemma='clean' pos='j'/><label vid='20'/><var sort='e' vid='21'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='20'/><var sort='x' vid='10'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='20'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='32'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='10'><realpred lemma='put' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='11' cto='17'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='11' cto='17'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='18' cto='20'><realpred lemma='in' pos='p'/><label vid='15'/><var sort='e' vid='16'/></ep>
+<ep cfrom='21' cto='24'><realpred lemma='the' pos='q'/><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='25' cto='31'><realpred lemma='garden' pos='n'/><label vid='20'/><var sort='x' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='15'/><var sort='e' vid='32'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='15'/><var sort='x' vid='18'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='17'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='17'/><var sort='h' vid='26'/></rarg>
+<ing><ing-a><var sort='h' vid='17'/></ing-a><ing-b><var sort='h' vid='20'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='20'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='36'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='12'><realpred lemma='will' pos='v'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='13' cto='17'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<ep cfrom='18' cto='20'><realpred lemma='if' pos='x'/><label vid='25'/><var sort='e' vid='26'/></ep>
+<ep cfrom='21' cto='27'><gpred>proper_q_rel</gpred><label vid='30'/><var sort='x' vid='28' num='sg'/></ep>
+<ep cfrom='21' cto='27'><gpred>named_rel</gpred><label vid='29'/><var sort='x' vid='28'/></ep>
+<ep cfrom='28' cto='35'><realpred lemma='arrive' pos='v'/><label vid='33'/><var sort='e' vid='34' tense='present'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='25'/><var sort='e' vid='13'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>SUBORD</rargname><label vid='25'/><var sort='h' vid='45'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='33'/><var sort='x' vid='28' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='30'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='30'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='29'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='25'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='14'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='45'/></hi><lo><label vid='33'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='31'/></hi><lo><label vid='29'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='26'>
+<label vid='27'/>
+<ep cfrom='0' cto='17'><gpred>udef_q_rel</gpred><label vid='21'/><var sort='x' vid='8'/></ep>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='10'><realpred lemma='and' pos='c'/><label vid='7'/><var sort='u' vid='8'/></ep>
+<ep cfrom='11' cto='17'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='11' cto='17'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='18' cto='25'><realpred lemma='arrive' pos='v'/><label vid='27'/><var sort='e' vid='28' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='27'/><var sort='x' vid='8'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='21'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='21'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>L-INDEX</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>R-INDEX</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='35'>
+<label vid='48'/>
+<ep cfrom='0' cto='26'><gpred>udef_q_rel</gpred><label vid='42'/><var sort='x' vid='41'/></ep>
+<ep cfrom='0' cto='26'><gpred>implicit_conj_rel</gpred><label vid='43'/><var sort='x' vid='41'/></ep>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='8' cto='26'><gpred>udef_q_rel</gpred><label vid='34'/><var sort='x' vid='16'/></ep>
+<ep cfrom='8' cto='14'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='8' cto='14'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='15' cto='18'><realpred lemma='and' pos='c'/><label vid='15'/><var sort='u' vid='16'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='the' pos='q'/><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='23' cto='26'><realpred lemma='dog' pos='n'/><label vid='20'/><var sort='x' vid='18' num='sg'/></ep>
+<ep cfrom='27' cto='34'><realpred lemma='arrive' pos='v'/><label vid='48'/><var sort='e' vid='49' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='48'/><var sort='x' vid='41'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='42'/><var sort='h' vid='44'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='42'/><var sort='h' vid='45'/></rarg>
+<rarg><rargname>L-INDEX</rargname><label vid='43'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>R-INDEX</rargname><label vid='43'/><var sort='x' vid='16'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='34'/><var sort='h' vid='35'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='34'/><var sort='h' vid='36'/></rarg>
+<rarg><rargname>L-INDEX</rargname><label vid='15'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>R-INDEX</rargname><label vid='15'/><var sort='x' vid='18' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='17'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='17'/><var sort='h' vid='26'/></rarg>
+<ing><ing-a><var sort='h' vid='17'/></ing-a><ing-b><var sort='h' vid='20'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='44'/></hi><lo><label vid='43'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='35'/></hi><lo><label vid='15'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='20'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='15'><realpred lemma='arrive' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='16' cto='19'><realpred lemma='and' pos='c'/><label vid='17'/><var sort='u' vid='18'/></ep>
+<ep cfrom='20' cto='26'><realpred lemma='bark' pos='v'/><label vid='19'/><var sort='e' vid='20' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>L-HNDL</rargname><label vid='17'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>L-INDEX</rargname><label vid='17'/><var sort='e' vid='13' tense='past'/></rarg>
+<rarg><rargname>R-HNDL</rargname><label vid='17'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>R-INDEX</rargname><label vid='17'/><var sort='e' vid='20' tense='past'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='34'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='15'><realpred lemma='arrive' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='16' cto='19'><realpred lemma='and' pos='c'/><label vid='21'/><var sort='u' vid='22'/></ep>
+<ep cfrom='20' cto='26'><gpred>proper_q_rel</gpred><label vid='26'/><var sort='x' vid='24' num='sg'/></ep>
+<ep cfrom='20' cto='26'><gpred>named_rel</gpred><label vid='25'/><var sort='x' vid='24'/></ep>
+<ep cfrom='27' cto='33'><realpred lemma='bark' pos='v'/><label vid='29'/><var sort='e' vid='30' tense='past'/></ep>
+<rarg><rargname>L-HNDL</rargname><label vid='21'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>L-INDEX</rargname><label vid='21'/><var sort='e' vid='13' tense='past'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>R-HNDL</rargname><label vid='21'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>R-INDEX</rargname><label vid='21'/><var sort='e' vid='30' tense='past'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='29'/><var sort='x' vid='24' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='26'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='26'/><var sort='h' vid='28'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='25'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='27'/></hi><lo><label vid='25'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='25'>
+<label vid='34'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='14'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='18' cto='21'><gpred>neg_rel</gpred><label vid='23'/><var sort='e' vid='24'/></ep>
+<ep cfrom='22' cto='24'><gpred>pron_rel</gpred><label vid='28'/><var sort='x' vid='26' num='sg' gender='n'/></ep>
+<ep cfrom='22' cto='24'><gpred>pronoun_q_rel</gpred><label vid='27'/><var sort='x' vid='26'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='27'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='27'/><var sort='h' vid='30'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='28'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='34'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='6' cto='13'><realpred lemma='obvious' pos='j'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='the' pos='q'/><label vid='15'/><var sort='x' vid='14'/></ep>
+<ep cfrom='23' cto='26'><realpred lemma='dog' pos='n'/><label vid='16'/><var sort='x' vid='14' num='sg'/></ep>
+<ep cfrom='27' cto='33'><realpred lemma='bark' pos='v'/><label vid='24'/><var sort='e' vid='25' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='9'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='24'/><var sort='x' vid='14' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='13'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='13'/><var sort='h' vid='22'/></rarg>
+<ing><ing-a><var sort='h' vid='13'/></ing-a><ing-b><var sort='h' vid='16'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='16'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='31'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='promise' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='16' cto='22'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='16' cto='22'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='26' cto='30'><realpred lemma='bark' pos='v'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='h' vid='27'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='27'/></hi><lo><label vid='17'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='seem' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='present'/></ep>
+<ep cfrom='16' cto='20'><realpred lemma='bark' pos='v'/><label vid='11'/><var sort='e' vid='12'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='h' vid='20'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='37'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='15'><realpred lemma='believe' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='present'/></ep>
+<ep cfrom='16' cto='22'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='16' cto='22'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='26' cto='28'><realpred lemma='be' pos='v'/><label vid='17'/><var sort='u' vid='18'/></ep>
+<ep cfrom='29' cto='36'><realpred lemma='bark' pos='v'/><label vid='19'/><var sort='e' vid='20'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='19'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='38'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='11'><realpred lemma='bother' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='12' cto='18'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='12' cto='18'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='24' cto='30'><gpred>proper_q_rel</gpred><label vid='20'/><var sort='x' vid='18' num='sg'/></ep>
+<ep cfrom='24' cto='30'><gpred>named_rel</gpred><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='31' cto='37'><realpred lemma='bark' pos='v'/><label vid='23'/><var sort='e' vid='24' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARGN</rargname><label vid='7'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='23'/><var sort='x' vid='18' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='20'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='20'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='19'/><constant>browne</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='19'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='37'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='7'><realpred lemma='take' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='8' cto='14'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='8' cto='14'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='15' cto='18'><gpred>card_rel</gpred><label vid='15'/><var sort='u' vid='17'/></ep>
+<ep cfrom='19' cto='26'><realpred lemma='minute' pos='n'/><label vid='18'/><var sort='x' vid='19'/></ep>
+<ep cfrom='30' cto='36'><realpred lemma='arrive' pos='v'/><label vid='22'/><var sort='e' vid='23'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='15'/><var sort='x' vid='16'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='15'/><constant>ten</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='33'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='11'><realpred lemma='leave' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='12' cto='14'><gpred>pron_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg' gender='n'/></ep>
+<ep cfrom='12' cto='14'><gpred>pronoun_q_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='to' pos='p'/><label vid='15'/><var sort='e' vid='16'/></ep>
+<ep cfrom='18' cto='24'><gpred>proper_q_rel</gpred><label vid='20'/><var sort='x' vid='18' num='sg'/></ep>
+<ep cfrom='18' cto='24'><gpred>named_rel</gpred><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='25' cto='32'><gpred>implicit_q_rel</gpred><label vid='32'/><var sort='x' vid='29' num='sg'/></ep>
+<ep cfrom='25' cto='27'><realpred lemma='to' pos='p'/><label vid='26'/><var sort='e' vid='27'/></ep>
+<ep cfrom='28' cto='32'><realpred lemma='bark' pos='n'/><label vid='28'/><var sort='x' vid='29' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='15'/><var sort='x' vid='18' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='20'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='20'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='19'/><constant>browne</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='32'/><var sort='h' vid='34'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='32'/><var sort='h' vid='35'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='26'/><var sort='x' vid='29'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='12'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='19'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='34'/></hi><lo><label vid='28'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='14'><realpred lemma='strike' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='present'/></ep>
+<ep cfrom='15' cto='21'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='15' cto='21'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='22' cto='24'><realpred lemma='as' pos='x'/><label vid='15'/><var sort='e' vid='16'/></ep>
+<ep cfrom='25' cto='28'><realpred lemma='old' pos='j'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='15'/><var sort='e' vid='28'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='u' vid='26'/></rarg>
+<ing><ing-a><var sort='h' vid='15'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='28'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='16'><realpred lemma='consider' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='present'/></ep>
+<ep cfrom='17' cto='23'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='17' cto='23'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='24' cto='27'><realpred lemma='old' pos='j'/><label vid='15'/><var sort='e' vid='16'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='15'/><var sort='x' vid='10'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='h' vid='25'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='25'/></hi><lo><label vid='15'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='45'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='like' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='13' cto='16'><realpred lemma='the' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='17' cto='21'><realpred lemma='idea' pos='n'/><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='27' cto='33'><gpred>proper_q_rel</gpred><label vid='19'/><var sort='x' vid='17' num='sg'/></ep>
+<ep cfrom='27' cto='33'><gpred>named_rel</gpred><label vid='18'/><var sort='x' vid='17'/></ep>
+<ep cfrom='34' cto='39'><realpred lemma='could' pos='v'/><label vid='22'/><var sort='e' vid='23'/></ep>
+<ep cfrom='40' cto='44'><realpred lemma='bark' pos='v'/><label vid='22'/><var sort='e' vid='25'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='49'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='50'/></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='22'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='22'/><var sort='x' vid='17' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='19'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='19'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='18'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='22'/><var sort='h' vid='33'/></rarg>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='22'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='49'/></hi><lo><label vid='12'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='18'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='33'/></hi><lo><label vid='22'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='32'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='bark' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='14' cto='18'><realpred lemma='from' pos='p'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='19' cto='31'><gpred>part_of_rel</gpred><label vid='31'/><var sort='x' vid='15'/></ep>
+<ep cfrom='19' cto='22'><gpred>card_rel</gpred><label vid='14'/><var sort='u' vid='16'/></ep>
+<ep cfrom='23' cto='25'><realpred lemma='to' pos='p'/><label vid='19'/><var sort='e' vid='20'/></ep>
+<ep cfrom='26' cto='31'><gpred>card_rel</gpred><label vid='21'/><var sort='u' vid='23'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='31'/><var sort='x' vid='20'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='17'/><var sort='h' vid='34'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='17'/><var sort='h' vid='35'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='15'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='14'/><constant>ten</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='19'/><var sort='x' vid='22'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='21'/><var sort='x' vid='22'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='21'/><constant>three</constant></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='31'/></ing-a><ing-b><var sort='h' vid='19'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='34'/></hi><lo><label vid='31'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='20'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='11' cto='15'><realpred lemma='very' pos='r'/><label vid='9'/><var sort='u' vid='10'/></ep>
+<ep cfrom='16' cto='19'><realpred lemma='old' pos='j'/><label vid='11'/><var sort='e' vid='12'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='24'>
+<label vid='19'/>
+<ep cfrom='0' cto='6'><realpred lemma='nearly' pos='r'/><label vid='1'/><var sort='e' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='every' pos='q'/><label vid='7'/><var sort='x' vid='6'/></ep>
+<ep cfrom='13' cto='16'><realpred lemma='dog' pos='n'/><label vid='8'/><var sort='x' vid='6' num='sg'/></ep>
+<ep cfrom='17' cto='23'><realpred lemma='bark' pos='v'/><label vid='19'/><var sort='e' vid='20' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='19'/><var sort='x' vid='6' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='5'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='5'/><var sort='h' vid='14'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='5'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='5'/></ing-a><ing-b><var sort='h' vid='8'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='8'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='26'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='13'><realpred lemma='bark' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='14' cto='18'><realpred lemma='very' pos='r'/><label vid='12'/><var sort='u' vid='13'/></ep>
+<ep cfrom='19' cto='25'><realpred lemma='softly' pos='r'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='e' vid='8' tense='past'/></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='14'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='41'>
+<label vid='38'/>
+<ep cfrom='0' cto='24'><gpred>def_explicit_q_rel</gpred><label vid='32'/><var sort='x' vid='12' num='sg'/></ep>
+<ep cfrom='0' cto='24'><gpred>poss_rel</gpred><label vid='33'/><var sort='u' vid='34'/></ep>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='9' cto='16'><realpred lemma='chasing' pos='n'/><label vid='11'/><var sort='x' vid='12' num='sg'/></ep>
+<ep cfrom='17' cto='19'><realpred lemma='of' pos='p'/><label vid='13'/><var sort='e' vid='14'/></ep>
+<ep cfrom='20' cto='24'><gpred>udef_q_rel</gpred><label vid='19'/><var sort='x' vid='16' num='pl'/></ep>
+<ep cfrom='20' cto='24'><realpred lemma='cat' pos='n'/><label vid='15'/><var sort='x' vid='16' num='pl'/></ep>
+<ep cfrom='25' cto='33'><realpred lemma='bother' pos='v'/><label vid='38'/><var sort='e' vid='39' tense='past'/></ep>
+<ep cfrom='34' cto='40'><gpred>proper_q_rel</gpred><label vid='43'/><var sort='x' vid='41' num='sg'/></ep>
+<ep cfrom='34' cto='40'><gpred>named_rel</gpred><label vid='42'/><var sort='x' vid='41'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='38'/><var sort='x' vid='12' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='32'/><var sort='h' vid='35'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='32'/><var sort='h' vid='36'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='33'/><var sort='x' vid='12'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='33'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='13'/><var sort='x' vid='12' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='13'/><var sort='x' vid='16' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='19'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='19'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='38'/><var sort='x' vid='41' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='43'/><var sort='h' vid='44'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='43'/><var sort='h' vid='45'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='42'/><constant>abrams</constant></rarg>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='33'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='13'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='35'/></hi><lo><label vid='33'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='15'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='44'/></hi><lo><label vid='42'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='43'>
+<label vid='7'/>
+<ep cfrom='0' cto='2'><gpred>pron_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg' gender='n'/></ep>
+<ep cfrom='0' cto='2'><gpred>pronoun_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='3' cto='11'><realpred lemma='bother' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='12' cto='18'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='12' cto='18'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='24' cto='30'><gpred>proper_q_rel</gpred><label vid='20'/><var sort='x' vid='18' num='sg'/></ep>
+<ep cfrom='24' cto='30'><gpred>named_rel</gpred><label vid='19'/><var sort='x' vid='18'/></ep>
+<ep cfrom='31' cto='37'><realpred lemma='chase' pos='v'/><label vid='23'/><var sort='e' vid='24' tense='past'/></ep>
+<ep cfrom='38' cto='42'><gpred>udef_q_rel</gpred><label vid='29'/><var sort='x' vid='26' num='pl'/></ep>
+<ep cfrom='38' cto='42'><realpred lemma='cat' pos='n'/><label vid='25'/><var sort='x' vid='26' num='pl'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARGN</rargname><label vid='7'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='23'/><var sort='x' vid='18' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='20'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='20'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='19'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='23'/><var sort='x' vid='26' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='29'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='29'/><var sort='h' vid='31'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='19'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='25'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='11'/>
+<ep cfrom='0' cto='4'><gpred>non_freerel_q_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='4'><gpred>mofy_rel</gpred><label vid='1'/><var sort='x' vid='2'/></ep>
+<ep cfrom='5' cto='10'><realpred lemma='third' pos='x'/><label vid='7'/><var sort='e' vid='8'/></ep>
+<ep cfrom='11' cto='18'><realpred lemma='arrive' pos='v'/><label vid='11'/><var sort='e' vid='12' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='11'/><var sort='x' vid='9'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='4'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='u' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='1'/><constant>june</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='4'/></hi><lo><label vid='1'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='31'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='14'><realpred lemma='arrive' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='at' pos='p'/><label vid='9'/><var sort='e' vid='10'/></ep>
+<ep cfrom='18' cto='23'><gpred>card_rel</gpred><label vid='11'/><var sort='u' vid='13'/></ep>
+<ep cfrom='24' cto='30'><gpred>card_rel</gpred><label vid='14'/><var sort='u' vid='16'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='9'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='9'/><var sort='x' vid='12'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='11'/><var sort='x' vid='12'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>three</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='14'/><var sort='x' vid='15'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='14'/><constant>twenty</constant></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='9'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='34'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='14'><realpred lemma='arrive' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='15' cto='17'><realpred lemma='on' pos='p'/><label vid='12'/><var sort='e' vid='13'/></ep>
+<ep cfrom='18' cto='33'><gpred>def_q_rel</gpred><label vid='25'/><var sort='x' vid='22'/></ep>
+<ep cfrom='18' cto='33'><gpred>of_p_rel</gpred><label vid='26'/><var sort='e' vid='27'/></ep>
+<ep cfrom='18' cto='33'><gpred>def_q_rel</gpred><label vid='28'/><var sort='x' vid='22'/></ep>
+<ep cfrom='18' cto='25'><gpred>proper_q_rel</gpred><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='18' cto='25'><gpred>dofw_rel</gpred><label vid='17'/><var sort='x' vid='15'/></ep>
+<ep cfrom='26' cto='33'><realpred lemma='morning' pos='n'/><label vid='21'/><var sort='x' vid='22'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='e' vid='8' tense='past'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='22'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='25'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='25'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='26'/><var sort='x' vid='22'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='26'/><var sort='x' vid='15'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='28'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='28'/><var sort='h' vid='33'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='16'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='16'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='u' vid='20'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='17'/><constant>tuesday</constant></rarg>
+<ing><ing-a><var sort='h' vid='7'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='26'/></ing-a><ing-b><var sort='h' vid='21'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='32'/></hi><lo><label vid='26'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='14'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='29'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='8'><realpred lemma='cat' pos='n'/><label vid='4'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='9' cto='14'><realpred lemma='find' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='15' cto='16'><realpred lemma='a' pos='q'/><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='17' cto='20'><realpred lemma='way' pos='n'/><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<ep cfrom='24' cto='28'><realpred lemma='bark' pos='v'/><label vid='21'/><var sort='e' vid='22'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='pl'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='35'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='36'/></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='21'/><var sort='x' vid='15' num='sg'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='35'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='30'>
+<label vid='23'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='11'><realpred lemma='happier' pos='j'/><label vid='4'/><var sort='e' vid='5'/></ep>
+<ep cfrom='4' cto='11'><gpred>comp_rel</gpred><label vid='6'/><var sort='e' vid='5'/></ep>
+<ep cfrom='12' cto='15'><realpred lemma='dog' pos='n'/><label vid='11'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='16' cto='22'><realpred lemma='chase' pos='v'/><label vid='23'/><var sort='e' vid='24' tense='past'/></ep>
+<ep cfrom='23' cto='29'><gpred>proper_q_rel</gpred><label vid='28'/><var sort='x' vid='26' num='sg'/></ep>
+<ep cfrom='23' cto='29'><gpred>named_rel</gpred><label vid='27'/><var sort='x' vid='26'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='23'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='20'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='4'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='23'/><var sort='x' vid='26' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='28'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='28'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='27'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='11'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='4'/></ing-a><ing-b><var sort='h' vid='6'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='20'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='27'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='30'>
+<label vid='3'/>
+<ep cfrom='11' cto='29'><gpred>udef_q_rel</gpred><label vid='28'/><var sort='x' vid='8'/></ep>
+<ep cfrom='11' cto='15'><realpred lemma='cat' pos='n'/><label vid='5'/><var sort='x' vid='6' num='pl'/></ep>
+<ep cfrom='16' cto='18'><realpred lemma='in' pos='p'/><label vid='7'/><var sort='e' vid='8'/></ep>
+<ep cfrom='19' cto='22'><realpred lemma='the' pos='q'/><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='23' cto='29'><realpred lemma='garden' pos='n'/><label vid='12'/><var sort='x' vid='10'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='3'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='3'/><var sort='x' vid='8'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='28'/><var sort='h' vid='29'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='28'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='6' num='pl'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='10'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='9'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='9'/><var sort='h' vid='18'/></rarg>
+<ing><ing-a><var sort='h' vid='5'/></ing-a><ing-b><var sort='h' vid='7'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='9'/></ing-a><ing-b><var sort='h' vid='12'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='29'/></hi><lo><label vid='7'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='12'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='23'>
+<label vid='12'/>
+<ep cfrom='0' cto='4'><realpred lemma='that' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='5' cto='8'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='9' cto='15'><realpred lemma='chase' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='16' cto='22'><gpred>proper_q_rel</gpred><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<ep cfrom='16' cto='22'><gpred>named_rel</gpred><label vid='16'/><var sort='x' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='12'/><var sort='x' vid='15' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='17'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='17'/><var sort='h' vid='19'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='16'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='18'/></hi><lo><label vid='16'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='23'>
+<label vid='6'/>
+<ep cfrom='0' cto='8'><gpred>non_temp_nom_rel</gpred><label vid='1'/><var sort='x' vid='2'/></ep>
+<ep cfrom='0' cto='8'><gpred>quant_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='9' cto='15'><realpred lemma='chase' pos='v'/><label vid='6'/><var sort='e' vid='7' tense='past'/></ep>
+<ep cfrom='16' cto='22'><gpred>proper_q_rel</gpred><label vid='11'/><var sort='x' vid='9' num='sg'/></ep>
+<ep cfrom='16' cto='22'><gpred>named_rel</gpred><label vid='10'/><var sort='x' vid='9'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='6'/><var sort='x' vid='2'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='3'/><var sort='h' vid='4'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='3'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='6'/><var sort='x' vid='9' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='11'/><var sort='h' vid='12'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='11'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='10'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='4'/></hi><lo><label vid='1'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='12'/></hi><lo><label vid='10'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='10'/>
+<ep cfrom='0' cto='3'><gpred>abstr_deg_rel</gpred><label vid='1'/><var sort='x' vid='3'/></ep>
+<ep cfrom='0' cto='3'><gpred>which_q_rel</gpred><label vid='4'/><var sort='x' vid='3'/></ep>
+<ep cfrom='4' cto='9'><realpred lemma='happy' pos='j'/><label vid='6'/><var sort='e' vid='7'/></ep>
+<ep cfrom='14' cto='20'><gpred>proper_q_rel</gpred><label vid='15'/><var sort='x' vid='13' num='sg'/></ep>
+<ep cfrom='14' cto='20'><gpred>named_rel</gpred><label vid='14'/><var sort='x' vid='13'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='1'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='10'/><var sort='x' vid='13' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='16'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='14'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='16'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='31'>
+<label vid='20'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='23'><gpred>compound_rel</gpred><label vid='11'/><var sort='e' vid='14'/></ep>
+<ep cfrom='4' cto='23'><gpred>udef_q_rel</gpred><label vid='15'/><var sort='x' vid='5' num='sg'/></ep>
+<ep cfrom='4' cto='10'><realpred lemma='number' pos='n'/><label vid='4'/><var sort='x' vid='5' num='sg'/></ep>
+<ep cfrom='11' cto='15'><gpred>card_rel</gpred><label vid='6'/><var sort='u' vid='8'/></ep>
+<ep cfrom='16' cto='23'><realpred lemma='bother' pos='n'/><label vid='9'/><var sort='x' vid='2' num='pl'/></ep>
+<ep cfrom='24' cto='30'><gpred>proper_q_rel</gpred><label vid='29'/><var sort='x' vid='27' num='sg'/></ep>
+<ep cfrom='24' cto='30'><gpred>named_rel</gpred><label vid='28'/><var sort='x' vid='27'/></ep>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='11'/><var sort='x' vid='2' num='pl'/></rarg>
+<rarg><rargname>ARG2</rargname><label vid='11'/><var sort='x' vid='5'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='17'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='18'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='6'/><var sort='x' vid='7'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='6'/><constant>five</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='29'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='29'/><var sort='h' vid='31'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='28'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='11'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='11'/></ing-a><ing-b><var sort='h' vid='9'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='17'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='28'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='13'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='could' pos='v'/><label vid='7'/><var sort='e' vid='8'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='16'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='12'><realpred lemma='try' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>browne</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='h' vid='15'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='9'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='11'>
+<label vid='1'/>
+<ep cfrom='0' cto='10'><gpred>pronoun_q_rel</gpred><label vid='18'/><var sort='x' vid='19'/></ep>
+<ep cfrom='0' cto='10'><gpred>pron_rel</gpred><label vid='20'/><var sort='x' vid='19'/></ep>
+<ep cfrom='0' cto='2'><realpred lemma='do' pos='v'/><label vid='1'/><var sort='u' vid='2'/></ep>
+<ep cfrom='2' cto='5'><gpred>neg_rel</gpred><label vid='3'/><var sort='e' vid='4'/></ep>
+<ep cfrom='6' cto='10'><realpred lemma='bark' pos='v'/><label vid='5'/><var sort='e' vid='6'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='1'/><var sort='x' vid='19'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='18'/><var sort='h' vid='21'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='18'/><var sort='h' vid='1'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='3'/><var sort='h' vid='13'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='20'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='5'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='24'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='15'><realpred lemma='arrive' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='16' cto='23'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='12'/><var sort='h' vid='21'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='22'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='13'><realpred lemma='like' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='past'/></ep>
+<ep cfrom='14' cto='21'><realpred lemma='bark' pos='v'/><label vid='14'/><var sort='e' vid='15'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='12'/><var sort='h' vid='21'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='21'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='32'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='8' cto='13'><realpred lemma='bark' pos='v'/><label vid='12'/><var sort='e' vid='13' tense='present'/></ep>
+<ep cfrom='14' cto='16'><realpred lemma='if' pos='x'/><label vid='17'/><var sort='e' vid='18'/></ep>
+<ep cfrom='17' cto='23'><gpred>proper_q_rel</gpred><label vid='22'/><var sort='x' vid='20' num='sg'/></ep>
+<ep cfrom='17' cto='23'><gpred>named_rel</gpred><label vid='21'/><var sort='x' vid='20'/></ep>
+<ep cfrom='24' cto='31'><realpred lemma='arrive' pos='v'/><label vid='25'/><var sort='e' vid='26' tense='present'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='e' vid='13' tense='present'/></rarg>
+<rarg><rargname>SUBORD</rargname><label vid='17'/><var sort='h' vid='37'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='25'/><var sort='x' vid='20' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='22'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='22'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='21'/><constant>browne</constant></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='12'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='37'/></hi><lo><label vid='25'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='21'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='45'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='10'><realpred lemma='bet' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='11' cto='17'><gpred>proper_q_rel</gpred><label vid='12'/><var sort='x' vid='10' num='sg'/></ep>
+<ep cfrom='11' cto='17'><gpred>named_rel</gpred><label vid='11'/><var sort='x' vid='10'/></ep>
+<ep cfrom='18' cto='19'><realpred lemma='a' pos='q'/><label vid='17'/><var sort='x' vid='16'/></ep>
+<ep cfrom='20' cto='29'><realpred lemma='cigarette' pos='n'/><label vid='18'/><var sort='x' vid='16' num='sg'/></ep>
+<ep cfrom='35' cto='37'><gpred>pron_rel</gpred><label vid='31'/><var sort='x' vid='29' num='sg' gender='n'/></ep>
+<ep cfrom='35' cto='37'><gpred>pronoun_q_rel</gpred><label vid='30'/><var sort='x' vid='29'/></ep>
+<ep cfrom='38' cto='44'><realpred lemma='bark' pos='v'/><label vid='34'/><var sort='e' vid='35' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2</rargname><label vid='7'/><var sort='x' vid='16' num='sg'/></rarg>
+<rarg><rargname>ARG3</rargname><label vid='7'/><var sort='x' vid='10' num='sg'/></rarg>
+<rarg><rargname>ARG4</rargname><label vid='7'/><var sort='h' vid='34'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='12'/><var sort='h' vid='13'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='12'/><var sort='h' vid='14'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='11'/><constant>browne</constant></rarg>
+<rarg><rargname>RSTR</rargname><label vid='15'/><var sort='h' vid='23'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='15'/><var sort='h' vid='24'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='34'/><var sort='x' vid='29' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='30'/><var sort='h' vid='32'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='30'/><var sort='h' vid='33'/></rarg>
+<ing><ing-a><var sort='h' vid='15'/></ing-a><ing-b><var sort='h' vid='18'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='13'/></hi><lo><label vid='11'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='23'/></hi><lo><label vid='18'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='32'/></hi><lo><label vid='31'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='27'>
+<label vid='7'/>
+<ep cfrom='0' cto='6'><gpred>proper_q_rel</gpred><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='0' cto='6'><gpred>named_rel</gpred><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='7' cto='11'><realpred lemma='know' pos='v'/><label vid='7'/><var sort='e' vid='8' tense='past'/></ep>
+<ep cfrom='17' cto='19'><gpred>pron_rel</gpred><label vid='14'/><var sort='x' vid='12' num='sg' gender='n'/></ep>
+<ep cfrom='17' cto='19'><gpred>pronoun_q_rel</gpred><label vid='13'/><var sort='x' vid='12'/></ep>
+<ep cfrom='20' cto='26'><realpred lemma='bark' pos='v'/><label vid='17'/><var sort='e' vid='18' tense='past'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='7'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='4'/><var sort='h' vid='5'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='4'/><var sort='h' vid='6'/></rarg>
+<rarg><rargname>CARG</rargname><label vid='3'/><constant>abrams</constant></rarg>
+<rarg><rargname>ARG2-4</rargname><label vid='7'/><var sort='h' vid='30'/></rarg>
+<rarg><rargname>ARG1</rargname><label vid='17'/><var sort='x' vid='12' num='sg' gender='n'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='13'/><var sort='h' vid='15'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='13'/><var sort='h' vid='16'/></rarg>
+<hcons hreln='qeq'><hi><var sort='h' vid='5'/></hi><lo><label vid='3'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='30'/></hi><lo><label vid='17'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='15'/></hi><lo><label vid='14'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='19'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='11' cto='14'><realpred lemma='the' pos='q'/><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='15' cto='18'><realpred lemma='cat' pos='n'/><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>ARG1-2</rargname><label vid='12'/><var sort='x' vid='15' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='20'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='12' cto='15'><realpred lemma='the' pos='q'/><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='16' cto='19'><realpred lemma='cat' pos='n'/><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+
+<rmrs cfrom='0' cto='21'>
+<label vid='12'/>
+<ep cfrom='0' cto='3'><realpred lemma='the' pos='q'/><label vid='3'/><var sort='x' vid='2'/></ep>
+<ep cfrom='4' cto='7'><realpred lemma='dog' pos='n'/><label vid='4'/><var sort='x' vid='2' num='sg'/></ep>
+<ep cfrom='13' cto='16'><realpred lemma='the' pos='q'/><label vid='16'/><var sort='x' vid='15'/></ep>
+<ep cfrom='17' cto='20'><realpred lemma='cat' pos='n'/><label vid='17'/><var sort='x' vid='15' num='sg'/></ep>
+<rarg><rargname>ARG1</rargname><label vid='12'/><var sort='x' vid='2' num='sg'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='1'/><var sort='h' vid='9'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='1'/><var sort='h' vid='10'/></rarg>
+<rarg><rargname>RSTR</rargname><label vid='14'/><var sort='h' vid='22'/></rarg>
+<rarg><rargname>BODY</rargname><label vid='14'/><var sort='h' vid='23'/></rarg>
+<ing><ing-a><var sort='h' vid='1'/></ing-a><ing-b><var sort='h' vid='4'/></ing-b></ing>
+<ing><ing-a><var sort='h' vid='14'/></ing-a><ing-b><var sort='h' vid='17'/></ing-b></ing>
+<hcons hreln='qeq'><hi><var sort='h' vid='9'/></hi><lo><label vid='4'/></lo></hcons>
+<hcons hreln='qeq'><hi><var sort='h' vid='22'/></hi><lo><label vid='17'/></lo></hcons>
+</rmrs>
+</rmrs-list>

@@ -29,6 +29,13 @@
 	    collect
 	      (read-rmrs rmrs origin))))))
 
+(defun read-single-rmrs-file (file-name &optional origin)
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream file-name :direction :input)
+       (let ((rmrs (parse-xml-removing-junk istream)))
+	 (unless (xml-whitespace-string-p rmrs)
+	   (read-rmrs rmrs origin))))))
+
 (defun read-single-rmrs-from-string (str)
   ;;; currently called from emacs interface - 
   ;;; lkb::display-rmrs-from-string in lkb-acl-rmrs.lisp

@@ -170,6 +170,7 @@
 		 
 
 (defun combine-similar-relations (liszt result-so-far test-fn)
+  ;;; revised version maintains original order
   (if (null liszt)
       result-so-far
     (let ((test-rel (car liszt))
@@ -180,8 +181,8 @@
            (if (apply test-fn (list test-rel rel))
                (push rel similar)
              (push rel non-similar)))
-      (combine-similar-relations non-similar
-                                 (push (cons test-rel similar)
+      (combine-similar-relations (nreverse non-similar)
+                                 (push (cons test-rel (nreverse similar))
 				       result-so-far)
 				 test-fn))))
 
@@ -236,6 +237,9 @@
 (defparameter *mrs-comparison-output-messages*
     nil)
 ;; used by algebra code
+
+(defparameter *no-comptype-checkp*
+    nil)
 
 (defun mrs-comparison-output (&rest args)
   (cond ((eql *mrs-comparison-output-control* :noisy-p)
@@ -456,7 +460,7 @@
 		 (compatible-var-types (var-type var1) (var-type var2))
                t))
            (or (null *mrs-equalp-properties-p*)
-               (if syntactic-p
+               (if (or syntactic-p *no-comptype-checkp*)
                  (equal-extra-vals (var-extra var1) (var-extra var2))
                  (compatible-extra-vals (var-extra var1) (var-extra var2))))
            (bindings-equal (get-var-num var1)
@@ -612,42 +616,133 @@
 
 
 ;;; Code for SciBorg
+;;; Utility function, takes a file of gold MRSs from TreeBanking
+;;; and a corresponding directory containing PET output MRSs 
+;;; each as a separate file.  Assumes file name is item_n
+;;; 
+;;; Checks the gold MRS against the PET MRSs, outputting
+;;; a string if there is a perfect match.  This notion of matching 
+;;; uses the `syntactic' version of mrsequal-p
+;;;
+;;; Also, converts MRS to RMRS and uses the RMRS matching code
+;;; to find a `best' match according to the supplied scoring
+;;; function.  Outputs the MRS corresponding to the best match.
 
-(defun sciborg-mrs-match-results (resfile petdir)
-  (with-open-file (istream resfile :direction :input)
-    (loop 
-      (let ((resline (read-line istream nil nil)))
-	(unless resline (return))
-	(let ((item-number (get-item-number-from-res resline))
-	      (mrsstr (get-mrsstr-from-res resline)))
-	  (when (and item-number mrsstr)
-	    (with-input-from-string (istream mrsstr)
-	      (let ((mrs (read-mrs istream)))
-;;;		(output-mrs1 mrs 'simple t)))))))))
-		(let ((petsubdir 
-		       (concatenate 'string petdir 
-				    "item_" (format nil "~A/*" item-number))))
+(defun sciborg-mrs-match-results (goldfile petdir output-file)
+  (sciborg-match-results goldfile petdir output-file :mrs))
+
+(defun sciborg-rmrs-match-results (goldfile petdir output-file)
+  (sciborg-match-results goldfile petdir output-file :rmrs))
+
+
+(defun sciborg-match-results (resfile petdir output-file match-type)
+  (unless (or (eql match-type :mrs) (eql match-type :rmrs))
+    (error "sciborg-match-results must be called with match-type :mrs or :rmrs"))
+  (with-open-file (ostream output-file 
+		   :direction :output
+		   :if-exists :supersede
+		   :if-does-not-exist :create)
+    (with-open-file (istream resfile :direction :input)
+      (loop 
+	(let ((resline (read-line istream nil nil)))
+	  (unless (and resline (not (equal resline "")))
+	    (return))
+	  (let ((item-number (get-item-number-from-res resline))
+		(mrsstr (get-mrsstr-from-res resline)))
+	    (when (and item-number mrsstr)
+	      (with-input-from-string (istream mrsstr)
+		(let* ((original-mrs (read-mrs istream))
+		       (mrs (remove-unk-rel-cargs original-mrs))
+		       (rmrs (mrs-to-rmrs mrs)))
+		  (format ostream "~%Gold standard for ~A~%" item-number) 
+		  (output-mrs1 mrs 'mrs-xml ostream)
+		  ;;		(pprint rmrs)
+	       (let ((petsubdir 
+		      (concatenate 'string petdir 
+				   "item_" (format nil "~A/*" item-number)))
+		     (max-weight 0)
+		     (matching-mrss nil)
+		     (best-petfile-so-far nil)
+		     (best-mrs-so-far nil))
 		  ;;; /* so directory gives files
-		  (loop for file in (directory petsubdir)
-		      do
-			(let ((possible-match
-			       (read-single-mrs-xml-file file)))
-			  (when possible-match
-			    (mrs-equalp possible-match mrs nil t)
-			    (output-mrs1 mrs 'simple t)
-			    (output-mrs1 possible-match 'simple t)
-			    (return)))))))))))))
-			    
-;;;			    (when (mrs-equalp possible-match mrs)
-;;;			      (format t "~%Item ~A match ~A" item-number file))))))))))))))
+		 (unless (directory petsubdir)
+		   (format ostream "~%No files found in ~A" petsubdir))
+		 (loop for file in (directory petsubdir)
+		       do
+		       (let* ((possible-match-from-file
+			       (read-single-mrs-xml-file file))
+			      (possible-match 
+			       (remove-unk-rel-cargs 
+				possible-match-from-file)))
+			 (when possible-match
+			   (if (eql match-type :mrs)
+			       (let ((*no-comptype-checkp* t))
+			       (when (mrs-equalp possible-match mrs t)
+				 ;; (mrs-equalp possible-match mrs nil t)
+				 ;; gives some feedback
+				 (format ostream "~%Item ~A perfect match ~A" 
+					 item-number file)
+				 (push possible-match matching-mrss)))
+			       ;;; else - :rmrs
+			   (let* ((possible-match-rmrs 
+				   (mrs-to-rmrs possible-match))
+				  (comparison-records 
+				    (compare-rmrs-no-char 
+				     ;; in rmrs/compare.lisp
+				     rmrs
+				     possible-match-rmrs)))
+			     (when comparison-records
+			       (let
+				   ((score (qa-score 
+					    (car comparison-records))))
+				    ;;; FIX the scoring
+				 (when (> score max-weight)
+				   (setf max-weight score)
+				   (setf best-petfile-so-far
+				     (list file))
+				   (setf best-mrs-so-far 
+				     (list possible-match-from-file)))
+				 (when (= score max-weight)
+				   (push file best-petfile-so-far)
+				   (push possible-match-from-file
+					 best-mrs-so-far)))))))))
+				   
+		 (if (eql match-type :rmrs)
+		     (progn
+		       (format ostream "~%Best matches ~A" 
+			       best-petfile-so-far)
+		       (dolist (mrs best-mrs-so-far)
+			 (output-mrs1 mrs 'mrs-xml ostream)))
+		   (if matching-mrss
+		       (progn
+			 (format ostream "~%Perfect matches")
+			 (dolist (match-mrs matching-mrss)
+			   (output-mrs1 match-mrs 'mrs-xml ostream)))
+		     (format ostream "~%No matches")))))))))))))
 
-			      
-;;; this version of equality checking requires a loaded type hierarchy
 
-      #| (sciborg-mrs-match-results "C:/Users/Ann/Desktop/foraac/sciborg-b309733a/result" "C:/Users/Ann/Desktop/")
-      
+(defun single-mrs-check (gold-file other-file)
+  ;;; 
+  (let ((*no-comptype-checkp* t))
+  (let* ((gold-mrs (read-single-mrs-xml-file gold-file))
+	 (possible-match-from-file
+	  (read-single-mrs-xml-file other-file)))
+    (mrs-equalp (remove-unk-rel-cargs possible-match-from-file)
+		(remove-unk-rel-cargs gold-mrs) nil t))))
+
+
+#| 
+
+(single-mrs-check "gold-10.mrs" "lkb1.mrs")
+
+(sciborg-mrs-match-results "~aac10/sciborg/foraac/sciborg-b309733a/result-selected"
+"/anfs/bigdisc/aac10/sciborg/goldoscar/sciborg-b309733a/" "gold-b309733a.mrs")
+
+(sciborg-rmrs-match-results "~aac10/sciborg/foraac/sciborg-b309733a/result-selected"
+"/anfs/bigdisc/aac10/sciborg/goldoscar/sciborg-b309733a-s/" "gold-b309733a-rmrs.mrs")
+
 |#
-
+         
 ;;; parse the fine system result - mrs is at the end between two @
 ;;; item is first thing, before first @
 
@@ -662,3 +757,41 @@
 			      :end (- (length resline) 1))))
     (when hashpos1
       (subseq resline (+ hashpos1 1) (- (length resline) 1)))))
+
+(defun remove-unk-rel-cargs (mrs)
+  ;;; a hack necessitated by the fact that unknown relations 
+  ;;; have been given CARGs, but these are not instantiated by the 
+  ;;; treebanking machinery
+  (dolist (rel (psoa-liszt mrs))
+    (when (or (substring-match-p "_unk_" (string (rel-pred rel)))
+	      (substring-match-p "oscarcompound" (string (rel-pred rel))))
+      (setf (rel-flist rel)
+	(loop
+	    for role in (rel-flist rel)
+	    unless (string-equal
+		    (string (fvpair-feature role)) 
+		    "CARG")
+	    collect role))))
+  mrs)
+
+(defun substring-match-p (substr str)
+  ;;; must be defined somewhere already!
+  (let ((substr-lst (coerce substr 'list))
+	(str-lst (coerce str 'list)))
+    (sublist-match-p substr-lst str-lst)))
+
+(defun sublist-match-p (sublst lst)
+  (or (null sublst)
+      (if lst
+	  (or (all-match-p sublst lst)
+	    (sublist-match-p sublst (cdr lst)))
+	nil)))
+
+(defun all-match-p (sublst lst)
+  (or (null sublst)
+      (and
+       lst
+       (char-equal (car sublst) (car lst))
+       (all-match-p (cdr sublst) (cdr lst)))))
+
+

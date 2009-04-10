@@ -6164,11 +6164,11 @@ noun's anchor.  FIX - interesting example for algebra!</comment>
 
 <rule>
 <name>P1/p_np</name>
-<comment>FIX - do something about selected for things ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1,all gen.ex., gap ex.3).  AAC - can we get away with passing up the N's INDEX?  Technically this is naughty, but it enables us to do better for cases where the preposition is irrelevant (e.g., 23), even if if we don't get rid of the preposition relation itself</comment>
+<comment>FIX - do something about selected for things ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1,all gen.ex., gap ex.3).  AAC - can we get away with passing up the N's INDEX?  Technically this is naughty, but it enables us to do better for cases where the preposition is irrelevant (e.g., 23), even if if we don't get rid of the preposition relation itself.  No! Bad idea - wrong coindexations</comment>
 <dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>E</index><label>H</label></hook>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
