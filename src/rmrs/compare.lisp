@@ -86,7 +86,7 @@ because snore and sleep don't have matching ARGs.
 
 (defstruct comparison-set
   cfrom cto real-preds constant-preds gram-preds)
-;;; real-preds and constant-preds are sorted, gram-preds aren't.
+;;; real-preds and constant-preds are sorted, gram-preds aren't necessarily
 
 ;;; Matching involves taking advantage of sortal order
 ;;; wherever possible.  This means making assumptions
@@ -158,6 +158,9 @@ because snore and sleep don't have matching ARGs.
 ;;; FIX2? - possibly need to put in a quick and dirty check for the
 ;;; weighted match case for e.g. QA, since otherwise this
 ;;; might be too expensive computationally
+;;; Addition, sept 2008 - same-source-p is :approx
+;;; if the original source is the same, but character positions are
+;;; not present.  In this case an approximation is used.
 
 (defun compare-rmrs (rmrs1 rmrs2 same-source-p)
   ;;; returns a list of comparison records
@@ -206,8 +209,9 @@ which can be put into a canonical order (alphabetical order on
 real predicate name).  The second group is the constant-valued rels which
 have alphabetical order on CARGs.  The third group
 are the grammar preds, which can't be put into any order lexically
-because we have to allow for subsumption.
-We may be able to order them by some notion of 
+in general because we have to allow for subsumption (although
+if *non-hierarchical-gpreds* is t, we treat them as though there's no
+subsumbption.  We may be able to order them by some notion of 
 type, but ignore that for now.
 
 In the case of two relations with the same sortal order,
@@ -236,17 +240,20 @@ the canonical order is fully defined.
 (defun sort-rmrs (rmrs same-source-p)
   (let* ((liszt (rmrs-liszt rmrs))
 	 (new-liszt 
-	  (if same-source-p
+	  (if (and same-source-p
+		   (not (eql same-source-p :approx)))
 	      (loop for relset in
-		    (combine-similar-relations liszt nil 
-					       #'rmrs-rel-sort-same-source-eql)
+		    (combine-similar-relations 
+		     liszt nil
+		     #'rmrs-rel-sort-same-source-eql)
 		    ;;; combine-similar-relations in
 		    ;;; mrs/mrscorpus.lisp
 		  collect
 		  (group-relations-by-class relset))
 	    (list (group-relations-by-class liszt)))))
     (let ((sorted-liszt
-	   (if same-source-p
+	   (if (and same-source-p
+		   (not (eql same-source-p :approx)))
 	       (sort new-liszt 
 		     #'rmrs-cset-same-source-lesser-p)
 	     new-liszt)))
@@ -264,15 +271,6 @@ the canonical order is fully defined.
     (and (eql cfrom1 cfrom2)
 	 (eql cto1 cto2))))
 
-(defun rmrs-rel-sort-same-source-lesser-p (rel1 rel2)
-  (let ((cfrom1 (rel-cfrom rel1))
-	(cfrom2 (rel-cfrom rel2))
-	(cto1 (rel-cto rel1))
-	(cto2 (rel-cto rel2)))
-    (or (< cfrom1 cfrom2)
-	(and (eql cfrom1 cfrom2) 
-	     (< cto1 cto2)))))
-
 (defun rmrs-cset-same-source-lesser-p (cset1 cset2)
   (let ((cfrom1 (comparison-set-cfrom cset1))
 	(cfrom2 (comparison-set-cfrom cset2))
@@ -287,6 +285,18 @@ the canonical order is fully defined.
 	(< cto1 cto2)))))
 	|#
 
+(defun rmrs-real-pred-lesser-p (rel1 rel2)
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+  ;;; note that this ignores pos tags and senses deliberately
+    (string-lessp (realpred-lemma pred1)
+		  (realpred-lemma pred2))))
+
+(defun rmrs-real-pred-approx-lesser-p (rel1 rel2)
+  (let ((cfrom1 (rel-cfrom rel1))
+	(cfrom2 (rel-cfrom rel2)))
+    (< cfrom1 cfrom2)))
+    
 (defun rmrs-constant-pred-lesser-p (rel1 rel2)
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
@@ -295,13 +305,30 @@ the canonical order is fully defined.
 	      (str2 (rel-parameter-strings rel2)))
 	  (string-lessp str1 str2))
       (string-lessp pred1 pred2))))
+
+(defun rmrs-constant-pred-approx-lesser-p (rel1 rel2)
+  (let ((cfrom1 (rel-cfrom rel1))
+	(cfrom2 (rel-cfrom rel2)))
+    (< cfrom1 cfrom2)))
+
       
-(defun rmrs-real-pred-lesser-p (rel1 rel2)
+(defun rmrs-grammar-pred-lesser-p (rel1 rel2)
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
-  ;;; note that this ignores pos tags and senses deliberately
-    (string-lessp (realpred-lemma pred1)
-		  (realpred-lemma pred2))))
+    (string-lessp pred1 pred2)))
+
+;;;
+
+(defun overlapping-rels (rel1 rel2)
+  (let ((cfrom1 (rel-cfrom rel1))
+	(cfrom2 (rel-cfrom rel2))
+	(cto1 (rel-cto rel1))
+	(cto2 (rel-cto rel2)))
+    (not (or (> cfrom1 cto2)
+	     (> cfrom2 cto1)))))
+;;; 
+
+(defparameter *non-hierarchical-gpreds-p* nil)
 
 ;;; Dividing relations into classes
 
@@ -319,19 +346,28 @@ the canonical order is fully defined.
 	       (push rel constant-pred-rels))
 	      (t (push rel gram-pred-rels)))))
     (let ((combined-real-preds
-	   (combine-similar-relations real-pred-rels nil 
-				      #'rmrs-real-pred-rel-eql))
+	   (sort 
+	    (combine-similar-relations real-pred-rels nil 
+				      #'rmrs-real-pred-rel-eql)
+	    #'rmrs-real-pred-lesser-p :key #'car))
 	  (combined-constant-preds
-	   (combine-similar-relations constant-pred-rels nil 
-				      #'rmrs-constant-pred-rel-eql)))
+	   (sort
+	    (combine-similar-relations constant-pred-rels nil 
+				      #'rmrs-constant-pred-rel-eql)
+	    #'rmrs-constant-pred-lesser-p :key #'car))
+	  (combined-grammar-preds
+	   (if *non-hierarchical-gpreds-p*
+	       (sort
+		(combine-similar-relations gram-pred-rels nil 
+					   #'rmrs-grammar-pred-rel-eql)
+		 #'rmrs-grammar-pred-lesser-p :key #'car)
+	     gram-pred-rels)))
       (make-comparison-set
        :cfrom cfrom
        :cto cto
-       :real-preds (sort combined-real-preds
-			 #'rmrs-real-pred-lesser-p :key #'car)
-       :constant-preds (sort combined-constant-preds
-			     #'rmrs-constant-pred-lesser-p :key #'car)
-       :gram-preds gram-pred-rels))))
+       :real-preds combined-real-preds
+       :constant-preds combined-constant-preds
+       :gram-preds combined-grammar-preds))))
 
 (defun rmrs-constant-pred-rel-eql (rel1 rel2)
   ;;; used for grouping similar relations
@@ -348,6 +384,14 @@ the canonical order is fully defined.
 	(pred2 (rel-pred rel2)))
     (compare-rmrs-real-preds pred1 pred2)))
 
+(defun rmrs-grammar-pred-rel-eql (rel1 rel2)
+  ;;; only used when grammar preds are not hierarchically organised
+  (unless *non-hierarchical-gpreds-p*
+    (error "Only used when grammar preds are not in a hierarchy"))
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+    (equal pred1 pred2)))
+
 
 ;;; **********************************************
 ;;; Conversion to comp-rmrs structures
@@ -356,12 +400,7 @@ the canonical order is fully defined.
 ;;; --- CARGS can subsequently be ignored
 
 (defun convert-to-comparison-rmrs (rmrs)
-    (loop for ep in (rmrs-liszt rmrs)
-	do
-	  (setf (rel-parameter-strings ep)
-	    (get-carg-value
-	     ep
-	     (rmrs-rmrs-args rmrs))))
+    (set-carg-values rmrs)
     (make-comp-rmrs
      :top-h (rmrs-top-h rmrs)
      :liszt (rmrs-liszt rmrs)
@@ -371,6 +410,14 @@ the canonical order is fully defined.
      :cfrom (rmrs-cfrom rmrs)
      :cto (rmrs-cto rmrs)
      :origin (rmrs-origin rmrs)))
+
+(defun set-carg-values (rmrs)
+  (loop for ep in (rmrs-liszt rmrs)
+	do
+	(setf (rel-parameter-strings ep)
+	      (get-carg-value
+	       ep
+	       (rmrs-rmrs-args rmrs)))))
 
 (defun get-carg-value (rel rmrs-args)
   (let ((lbl (rel-handel rel)))
@@ -386,6 +433,11 @@ the canonical order is fully defined.
 ;;;
 
 (defun compare-rmrs-liszts (l1 l2 comp-record same-source-p)
+  ;;; if these are from the same-source, then the list of comparison
+  ;;; records is sorted by cfrom/cto, so we don't need
+  ;;; to compare if we can establish that the first element is
+  ;;; greater/lesser and can recurse accordingly.  Otherwise we're
+  ;;; comparing everything with everything.
   (if (and l1 l2)
       (let ((first1 (car l1))
 	    (first2 (car l2)))
@@ -398,63 +450,85 @@ the canonical order is fully defined.
 	      (compare-rmrs-liszts (cdr l1) l2 comp-record same-source-p)
 	    (let ((new-comp-record 
 		   (compare-rmrs-rel-set 
-		    (car l1) (car l2) comp-record)))
+		    (car l1) (car l2) comp-record same-source-p)))
 	      (compare-rmrs-liszts (cdr l1) (cdr l2) 
 				  new-comp-record same-source-p)))))
     comp-record))
 
-(defun compare-rmrs-rel-set (s1 s2 comp-record)
+
+(defun compare-rmrs-rel-set (s1 s2 comp-record same-source-p)
   ;;; 1 compare the real preds on an ordered basis
+  ;;; (i.e., lexicographic order)
   ;;; 2 compare the constant preds on an ordered basis
   ;;;   (in both cases, store any left overs)
   ;;; 3 compare the grammar preds on an unordered basis
+  ;;;   if *non-hierarchical-gpreds-p* is nil (the default)
+  ;;;   or ordered if it's t
   ;;; 4 try any left over real and constant preds 
   ;;;   against any left over grammar preds on an unordered
   ;;;   basis
   ;;; except forget this last step for now, since it seems
   ;;; like to be very expensive
   ;;; FIX4
-  (let ((real-preds1 (comparison-set-real-preds s1))
-	(real-preds2 (comparison-set-real-preds s2))
-	(const-preds1 (comparison-set-constant-preds s1))
-	(const-preds2 (comparison-set-constant-preds s2))
-	(gram-preds1 (comparison-set-gram-preds s1))
-	(gram-preds2 (comparison-set-gram-preds s2)))
-    (let
-	((r-comp-record
+  ;;; same-source-p is :approx is interpreted as providing an
+  ;;; ordering for the constant and real preds
+  ;;; but as adding an overlap constraint on equality
+  ;;; for grammar preds
+  (let* ((real-preds1 (comparison-set-real-preds s1))
+	 (real-preds2 (comparison-set-real-preds s2))
+	 (const-preds1 (comparison-set-constant-preds s1))
+	 (const-preds2 (comparison-set-constant-preds s2))
+	 (gram-preds1 (comparison-set-gram-preds s1))
+	 (gram-preds2 (comparison-set-gram-preds s2))
+	 (r-comp-record
 	  (compare-rmrs-ordered-rel-set 
-	   real-preds1 real-preds2 comp-record #'rmrs-real-pred-lesser-p)))
-      (let ((c-comp-record
-	     (compare-rmrs-ordered-rel-set 
-	      const-preds1 const-preds2 r-comp-record 
-	      #'rmrs-constant-pred-lesser-p)))
-	(let ((g-comp-record
-		(compare-rmrs-unordered-rel-set 
-		 gram-preds1 gram-preds2 c-comp-record)))
-	  g-comp-record)))))
+	   real-preds1 real-preds2 comp-record
+	   (if (eql same-source-p :approx)
+	       #'rmrs-real-pred-approx-lesser-p
+	     #'rmrs-real-pred-lesser-p) nil))
+	 (c-comp-record
+	  (compare-rmrs-ordered-rel-set 
+	   const-preds1 const-preds2 r-comp-record 
+	   (if (eql same-source-p :approx)
+	       #'rmrs-constant-pred-approx-lesser-p 
+	     #'rmrs-constant-pred-lesser-p) nil))
+	 (g-comp-record
+	  (if *non-hierarchical-gpreds-p*
+	      (compare-rmrs-ordered-rel-set 
+	       gram-preds1 gram-preds2 c-comp-record
+		 #'rmrs-grammar-pred-lesser-p 
+		 (eql same-source-p :approx))
+	    (compare-rmrs-unordered-rel-set 
+	     gram-preds1 gram-preds2 c-comp-record 
+	     (eql same-source-p :approx)))))
+	  g-comp-record))
 
-(defun compare-rmrs-ordered-rel-set (l1 l2 comp-record lesser-p-fn)
+(defun compare-rmrs-ordered-rel-set (l1 l2 comp-record lesser-p-fn 
+					overlap-test-p)
   (if (and l1 l2)
       (let ((first1 (car l1))
 	    (first2 (car l2)))
 	(if (apply lesser-p-fn (list (car first2) (car first1)))
 	    (compare-rmrs-ordered-rel-set l1 (cdr l2) 
-					  comp-record lesser-p-fn)
+					  comp-record lesser-p-fn 
+					  overlap-test-p)
 	  (if (apply lesser-p-fn (list (car first1) (car first2)))
 	      (compare-rmrs-ordered-rel-set (cdr l1) l2 
-					    comp-record lesser-p-fn)
+					    comp-record lesser-p-fn
+					    overlap-test-p)
 	    (let ((new-comp-record
 		   (compare-rmrs-unordered-rel-set 
-		    first1 first2 comp-record)))
-	      (compare-rmrs-ordered-rel-set (cdr l1) (cdr l2) 
-					    new-comp-record lesser-p-fn)))))
+		    first1 first2 comp-record overlap-test-p)))
+	      (compare-rmrs-ordered-rel-set 
+	       (cdr l1) (cdr l2) 
+	       new-comp-record lesser-p-fn overlap-test-p)))))
     comp-record))
 
-(defun compare-rmrs-unordered-rel-set (s1 s2 comp-record)
+(defun compare-rmrs-unordered-rel-set (s1 s2 comp-record overlap-test-p)
   (let ((matches nil))
     (dolist (rel1 s1)
       (dolist (rel2 s2)
-	(let ((match (compare-rmrs-rels rel1 rel2)))
+	(let ((match (compare-rmrs-rels rel1 rel2 overlap-test-p)))
 	  (when match
 	    (push match matches)))))
     (when matches
@@ -463,8 +537,8 @@ the canonical order is fully defined.
     comp-record))
 
 
-(defun compare-rmrs-rels (rel1 rel2)
-  (let ((pred-comparison (compare-rmrs-preds rel1 rel2)))
+(defun compare-rmrs-rels (rel1 rel2 overlap-test-p)
+  (let ((pred-comparison (compare-rmrs-preds rel1 rel2 overlap-test-p)))
     (if pred-comparison
 	(multiple-value-bind
 	    (cvar-pair hvar-pair) 
@@ -502,7 +576,7 @@ the canonical order is fully defined.
 		nil			; error state
 	      (values cvar-pair nil)))))))
 
-(defun compare-rmrs-preds (rel1 rel2)
+(defun compare-rmrs-preds (rel1 rel2 overlap-test-p)
   ;;; FIX? - need to think about the parameter
   ;;; strings handling.  Note that rmrs-constant-pred-rel-eql
   ;;; needs to be consistent with this
@@ -516,6 +590,12 @@ the canonical order is fully defined.
 	  ;;; 1 is more specific
 	  ((realpred-p pred2) (if (gpred-subsumes-real-p pred1 pred2)
 				  :sub2))
+	  (overlap-test-p
+	   ;;; only set for gpreds
+	   (if 
+	       (and (equal pred1 pred2)
+		    (overlapping-rels rel1 rel2))
+	       :equal nil))
 	  ((and (equal pred1 pred2) 
 		(string-equal (rel-parameter-strings rel1)
 			      (rel-parameter-strings rel2)))
@@ -646,11 +726,13 @@ the canonical order is fully defined.
 
 (defun distinguished-rel-type-p (rel)
   (let ((pred (rel-pred rel)))
-    (or (equal pred "named_rel")
-	(and (realpred-p pred)
-	     (or (equal (realpred-pos pred) "n")
-		 (equal (realpred-pos pred) "a")
-		 (equal (realpred-pos pred) "v"))))))
+    (or ;; (equal pred "named_rel")
+     (rel-parameter-strings rel)
+     (and (realpred-p pred)
+	  (or (equal (realpred-pos pred) "p")
+	      (equal (realpred-pos pred) "n")
+	      (equal (realpred-pos pred) "a")
+	      (equal (realpred-pos pred) "v"))))))
 
 ;;; Pruning 
 
@@ -1132,4 +1214,196 @@ cases
       -1)))
 
 ;;; end fine system stuff
+
+;;; ****************************************************
+;;;
+;;; Comparison of RMRSs where the characterisation is missing or
+;;; non-aligned.
+;;;
+;;; ****************************************************
+
+
+#|
+
+if cfrom cto isn't present or isn't consistent, we try an
+approximation, which is to set cfrom and cto on the basis of the
+real-preds these may not match precisely - we find the list of
+realpreds that are in both rmrses, match them up, number these
+successively and consistently, and number everything surrounding them
+so that they have cfrom/cto pairs which are consistent with a location
+that could be either side of a realpred.
+
+
+for instance, if we have
+
+the dog gpred1 likes the gpred1 cat
+
+the gpred1 dog like s the cat
+
+the renumbering will end up as
+
+1.1the 3.3dog 2.6gpred1 5.5likes 7.7the 6.10gpred1 9.9cat
+
+1.1the 0.4gpred1 3.3dog 5.5like 6.6s 7.7the 9.9cat
+|#
+
+
+#| 
+
+(let* ((test-rmrs1 (read-single-rmrs-file "richard.rmrs"))
+      (test-rmrs2 (read-single-rmrs-file "richard.rmrs"))
+      (comp-recs (compare-rmrs test-rmrs1 test-rmrs2 :approx)))
+  (dolist (comp-rec comp-recs)
+    (lkb::show-mrs-rmrs-compare-window test-rmrs1 test-rmrs2
+				       comp-rec "foo")))
+
+|#
+
+(defun compare-rmrs-no-char (rmrs1 rmrs2)
+  (let ((*non-hierarchical-gpreds-p* t))
+    ;;; don't try and match according to a hierarchy (cf syntactic-p
+    ;;; option for mrsequal-p
+    (multiple-value-bind (renumbered-rmrs1 renumbered-rmrs2)
+	 (renumber-rmrses rmrs1 rmrs2)
+	 (compare-rmrs renumbered-rmrs1 renumbered-rmrs2
+		       :approx))))
+	
+    
+
+(defun renumber-rmrses (rmrs1 rmrs2)
+  (set-carg-values rmrs1)
+  (set-carg-values rmrs2)
+  (let* ((rmrs1-lemma-rels nil)
+	 (rmrs2-lemma-rels nil))
+    (loop for rel in (rmrs-liszt rmrs1)
+	  do 
+	  (setf (rel-cfrom rel) nil)
+	  (setf (rel-cto rel) nil)
+	  (let ((pred (rel-pred rel)))
+	    (if (or (realpred-p pred)
+		    (rel-parameter-strings rel))
+		   (push rel rmrs1-lemma-rels))))
+    (setf rmrs1-lemma-rels (nreverse rmrs1-lemma-rels))
+    (loop for rel in (rmrs-liszt rmrs2)
+	  do 
+	  (setf (rel-cfrom rel) nil)
+	  (setf (rel-cto rel) nil)
+	  (let ((pred (rel-pred rel)))
+	    (if (or (realpred-p pred)
+		    (rel-parameter-strings rel))
+		   (push rel rmrs2-lemma-rels))))
+    (setf rmrs2-lemma-rels (nreverse rmrs2-lemma-rels))
+    (let ((match-list
+	   (match-lemma-preds rmrs1-lemma-rels 
+			     rmrs2-lemma-rels)))
+    ;;; produce a list of paired real-preds
+      (loop for pair in match-list
+	    and num from 1 by 2
+	    do
+	    (setf (rel-cfrom (car pair)) num)
+	    (setf (rel-cfrom (cdr pair)) num)
+	    (setf (rel-cto (car pair)) num)
+	    (setf (rel-cto (cdr pair)) num))
+      (reset-cfrom-tos (rmrs-liszt rmrs1))
+      (reset-cfrom-tos (rmrs-liszt rmrs2))
+      (values rmrs1 rmrs2))))
+
+
+(defun reset-cfrom-tos (eps)
+  (let ((cfrom 0) (cto 2))
+    (loop for ep in eps
+	  do
+	  (cond ((rel-cfrom ep) 
+		 (setf cfrom (- (rel-cfrom ep) 1))
+		 (setf cto (+ (rel-cfrom ep) 3)))
+		((or (realpred-p (rel-pred ep))
+		     (rel-parameter-strings ep))
+		 (setf (rel-cfrom ep) cfrom)
+		 (setf (rel-cto ep) cfrom))
+		(t (setf (rel-cfrom ep) cfrom)
+		   (setf (rel-cto ep) cto))))))
+	    
+	    
+(defun match-lemma-preds (eps1 eps2)
+  (let ((matches nil))
+    (loop for ep1 in eps1
+	  and count1 from 0
+	  do
+	  (loop for ep2 in eps2
+		and count2 from 0
+	       do
+	       (when (sloppy-match-ep ep1 ep2)
+		 (push (cons count1 count2) matches))))
+    (let* ((refined-list (prune-matches-for-compatability matches))
+	   (best-list (select-best-matches (reverse refined-list) nil)))
+      (loop for pairing in best-list
+	    collect
+	    (cons (nth (car pairing) eps1)
+		  (nth (cdr pairing) eps2))))))
+	  
+
+(defun sloppy-match-ep (ep1 ep2)
+  (let* ((pred1 (rel-pred ep1))
+	 (pred2 (rel-pred ep2))
+	 (lemma1 (or (rel-parameter-strings ep1)
+		     (if (realpred-p (rel-pred ep1))
+			 (realpred-lemma pred1))))
+	 (lemma2 (or (rel-parameter-strings ep2)
+		     (if (realpred-p (rel-pred ep2))
+			 (realpred-lemma pred2)))))
+    (if (and (stringp lemma1) (stringp lemma2))
+	(string-equal lemma1 lemma2))))
+
+#|
+
+(select-best-matches 
+(reverse (prune-matches-for-compatability 
+'((1 . 2) (3 . 2) (4 . 4) (4 . 6) (5 . 4) (5 . 6) (6 . 5) (7 . 2) (6 . 7)))) 
+nil)
+
+returns
+
+((6 . 7) (5 . 6) (4 . 4) (1 . 2))
+
+|#
+
+(defun prune-matches-for-compatability (match-list)
+  (loop for pair1 in match-list
+	collect
+	(cons pair1
+	      (loop for pair2 in match-list
+		    unless (equal pair1 pair2)
+		    when (pairing-compatible pair1 pair2)
+		    collect pair2))))
+
+(defun pairing-compatible (pair1 pair2)
+  (let ((left (car pair1)) (right (cdr pair1)))
+    (or (and (> (car pair2) left) 
+	     (> (cdr pair2) right))
+	(and (< (car pair2) left) 
+	     (< (cdr pair2) right)))))
+
+(defun select-best-matches (comp-lists ok-nodes)
+  (if comp-lists
+      (let ((max 0) (top nil))
+	(loop for clist in comp-lists
+	      when (> (length clist) max)
+	      do (setf top clist))
+	(let* ((best-node (car top))
+	       (compatible-nodes (cdr top))
+	       (possible-lists
+		(loop for clist in comp-lists
+		      unless (eq clist top)
+		      when (member (car clist) compatible-nodes)
+		      collect 
+		      (cons (car clist)
+			    (loop for pair in (cdr clist)
+				  unless (not (pairing-compatible 
+					       pair best-node))
+				  collect pair)))))
+    ;;; collect all lists compatible with top
+    ;;; removing elements which were incompatible
+	  (select-best-matches possible-lists
+			       (cons best-node ok-nodes))))
+    ok-nodes))
 
