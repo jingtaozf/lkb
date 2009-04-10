@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: PREPROCESSOR -*-
 
 
 ;;; Copyright (c) 2000--2006
