@@ -22,20 +22,17 @@
 (defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t) (lexicon *lexicon*))
   (format t "~&;;; Running batch check over lexicon ~a"
 	  (or (name lexicon) ""))
-  (let ((*batch-mode* t)
-	(start-path (get-diff-list-start-path)))
+  (let ((*batch-mode* t))
     #+:psql
     (when (typep lexicon 'psql-lex-database)
       (format t "~&;;; (caching all lexical records)")
       (cache-all-lex-records lexicon))
-;    (format t "~%  - difference-list check starts at path ~a" start-path)
     (let ((ids (collect-psort-ids lexicon)))
       (format t "~&;;; (~a entries)" (length ids))
       (loop for id in ids
 	  do
 	    (check-lex-entry id lexicon
 			     :unexpandp unexpandp
-			     :start-path start-path
 			     :ostream *lkb-background-stream*))))
   (when check-duplicates
     (display-tdl-duplicates lexicon))
@@ -102,12 +99,13 @@
 	(format nil "[~a] ~a" in-lex-name (tdl-val-str id))
       (tdl-val-str id))))
 
-(defun check-lex-entry (id lexicon &key unexpandp
-					start-path ostream)
+(defun check-lex-entry (id lexicon &key unexpandp ostream)
   (let* ((entry (read-psort lexicon id :cache (not unexpandp)))
 	 (output-stream (or ostream t))
 	 (lex-id id)
-	 (sane-start-path (or start-path (get-diff-list-start-path))))
+	 (start-path (get-diff-list-start-path)))
+    ;;; make behaviour of check-lex-entry consistent with respect
+    ;;; to diff-list start path 
     (cond 
      ((null entry)
       (format t "~%WARNING: lexical entry '~a' not found in lexicon" lex-id)
@@ -125,9 +123,9 @@
 	  (funcall *grammar-specific-batch-check-fn* new-fs id))   
 	(when new-fs
 	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) 
-					    sane-start-path)
+					    start-path)
 		    lex-id
-		    (reverse sane-start-path)
+		    (reverse start-path)
 		    output-stream))
 	new-fs)))))
 
