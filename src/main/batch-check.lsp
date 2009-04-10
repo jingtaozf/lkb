@@ -106,7 +106,8 @@
 					start-path ostream)
   (let* ((entry (read-psort lexicon id :cache (not unexpandp)))
 	 (output-stream (or ostream t))
-	 (lex-id id))
+	 (lex-id id)
+	 (sane-start-path (or start-path (get-diff-list-start-path))))
     (cond 
      ((null entry)
       (format t "~%WARNING: lexical entry '~a' not found in lexicon" lex-id)
@@ -123,9 +124,10 @@
 		   *grammar-specific-batch-check-fn*)
 	  (funcall *grammar-specific-batch-check-fn* new-fs id))   
 	(when new-fs
-	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
+	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) 
+					    sane-start-path)
 		    lex-id
-		    (reverse start-path)
+		    (reverse sane-start-path)
 		    output-stream))
 	new-fs)))))
 
