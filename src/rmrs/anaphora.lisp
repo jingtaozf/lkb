@@ -189,15 +189,69 @@ discourse items
   ;;; past-items are in reverse order, most recent first
   (append
    (loop for referent in (discourse-item-referents discourse-item)
-       unless (eql referent anaphor)
+       unless (or (eql referent anaphor)
+		  (violates-binding-conditions 
+		   anaphor referent discourse-item)
+		  (referent-property-mismatch 
+		   anaphor referent))
        collect (make-a-link :anaphor (referent-d-id anaphor)
-			   :referent (referent-d-id referent)))
-   (loop for past-item in past-items
-       append
-	 (loop for referent in (discourse-item-referents past-item)
-	     collect (make-a-link :anaphor (referent-d-id anaphor)
-				  :referent (referent-d-id referent))))))
+			    :referent (referent-d-id referent)))
+   ;;; don't look back if prontype='refl'
+   (if (node-properties-p (referent-node anaphor)
+			  "prontype" "refl")    
+       nil
+     (loop for past-item in past-items
+	 append
+	   (loop for referent in (discourse-item-referents past-item)
+	       unless (referent-property-mismatch 
+		       anaphor referent)
+	       collect (make-a-link :anaphor (referent-d-id anaphor)
+				    :referent (referent-d-id referent)))))))
 
+(defun node-properties-p (node feature value)
+  ;;; feature and value are specified as strings
+  ;;; this function takes care of nastinesses like packages
+  ;;; though not very efficiently
+  (let ((properties (dmrs-node-cvextra node)))
+    (dolist (property properties)
+      (let ((f (extrapair-feature property))
+	    (v (extrapair-value property)))
+	(when 
+	    (and (string-equal (string f) feature)
+		 (string-equal (string v) value))
+	  (return t))))))
+
+(defun referent-property-mismatch (anaphor referent)
+  ;;; FIX
+  (declare (ignore anaphor referent))
+  nil)
+
+(defun violates-binding-conditions (anaphor referent discourse-item)
+  ;;; this of course is indefinitely complex
+  ;;; in the medium term, allow patterns to be specified in
+  ;;; DMRS such that if the configuration matches the pattern
+  ;;; we have a violation
+  (if (node-properties-p (referent-node anaphor)
+			 "prontype" "refl")
+      nil 
+    ;;; FIX!
+    ;;; non-reflexive
+    ;;; crudely block all cases where the elements are
+    ;;; linked from the same node
+    (let* ((dmrs (discourse-item-mrs discourse-item))
+	   (alinked (collect-linked-from anaphor dmrs))
+	   (rlinked (collect-linked-from referent dmrs)))
+      (intersection alinked rlinked))))
+
+(defun collect-linked-from (ref dmrs)
+  (let ((ref-id (d-id-id (referent-d-id ref)))
+	(links (dmrs-links dmrs)))
+    (loop for link in links
+	when (eql (dmrs-link-to link) ref-id)
+	collect
+	  (dmrs-link-from link))))
+  
+  
 ;;; *************************************************
 ;;;
 ;;; Output (as XML for now)
@@ -535,9 +589,11 @@ discourse items
 
 (convert-fine-system-output-to-discourses "~/anaphora.1" "/home/aac10/anaphora-test/")
 
+(convert-fine-system-output-to-discourses "~/anaphora.1" "/home/aac10/anaphora-test/" '(30))
+
 |#
 
-(defun convert-fine-system-output-to-discourses (ifile odir)
+(defun convert-fine-system-output-to-discourses (ifile odir &optional dnums)
   (let ((*anchor-rmrs-p* t)
 	(drecord nil))
     ;;; read in all the discourses and store them in drecord
@@ -570,13 +626,14 @@ discourse items
       (let* ((dcount (car ditem))
 	     (dmrss (reverse (cdr ditem)))
 	     (discourse (dmrs-list-to-discourse dmrss))) 
-	(let ((ofile (format nil "~Ad~A.dmrs" odir dcount)))
-	  (with-open-file 
-	      (ostream ofile :direction :output
-	       :if-does-not-exist :create
-	       :if-exists :supersede)
-	    (output-discourse discourse ostream)
-	    (finish-output ostream)))))))
+	(unless (and dnums (not (member dcount dnums)))
+	  (let ((ofile (format nil "~Ad~A.dmrs" odir dcount)))
+	    (with-open-file 
+		(ostream ofile :direction :output
+		 :if-does-not-exist :create
+		 :if-exists :supersede)
+	      (output-discourse discourse ostream)
+	      (finish-output ostream))))))))
 
 
 (defun extract-fine-system-mrs (str)
@@ -617,6 +674,11 @@ discourse items
 
 ;;;	(output-dmrs1 (rmrs-to-dmrs rmrs) 'dxml t)))))
 
+;;; (with-open-file (ostream file-name :direction :output
+;;;			  :if-exists :supersede
+;;;			  :if-does-not-exist :create)
+;;;	(layout-dmrs dmrsstruct :svg ostream))
+
 
 ;;; testing well-formedness of dmrs
 
@@ -649,5 +711,7 @@ discourse items
 			     "xmlnorm -s ~/dmrs-test.dmrs 2>| ~/dmrs-tmp/"
 			     (format nil "~A" scount)
 			   ".errs"))))))))))))
+
+
 
 |#
