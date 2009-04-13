@@ -1132,7 +1132,7 @@ CLIM rendering is in lkb-acl-rmrs.lisp
 \end{picture}
 |#
 
-(defun dmrs-svg-preamble (stream)
+(defun dmrs-svg-preamble (stream width height)
   ;;; in a separate fn to avoid clutter below
   (format stream
 	  "<?xml version=\"1.0\" standalone=\"no\"?>")
@@ -1142,7 +1142,7 @@ CLIM rendering is in lkb-acl-rmrs.lisp
 	  "~%\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">")
   
   (format stream
-	  "~%~%<svg width=\"100%\" height=\"100%\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">")
+	  "~%~%<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 ~A ~A\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">" width height)
 ;;; definition of an arrow head
  (format stream "~%<defs>
 <marker id=\"Triangle\"
@@ -1183,8 +1183,20 @@ and so on
 	 (offset 10) ;; offset from centre position of node for link start/end
 	 ;; so if two links go to/from the same node, the link ends
 	 ;; are (* 2 offset) apart
-	 )
-    (dmrs-svg-preamble stream)
+	 (picture-height (+ start-y
+			    (* y-incr
+			       (* scale 
+				  (+ 1 (loop for link in links
+					   maximize
+					     (dmrs-layout-link-y link)))))))
+	 (picture-width 
+	  (* scale
+	     (+ 10  ;;; fudge factor - should really calculate width
+		(loop for node in nodes
+		 maximize
+		   (dmrs-layout-node-mid-x node))))
+	 ))
+    (dmrs-svg-preamble stream picture-width picture-height)
     (dolist (node nodes)
       (let ((x (+ (* scale (dmrs-layout-node-start-x node)) start-x))
 	    (label (dmrs-layout-node-label node)))
@@ -1379,6 +1391,99 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 	(post (dmrs-link-post link)))
     (dmrs-output-link dmrs-display-structure
 		      from to pre post)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;
+;;;;;;    Input
+;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; FIX - incomplete
+
+(defun read-single-dmrs-from-string (str)
+  (let ((*package* (find-package :mrs)))
+    (with-input-from-string (istream str)
+      (let ((dmrs (parse-xml-removing-junk istream)))
+	(unless (xml-whitespace-string-p dmrs)
+	  (read-dmrs dmrs))))))
+
+(defun read-dmrs (content)
+;;;  (pprint content lkb::*lkb-background-stream*)
+;;;  <!ATTLIST dmrs
+;;;          cfrom CDATA #REQUIRED
+;;;          cto   CDATA #REQUIRED 
+;;;          surface   CDATA #IMPLIED 
+;;;          ident     CDATA #IMPLIED >
+  (let ((nodes nil) (links nil)
+	(tag (car content)))
+    (unless (eql (car tag) '|dmrs|)
+      (error "~A is not an dmrs" content))
+    (setf content (cdr content))
+    (loop (let ((next-el (car content)))
+	    (if (xml-whitespace-string-p next-el)
+		(pop content)
+	      (return))))
+    (when content
+      (loop for next-el in content
+	  do
+	    (unless (xml-whitespace-string-p next-el)
+		(cond 
+		 ((eql (caar next-el) '|node|)
+		  (push (read-dmrs-node next-el)
+			nodes))
+		 ((eql (caar next-el) '|link|)
+		  (push (read-dmrs-link next-el)
+			links))
+		 (t (error "Unexpected element ~A" next-el)))))
+;;;      (pprint nodes)
+;;;      (pprint links)
+      (make-dmrs :nodes nodes :links links))))
+
+(defun read-dmrs-node (content)
+;;;  <!ELEMENT node ((realpred|gpred), sortinfo)>
+;;;  <!ATTLIST node
+;;;          nodeid CDATA #REQUIRED
+;;;          cfrom CDATA #REQUIRED
+;;;          cto   CDATA #REQUIRED 
+;;;          surface   CDATA #IMPLIED
+;;;	     base      CDATA #IMPLIED 
+;;;          carg CDATA #IMPLIED >
+  (let ((tag (car content))
+        (body (cdr content)))
+    (unless (and 
+	     (eql (first tag) '|node|)
+	     (eql (second tag) '|nodeid|)
+             (eql (fourth tag) '|cfrom|)
+             (eql (sixth tag) '|cto|))
+      (error "Malformed node ~A" content))
+    (setf body (loop for x in body
+		   unless (xml-whitespace-string-p x)
+		   collect x))
+    (let ((carg-rest (member '|carg| tag)))
+      (make-dmrs-node
+       :id (parse-integer (third tag))
+       :pred (read-rmrs-pred (first body))
+       :cfrom (parse-integer (fifth tag))
+       :cto (parse-integer (seventh tag))
+       :carg (cadr carg-rest) 
+       :cvtype nil
+       :cvextra nil))))
+
+
+(defun read-dmrs-link (content)
+  (let* ((tag (car content))
+	 (from (parse-integer (third tag)))
+	 (to (parse-integer (fifth tag)))
+	 (arg (second content))
+	 (post (third content)))
+    (make-dmrs-link :from from
+		    :to to
+		    :pre (second arg)
+		    :post (second post))))
+	   
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;
