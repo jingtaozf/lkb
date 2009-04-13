@@ -468,6 +468,42 @@
 
 ; (global-set-key "\C-cm" 'display-mrs)
 
+
+;;; DMRS display utility
+
+(defun display-dmrs (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-dmrs-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-dmrs-expression))
+    (eval-in-lisp (format "(lkb::display-dmrs-from-string \"%s\")" 
+			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
+(defun calc-begin-of-dmrs-expression ()
+  "calculates begin of a mrs expression in XML"
+  (or (re-search-backward "<dmrs" nil t)
+               (point-min)))
+
+(defun calc-end-of-dmrs-expression ()
+  "calculates end of an dmrs expression"
+    (or (re-search-forward "</dmrs>" nil t)
+                 (point-max)))
+
+; as above
+
+
+(add-hook 'sgml-mode-hook
+	  (function (lambda ()
+		      (define-key sgml-mode-map 
+			  "\C-cd" 'display-dmrs))))
+
+; (global-set-key "\C-cd" 'display-dmrs)
+
+
 ;;;
 ;;; open a file in a new buffer, killing its existing buffer, if necessary
 ;;;
