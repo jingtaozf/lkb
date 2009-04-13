@@ -167,7 +167,10 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-extra-feat-val  ((rmrsout xml) feat val)
   (with-slots (stream) rmrsout
-    (format stream " ~(~a~)='~(~a~)'" feat val)))
+    (format stream " ~(~a~)='~(~a~)'" 
+	    feat (cond ((eql val '+) "plus")
+		       ((eql val '-) "minus")
+		       (t val)))))
 
 ;;; <!ELEMENT constant (#PCDATA)>
 
