@@ -168,8 +168,16 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
            :pred pred 
            :flist (list converted-main-arg)
            :str (rel-str rel)
-	   :cfrom (and (integerp (rel-cfrom rel)) (rel-cfrom rel))
-	   :cto (and (integerp (rel-cto rel)) (rel-cto rel)))))
+	   :cfrom (if (integerp (rel-cfrom rel)) 
+		      (rel-cfrom rel)
+		    (if (and (rel-lnk rel) 
+			     (eql (car (rel-lnk rel)) :CHARACTERS))
+			(cadr (rel-lnk rel))))
+	   :cto (if (integerp (rel-cto rel)) 
+		    (rel-cto rel)
+		  (if (and (rel-lnk rel) 
+			     (eql (car (rel-lnk rel)) :CHARACTERS))
+			(caddr (rel-lnk rel)))))))
     (values ep rmrs-args 
 	    (if (not *anchor-rmrs-p*)
 	    (record-ing-info label-recs 
@@ -340,7 +348,11 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 
 (defparameter *var-extra-mrs-compiled-table*
-    (compile-var-extra-table *var-extra-conversion-table* nil))
+    nil)
+
+;;; was
+;;;    (compile-var-extra-table *var-extra-conversion-table* nil))
+;;; but this has all ceased to work / become redundant
 
 ;;; conversion functions - mostly generic for MRS <-> RMRS
 ;;; calling function supplies the right table
@@ -352,9 +364,11 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                       (var-type var)
                     "u")
             :id (var-id var)
-	    :extra (rmrs-convert-var-extra 
-		    (var-extra var) 
-		    *var-extra-mrs-compiled-table*)))
+	    :extra (if *var-extra-mrs-compiled-table*
+		       (rmrs-convert-var-extra 
+			(var-extra var) 
+			*var-extra-mrs-compiled-table*)
+		     (var-extra var))))
 
 
 (defun rmrs-convert-var-extra (extras table)
