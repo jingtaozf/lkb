@@ -1,5 +1,6 @@
 <!ELEMENT rmrs-list (rmrs)*>
 <!-- Documentation in dtd-notes.txt -->
+<!-- features and values now correspond to 09/02 ERG SEMI -->
 <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 <!ATTLIST rmrs
           cfrom CDATA #REQUIRED
@@ -34,17 +35,14 @@
           vid  CDATA #REQUIRED 
           num  (sg|pl|u) #IMPLIED
           pers (1|2|3|1-or-3|u) #IMPLIED
-          gender (m|f|n|m-or-f|u) #IMPLIED
-          divisible (plus|minus|u) #IMPLIED
-          cogn-st (type-id|uniq-id|fam|activ|in-foc|uniq-or-less|uniq-or-fam|fam-or-activ|active-or-more|fam-or-less|uniq-or-fam-or-activ|fam-or-more|activ-or-less|uniq-or-more|u) #IMPLIED
-          tense (past|present|future|non-past|u) #IMPLIED
-          telic (plus|minus|u) #IMPLIED
-          protracted (plus|minus|u) #IMPLIED
-          stative (plus|minus|u) #IMPLIED
-          incept (plus|minus|u) #IMPLIED
-          imr (plus|minus|u) #IMPLIED
-          boundedness (plus|minus|u) #IMPLIED
-          refdistinct (plus|minus|u) #IMPLIED >
+          gend (m|f|n|m-or-f|u) #IMPLIED
+          sf (prop|ques|comm|prop-or-ques|u) #IMPLIED
+          tense (past|pres|fut|tensed|untensed|u) #IMPLIED
+          mood (indicative|subjunctive|u) #IMPLIED
+          prontype (std_pron|zero_pron|refl|u) #IMPLIED 
+          prog (plus|minus|u) #IMPLIED
+          perf (plus|minus|u) #IMPLIED
+          ind  (plus|minus|u) #IMPLIED >
 
 
 <!ELEMENT rarg (rargname, label, (var|constant))>

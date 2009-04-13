@@ -75,5 +75,7 @@ identifying information there instead.  Hinoki uses the ident
 identifier but may switch to a wrapper, in which case ident may be
 removed.  In any case it is optional.
  
+04/09 changed the DTD to conform with 09/02 ERG SEM-I VPM
+though note the use of plus and minus for + and minus
 
 
