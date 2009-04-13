@@ -1584,42 +1584,6 @@ higher and lower are handle-variables
 	(mrs-output-end-fvpair-fn display))
   (mrs-output-end-rel display))
 
-;;; FIX
-;;; following version of print-rel is called from the SEM-I 
-;;; but unfortunate use of key and not exactly the same as the `real' code
-;;; so renamed - should be changed to be same as print-rel above
-;;; or moved to semi.lsp
-
-(defun print-semi-rel (rel &key (display-to *mrs-display-structure*) first-rel connected-p)
-  (unless (rel-base-p rel)
-    (error "unexpected type"))
-  ;; print pred name
-  (mrs-output-start-rel
-   display-to
-   (rel-pred rel) first-rel
-   (determine-ep-class rel))
-  ;; print handel if valid
-  (when (rel-p rel)
-    (mrs-output-rel-handel
-     display-to 
-     (find-var-name (rel-handel rel) connected-p))
-    (print-mrs-extra (rel-handel rel)
-		     :display-to display-to))
-  (loop
-      for feat-val in (rel-flist rel)
-      do
-	;; print feature
-	(mrs-output-label-fn display-to (fvpair-feature feat-val))
-	(let ((value (fvpair-value feat-val)))
-	  ;; print value struct
-	  (if (var-p value)
-	      (progn
-		(mrs-output-var-fn display-to
-				   (find-var-name value connected-p))
-		(print-mrs-extra value
-				 :display-to display-to))
-	    (mrs-output-atomic-fn display-to value))))
-  (mrs-output-end-rel display-to))
 
 (defun print-mrs-hcons (hcons-list connected-p display)
     (mrs-output-start-h-cons display)
