@@ -34,7 +34,9 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   pred
   cfrom
   cto
-  carg
+  carg ;; constant arguments
+  cvtype
+  cvextra
   charvar ;; for RMRS to DMRS only
   label ;; for RMRS to DMRS only
 )
@@ -228,41 +230,61 @@ make-dmrs-handel-links
 ;;;      (simple-output-dmrs dmrs)
 ;;;      (layout-dmrs dmrs))))
 
+
+(defparameter *exclude-discourse-rels-p* t)
+
 (defun extract-rmrs-nodes (rmrs)
   ;;; FIX - the char var test is whether there's an ARG0 class variable
   ;;; and the predicate is not a quantifier.  This is probably too generous.
   (let ((nodes
 	 (loop for rel in (rmrs-liszt rmrs)
+	     unless (and *exclude-discourse-rels-p* 
+			 (discourse-rel-p rel))
 	     collect
-	       (let ((pred (rel-pred rel))) 
+	       (let* ((pred (rel-pred rel))
+		      (charvar (if (if (realpred-p pred)
+				       (not (equal (realpred-pos pred) 
+						   "q"))
+				     (not (pred-type-p #\q
+					   (rel-pred rel))))
+				   (car (rel-flist rel)))))
 	       (make-dmrs-node
 		:id (var-id (rel-anchor rel))
 		:pred pred
 		:cfrom (rel-cfrom rel)
 		:cto (rel-cto rel)
-		:charvar (if (if (realpred-p pred)
-				 (not (equal (realpred-pos pred) 
-					     "q"))
-			       (not (quantifier-pred-p (rel-pred rel))))
-			     (var-id (car (rel-flist rel))))
+		:cvtype (if charvar (var-type charvar))
+		:cvextra (if charvar (var-extra charvar))
+		:charvar (if charvar (var-id charvar))
 		:label (var-id (rel-handel rel)))))))
     (dolist (rmrs-arg (rmrs-rmrs-args rmrs))
       (when (and (stringp (rmrs-arg-val rmrs-arg))
 	       (equal (rmrs-arg-arg-type rmrs-arg) "CARG"))
-	  (let* ((node (car (member (var-id (rmrs-arg-label rmrs-arg))
-				    nodes :key #'dmrs-node-id))))
-	    (when (and node (dmrs-node-p node))
+	  (let* ((node (node-from-anchor rmrs-arg nodes)))
 	      (setf (dmrs-node-carg node)
-		(rmrs-arg-val rmrs-arg))))))
+		(rmrs-arg-val rmrs-arg)))))
     nodes))
 
+(defun node-from-anchor (rmrs-arg nodes)
+  (let ((node
+	 (car (member (var-id (rmrs-arg-label rmrs-arg))
+		      nodes :key #'dmrs-node-id))))
+    (if (and node (dmrs-node-p node))
+	node)))
 
-(defun quantifier-pred-p (pred)
-  (let ((qpos (position  #\q pred)))
+(defun pred-type-p (char pred)
+  (let ((qpos (position  char pred)))
     (and qpos (> qpos 0) (< qpos (- (length pred) 1))
 	 (char= (elt pred (- qpos 1)) #\_)
 	 (char= (elt pred (+ qpos 1)) #\_))))
-	
+
+(defun discourse-rel-p (rel)
+  (let* ((pred (rel-pred rel)))
+    (if (realpred-p pred)
+	(equal (realpred-pos pred) 
+		    "d")
+      (pred-type-p #\d pred))))
+
 
 (defun check-char-vars (nodes)
   (let ((vars nil)
@@ -279,7 +301,8 @@ make-dmrs-handel-links
   (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
       unless (or (not (var-p (rmrs-arg-val rmrs-arg)))
 		 (equal (var-type (rmrs-arg-val rmrs-arg)) "h")
-		 (equal (var-type (rmrs-arg-val rmrs-arg)) "u"))
+		 (equal (var-type (rmrs-arg-val rmrs-arg)) "u")
+		 (not (node-from-anchor rmrs-arg nodes)))
       collect
 	(let* ((var (rmrs-arg-val rmrs-arg))
 	       (var-id (var-id var))
@@ -439,6 +462,7 @@ make-dmrs-handel-links
 (defun make-dmrs-handel-links (rmrs ngroups nodes)
   (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
       when (and (var-p (rmrs-arg-val rmrs-arg))
+		(node-from-anchor rmrs-arg nodes)
 		(equal (var-type (rmrs-arg-val rmrs-arg)) "h"))
       append
 	;; BODY args won't have a qeq, so the code
@@ -473,6 +497,7 @@ make-dmrs-handel-links
   (let* ((main-args
 	  (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
 	      when (and (eql (var-id (rmrs-arg-label rmrs-arg)) from-node-id)
+			(node-from-anchor rmrs-arg nodes)
 			(not (equal (var-type (rmrs-arg-val rmrs-arg)) "h")))
               append
 		(let* ((var (rmrs-arg-val rmrs-arg))
@@ -1254,9 +1279,16 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
       (write-char #\' stream))
     (write-char #\> stream)))
 
+(defmethod dmrs-output-sort-info ((dmrsout dxml) type)
+  (with-slots (stream) dmrsout
+    (if type
+	(format stream "<sortinfo cvarsort='~A'" type)
+      (write-string "<sortinfo" stream))))
+
 (defmethod dmrs-output-end-node ((dmrsout dxml))
   (with-slots (stream) dmrsout
-    (write-string "<sortinfo/></node>" stream)
+    ;; end sortinfo
+    (write-string "/></node>" stream)
     (terpri stream)))
 
 ;;; links
@@ -1328,6 +1360,15 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 			      (realpred-pos pred)
 			      (realpred-sense pred))
       (rmrs-output-gpred dmrs-display-structure pred))
+    (dmrs-output-sort-info dmrs-display-structure
+			   (dmrs-node-cvtype node))
+    (when (dmrs-node-cvtype node)
+      (loop for extrapair in (dmrs-node-cvextra node)
+	  do
+	    (rmrs-output-extra-feat-val 
+	     dmrs-display-structure
+	     (extrapair-feature extrapair)
+	     (extrapair-value extrapair))))		      
     (dmrs-output-end-node dmrs-display-structure)))
     
 
