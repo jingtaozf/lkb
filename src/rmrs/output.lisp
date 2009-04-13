@@ -167,7 +167,7 @@ plus other slots - see DTD
 
 (defmethod rmrs-output-extra-feat-val  ((rmrsout xml) feat val)
   (with-slots (stream) rmrsout
-    (format stream " ~A='~A'" feat val)))
+    (format stream " ~(~a~)='~(~a~)'" feat val)))
 
 ;;; <!ELEMENT constant (#PCDATA)>
 
