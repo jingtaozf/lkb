@@ -39,6 +39,13 @@
 
 ;;; DMRS
 
+(define-lkb-frame dmrs-ordinary
+    ((dmrs :initform nil
+	   :accessor dmrs-ordinary-dmrs))
+  :display-function 'show-dmrs-ordinary  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
 (define-lkb-frame mrs-dmrs
     ((mrsstruct :initform nil
                 :accessor mrs-dmrs-mrsstruct)
@@ -405,6 +412,33 @@
 ;;; ****** Comparison of RMRSs based on data stored in the fine system
 
 ;; code moved to rmrs/compare.lisp since it isn't actually ACL specific
+
+;;; DMRS code
+
+;;; 
+
+(defun display-dmrs-from-string (str)
+  (with-package (:mrs)
+    (let ((dmrs (mrs::read-single-dmrs-from-string str)))
+      (when (and dmrs (mrs::dmrs-p dmrs))
+	(show-dmrs-ordinary-window dmrs "DMRS")))))
+
+(defun show-dmrs-ordinary-window (dmrs title)
+  (mp:run-function "DMRS ORDINARY"
+		   #'show-dmrs-ordinary-window-really :dmrs dmrs :title title))
+
+(defun show-dmrs-ordinary-window-really (&key dmrs title)
+  (let ((mframe (clim:make-application-frame 'dmrs-ordinary)))
+    (setf (dmrs-ordinary-dmrs mframe) 
+      dmrs)
+    (setf (clim:frame-pretty-name mframe) (or title "Dependency MRS"))
+    (clim:run-frame-top-level mframe)))
+
+(defun show-dmrs-ordinary (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((dmrs (dmrs-ordinary-dmrs mframe)))
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+	(mrs::layout-dmrs dmrs :clim stream))))
 
 ;;; DMRS display from parser
 
