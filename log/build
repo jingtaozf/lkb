@@ -1,10 +1,11 @@
-At revision 6479.
-At revision 6479.
+At revision 6482.
+A    src/tsdb/home
+Updated to revision 6482.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 6480.
+Committed revision 6483.
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
 	  cd /lingo/build//lkb; \
@@ -14,7 +15,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 	  chmod 3775 /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
 	  chgrp build /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`; \
 	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_source.tgz \
-	      --exclude=Makefile \
+	      --exclude=Makefile --exclude=./.build \
 	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/.????*" --exclude="src/fasl*" \
@@ -490,7 +491,6 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/lkb.el
 ./src/mrs-package.lsp
 ./src/lkb-package.lsp
-./.build
 ( \
 	  cd /lingo/build//lkb; \
 	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/lkb_data.tgz \
@@ -1298,7 +1298,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Apr 27, 2009 5:24)
+8.1 [Linux (x86)] (Apr 27, 2009 5:44)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -3574,7 +3574,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
-[05:27:39] gc-after-hook(): {L#1 N=1.4m O=36k E=93%} [S=115m R=108m].
+[05:47:38] gc-after-hook(): {L#1 N=1.4m O=36k E=92%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/yy.fasl
@@ -3583,8 +3583,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/mt.lisp
-[05:27:40] gc-after-hook(): {L#2 N=2.1m O=12k E=92%} [S=115m R=108m].
-[05:27:41] gc-after-hook(): {L#3 N=4.6m O=6.8k E=88%} [S=115m R=108m].
+[05:47:39] gc-after-hook(): {L#2 N=2.1m O=12k E=92%} [S=115m R=108m].
+[05:47:40] gc-after-hook(): {L#3 N=4.6m O=6.8k E=89%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/mt.fasl
@@ -3592,19 +3592,19 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/derivations.fasl
-[05:27:42] gc-after-hook(): {L#4 N=1.9m O=316k E=90%} [S=115m R=108m].
+[05:47:41] gc-after-hook(): {L#4 N=1.9m O=316k E=90%} [S=115m R=108m].
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-[05:27:43] gc-after-hook(): {L#5 N=3.2m O=118k E=90%} [S=115m R=108m].
-[05:27:44] gc-after-hook(): {L#6 N=3.4m O=83k E=91%} [S=115m R=108m].
+[05:47:42] gc-after-hook(): {L#5 N=3.2m O=118k E=90%} [S=115m R=108m].
+[05:47:43] gc-after-hook(): {L#6 N=3.4m O=83k E=91%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
-[05:27:45] gc-after-hook(): {L#7 N=2.5m O=6.9k E=90%} [S=115m R=108m].
+[05:47:44] gc-after-hook(): {L#7 N=2.5m O=6.9k E=90%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/lsp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/lsp.fasl
@@ -3625,7 +3625,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/chasen.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/hunter.lisp
-[05:27:46] gc-after-hook(): {L#8 N=1022k O=1.5m E=90%} [S=115m R=108m].
+[05:47:45] gc-after-hook(): {L#8 N=1022k O=1.5m E=90%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/hunter.fasl
@@ -3637,13 +3637,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/bdb.fasl
-[05:27:46] gc-after-hook(): {L#9 N=795k O=24k E=93%} [S=115m R=108m].
+[05:47:46] gc-after-hook(): {L#9 N=795k O=24k E=93%} [S=115m R=108m].
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/features.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/learner.lisp
-[05:27:47] gc-after-hook(): {L#10 N=2.1m O=5.7k E=92%} [S=115m R=108m].
+[05:47:47] gc-after-hook(): {L#10 N=2.1m O=5.7k E=92%} [S=115m R=108m].
 ;;; Writing fasl file /lingo/build/lkb/src/.l1cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l1cl/tsdb/learner.fasl
@@ -5687,7 +5687,18 @@ src/tsdb/skeletons/norsk/jhk/relations
 src/tsdb/skeletons/norsk/jhk/item
 src/tsdb/skeletons/norsk/Relations
 src/tsdb/skeletons/norsk/Index.lisp
-tar: src/tsdb/home: Cannot stat: No such file or directory
+src/tsdb/home/
+( \
+	  cd /lingo/build//lkb; \
+	  tar Svczf /lingo/www/lingo/ftp/builds/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
+	)
+tar: doc/itsdb.ps: Cannot stat: No such file or directory
+tar: doc/tsnlp.ps: Cannot stat: No such file or directory
+tar: doc/profiling.ps: Cannot stat: No such file or directory
+tar: doc/parsing.ps: Cannot stat: No such file or directory
 tar: Error exit delayed from previous errors
-make[1]: *** [itsdb_data] Error 2
+make[1]: *** [itsdb_documentation] Error 2
 make[1]: Leaving directory `/lingo/build/lkb'
