@@ -5,6 +5,7 @@ WROOT = c:/d/delphin-download
 WACLROOT = c:/Program\ Files/acl81
 WLOGIN = aac
 DATE = `date "+%Y-%m-%d"`
+TIME = `date "+%Y-%m-%d (%H:%M:%S)"`
 TARGET = /lingo/www/lingo/ftp
  
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
@@ -20,24 +21,21 @@ CHGRP=chgrp
 CHMOD=chmod
 LN=ln -s
 CVS=cvs -q -z9
+SVN=svn
 TAR=tar
 MAKE=make
 TEE=tee
 
 update:
 	( \
-	  cd ${ROOT}/yzlui; \
-	  ${CVS} update -P -d -R; \
-	  ${CVS} rtag -F latest yzlui; \
 	  cd ${ROOT}/erg; \
-	  svn update; \
-	  cd ${ROOT}/spanish; \
-	  ${CVS} update -P -d -R; \
-	  ${CVS} rtag -F latest spanish; \
+	  ${SVN} update; \
 	  cd ${ROOT}/lkb; \
-	  ${CVS} update -P -d -R; \
-	  ${CVS} commit -f -m "auto-update for build" ./src/version.lsp; \
-	  ${CVS} rtag -F latest lkb; \
+	  ${SVN} update; \
+	  ${SVN} propset build "${TIME}" ./src/version.lsp; \
+	  ${SVN} info . | egrep '^Revision: ' | sed 's/^.*: //' > .build; \
+	  ${SVN} commit -m "auto-update for build" \
+	    ./src/version.lsp .build; \
 	  $(MAKE) all; \
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	${CP} ${ROOT}/lkb/src/lkb.el ${TARGET}/etc
@@ -49,16 +47,14 @@ update:
 	  cd ${ROOT}/lkb/log; \
           mail -s "automated LinGO build (${DATE})" \
 	    oe@ifi.uio.no \
-	    ann.copestake@cl.cam.ac.uk \
-	    danf@csli.stanford.edu \
             < build; \
-	  cvs commit -m "" build; \
+	  ${SVN} commit -m "build log @ ${TIME}" build; \
 	)
 
 latest:
 	${CVS} update -P -d -R -r latest;
 
-all: lkb yzlui erg spanish itsdb
+all: lkb erg itsdb
 
 windows: lkb_windows
 
@@ -95,8 +91,8 @@ lkb_source:
 	  ${CHMOD} 3775 ${TARGET}/builds/${DATE}; \
 	  ${CHGRP} build ${TARGET}/builds/${DATE}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_source.tgz \
-	      --exclude=Makefile \
-	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	      --exclude=Makefile --exclude=./.build \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/.????*" --exclude="src/fasl*" \
 	      --exclude="*.fasl" --exclude="./lexdb*" \
@@ -115,7 +111,7 @@ lkb_data:
 	( \
 	  cd ${ROOT}/lkb; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_data.tgz \
-	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/data/spanish*" \
 	      --exclude="src/data/interrogatives*" \
@@ -250,15 +246,6 @@ lkb_windows: lkb_windows_clean
 	scp /cygdrive/c/tmp/lkb_windows.tgz /cygdrive/c/tmp/lkb_windows.zip \
           ${WLOGIN}@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
 
-lkb_documentation:
-	( \
-	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/builds/${DATE}/lkb_documentation.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" \
-	      doc/lkb.pdf; \
-	)
-
 #
 # YZ implementation of Linguistic User Interface (Woodley Packard)
 #
@@ -280,8 +267,7 @@ erg:
 	( \
 	  cd ${ROOT}; \
 	  ${TAR} Svczf ${TARGET}/builds/${DATE}/erg.tgz \
-	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
-              --exclude "*.svn*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="tsdb*" --exclude="*.fasl" \
 	      erg; \
@@ -319,7 +305,7 @@ itsdb_linux_x86_32:
 	  cd ${ROOT}/lkb; \
 	  find src/.l1cl -type f -exec touch {} \; ; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_linux.x86.32.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
 	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
@@ -332,7 +318,7 @@ itsdb_linux_x86_64:
 	  cd ${LROOT}/lkb; \
 	  find src/.l1c4 -type f -exec touch {} \; ; \
 	  tar Svczf /tmp/itsdb_linux.x86.64.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.64/tsdb bin/linux.x86.64/swish++ \
 	      bin/linux.x86.64/pvmd3 bin/linux.x86.64/pvm \
@@ -347,7 +333,7 @@ itsdb_solaris:
 	  cd ${SROOT}/lkb; \
 	  find src/.s7cl -type f -exec touch {} \; ; \
 	  tar Svczf /tmp/itsdb_solaris.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      bin/solaris/tsdb bin/solaris/swish++ \
 	      bin/solaris/pvmd3 bin/solaris/pvm \
@@ -361,16 +347,16 @@ itsdb_libraries:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_libraries.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" \
-	      etc include lib man src/general/itsdb.lisp; \
+	      etc include lib src/general/itsdb.lisp; \
 	)
 
 itsdb_source:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_source.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/systems/tsdb.system src/systems/pvm.system \
 	      src/systems/fad.system  \
@@ -384,7 +370,7 @@ itsdb_capi:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_capi.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/tsdb/capi; \
 	)
@@ -393,7 +379,7 @@ itsdb_tsdb:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_tsdb.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/tsdb/c; \
 	)
@@ -409,7 +395,7 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/parc \
 	      --exclude=src/tsdb/skeletons/yy \
 	      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      src/tsdb/skeletons src/tsdb/home; \
 	)
@@ -418,9 +404,9 @@ itsdb_documentation:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_documentation.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
-	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
+	      ./src/tsdb/doc; \
 	)
 
 
@@ -430,7 +416,7 @@ itsdb_vm32:
 	( \
 	  cd ${ROOT}/lkb; \
 	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_vm32.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      src/tsdb/home/trees/vm32; \
 	)
