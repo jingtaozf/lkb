@@ -6,7 +6,7 @@ WACLROOT = c:/Program\ Files/acl81
 WLOGIN = aac
 DATE = `date "+%Y-%m-%d"`
 TIME = `date "+%Y-%m-%d (%H:%M:%S)"`
-TARGET = /lingo/www/lingo/ftp
+TARGET = /lingo/www/lingo/build
  
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
@@ -46,7 +46,7 @@ update:
 	( \
 	  cd ${ROOT}/lkb/log; \
           mail -s "automated LinGO build (${DATE})" \
-	    oe@ifi.uio.no \
+	    lingo@delph-in.net \
             < build; \
 	  ${SVN} commit -m "build log @ ${TIME}" build; \
 	)
@@ -63,7 +63,7 @@ solaris: lkb_solaris itsdb_solaris
 linux_x86_64: lkb_linux_x86_64 itsdb_linux_x86_64
 
 #
-# link structure on CSLI LinGO ftp(1) site
+# link structure on download site for LinGO builds
 #
 links: 
 	( \
@@ -244,7 +244,7 @@ lkb_windows: lkb_windows_clean
 	  ${RM} -f /cygdrive/c/tmp/lkb_windows.zip; \
           zip -r /cygdrive/c/tmp/lkb_windows.zip windows; )
 	scp /cygdrive/c/tmp/lkb_windows.tgz /cygdrive/c/tmp/lkb_windows.zip \
-          ${WLOGIN}@lingo.stanford.edu:/lingo/www/lingo/ftp/test;
+          ${WLOGIN}@lingo.stanford.edu:/lingo/www/lingo/build/test;
 
 #
 # YZ implementation of Linguistic User Interface (Woodley Packard)
