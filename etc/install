@@ -2,7 +2,7 @@
 
 #
 # a first shot at automating an install of several of the DELPH-IN open-source
-# packages, specifically:
+# packages, the so-called LinGO builds.  specifically:
 #
 # - the Linguistic Knowledge Builder (LKB);
 # - the LinGO English Resource Grammar (ERG);
@@ -185,9 +185,9 @@ ${GUNZIP} ${DELPHINHOME}/Archives/eli.tgz | ${TAR}
 echo " done.";
 
 #
-# finally, a couple of grammars (and the Matrix `meta-grammar') ...
+# finally, the English Resource Grammar
 #
-for i in erg.tgz spanish.tgz; do
+for i in erg.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
   if [ -f Archives/${i} ]; then
@@ -238,7 +238,7 @@ fi
 #
 # on Linux, we need to make sure that a (good) version of the Motif library is
 # available for the LKB; unless we find one in `/usr/X11R6/lib' that looks as
-# if it were right, install our own and suggest that the user that they tell
+# if it were right, install our own and suggest to the user that they tell
 # their shell how to find it.  this all is a little iffy ...
 #
 if [ false -a "${os}" == "linux.x86.32" ]; then
@@ -252,13 +252,6 @@ if [ false -a "${os}" == "linux.x86.32" ]; then
       sleep 5;
     fi
   fi
-  [ -d ${DELPHINHOME}/lib ] || ${MKDIR} ${DELPHINHOME}/lib;
-  [ -d ${DELPHINHOME}/lib/${os} ] || ${MKDIR} ${DELPHINHOME}/lib/${os};
-  ( \
-    cd lib/${os}; \
-    ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.2; \
-    ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.3; \
-  )
 fi
 
 #

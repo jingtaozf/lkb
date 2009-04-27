@@ -52,7 +52,7 @@ update:
 	)
 
 latest:
-	${CVS} update -P -d -R -r latest;
+	${SVN} update -r `cat .build`;
 
 all: lkb erg itsdb
 
