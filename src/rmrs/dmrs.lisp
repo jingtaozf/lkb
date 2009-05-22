@@ -191,13 +191,15 @@ make-dmrs-handel-links
 
 |#
 
+(defparameter *robust-dmrs-p* nil)
+
 (defun rmrs-to-dmrs (rmrs) 
   ;;; convert an RMRS to a DMRS
   (let* ((nodes (extract-rmrs-nodes rmrs))
 	 (dup-errors
 	  (check-char-vars nodes)))
     (if dup-errors 
-	(progn (format t "~A~%" dup-errors)
+	(progn (unless *robust-dmrs-p* (format t "~A~%" dup-errors))
 	       nil)
       (let* ((var-links (extract-rmrs-var-links rmrs nodes))
 	     (unlinked-errors
@@ -232,6 +234,8 @@ make-dmrs-handel-links
 
 
 (defparameter *exclude-discourse-rels-p* t)
+
+
 
 (defun extract-rmrs-nodes (rmrs)
   ;;; FIX - the char var test is whether there's an ARG0 class variable
@@ -303,15 +307,19 @@ make-dmrs-handel-links
 		 (equal (var-type (rmrs-arg-val rmrs-arg)) "h")
 		 (equal (var-type (rmrs-arg-val rmrs-arg)) "u")
 		 (not (node-from-anchor rmrs-arg nodes)))
-      collect
+      ;; FIX - rewrite to avoid append
+      append
 	(let* ((var (rmrs-arg-val rmrs-arg))
-	       (var-id (var-id var))
-	       (from-node-id (var-id (rmrs-arg-label rmrs-arg)))
-	       (to-node (car (member var-id nodes :key #'dmrs-node-charvar))))
-	  (make-dmrs-link
-	   :from from-node-id
-	   :to (if to-node (dmrs-node-id to-node))
-	   :pre (rmrs-arg-arg-type rmrs-arg)))))
+               (var-id (var-id var))
+               (from-node-id (var-id (rmrs-arg-label rmrs-arg)))
+               (to-node (car (member var-id nodes :key #'dmrs-node-charvar))))
+        (if (and *robust-dmrs-p* (not to-node))
+	    nil
+	  (list
+	   (make-dmrs-link
+	    :from from-node-id
+	    :to (if to-node (dmrs-node-id to-node))
+	    :pre (rmrs-arg-arg-type rmrs-arg)))))))
 
 (defun check-char-vars2 (links nodes)
   (let ((unlinked nil))
@@ -497,14 +505,15 @@ make-dmrs-handel-links
   (let* ((main-args
 	  (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
 	      when (and (eql (var-id (rmrs-arg-label rmrs-arg)) from-node-id)
+			(var-p (rmrs-arg-val rmrs-arg))
 			(node-from-anchor rmrs-arg nodes)
 			(not (equal (var-type (rmrs-arg-val rmrs-arg)) "h")))
               append
 		(let* ((var (rmrs-arg-val rmrs-arg))
 		       (var-id (var-id var))
 		       (to-node
-			(car (member var-id nodes 
-				     :key #'dmrs-node-charvar))))
+			    (car (member var-id nodes 
+					 :key #'dmrs-node-charvar))))
 		  (if to-node
 		      (list (dmrs-node-id to-node))))))
 	 (inherent-args
