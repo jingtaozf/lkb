@@ -135,7 +135,11 @@ discourse items
     (let ((utterance-id (discourse-item-utterance-id discourse-item)))
       (setf (discourse-item-referents discourse-item)
 	(loop for node in (dmrs-nodes (discourse-item-mrs discourse-item))
-	    when (potential-referent-p node)
+	    when (potential-referent-p node
+				       (dmrs-nodes 
+					(discourse-item-mrs discourse-item))
+				       (dmrs-links 
+					(discourse-item-mrs discourse-item)))
 	    collect 
 	      (make-referent 
 	       :d-id (make-d-id :id 
@@ -143,10 +147,37 @@ discourse items
 				:utterance-id utterance-id)
 	       :node node))))))
 
-(defun potential-referent-p (node)
+(defun potential-referent-p (node dmrs-nodes dmrs-links)
   ;;; type is individual
   ;;; FIX
-  (equal (dmrs-node-cvtype node) "x"))
+  (and 
+   (equal (dmrs-node-cvtype node) "x")
+   (let ((id (dmrs-node-id node)))
+     (not (match-dmrs-link-config (list "compound_name_rel" "ARG2" id)
+				  dmrs-nodes dmrs-links)))))
+
+(defun match-dmrs-link-config (config nodes links)
+  ;;; make more general
+  (let* ((id (third config))
+	 (rel (first config))
+	 (arg (second config))
+	 (rel-set (loop for node in nodes
+		      when (let ((pred (dmrs-node-pred node)))
+			     (dmrs-pred-match pred rel))
+		      collect (dmrs-node-id node))))
+       (member-if 
+	#'(lambda (link)
+	    (and (eql (dmrs-link-to link) id)
+		 (equal (dmrs-link-pre link) arg)
+		 (member (dmrs-link-from link) rel-set)))
+	links)))
+
+(defun dmrs-pred-match (pred rel)
+  (if (realpred-p pred) nil
+    (string-equal pred rel)))
+
+  
+  
 
 ;;; Step 2 - extract anaphoric items
 
@@ -585,12 +616,9 @@ discourse items
 
 #|
 
-(excl::shell "rm /home/aac10/anaphora-test/*")
+(convert-fine-system-output-to-discourses "~/lingo/lkb/src/rmrs/anaphora-test/ana-exs" "~/lingo/lkb/src/rmrs/anaphora-test/ana.dmrs")
 
-(convert-fine-system-output-to-discourses "~/anaphora.1" "/home/aac10/anaphora-test/")
-
-(convert-fine-system-output-to-discourses "~/anaphora.1" "/home/aac10/anaphora-test/" '(30))
-
+(convert-fine-system-output-to-discourses "~/lingo/lkb/src/rmrs/anaphora-test/ana-exs" "~/lingo/lkb/src/rmrs/anaphora-test/ana.dmrs" '(30))
 |#
 
 (defun convert-fine-system-output-to-discourses (ifile odir &optional dnums)
@@ -662,9 +690,102 @@ discourse items
 	(if apos
 	    (parse-integer (subseq str 0 apos) :junk-allowed t))))
 
+
+;;; Sciborg data
+
+
+;;; (convert-sciborg-data-to-discourse "~/select-papers" "~/sciborg-select.dmrs")
+
+(defun convert-sciborg-data-to-discourse (ifile ofile)
+  (let ((*anchor-rmrs-p* t)
+	(*robust-dmrs-p* t)
+	(dmrss nil)
+	(prior-sentence nil))
+    ;;; read in the discourse
+    (with-open-file (istream ifile :direction :input)
+      (loop (let ((rmrs-record (read-line istream nil nil)))
+	      (unless rmrs-record (return))
+	      (let* ((item-count (extract-sciborg-system-number rmrs-record))
+		     (sentence-count (extract-sciborg-system-sentence-number 
+				      rmrs-record))
+		     (rmrs-string (extract-sciborg-system-rmrs rmrs-record)))
+		;;; just take the first result from any sentence
+		(when (and item-count sentence-count
+		           (stringp rmrs-string)
+			   (not (equal rmrs-string "")))
+		  (unless (eql sentence-count prior-sentence)
+		    (let* ((rmrs (read-single-rmrs-from-string rmrs-string))
+			   (dmrs (rmrs-to-dmrs rmrs)))
+		      (unless dmrs (format t "~%dmrs conversion failure on ~A"
+					   sentence-count))
+		      (when dmrs
+			(push dmrs dmrss)))
+		    (setf prior-sentence sentence-count)))))))
+    (let ((discourse (dmrs-list-to-discourse dmrss))) 
+      (with-open-file 
+	  (ostream ofile :direction :output
+	   :if-does-not-exist :create
+	   :if-exists :supersede)
+	(output-discourse discourse ostream)
+	(finish-output ostream)))))
+
+(defun extract-sciborg-system-number (str)
+  (parse-integer str :junk-allowed t))
+
+(defun extract-sciborg-system-sentence-number (str)
+  (let ((apos (position #\tab str)))
+    (when apos
+      (parse-integer str :start (+ 1 apos) :junk-allowed t))))
+
+(defun extract-sciborg-system-rmrs (str)
+  (let ((apos (position #\< str)))
+    (if apos
+	(let ((rmrs-with-ns (subseq str apos))
+	      (chars nil)
+	      (seen-slash nil))
+	  (dolist (char (coerce rmrs-with-ns 'list))
+	    (if (and (char= char #\n)
+	             seen-slash)
+		(pop chars)
+		(push char chars))
+	    (if (char= char #\\) 
+		(setf seen-slash t)
+	      (setf seen-slash nil)))
+	  (coerce (nreverse chars) 'string)))))
+
+
 ;;;; scratch code
 
 #|
+
+(with-open-file (istream "~/papers.dump" :direction :input)
+  (let ((count nil)
+	(rmrs nil))
+  (loop
+    (let ((mrs-string (read-line istream nil nil)))
+      (unless mrs-string (return))
+      (when (and count (> count 1000)) (return))
+      (when (and (> (length  mrs-string) 9)
+	         (eql (elt mrs-string 0) #\C)
+		 (eql (elt mrs-string 1) #\O)
+		 (eql (elt mrs-string 2) #\P)
+		 (eql (elt mrs-string 3) #\Y)
+		 (eql (elt mrs-string 4) #\space)
+		 (eql (elt mrs-string 5) #\r)
+		 (eql (elt mrs-string 6) #\m)
+		 (eql (elt mrs-string 7) #\r)
+		 (eql (elt mrs-string 8) #\s))
+	(setf count 0))
+      (when count 
+	(push mrs-string rmrs)
+	(incf count))))
+  (with-open-file (ostream "~/select-papers" :direction :output)
+  (dolist (str (nreverse rmrs))
+    (write-string str ostream)
+    (terpri ostream)))))
+
+
+	
 
 (with-open-file (istream "~/tst.raw" :direction :input)
   (let ((mrs-string (read-line istream nil nil)))
