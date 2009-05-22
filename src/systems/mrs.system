@@ -84,7 +84,7 @@
       ((:file "basermrs") ;; the RMRS specific structures
        (:file "comp") ;; main code for semantic composition
        (:file "rmrs-algebra") ;; new code for ING free composition	
-       (:file "convert") ;; MRS to RMRS
+       (:file "rmrs-convert") ;; MRS to RMRS
        (:file "annlt") ;; The ANNLT specific code - navigates round the input trees                           
        (:file "output") ;; outputting RMRS structures, and also LKB
                         ;; generated structures in a compatible format.
