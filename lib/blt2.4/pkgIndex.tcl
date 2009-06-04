@@ -24,7 +24,7 @@ proc LoadBLT { version dir } {
 	}
 	if { ![file exists $library] } {
 	    # Default to the path generated at compilation.
-	    set library [file join "/opt/local/lib" $name]
+	    set library [file join "/tmp/tcltk/lib" $name]
 	}
     } else {
 	set library $name
