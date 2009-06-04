@@ -125,8 +125,8 @@
                              (concatenate 'string word-string "_rel"))))))
 
 
-(defun instantiate-generic-lexical-entry (gle surface &optional (carg surface))
-  (declare (ignore gle carg)))
+(defun instantiate-generic-lexical-entry (gle surface pred &optional carg)
+  (declare (ignore gle surface pred carg)))
 
 
 (defun make-orth-tdfs (orth)
