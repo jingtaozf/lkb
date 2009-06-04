@@ -7,7 +7,7 @@
 (defparameter %generics-index% nil)
 
 (defstruct gle
-  id flags le pred mrs)
+  id flags test le pred mrs)
 
 (defun index-generics ()
   (setf %generics-index%
@@ -15,6 +15,15 @@
      nil
      (loop
          for (id . flags) in *generic-lexical-entries*
+         for test = (let ((predicate (second flags))
+                          (*package* (find-package :lkb)))
+                      (typecase predicate
+                        (string (symbol-function
+                                 (read-from-string predicate)))
+                        (null nil)
+                        (symbol (symbol-function predicate))
+                        (function predicate)
+                        (cons predicate)))
          for entry = (when (smember :generate flags)
                        (get-lex-entry-from-id id))
          for mrs = (and entry (lex-entry-full-fs entry)
@@ -35,7 +44,7 @@
          else when mrs
          collect
            (make-gle
-            :id id :flags flags :le entry
+            :id id :flags flags :test test :le entry
             :pred (mrs::rel-pred (first (mrs:psoa-liszt mrs)))
             :mrs mrs)))))
             
@@ -48,15 +57,19 @@
                       when (eq (mrs:fvpair-feature role) *generics-carg*)
                       return (mrs:fvpair-value role))
       with surface = (substitute #\space #\_ carg :test #'char=)
+      with *package* = (find-package :lkb)
       for gle in (rest %generics-index%)
-      when (equal pred (gle-pred gle))
+      for test
+      = (when (gle-test gle) (ignore-errors (funcall (gle-test gle) ep)))
+      when (or test (and carg (equal pred (gle-pred gle))))
       do
-        (let* ((id (format nil "~@:(~a[~a]~)" (gle-id gle) surface))
+        (let* ((id (format nil "~@:(~a[~a]~)" (gle-id gle) (or test surface)))
                (id (intern id :lkb)))
           (if (get-lex-entry-from-id id)
             (push id ids)
             (multiple-value-bind (tdfs orth)
-                (instantiate-generic-lexical-entry gle surface carg)
+                (instantiate-generic-lexical-entry
+                 gle (or test surface) pred carg)
               (when tdfs
                 (let ((new
                        (make-lex-entry

@@ -95,9 +95,11 @@ at this point).
                             when (lex-rule-rel-p (rel-pred rel))
                             collect rel))
          ; specified by lexical rule
-         (lexical-rels (loop for rel in all-rels 
-                             when (lexical-rel-p (rel-pred rel))
-                             collect rel))
+         (lexical-rels (loop 
+                           for rel in all-rels 
+                           unless (or (lex-rule-rel-p (rel-pred rel))
+                                      (grammar-rel-p (rel-pred rel)))
+                           collect rel))
          ; specified in lexical entry
          (grammar-rels (loop for rel in all-rels 
                              when (grammar-rel-p (rel-pred rel))

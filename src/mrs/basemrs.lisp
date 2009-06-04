@@ -1168,7 +1168,7 @@ higher and lower are handle-variables
   (with-slots (stream memory) mrs
     (setf memory (if pred
                    (if (stringp pred) 
-                     (format nil "~(~s~)~a" pred (output-lnk lnk :stream nil))
+                     (format nil "~s~a" pred (output-lnk lnk :stream nil))
                      (format nil "~(~a~)~a" pred (output-lnk lnk :stream nil)))
                    "_"))
     (format stream " ")))
@@ -1583,7 +1583,6 @@ higher and lower are handle-variables
 	    (mrs-output-atomic-fn display value)))
 	(mrs-output-end-fvpair-fn display))
   (mrs-output-end-rel display))
-
 
 (defun print-mrs-hcons (hcons-list connected-p display)
     (mrs-output-start-h-cons display)
