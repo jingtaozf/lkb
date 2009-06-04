@@ -65,6 +65,9 @@
   (define-key map [menu-bar lkb generate index]
     (fi::menu "Index"
 	      'lkb::index-for-generator))
+  (define-key map [menu-bar lkb generate start_generator_server]
+    (fi::menu "Start Generator Server"
+	      'lkb::start-generator-server))
   (define-key map [menu-bar lkb generate print_chart]
     (fi::menu "Print chart input"
 	      'lkb::print-gen-chart-input))
@@ -194,7 +197,8 @@
        ["Show chart" lkb::show-gen-chart t]
        ["Print chart" lkb::print-gen-chart t]
        ["Print chart input" lkb::print-gen-chart-input t]
-       ["Index" lkb::index-for-generator t])
+       ["Index" lkb::index-for-generator t]
+       ["Start Generator Server" lkb::start-generator-server t])
       "---"
       ["Redefine type" lkb::redefine-type t]
 ))
@@ -238,6 +242,7 @@
       lkb::print-gen-chart
       lkb::print-gen-chart-input
       lkb::index-for-generator
+      lkb::start-generator-server
       ;; lexicon commands
       lkb::batch-check-lexicon
       lkb::command-load-tdl-to-scratch))
