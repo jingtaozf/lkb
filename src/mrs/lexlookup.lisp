@@ -34,8 +34,9 @@ at this point).
 ;;; check whether relations are lexical or come from rules
 ;;; (not mutually exclusive)
 
-(defun lexical-rel-p (rel-name)
-  (gethash rel-name *relation-index*))
+(defun lexical-rel-p (pred)
+  (or (gethash pred *relation-index*)
+      (and (stringp pred) (> (length pred) 0) (char= (char pred 0) #\_))))
 
 (defun grammar-rel-p (rel-name)
   (member rel-name *grule-rel-index* :key #'car :test #'equal))
@@ -97,8 +98,7 @@ at this point).
          ; specified by lexical rule
          (lexical-rels (loop 
                            for rel in all-rels 
-                           unless (or (lex-rule-rel-p (rel-pred rel))
-                                      (grammar-rel-p (rel-pred rel)))
+                           when (lexical-rel-p (rel-pred rel))
                            collect rel))
          ; specified in lexical entry
          (grammar-rels (loop for rel in all-rels 
