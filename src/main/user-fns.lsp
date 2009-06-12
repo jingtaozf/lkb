@@ -125,7 +125,7 @@
                              (concatenate 'string word-string "_rel"))))))
 
 
-(defun instantiate-generic-lexical-entry (gle surface pred &optional carg)
+(defun instantiate-generic-lexical-entry (gle surface &optional pred carg)
   (declare (ignore gle surface pred carg)))
 
 

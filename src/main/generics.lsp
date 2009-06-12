@@ -74,6 +74,11 @@
                 (let ((new
                        (make-lex-entry
                         :orth (list orth) :id id :full-fs tdfs)))
+                  ;;
+                  ;; _fix_me_
+                  ;; we should encapsulate the write access on the lexicon as a
+                  ;; method cache-psort() or the like.           (7-jun-09; oe)
+                  ;;
                   (with-slots (psorts) *lexicon*
                     (setf (gethash id psorts) new))
                   (mrs::extract-lexical-relations new)

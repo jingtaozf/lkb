@@ -3,6 +3,7 @@
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
 ;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2006 -- 2009 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
