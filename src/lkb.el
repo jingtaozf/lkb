@@ -340,7 +340,7 @@
     "prompt for grammar"
   (interactive)
   (goto-char (point-max))
-  (insert-string "(lkb::read-script-file-aux \"/lkb/script\")")
+  (insert-string "(lkb::read-script-file-aux \"~//lkb/script\")")
   (backward-char 13))
 
 (defun lkb-reload ()
