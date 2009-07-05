@@ -1,0 +1,32 @@
+Requirements
+
+  * Perl
+   * DBD::SQLite
+   * XML::DOM
+  * SQLite3
+  * Apache
+  * Lisp		for db dump
+  * nsgmls		for validation  (package sp)
+In ubuntu:
+sudo apt-get install libdbd-sqlite3-perl sp libxml-dom-perl apache2
+
+Installation
+
+ Put the information about the grammar in 
+
+Usage
+
+  1. Run ./make-ltdb.bash --grm GRAMMAR
+E.g.
+./make-ltdb.bash --grm jacy
+
+  2. If you have any gold treebanks run ./make-trees.bash --grm GRAMMAR
+  (slow if you have a lot of trees, needs a fair bit of memory)
+
+  Everything is installed to ~/public_html/
+
+
+Enable local directories in Apache2:
+------------------------------------
+
+sudo a2enmod userdir

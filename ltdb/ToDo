@@ -1,0 +1,22 @@
+
+ * make an index file
+
+ * add in some html for the trees
+
+
+
+ * share paramaters with www
+   echo "(setf tsdb::*www-introduction* \"jacy\")";
+     '((:parse \"http://www.delph-in.net/jacy\")	
+
+ * get the patches in the mainstream, ...
+
+
+DONE:
+-----
+ * add daughter look-up
+
+ * handle gzipped profiles
+
+ * release to the waiting world
+
