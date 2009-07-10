@@ -35,8 +35,7 @@ at this point).
 ;;; (not mutually exclusive)
 
 (defun lexical-rel-p (pred)
-  (or (gethash pred *relation-index*)
-      (and (stringp pred) (> (length pred) 0) (char= (char pred 0) #\_))))
+  (gethash pred *relation-index*))
 
 (defun grammar-rel-p (rel-name)
   (member rel-name *grule-rel-index* :key #'car :test #'equal))
@@ -92,51 +91,50 @@ at this point).
 (defun collect-lex-entries-from-mrs (psoa)
 
   (let* ((all-rels (psoa-liszt psoa))
-         (lex-rule-rels (loop for rel in all-rels
-                            when (lex-rule-rel-p (rel-pred rel))
-                            collect rel))
-         ; specified by lexical rule
-         (lexical-rels (loop 
-                           for rel in all-rels 
-                           when (lexical-rel-p (rel-pred rel))
-                           collect rel))
-         ; specified in lexical entry
-         (grammar-rels (loop for rel in all-rels 
-                             when (grammar-rel-p (rel-pred rel))
-                           collect rel))
-         ;; specified in grammar rule
-         ;; these are not necessarily mutually exclusive classes
-         (possibles 
-          ; Part 1
-          ; candidates found without getting actual lex-entry
-          (find-lexical-candidates lexical-rels lex-rule-rels 
-                                   grammar-rels nil)))
-    ;; Part 2
-    (if possibles
-        (let* ((lrules (find-possible-rules lex-rule-rels t))
-            ;;; lexical rules are possible if they have no effect
-            ;;; on semantics or if they contribute relations
-            ;;; which are on the list to be accounted for
-               (nullsem (instantiate-null-semantic-items psoa lrules))
-            ;;; nullsem items are ones we have to postulate without
-            ;;; direct evidence from the MRS
-               (nonnull (loop 
-                            for possible in possibles
-                            #+:arboretum
-                            when
-                            #+:arboretum
-                            (or lkb::*gen-mal-active-p*
-                                (not (lkb::mal-lex-entry-p possible)))
-                            append
-                              ;; check unification etc
-                              (create-instantiated-structures 
-                               possible lrules)))
-               (lexres (append nullsem nonnull)))
-          (values
-           lexres
-           (find-possible-rules grammar-rels nil)
-           (find-linear-order-spec lexres)))
-      (values nil nil nil))))
+         lex-rule-rels lexical-rels grammar-rels unknown-rels)
+    (loop
+        for ep in all-rels
+        for pred = (rel-pred ep)
+        for match = nil
+        ;;
+        ;; these are not necessarily mutually exclusive classes
+        ;;
+        when (lex-rule-rel-p pred) do (setf match (push ep lex-rule-rels))
+        when (lexical-rel-p pred) do (setf match (push ep lexical-rels))
+        when (grammar-rel-p pred) do (setf match (push ep grammar-rels))
+        unless match do (push ep unknown-rels))
+    (let ((possibles
+           ;; Part 1
+           ;; candidates found without getting actual lex-entry
+           (find-lexical-candidates
+            (append lexical-rels unknown-rels)
+            lex-rule-rels grammar-rels nil)))
+      ;; Part 2
+      (if possibles
+          (let* ((lrules (find-possible-rules lex-rule-rels t))
+              ;;; lexical rules are possible if they have no effect
+              ;;; on semantics or if they contribute relations
+              ;;; which are on the list to be accounted for
+                 (nullsem (instantiate-null-semantic-items psoa lrules))
+              ;;; nullsem items are ones we have to postulate without
+              ;;; direct evidence from the MRS
+                 (nonnull (loop 
+                              for possible in possibles
+                              #+:arboretum
+                              when
+                              #+:arboretum
+                              (or lkb::*gen-mal-active-p*
+                                  (not (lkb::mal-lex-entry-p possible)))
+                              append
+                                ;; check unification etc
+                                (create-instantiated-structures 
+                                 possible lrules)))
+                 (lexres (append nullsem nonnull)))
+            (values
+             lexres
+             (find-possible-rules grammar-rels nil)
+             (find-linear-order-spec lexres)))
+        (values nil nil nil)))))
 
 ;;; third value is an ordering specification 
 ;;; given as a list of lex-ids 
