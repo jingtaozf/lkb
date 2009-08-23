@@ -41,7 +41,7 @@ case ${grm} in
 esac
 
 #ltypes=`ls -d ${grammardir}/*.tdl` ### check them all!
-treebanks=`ls -d ${grammardir}/gold/*`
+treebanks=`ls -d ${grammardir}/tsdb/gold/*`
 now=`date --rfc-3339=date`
 
 ### Constants
