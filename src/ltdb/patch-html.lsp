@@ -132,7 +132,7 @@
 ;;;             item active :complementp t :offset offset :stream stream))
 	  (format stream  "<pre>Redwoods export of `~a' (~a@~a, ~a)</pre>~%"
 	   data (current-user) (current-host) (current-time :long :iso))
-	  (format stream ("<div id=\"navtxt\" class=\"navtext\" style=\"position: absolute; top: -100px; left: 0px; visibility: hidden\"></div>~%")
+	  (format stream "<div id=\"navtxt\" class=\"navtext\" style=\"position: absolute; top: -100px; left: 0px; visibility: hidden\"></div>~%")
 	  (format stream "</body>~%</html>~%")
           (force-output stream)
           (close stream)
