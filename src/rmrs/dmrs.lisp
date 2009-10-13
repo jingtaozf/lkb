@@ -54,6 +54,19 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   elements
   targets)
 
+;;; Convert a file
+
+(defun rmrs-to-dmrs-file (ifile ofile)
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream ifile
+      :direction :input)
+    (with-open-file (ostream ofile
+      :direction :output :if-exists :supersede)
+      (let ((rmrs (parse-xml-removing-junk istream)))
+	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
+	  (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
+	    (when dmrs (output-dmrs1 dmrs 'dxml ostream)))))))))
+			
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -975,6 +988,7 @@ drawing program (and recalculated so origin is bottom left in some cases)
 	    (setf tmp-links new-tmp)
 	    (setf current-y (+ current-y 1))))))
     (ecase layout-type
+      #+:lkb      
       (:clim
        (lkb::construct-dmrs-clim-diagram layout-nodes final-links stream))
       (:latex 

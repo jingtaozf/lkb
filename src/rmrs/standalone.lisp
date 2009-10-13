@@ -22,11 +22,18 @@
 
 (defvar *restart-variable-generator* t)
 
+(defvar *variable-generator* nil)
+
 (defun create-variable-generator (&optional start)
   (let ((number (or start 0)))
     #'(lambda nil
         (incf number)
         number)))
+
+(defun init-variable-generator ()
+  (setf *variable-generator* (create-variable-generator)))
+
+(init-variable-generator)
 
 ;;; structures (from mrs/basemrs.lisp)
 
