@@ -62,6 +62,7 @@ produced by robust parsers of various types.
                          ;; readgram
        (:file "input")   ;;; loads the underlying rmrs input code
        (:file "compare") ;;; RMRS comparison
+       (:file "dmrs")    ;;; dependency mrs
 ))
 ))
 
