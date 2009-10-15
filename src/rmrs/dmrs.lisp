@@ -54,7 +54,42 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
   elements
   targets)
 
-;;; Convert a file
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; Utilities for conversion
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+#| 
+
+(rmrs-to-dmrs-directory "/home/aac10/andy-m/9989503.rmrx/"
+                        "/home/aac10/andy-m/dmrs/")
+
+			|#
+
+(defun rmrs-to-dmrs-directory (idir odir)
+  ;;; input and output directories should both exist
+  ;;; file names are kept the same
+  (let ((*package* (find-package :mrs)))
+    (let* ((ifiles (directory idir)))
+      (loop for ifile in ifiles
+	  do
+	    (let* ((namestring (file-namestring ifile))
+		   (ofile (concatenate 'string odir
+                                namestring)))
+	      (with-open-file (istream ifile
+			       :direction :input)
+		(with-open-file (ostream ofile
+				 :direction :output :if-exists :supersede)
+		  (let ((rmrs (parse-xml-removing-junk istream)))
+		    (when (and rmrs (not (xml-whitespace-string-p rmrs)))
+		      (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
+			(when dmrs (output-dmrs1 dmrs 'dxml ostream))))))))))))
+
+
+
+;;; Convert an RMRS file in XML to a DMRS in XML
 
 (defun rmrs-to-dmrs-file (ifile ofile)
   (let ((*package* (find-package :mrs)))
