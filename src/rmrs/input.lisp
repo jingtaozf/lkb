@@ -248,10 +248,16 @@
 (defun read-rmrs-rarg (content)
   ;;; <!ELEMENT rarg (rargname, label, (var|constant)) >
   (let ((name nil) (label nil) (arg nil))
+    (setf content 
+      (loop for x in content
+	  unless (xml-whitespace-string-p x)
+	  collect x))
     (setf name (read-rmrs-simple '|rargname| (car content)))
     ;;; <!ELEMENT rargname (#PCDATA)>
-    (setf label (read-rmrs-label (cadr content)))
-    (let* ((argval (caddr content))
+    (setf content (cdr content))
+    (setf label (read-rmrs-label (car content)))
+    (setf content (cdr content))
+    (let* ((argval (car content))
            (argvaltag (car argval)))
       (setf arg
         (if (eql argvaltag '|constant|)
@@ -264,6 +270,10 @@
 ;;; <!ELEMENT ing (ing-a,ing-b) >
 ;;; <!ELEMENT ing-a (var)>
 ;;; <!ELEMENT ing-b (var)>  
+  (setf content 
+      (loop for x in content
+	  unless (xml-whitespace-string-p x)
+	  collect x))
   (let ((ing-a-xml (car content))
         (ing-b-xml (cadr content)))
     (unless (and (eql (car ing-a-xml) '|ing-a|)
@@ -280,15 +290,30 @@
 ;;;
 ;;; <!ELEMENT hi (var)>
 ;;; <!ELEMENT lo (label|var)>
+  (setf content 
+      (loop for x in content
+	  unless (xml-whitespace-string-p x)
+	  collect x))
   (let ((tag (car content))
         (body (cdr content)))
     (unless (and (eql (first tag) '|hcons|)
-                 (eql (second tag) '|hreln|)
-                 (eql (first (first body)) '|hi|)
-                 (eql (first (second body)) '|lo|))
+                 (eql (second tag) '|hreln|))
       (error "Malformed hcons ~A" content))
+    (let ((hi (first body)) (lo (second body)))
+      (setf hi 
+	(loop for x in hi
+	    unless (xml-whitespace-string-p x)
+	    collect x))
+      (setf lo
+	(loop for x in lo
+	    unless (xml-whitespace-string-p x)
+	    collect x))
+      (unless (and
+                 (eql (first hi) '|hi|)
+                 (eql (first lo) '|lo|))
+	(error "Malformed hcons components ~A ~A" hi lo))
     (make-hcons :relation (third tag)
-                :scarg (read-rmrs-var (second (first body)))
-                :outscpd (read-rmrs-label (second (second body))))))
+                :scarg (read-rmrs-var (second hi))
+                :outscpd (read-rmrs-label (second lo))))))
                 
 
