@@ -180,8 +180,8 @@ anchors are used as ids.
 3. For every non-characteristic argument A (except BV arguments)
   in the RMRS which is anchored to a predicate P and has a variable
   value y, such that \charp(y) is P', an arc exists in the DMRS
-  from P to P'.  The arcs wil be referred to as {\bf variable
-    arcs}.  The preslash label on that arc is equal to the argument
+  from P to P'.  The arcs will be referred to as `variable
+    arcs'.  The preslash label on that arc is equal to the argument
 type of A (e.g., ARG1).  
 
 done by extract-rmrs-var-links
@@ -239,7 +239,7 @@ make-dmrs-handel-links
 
 |#
 
-(defparameter *robust-dmrs-p* nil)
+(defparameter *robust-dmrs-p* t)
 
 (defun rmrs-to-dmrs (rmrs) 
   ;;; convert an RMRS to a DMRS
@@ -250,9 +250,9 @@ make-dmrs-handel-links
 	(progn (unless *robust-dmrs-p* (format t "~A~%" dup-errors))
 	       nil)
       (let* ((var-links (extract-rmrs-var-links rmrs nodes))
-	     (unlinked-errors
-	      (check-char-vars2 var-links nodes)))
+	     (unlinked-errors (check-char-vars2 var-links nodes)))
 	(if unlinked-errors 
+	    ;; if *robust-dmrs-p* is set there won't be any
 	    (progn (format t "~A~%" unlinked-errors)
 		   nil)
 	  (let*
@@ -344,7 +344,9 @@ make-dmrs-handel-links
     (dolist (node nodes)
       (let ((char-var (dmrs-node-charvar node)))
 	(if (and char-var (member char-var vars))
-	    (pushnew char-var duplicates)
+	    (if *robust-dmrs-p*
+		(setf (dmrs-node-charvar node) (+ 10000 char-var))
+	      (pushnew char-var duplicates))
 	  (push char-var vars))))
     (if duplicates
       (format nil "~%Duplicate char vars ~A in ~A" duplicates nodes))))
