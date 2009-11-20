@@ -131,8 +131,12 @@
     (write-string "<realpred lemma='" stream)
     (xml-escaped-output lemma stream)
     (write-char #\' stream)
-    (when pos (format stream " pos='~A'" pos))
-    (when sense (format stream " sense='~A'" sense))      
+    (when pos (write-string " pos='" stream)
+	  (xml-escaped-output pos stream)
+	  (write-char #\' stream))
+    (when sense (write-string " sense='" stream)
+	  (xml-escaped-output sense stream)
+	  (write-char #\' stream))
     (write-string "/>" stream)))
 
 ;;; <!ELEMENT gpred (#PCDATA)>

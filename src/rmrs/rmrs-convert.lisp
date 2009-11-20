@@ -241,18 +241,20 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
   ;;;
   ;;; If there is no leading underscore, the pred
   ;;; is not decomposed
+  ;;; 
+  ;;; For unknown word handling, underscores may be escaped
   (let* ((str (string-downcase (string pred))))
     ;;; parse the string - hacky ...
     (if (not (eql (elt str 0) #\_))
         str
       (let*
-          ((uscore-pos2 (position #\_ str :start 1))
+          ((uscore-pos2 (next-pred-splitter-position str 1))
            (uscore-pos3 
             (if uscore-pos2
-                (position #\_ str :start (+ 1 uscore-pos2))))
+		(next-pred-splitter-position str (+ 1 uscore-pos2))))
            (uscore-pos4
             (if uscore-pos3
-                (position #\_ str :start (+ 1 uscore-pos3))))
+		(next-pred-splitter-position str (+ 1 uscore-pos3))))
            (remainder (cond (uscore-pos4
                              (subseq str uscore-pos4))
                             (uscore-pos3
@@ -269,7 +271,16 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                                    (subseq str (+ 1 uscore-pos3) uscore-pos4))))))))
 
 
-
+(defun next-pred-splitter-position (str start)
+  ;;; returns the position in the string of the
+  ;;; first unescaped underscore
+  (loop 
+    (let ((pos (position #\_ str :start start)))
+    ;;; start is 1 or more
+      (unless pos (return))
+      (when (not (eql (elt str (- pos 1)) #\\))
+	  (return pos))
+      (setf start (+ 1 pos)))))
 
 
 ;;; the conversion of extra values is grammar specific
