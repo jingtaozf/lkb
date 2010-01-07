@@ -702,8 +702,8 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 			     (id (dmrs-node-id node))
 			     (cfrom (dmrs-node-cfrom node))
 			     (cto (dmrs-node-cto node))
-			     (label (create-new-handle-var
-				     *variable-generator*))
+			     (label (create-new-rmrs-var 
+				      "h" *variable-generator* nil))
 			     (anchor (make-var :type "h" :id id)))
 			(when carg
 			  (push (make-rmrs-arg :arg-type "CARG"
@@ -837,7 +837,7 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
     (ecase handel-relationship
       (:eq (car (rel-flist to-node)))
       (:neq (car (rel-flist to-node)))
-      (:h (create-new-handle-var *variable-generator*))
+      (:h (create-new-rmrs-var "h" *variable-generator* nil))
       (:heq (rel-handel to-node)))))
 
 
@@ -1478,13 +1478,9 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 ;;;          ident     CDATA #IMPLIED >
   (let ((nodes nil) (links nil)
 	(tag (car content)))
-    (unless (eql (car tag) '|dmrs|)
+    (unless (and (listp tag) (eql (car tag) '|dmrs|))
       (error "~A is not an dmrs" content))
     (setf content (cdr content))
-    (loop (let ((next-el (car content)))
-	    (if (xml-whitespace-string-p next-el)
-		(pop content)
-	      (return))))
     (when content
       (loop for next-el in content
 	  do
@@ -1512,27 +1508,58 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 ;;;          carg CDATA #IMPLIED >
   (let ((tag (car content))
         (body (cdr content)))
-    (unless (and 
-	     (eql (first tag) '|node|)
-	     (eql (second tag) '|nodeid|)
-             (eql (fourth tag) '|cfrom|)
-             (eql (sixth tag) '|cto|))
-      (error "Malformed node ~A" content))
+    (setf tag (loop for x in tag
+		     unless (xml-whitespace-string-p x)
+		     collect x))
     (setf body (loop for x in body
-		   unless (xml-whitespace-string-p x)
-		   collect x))
-    (let ((carg-rest (member '|carg| tag)))
+		     unless (xml-whitespace-string-p x)
+		     collect x))
+    (unless (eql (first tag) '|node|)
+      (error "Malformed node ~A" content))
+    (let ((attlist (parse-xml-attlist (rest tag)
+				      '(|nodeid| |cfrom| |cto|)
+				      '(|surface| |base| |carg|)
+				      nil)))
+      (setf body (loop for x in body
+		     unless (xml-whitespace-string-p x)
+		     collect x))
       (make-dmrs-node
-       :id (parse-integer (third tag))
+       :id (parse-integer (cdr (assoc '|nodeid| attlist)))
        :pred (read-rmrs-pred (first body))
-       :cfrom (parse-integer (fifth tag))
-       :cto (parse-integer (seventh tag))
-       :carg (cadr carg-rest) 
+       :cfrom (parse-integer (cdr (assoc '|cfrom| attlist)))
+       :cto (parse-integer (cdr (assoc '|cto| attlist)))
+       :carg (cdr (assoc '|carg| attlist))
        :cvtype nil
        :cvextra nil))))
 
 
+(defun parse-xml-attlist (attlist required-lst optional-lst result)
+  ;;; e.g. required-lst (nodeid cfrom cto) optional-lst (surface base carg))
+  ;;; attlist is a list which should correspond to expected
+  ;;; of attribute value pairs
+  (cond ((null attlist)
+	 (when required-lst (error "~A expected and not found" required-lst))
+	 result)
+	((member (first attlist) required-lst)
+	 (push (cons (first attlist) (second attlist)) result)
+	 (parse-xml-attlist (cddr attlist) 
+			    (remove (first attlist) required-lst) 
+			    optional-lst
+			    result))
+	((member (first attlist) optional-lst)
+	 (push (cons (first attlist) (second attlist)) result)
+	 (parse-xml-attlist (cddr attlist) 
+			    required-lst
+			    (remove (first attlist) optional-lst) 
+			    result))
+	(t (error "Unexpected element ~A" (first attlist)))))  
+      
+    
+
 (defun read-dmrs-link (content)
+  (setf content (loop for x in content
+		     unless (xml-whitespace-string-p x)
+		     collect x))
   (let* ((tag (car content))
 	 (from (parse-integer (third tag)))
 	 (to (parse-integer (fifth tag)))
@@ -1541,9 +1568,14 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
     (make-dmrs-link :from from
 		    :to to
 		    :pre (second arg)
-		    :post (second post))))
-	   
+		    :post (check-and-convert-post (second post)))))
 
+(defun check-and-convert-post (post-type) 
+  (cond ((or (equal post-type "H") (equal  post-type :H)) :H)
+	((or (equal post-type "EQ") (equal  post-type :EQ)) :EQ)
+	((or (equal post-type "NEQ") (equal  post-type :NEQ)) :NEQ)
+	((or (equal post-type "HEQ") (equal  post-type :HEQ)) :HEQ)
+	(t (error "Unexpected post type ~A" post-type))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;
@@ -1569,3 +1601,34 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 	    (when crossing-links
 		(format t "~%Crossing links ~A" crossing-links))))
     (finish-output ostream)))
+
+#|
+
+(dolist (file (directory "~/andy-m/variants-testvar/"))
+  (let ((filename (file-namestring file)))
+    (when (equal (elt filename (- (length filename) 1)) #\l)
+      (well-formed-dmrs-file file))))
+
+|#
+
+
+(defun well-formed-dmrs-file (ifile)
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream ifile
+		     :direction :input)
+      (let ((dmrs-xml (parse-xml-removing-junk istream)))
+	(when (and dmrs-xml (not (xml-whitespace-string-p dmrs-xml)))
+	  (let ((dmrs (read-dmrs dmrs-xml)))
+	    (when dmrs
+	      (unless (well-formed-dmrs-p dmrs)
+		(format t "Illformed DMRS in file ~A" ifile)))))))))
+
+(defun well-formed-dmrs-p (dmrs)
+  (let ((rmrs (dmrs-to-rmrs dmrs)))
+    rmrs))
+
+#|
+<?xml version='1.0'?> <!DOCTYPE dmrs SYSTEM "/auto/homes/aac10/delph-in/lkb/trunk/src/rmrs/dmrs.dtd" >
+
+xmlnorm -Vs 156605.v000.xml
+|#
