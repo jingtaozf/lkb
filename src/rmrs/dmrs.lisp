@@ -101,7 +101,35 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
 	  (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
 	    (when dmrs (output-dmrs1 dmrs 'dxml ostream)))))))))
-			
+
+
+;;; (dmrs-to-svg-directory "~/andy-m/variants-testvar-xml/" "~/andy-m/variants-testvar-svg/")
+
+(defun dmrs-to-svg-directory (idir odir)
+  ;;; takes an input directory of DMRSs in XML and converts 
+  ;;; to a directory of SVG files
+  (let ((*package* (find-package :mrs)))
+    (let* ((ifiles (directory idir)))
+      (loop for ifile in ifiles
+	  do
+	    (let* ((namestring (file-namestring ifile))
+		   (ofile (concatenate 'string odir
+                                namestring ".svg")))
+	      (with-open-file (istream ifile
+			       :direction :input)
+		  (let ((dmrs-xml (parse-xml-removing-junk istream)))
+		    (when (and dmrs-xml 
+			       (not (xml-whitespace-string-p dmrs-xml)))
+		      (let ((dmrs (read-dmrs dmrs-xml)))
+			(when dmrs
+			    (with-open-file (ostream ofile
+				 :direction :output :if-exists :supersede
+					     :if-does-not-exist :create)
+			      	(mrs::layout-dmrs dmrs :svg ostream))))))))))))
+
+
+  
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1632,3 +1660,49 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 
 xmlnorm -Vs 156605.v000.xml
 |#
+
+
+;  (generate-from-dmrs-file "~/andy-m/variants-testvar-xml/156605.orig.xml")
+
+#+:lkb
+(defun generate-from-dmrs-file (ifile)
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream ifile
+		     :direction :input)
+      (let ((dmrs-xml (parse-xml-removing-junk istream)))
+	(when (and dmrs-xml (not (xml-whitespace-string-p dmrs-xml)))
+	  (let ((dmrs (read-dmrs dmrs-xml)))
+	    (when dmrs
+	      (let ((rmrs (dmrs-to-rmrs dmrs)))
+		(when rmrs
+		  (let ((mrs (convert-rmrs-to-mrs rmrs)))
+		    (when mrs
+		      (lkb::generate-from-mrs mrs))))))))))))
+
+;;; (dmrs-to-rmrs-directory "~/andy-m/variants-testvar-xml/" "~/andy-m/variants-testvar-rmrs/")
+
+
+(defun dmrs-to-rmrs-directory (idir odir)
+  ;;; takes an input directory of DMRSs in XML and converts 
+  ;;; to a directory of RMRS files
+  (let ((*package* (find-package :mrs)))
+    (let* ((ifiles (directory idir)))
+      (loop for ifile in ifiles
+	  do
+	    (let* ((namestring (file-namestring ifile))
+		   (ofile (concatenate 'string odir
+                                namestring ".rmrs")))
+	      (with-open-file (istream ifile
+			       :direction :input)
+		  (let ((dmrs-xml (parse-xml-removing-junk istream)))
+		    (when (and dmrs-xml 
+			       (not (xml-whitespace-string-p dmrs-xml)))
+		      (let ((dmrs (read-dmrs dmrs-xml)))
+			(when dmrs
+			    (with-open-file (ostream ofile
+				 :direction :output :if-exists :supersede
+					     :if-does-not-exist :create)
+			      (let ((rmrs (dmrs-to-rmrs dmrs)))
+				(when rmrs
+				  (output-rmrs1 rmrs 'xml ostream))))))))))))))
+
