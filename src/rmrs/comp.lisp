@@ -196,54 +196,98 @@
     (if var-entry
         (binding-canonical var-entry)
         var)))
-        
+
+
+;;; revised code to avoid ridiculously slow version.  This version could
+;;; be further improved, but may not be the rate limiting step any more.
+;;; Very occasional differences in results compared to prior version 
+;;; current version appears correct.
+;;; AAC Jan 2010
+
 (defun close-bindings (bindings)
-  ;;; the bindings are a list of pairs, linking ids
-  ;;; this function effectively performs the transitive
-  ;;; closure, resulting in a list where each id used
-  ;;; is paired with its canonical var (could be the same)
-  (let ((canonical-bindings nil))
+  (let ((id-bindings nil)
+	  ;;; main work just done with ids to keep data structures smaller
+	(canonical-bindings nil))
     (dolist (pair bindings)
       (dolist (el pair)
         (unless (member (var-id el) 
                         canonical-bindings
                         :key #'binding-id)
           (push (make-binding :var el :id (var-id el))
-                 canonical-bindings))))             
+                 canonical-bindings))))
     (dolist (pair bindings)
-      (when (and (car pair) (cadr pair))
-        (let* ((var1-id (var-id (car pair)))
-               (var2-id (var-id (cadr pair))))
-          (when (cddr pair) 
+      (when (cddr pair) 
             (error "Non binary binding ~A unexpected" pair))
-          (augment-bindings var1-id var2-id
-                            canonical-bindings nil)
-          (augment-bindings var2-id var1-id
-                            canonical-bindings nil))))
-    (dolist (binding canonical-bindings)
-      (setf (binding-canonical binding)
-        (let* ((canon-id
-               (apply #'min (cons (binding-id binding)
-                                  (binding-equivs binding))))
-               (canon-entry (find canon-id 
-                                  canonical-bindings 
-                                  :key #'binding-id)))
-          (binding-var canon-entry))))
-    ;; i.e., sort all the equivalents, including the original var
-    canonical-bindings))
-        
-(defun augment-bindings (main-var second-var bindings done)
-  (unless (or (eql main-var second-var) (member main-var done))
-    (let ((main-var-entry (find main-var bindings :key #'binding-id)))
-      (unless main-var-entry
-        (error "Incorrectly set up bindings for ~A" main-var))
-      (unless (member second-var (binding-equivs main-var-entry))
-        (dolist (id (binding-equivs main-var-entry))
-          (augment-bindings second-var id
-                            bindings (cons main-var done))
-          (augment-bindings id second-var 
-                            bindings (cons main-var done)))
-        (push second-var (binding-equivs main-var-entry))))))
+      (let ((a (if (car pair) (var-id (car pair))))
+	    (b (if (cadr pair) (var-id (cadr pair)))))
+	(when (and a b (not (eql a b)))
+	  (push (list a b) id-bindings))))
+    (let* ((equivalence-sets-unsorted
+	    (close-bindings-rec (list (car id-bindings)) (cdr id-bindings)))
+	   (equivalence-sets-sorted
+	    (loop for equiv-set in equivalence-sets-unsorted
+		collect
+		  (sort equiv-set #'<))))
+      (dolist (binding canonical-bindings)
+	(let* ((id (binding-id binding))
+	       (equivs (dolist (equiv-set equivalence-sets-sorted)
+			 (when (member id equiv-set)
+			   (return equiv-set))))
+	       (canon-id (car equivs)))
+	  (setf (binding-equivs binding)
+	    (remove id equivs))
+	  (setf (binding-canonical binding)
+	    (binding-var 
+	     (find canon-id 
+		   canonical-bindings 
+		   :key #'binding-id)))))
+      canonical-bindings)))
+
+
+
+(defun close-bindings-rec (equivalence-sets to-do)
+  (if to-do
+      (let* ((next-pair (car to-do))
+	     (a-member (find-equivalence-set (car next-pair) equivalence-sets))
+	     (b-member (find-equivalence-set (cadr next-pair) equivalence-sets)))
+	(cond ((and (not a-member) (not b-member))
+	       (close-bindings-rec (cons next-pair equivalence-sets)
+				   (cdr to-do)))
+	      ((not b-member)
+	       (close-bindings-rec
+		(add-el-to-equivalence-sets (cadr next-pair) a-member 
+					    equivalence-sets)
+		(cdr to-do)))
+	      ((not a-member)
+	       (close-bindings-rec
+		(add-el-to-equivalence-sets (car next-pair) b-member 
+					    equivalence-sets)
+		(cdr to-do)))
+	      ((eql a-member b-member)
+	       (close-bindings-rec equivalence-sets
+				   (cdr to-do)))
+	      (t (close-bindings-rec 
+		  (merge-equivalence-sets a-member b-member
+					  equivalence-sets)
+		  (cdr to-do)))))
+    equivalence-sets))
+
+(defun find-equivalence-set (element equiv-sets)
+  (dolist (eqset equiv-sets)
+    (when (member element eqset)
+      (return eqset))))
+
+(defun add-el-to-equivalence-sets (element set-toupdate equivalence-sets)
+  (push element (car (member set-toupdate equivalence-sets)))
+  equivalence-sets)
+
+(defun merge-equivalence-sets (a-member b-member equivalence-sets)
+  (let ((reduced-sets (delete a-member (delete b-member equivalence-sets))))
+    (push (nconc a-member b-member) 
+	  reduced-sets)
+    reduced-sets))
+
+
 
 ;;; end transitive closure code
 
