@@ -9,11 +9,14 @@
 #|
 (process-rasp-files-2008 "/usr/groups/mphil/qa08/parses-new/"
 			 "/usr/groups/mphil/qa08/rmrs/ans-new/"))
+
+(process-rasp-files-2008 "/anfs/bigdisc/aac10/trec8-2010-in/"
+			 "/anfs/bigdisc/aac10/trec8-2010-out/")
 |#
 			 
 (defun process-rasp-files-2008 (idirectory odirectory)
   ;;; clear and load the grammars
-  (let ((*rasp-xml-word-p* nil)
+  (let ((*rasp-xml-word-p* t)
 	(*anchor-rmrs-p* t))
     (clear-rule-record)
  (read-rmrs-grammar (make-pathname 
