@@ -227,12 +227,22 @@
 (defun construct-rmrs-var-extras (extra-list)
   (if extra-list
       (let ((feat (car extra-list))
-	    (val (cadr extra-list)))
+	    (val (convert-mrs-extra-val (cadr extra-list))))
 	(unless (and feat val)
 	  (error "Malformed variable extras ~A" extra-list))
 	(cons 
 	 (make-extrapair :feature feat :value val)
 	 (construct-rmrs-var-extras (cddr extra-list))))))
+
+(defun convert-mrs-extra-val (val)
+  ;;; val read in is a string 
+  ;;; plus -> +
+  ;;; minus -> -
+  ;;; "3" -> |3|
+  ;;; "sg" -> SG
+  (cond ((equal val "plus") (make-mrs-atom "+"))
+	((equal val "minus") (make-mrs-atom "-"))
+	(t (make-mrs-atom (string-upcase val)))))
 
 (defun create-new-var-with-id (idnumber str &optional extras)
   (let* ((type (find-var-type str)))
