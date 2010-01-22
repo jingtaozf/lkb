@@ -285,7 +285,8 @@
   *semi*)
 
 (defun get-meta-semi nil
-  *meta-semi*)
+  nil)
+;;;   *meta-semi*
 
 
 
