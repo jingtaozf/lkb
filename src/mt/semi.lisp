@@ -708,3 +708,28 @@
               (push (cons tag strings) (sps-forms sps))
             finally (setf (sps-forms sps) (nreverse (sps-forms sps)))))
   sps)
+
+
+;;; added by AAC - called from rmrs-convert.lisp - added here because
+;;; I don't want to add yet another file to lkb.system or mess around 
+;;; with the file ordering there.
+;;; takes a string and tries to look it up in the SEMI
+;;; could no doubt be improved by better understanding of the code
+
+(defun find-semi-entries (pred)
+;;; code adapted from test-semi-compliance
+  (unless *semis*     (error "Semis not initialised"))
+  (let* ((semi (first *semis*))
+	 (pred-symbol (mrs::vsym (string-upcase pred))))
+    (if
+	(or
+	 (member pred-symbol *semi-fragment-relations* :test #'eq)
+	 (member
+	  pred-symbol
+	  *semi-punctuation-relations* :test #'eq)
+	 (member pred-symbol *semi-token-relations* :test #'eq)
+	 (lookup-predicate pred-symbol semi))
+	pred-symbol
+      (if (lookup-predicate pred semi)
+	  pred
+	nil))))
