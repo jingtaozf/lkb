@@ -723,13 +723,15 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 	 (qeqs nil) ;; ditto
 	 (cargs nil) ;; ditto
 	 (label-eqs nil) ;;; partially ditto
-	 (preds (loop for node in (dmrs-nodes dmrs)
+	 (pred-plus (loop for node in (dmrs-nodes dmrs)
 		    collect
 		      (let* ((pred (dmrs-node-pred node))
 			     (carg (dmrs-node-carg node))
 			     (id (dmrs-node-id node))
 			     (cfrom (dmrs-node-cfrom node))
 			     (cto (dmrs-node-cto node))
+			     (cvtype (dmrs-node-cvtype node))
+			     (cvextra (dmrs-node-cvextra node))
 			     (label (create-new-rmrs-var 
 				      "h" *variable-generator* nil))
 			     (anchor (make-var :type "h" :id id)))
@@ -738,13 +740,18 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 					       :label anchor
 					       :val carg)
 				cargs))
-			(make-rel :pred pred
-				  :anchor anchor
-				  :handel label
-				  :cfrom cfrom
-				  :cto cto
-				  :flist 
-				  (construct-rmrs-flist id links)))))
+			(list
+			 (make-rel :pred pred
+				   :anchor anchor
+				   :handel label
+				   :cfrom cfrom
+				   :cto cto
+				   :flist 
+				   (construct-rmrs-flist 
+				    id links cvtype cvextra))
+			 cvtype
+			 cvextra))))
+	 (preds (mapcar #'car pred-plus))
 	 (args (loop for link in links
 		   unless ;; ltop
 		     (or 
@@ -752,15 +759,17 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 			    (to (dmrs-link-to link)))
 			(if (eql from 0)
 			    (let ((to-label 
-				   (retrieve-node-label to 
-							preds)))
+				   (retrieve-node-label 
+				    to 
+				    preds)))
 			      (if ltop
 				(push (list ltop to-label)
 				      label-eqs)
 				(setf ltop to-label))
 			      t)
 			  nil))
-		      (not (dmrs-link-pre link))) ;; eq labels with no arg
+		      (not (dmrs-link-pre link)) ;; eq labels with no arg
+		      (equal (dmrs-link-pre link) "NIL"))
 		   collect
 		     (let* ((from (dmrs-link-from link))
 			    (from-pred 
@@ -779,7 +788,8 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 			 (push (make-hcons :relation "qeq" 
 					   :scarg val
 					   :outscpd 
-					   (retrieve-node-label to preds))
+					   (retrieve-node-label 
+					    to preds))
 			       qeqs))
 		       (make-rmrs-arg :arg-type arg
 				      :label from-anchor
@@ -793,19 +803,22 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 		 (retrieve-node-label
 		  (dmrs-link-from link) preds))
 		label-eqs)))
-    (dolist (pred preds)
-      (unless (rel-flist pred)
-	(let* ((rstr-to-id (find-rstr-from pred links))
+    (dolist (pred pred-plus)
+      (let ((pred1 (car pred)))
+      (unless (rel-flist pred1)
+	(let* ((rstr-to-id (find-rstr-from pred1 links))
 	       (rstr-node (if rstr-to-id
 			      (find rstr-to-id preds 
 				    :key #'(lambda (pred) 
-					     (var-id (rel-anchor pred)))))))
-	  (setf (rel-flist pred)
+					     (var-id 
+					      (rel-anchor pred)))))))
+	  (setf (rel-flist pred1)
 	    (if (and rstr-node (rel-p rstr-node))
 		(copy-list (rel-flist rstr-node))
-	      (make-new-flist))))))
+	      (make-new-flist (second pred) (third pred))))))))
     (let ((rmrs 
-	   (make-rmrs  :top-h ltop
+	   (make-rmrs  :top-h (or ltop (create-new-rmrs-var 
+					"h" *variable-generator* nil))
 		:liszt preds 
 		:h-cons qeqs
 		:rmrs-args (append args cargs)
@@ -823,8 +836,7 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
     (if pred
 	(rel-handel pred))))
 
-
-(defun construct-rmrs-flist (id links)
+(defun construct-rmrs-flist (id links cvtype cvextra)
   ;;; we are interested in cases where the id is a to on the links
   ;;; and the link type is something/:eq or something/:neq
   ;;;
@@ -834,11 +846,14 @@ CARGs and step 3, ltop and h-cons as above and equalities from step 4.
 	       (dmrs-link-pre link)
 	       (or (eql (dmrs-link-post link) :eq)
 		   (eql (dmrs-link-post link) :neq)))
-      (return (make-new-flist)))))
+      (return (make-new-flist cvtype cvextra)))))
 
-(defun make-new-flist nil
-  (list (make-var :type "i"
-		  :id (funcall *variable-generator*))))
+
+(defun make-new-flist (cvtype cvextra)
+  (list (make-var :type (or cvtype "i")
+		  :id (funcall *variable-generator*)
+		  :extra cvextra)))
+			      
 	
 (defun find-rstr-from (pred links)
   ;;; this is looking for cases where the pred has a rstr
@@ -1551,15 +1566,43 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
       (setf body (loop for x in body
 		     unless (xml-whitespace-string-p x)
 		     collect x))
-      (make-dmrs-node
-       :id (parse-integer (cdr (assoc '|nodeid| attlist)))
-       :pred (read-rmrs-pred (first body))
-       :cfrom (parse-integer (cdr (assoc '|cfrom| attlist)))
-       :cto (parse-integer (cdr (assoc '|cto| attlist)))
-       :carg (cdr (assoc '|carg| attlist))
-       :cvtype nil
-       :cvextra nil))))
+      (let* ((sortinfo-list (if (listp (car (second body)))
+				(car (second body))))
+	     (varattlist 
+	      (if (and sortinfo-list
+		       (eql (first sortinfo-list) '|sortinfo|))
+		 (parse-xml-attlist (rest sortinfo-list)
+				    '(|cvarsort|)
+				    '(|num| |pers| |gend| |sf| 
+				      |tense| |mood| |prontype|
+				      |prog| |perf| |ind|)
+				    nil))))
+	(make-dmrs-node
+	 :id (parse-integer (cdr (assoc '|nodeid| attlist)))
+	 :pred (read-rmrs-pred (first body))
+	 :cfrom (parse-integer (cdr (assoc '|cfrom| attlist)))
+	 :cto (parse-integer (cdr (assoc '|cto| attlist)))
+	 :carg (cdr (assoc '|carg| attlist))
+	 :cvtype (parse-dmrs-cvtype varattlist)
+	 :cvextra (parse-dmrs-cvextra varattlist))))))
 
+(defun parse-dmrs-cvtype (sort-info-list)
+  (cdr (assoc '|cvarsort| sort-info-list)))
+       
+(defun parse-dmrs-cvextra (sort-info-list)
+  (let ((cvextra nil))
+    (loop for feat in '(|num| |pers| |gend| |sf| 
+			|tense| |mood| |prontype|
+			|prog| |perf| |ind|)
+	do
+	  (let ((featval (assoc feat sort-info-list)))
+	    (when featval
+	      (push
+	       (make-extrapair :feature (make-mrs-atom (string-upcase 
+							(string feat)))
+			       :value (convert-mrs-extra-val (cdr featval)))
+	       cvextra))))
+    cvextra))
 
 (defun parse-xml-attlist (attlist required-lst optional-lst result)
   ;;; e.g. required-lst (nodeid cfrom cto) optional-lst (surface base carg))
@@ -1630,30 +1673,6 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 		(format t "~%Crossing links ~A" crossing-links))))
     (finish-output ostream)))
 
-#|
-
-(dolist (file (directory "~/andy-m/variants-testvar/"))
-  (let ((filename (file-namestring file)))
-    (when (equal (elt filename (- (length filename) 1)) #\l)
-      (well-formed-dmrs-file file))))
-
-|#
-
-
-(defun well-formed-dmrs-file (ifile)
-  (let ((*package* (find-package :mrs)))
-    (with-open-file (istream ifile
-		     :direction :input)
-      (let ((dmrs-xml (parse-xml-removing-junk istream)))
-	(when (and dmrs-xml (not (xml-whitespace-string-p dmrs-xml)))
-	  (let ((dmrs (read-dmrs dmrs-xml)))
-	    (when dmrs
-	      (unless (well-formed-dmrs-p dmrs)
-		(format t "Illformed DMRS in file ~A" ifile)))))))))
-
-(defun well-formed-dmrs-p (dmrs)
-  (let ((rmrs (dmrs-to-rmrs dmrs)))
-    rmrs))
 
 #|
 <?xml version='1.0'?> <!DOCTYPE dmrs SYSTEM "/auto/homes/aac10/delph-in/lkb/trunk/src/rmrs/dmrs.dtd" >
@@ -1662,10 +1681,48 @@ xmlnorm -Vs 156605.v000.xml
 |#
 
 
-;  (generate-from-dmrs-file "~/andy-m/variants-testvar-xml/156605.orig.xml")
+;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/156610.orig.xml")
+;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/156613.orig.xml")
+;;; (generate-from-dmrs-file "~/andy-m/test1.xml")
+
 
 #+:lkb
 (defun generate-from-dmrs-file (ifile)
+  ;;; this requires a SEM-I at the RMRS to MRS conversion stage
+  ;;; (mt:read-semi "~/delph-in/erg/trunk/erg.smi")
+  ;;;
+  ;;; may want to set lkb::*gen-first-only-p*
+  (let ((rmrs (dmrs-file-to-rmrs ifile)))
+    (when rmrs
+      (let ((mrs (convert-rmrs-to-mrs rmrs)))
+	(when mrs
+	  (lkb::generate-from-mrs mrs))))))
+
+(defun generate-from-dmrs-directory (idir)
+  ;;; (generate-from-dmrs-directory "~/andy-m/testdir/")
+  (let ((*package* (find-package :mrs)))
+      (loop for ifile in (directory idir)
+	  do
+	    (format t "~%Processing file ~A" ifile)
+	    (handler-case
+		(let ((rmrs (dmrs-file-to-rmrs ifile)))
+		  (when rmrs
+		    (let ((mrs (convert-rmrs-to-mrs rmrs)))
+		      (when mrs
+			(let ((strings (lkb::generate-from-mrs mrs)))
+			  (if strings (pprint strings)
+			    (format t " - nothing generated")))))))
+	      (storage-condition (condition)
+		(format t "~%Memory allocation problem: ~A~%" condition))
+	      (error (condition)
+		(format t "~%Error: ~A~%" condition))
+	      (serious-condition (condition)
+		(format t "~%Something nasty: ~A~%" condition))))))
+	      
+
+;;; (dmrs-to-rmrs-directory "~/andy-m/variants-testvar-xml/" "~/andy-m/variants-testvar-rmrs/")
+
+(defun dmrs-file-to-rmrs (ifile)
   (let ((*package* (find-package :mrs)))
     (with-open-file (istream ifile
 		     :direction :input)
@@ -1673,36 +1730,39 @@ xmlnorm -Vs 156605.v000.xml
 	(when (and dmrs-xml (not (xml-whitespace-string-p dmrs-xml)))
 	  (let ((dmrs (read-dmrs dmrs-xml)))
 	    (when dmrs
-	      (let ((rmrs (dmrs-to-rmrs dmrs)))
-		(when rmrs
-		  (let ((mrs (convert-rmrs-to-mrs rmrs)))
-		    (when mrs
-		      (lkb::generate-from-mrs mrs))))))))))))
-
-;;; (dmrs-to-rmrs-directory "~/andy-m/variants-testvar-xml/" "~/andy-m/variants-testvar-rmrs/")
+	      (dmrs-to-rmrs dmrs))))))))
 
 
 (defun dmrs-to-rmrs-directory (idir odir)
   ;;; takes an input directory of DMRSs in XML and converts 
   ;;; to a directory of RMRS files
-  (let ((*package* (find-package :mrs)))
-    (let* ((ifiles (directory idir)))
-      (loop for ifile in ifiles
+    (let ((*package* (find-package :mrs)))
+      (loop for ifile in (directory idir)
 	  do
 	    (let* ((namestring (file-namestring ifile))
 		   (ofile (concatenate 'string odir
-                                namestring ".rmrs")))
-	      (with-open-file (istream ifile
-			       :direction :input)
-		  (let ((dmrs-xml (parse-xml-removing-junk istream)))
-		    (when (and dmrs-xml 
-			       (not (xml-whitespace-string-p dmrs-xml)))
-		      (let ((dmrs (read-dmrs dmrs-xml)))
-			(when dmrs
-			    (with-open-file (ostream ofile
+				       namestring ".rmrs"))
+		   (rmrs (dmrs-file-to-rmrs ifile)))
+	      (when rmrs
+		(with-open-file (ostream ofile
+				 :direction :output :if-exists :supersede
+				 :if-does-not-exist :create)
+		  (output-rmrs1 rmrs 'xml ostream)))))))
+
+(defun dmrs-to-mrs-directory (idir odir)
+  ;;; takes an input directory of DMRSs in XML and converts 
+  ;;; to a directory of MRS files
+  (let ((*package* (find-package :mrs)))
+    (loop for ifile in (directory idir)
+	do
+	  (let* ((namestring (file-namestring ifile))
+		 (ofile (concatenate 'string odir
+				     namestring ".mrs"))
+		 (rmrs (dmrs-file-to-rmrs ifile)))
+	    (when rmrs
+	      (let ((mrs (convert-rmrs-to-mrs rmrs)))
+		(when mrs
+		  (with-open-file (ostream ofile
 				 :direction :output :if-exists :supersede
 					     :if-does-not-exist :create)
-			      (let ((rmrs (dmrs-to-rmrs dmrs)))
-				(when rmrs
-				  (output-rmrs1 rmrs 'xml ostream))))))))))))))
-
+		    (output-mrs1 mrs 'xml ostream)))))))))
