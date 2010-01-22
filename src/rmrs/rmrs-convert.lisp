@@ -571,7 +571,7 @@ Errors won't be devastating anyway ...
   (let* ((problems nil)
 	 (rmrs-pred (rel-pred ep))
 	 (mrs-pred (convert-rmrs-pred-to-mrs rmrs-pred))
-	 (semi-pred (find-semi-entries mrs-pred)))
+	 (semi-pred (mt::find-semi-entries mrs-pred)))
     (if semi-pred
 	(let ((new-ep
 	      (make-rel
@@ -629,30 +629,6 @@ Errors won't be devastating anyway ...
 	 (realpred-sense pred))
 	"_rel")
     pred))
-
-
-
-;;; takes a string and tries to look it up in the SEMI
-
-(defun find-semi-entries (pred)
-;;; code adapted from test-semi-compliance
-  (unless mt::*semis*     (error "Semis not initialised"))
-  (let* ((semi (first mt::*semis*))
-	 (pred-symbol (vsym (string-upcase pred))))
-    (if
-	(or
-	 (member pred-symbol mt::*semi-fragment-relations* :test #'eq)
-	 (member
-	  pred-symbol
-	  mt::*semi-punctuation-relations* :test #'eq)
-	 (member pred-symbol mt::*semi-token-relations* :test #'eq)
-	 (mt::lookup-predicate pred-symbol semi))
-	pred-symbol
-      (if (mt::lookup-predicate pred semi)
-	  pred
-	nil))))
-
-
 
   
 ;;; Generation
