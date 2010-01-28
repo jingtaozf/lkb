@@ -127,3 +127,40 @@
                                  (push (cons test-rel similar)
 				       result-so-far)
 				 test-fn))))
+
+;;; from mrs/basemrs.lisp
+;;; 
+;;; LaTeX output-type class
+;;;
+(defun latex-escape-string (string)
+  (if (and string (or (stringp string) (symbolp string)))
+    (loop
+        with string = (string string)
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (member c '(#\_ #\% #\# #\{ #\}) :test #'char=) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    string))
+
+;;; from basemrs - the package is defined as :lkb when we're interfacing 
+;;; with an LKB system but :mrs in the standalone code
+
+(defconstant *mrs-package* :mrs)
+
+(defun make-mrs-atom (str)
+  (let ((*package* (find-package *mrs-package*)))
+    (intern str *mrs-package*)))
+

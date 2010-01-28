@@ -1682,6 +1682,8 @@ xmlnorm -Vs 156605.v000.xml
 
 
 ;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/156610.orig.xml")
+;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/1226279.orig.xml")
+;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/1226279.v000.xml")
 ;;; (generate-from-dmrs-file "~/andy-m/variants-testvar/156613.orig.xml")
 ;;; (generate-from-dmrs-file "~/andy-m/test1.xml")
 
@@ -1696,8 +1698,10 @@ xmlnorm -Vs 156605.v000.xml
     (when rmrs
       (let ((mrs (convert-rmrs-to-mrs rmrs)))
 	(when mrs
+	  (output-mrs1 mrs 'simple t)
 	  (lkb::generate-from-mrs mrs))))))
 
+#+:lkb
 (defun generate-from-dmrs-directory (idir)
   ;;; (generate-from-dmrs-directory "~/andy-m/testdir/")
   (let ((*package* (find-package :mrs)))
@@ -1749,6 +1753,7 @@ xmlnorm -Vs 156605.v000.xml
 				 :if-does-not-exist :create)
 		  (output-rmrs1 rmrs 'xml ostream)))))))
 
+#+:lkb
 (defun dmrs-to-mrs-directory (idir odir)
   ;;; takes an input directory of DMRSs in XML and converts 
   ;;; to a directory of MRS files
