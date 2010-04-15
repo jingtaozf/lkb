@@ -1,4 +1,4 @@
-ROOT = /lingo/build/
+ROOT = /projects/lingo
 SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/delphin
 WROOT = c:/d/delphin-download
@@ -6,8 +6,8 @@ WACLROOT = c:/Program\ Files/acl81
 WLOGIN = aac
 DATE = `date "+%Y-%m-%d"`
 TIME = `date "+%Y-%m-%d (%H:%M:%S)"`
-TARGET = /lingo/www/lingo/build
- 
+TARGET = /home/www-lingo/html
+
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
@@ -79,7 +79,7 @@ links:
 #
 
 lkb: lkb_source lkb_data lkb_binaries
-	${RM} ${TARGET}/test;
+	${RM} -f ${TARGET}/test;
 	${LN} ${TARGET}/builds/${DATE} ${TARGET}/test;
 
 lkb_source:
@@ -149,7 +149,7 @@ lkb_linux@cypriot:
 	  echo "(excl:exit)"; \
 	) | ( ACL_LOCALE=C \
               LD_LIBRARY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
-                cd /lingo/build/acl; \
+                cd ${ROOT}/acl; \
                 alisp -I clim -qq && touch ${ROOT}/.yes; )
 
 lkb_linux_x86_64:
