@@ -25,6 +25,7 @@ SVN=svn
 TAR=tar
 MAKE=make
 TEE=tee
+ALISP=/projects/lingo/acl/alisp
 
 update:
 	( \
@@ -150,7 +151,7 @@ lkb_linux@cypriot:
 	) | ( ACL_LOCALE=C \
               LD_LIBRARY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
                 cd ${ROOT}/acl; \
-                alisp -I clim -qq && touch ${ROOT}/.yes; )
+                ${ALISP} -I clim -qq && touch ${ROOT}/.yes; )
 
 lkb_linux_x86_64:
 	${RM} -f ${LROOT}/.yes;
