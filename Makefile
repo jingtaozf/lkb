@@ -294,7 +294,7 @@ spanish:
 # [incr tsdb()]
 #
 
-itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_capi itsdb_tsdb \
+itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_capi \
        itsdb_data itsdb_documentation
 
 itsdb_binaries: itsdb_linux # itsdb_solaris
@@ -376,15 +376,6 @@ itsdb_capi:
 	      src/tsdb/capi; \
 	)
 
-itsdb_tsdb:
-	( \
-	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_tsdb.tgz \
-	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
-              --exclude=".nfs*" --exclude=".#*" \
-	      src/tsdb/c; \
-	)
-
 itsdb_data:
 	( \
 	  cd ${ROOT}/lkb; \
@@ -408,16 +399,4 @@ itsdb_documentation:
 	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
 	      ./src/tsdb/doc; \
-	)
-
-
-itsdb_trees: itsdb_vm32
-
-itsdb_vm32:
-	( \
-	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_vm32.tgz \
-	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
-              --exclude=".nfs*" \
-	      src/tsdb/home/trees/vm32; \
 	)
