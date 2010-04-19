@@ -34,20 +34,18 @@
 (defmacro unless (condition &rest body)
   (list 'or condition (cons 'progn body)))
 
-(defun delphin:system-binaries ()
+(defun delphin:system-binaries (&optional runtimep)
   (cond
    ((string-match "solaris" system-configuration) "solaris")
    ((string-match "linux" system-configuration) 
     (if (string-match "x86_64" system-configuration)
-      "linux.x86.64"
+      (if runtimep "linux.x86.32" "linux.x86.64")
       "linux.x86.32"))
    ((or (string-match "windows" system-configuration)
         (string-match "mingw-nt" system-configuration)
         (string-match "msvc" system-configuration)) "windows")))
 
-(defun delphin:allegro (&optional prefix)
-  (interactive "P")
-
+(defun delphin:allegro (&optional runtimep)
   ;;
   ;; set up .load-path., load and configure emacs -- lisp interface
   ;;
@@ -95,16 +93,16 @@
   (let ((old (getenv "LD_LIBRARY_PATH"))
         (new (format
               "LD_LIBRARY_PATH=%s/lkb/lib/%s"
-              delphin-home (delphin:system-binaries))))
+              delphin-home (delphin:system-binaries runtimep))))
     (setq process-environment
       (cons
        (if old (format "%s:%s" new old) new)
        process-environment))))
 
-(defun lkb (&optional prefix)
-  (interactive "P")
+(defun lkb ()
+  (interactive)
 
-  (delphin:allegro)
+  (delphin:allegro t)
   ;;
   ;; use pre-built run-time binaries distributed from `lingo.stanford.edu'
   ;;
@@ -112,7 +110,7 @@
     (format
      "%s/lkb/%s/lkb%s"
      delphin-home
-     (delphin:system-binaries)
+     (delphin:system-binaries t)
      (if (or (string-match "windows" system-configuration)
              (string-match "mingw-nt" system-configuration)
              (string-match "msvc" system-configuration))
@@ -120,7 +118,7 @@
        "")))
 
   (setq fi:common-lisp-image-file
-    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries)))
+    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries t)))
 
   (setq fi:common-lisp-image-arguments (list "-locale" allegro-locale))
 
@@ -131,102 +129,8 @@
     (fi:common-lisp)))
 
 
-(defun japanese (&optional prefix)
-  (interactive "P")
-
-  (delphin:allegro)
-  ;;
-  ;; make sure that emacs(1) will use the appropriate encoding on all buffers
-  ;; connected to Lisp (aka the LKB), which for latest versions include more 
-  ;; than just the main `*common-lisp*' buffer.  also, we need to force the LKB
-  ;; into using a locale with corresponding encoding (`japan.EUC' as we used to
-  ;; call it appears to be an Allegro CL nickname for `ja_JP.EUC').
-  ;;
-  (let ((encoding 'euc-jp))
-    (set-language-environment 'japanese)
-    (setq default-buffer-file-coding-system encoding)
-    (setq default-process-coding-system (cons encoding encoding)))
-
-  (setq fi:common-lisp-image-name 
-    (format
-     "%s/lkb/%s/lkb%s"
-     delphin-home
-     (delphin:system-binaries)
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
-
-  (setq fi:common-lisp-image-file
-    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries)))
-
-  (setq fi:common-lisp-image-arguments (list "-locale" "ja_JP.EUC"))
-
-  (let ((process-connection-type nil))
-    (fi:common-lisp)))
-
-
-(defun spanish (&optional prefix)
-  (interactive "P")
-
-  (delphin:allegro)
-  (let ((encoding 'iso-8859-1))
-    (set-language-environment 'spanish)
-    (setq default-buffer-file-coding-system encoding)
-    (setq default-process-coding-system (cons encoding encoding)))
-
-  (setq fi:common-lisp-image-name 
-    (format
-     "%s/lkb/%s/lkb%s"
-     delphin-home
-     (delphin:system-binaries)
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
-
-  (setq fi:common-lisp-image-file
-    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries)))
-
-  (setq fi:common-lisp-image-arguments (list "-locale" "es_ES.ISO-8859-1"))
-
-  (let ((process-connection-type nil))
-    (fi:common-lisp)))
-
-
-(defun korean (&optional prefix)
-  (interactive "P")
-
-  (delphin:allegro)
-  (let ((encoding 'euc-kr))
-    (set-language-environment 'korean)
-    (setq default-buffer-file-coding-system encoding)
-    (setq default-process-coding-system (cons encoding encoding)))
-
-  (setq fi:common-lisp-image-name 
-    (format
-     "%s/lkb/%s/lkb%s"
-     delphin-home
-     (delphin:system-binaries)
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
-
-  (setq fi:common-lisp-image-file
-    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries)))
-
-  (setq fi:common-lisp-image-arguments (list "-locale" "ko_KR.EUC"))
-
-  (let ((process-connection-type nil))
-    (fi:common-lisp)))
-
-
-(defun lisp (&optional prefix)
-  (interactive "P")
+(defun lisp ()
+  (interactive)
 
   (delphin:allegro)
 

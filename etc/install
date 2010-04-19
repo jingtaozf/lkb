@@ -35,6 +35,7 @@ fi
 # come to think of it, we should probably use gunzip(1) plus tar(1) instead,
 # so as to not be dogmatic and even succeed with a Sun tar(1).  (9-nov-04; oe)
 #
+URL=http://lingo.delph-in.net
 MKDIR=mkdir
 LS=ls
 RM=rm
@@ -108,11 +109,8 @@ if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
     cpu=$(uname -m)
   fi
   case "${cpu}" in
-    i?86)
+    i?86|x86_64)
       os="linux.x86.32"
-      ;;
-    x86_64)
-      os="linux.x86.64"
       ;;
     *)
       echo "lkb: unknown Linux architecture (check \`uname -m'); exit."
@@ -143,7 +141,7 @@ cd ${DELPHINHOME}
 
 for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
   echo -n "install: \`${i}' ...";
-  ( cd Archives; ${WGET} http://lingo.delph-in.net/${build}/${i}; )
+  ( cd Archives; ${WGET} ${URL}/${build}/${i}; )
   if [ -f Archives/${i} ]; then
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
@@ -165,7 +163,7 @@ if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
            itsdb_${os}.tgz itsdb_data.tgz itsdb_documentation.tgz \
            itsdb_source.tgz; do
     echo -n "install: \`${i}' ...";
-    ( cd Archives; ${WGET} http://lingo.delph-in.net/${build}/${i}; )
+    ( cd Archives; ${WGET} ${URL}/${build}/${i}; )
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     if [ -f Archives/${i} ]; then
       ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
@@ -180,7 +178,7 @@ fi
 # for integration of the LKB et al. with emacs(1), we need the following
 #
 echo -n "install: \`eli.tgz' ...";
-( cd Archives; ${WGET} http://lingo.delph-in.net/etc/eli.tgz )
+( cd Archives; ${WGET} ${URL}/etc/eli.tgz )
 ${GUNZIP} ${DELPHINHOME}/Archives/eli.tgz | ${TAR}
 echo " done.";
 
@@ -189,7 +187,7 @@ echo " done.";
 #
 for i in erg.tgz; do
   echo -n "install: \`${i}' ...";
-  ( cd Archives; ${WGET} http://lingo.delph-in.net/${build}/${i}; )
+  ( cd Archives; ${WGET} ${URL}/${build}/${i}; )
   if [ -f Archives/${i} ]; then
     ( cd ${DELPHINHOME}; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
