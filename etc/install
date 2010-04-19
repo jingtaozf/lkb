@@ -159,7 +159,7 @@ done
 # and shares a source directory with the LKB
 #
 if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
-  for i in itsdb_libraries.tgz itsdb_tsdb.tgz itsdb_capi.tgz \
+  for i in itsdb_libraries.tgz itsdb_capi.tgz \
            itsdb_${os}.tgz itsdb_data.tgz itsdb_documentation.tgz \
            itsdb_source.tgz; do
     echo -n "install: \`${i}' ...";
