@@ -718,7 +718,10 @@ for gram.dtd and tag.dtd
 	   (rmrs-output-start-fn rmrs-display-structure 
 				 (rmrs-cfrom rmrs-instance)
 				 (rmrs-cto rmrs-instance)
-                                 surface ident)
+                                 (or surface 
+				     (rmrs-surface rmrs-instance))
+				 (or ident
+				     (rmrs-ident rmrs-instance)))
 	   (let ((positions
 		  (print-rmrs rmrs-instance grouping-p 
 			      pos-rec-p

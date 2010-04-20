@@ -20,7 +20,11 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 (defstruct (dmrs)
   nodes
-  links)
+  links
+  cfrom
+  cto
+  surface
+  ident)
 
 (defstruct dmrs-node
   ;;; the LTOP node is always id 0, others may be anything - but
@@ -86,6 +90,95 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 		    (when (and rmrs (not (xml-whitespace-string-p rmrs)))
 		      (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
 			(when dmrs (output-dmrs1 dmrs 'dxml ostream))))))))))))
+
+
+(defun rmrs-to-dmrs-fine-system-dir (idir odir)
+  ;;; this assumes a directory which has rmrs files as output by the
+  ;;; fine system - each file contains a list of rmrss corresponding 
+  ;;; to a single parse, with additional `junk' in between -
+  ;;; all files are gzipped
+  ;;;
+  ;;; input and output directories should both exist
+  ;;; file names are kept the same
+  (let ((*package* (find-package :mrs)))
+    (let* ((ifiles (directory idir)))
+      (loop for ifile in ifiles
+	  do
+	    (let* ((namestring (file-namestring ifile))
+		   (non-gzipped (if (equal (subseq namestring 
+						   (- (length namestring) 2))
+					   "gz")
+				    (subseq namestring 0
+						   (- (length namestring) 3))))
+		   (ofile-nongz (concatenate 'string odir
+				       non-gzipped))
+		   (ifile-nongz (concatenate 'string idir
+				       non-gzipped)))
+	      (excl::shell 
+               (concatenate 
+                   'string "gunzip " idir namestring))
+	      (when (probe-file ifile-nongz)
+		(rmrs-to-dmrs-fine-system-file ifile-nongz ofile-nongz)
+		(excl::shell 
+		 (concatenate 
+		     'string "gzip " idir non-gzipped))
+		(excl::shell 
+		 (concatenate 
+		     'string "gzip " odir non-gzipped))))))))
+
+
+#|
+
+(rmrs-to-dmrs-fine-system-dir "~/erg.trunk.goo.10-04-19.pet/"
+			      "~/erg.trunk.goo.10-04-19.pet-dmrs/")
+
+(rmrs-to-dmrs-fine-system-dir "/usr/groups/mphil/project-data/erg.0909.hike.10-04-20.pet.rmrs/"
+		"/usr/groups/mphil/project-data/erg.0909.hike.10-04-20.pet.dmrs/")	      
+
+(rmrs-to-dmrs-fine-system-dir "~/ilongot-tmp-back/"
+			      "~/ilongot-tmp-back-dmrs/")
+
+(with-open-file (istream "~/erg.trunk.goo.10-04-19.pet-dmrs/1"
+		 :direction :input)
+  (parse-xml-removing-junk istream))
+
+|#
+
+
+
+(defun rmrs-to-dmrs-fine-system-file (ifile ofile)
+  (with-open-file (istream ifile
+		   :direction :input)
+    (with-open-file (ostream ofile
+		     :direction :output :if-exists :supersede)
+      (write-line "<dmrs-list>" ostream)
+      (loop
+      ;;; this is pretty horrible, but I can't currently think of a better
+      ;;; approach I can quickly implement
+      ;;; For each RMRS structure, we create a temporary file containing 
+      ;;; just that XML and read that in to the standard code
+      ;;;
+      ;;; assume first < corresponds to an rmrs
+	(loop 
+	    for c = (peek-char t istream nil nil)
+	    while (and c (not (char= c #\<))) do (read-line istream))
+	(unless (peek-char t istream nil nil) (return))
+	(with-open-file (tmpstream "/tmp/rmrs-to-dmrs-fine-system-file"
+			 :direction :output :if-exists :supersede)
+	  (loop 
+	      for c = (peek-char t istream nil nil)
+	      while (and c (char= c #\<)) 
+	      do (let ((line (read-line istream)))
+		   (write-line line tmpstream)))
+	  (finish-output tmpstream))
+	(with-open-file (tmpistream "/tmp/rmrs-to-dmrs-fine-system-file"
+			 :direction :input)
+	  (let ((rmrs (parse-xml-removing-junk tmpistream)))
+	    (when (and rmrs (not (xml-whitespace-string-p rmrs)))
+	      (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
+		(when dmrs (output-dmrs1 dmrs 'dxml ostream)))))))
+      (write-line "</dmrs-list>" ostream)
+      (finish-output ostream))))
 
 
 
@@ -291,7 +384,9 @@ make-dmrs-handel-links
 	       (ltoplinks (make-dmrs-ltop-links rmrs dgroups))
 	   ;;; link types are distinguished for convenience
 	       (dmrs
-		(make-dmrs :nodes nodes
+		(make-dmrs :surface (rmrs-surface rmrs)
+			   :ident (rmrs-ident rmrs)
+		           :nodes nodes
 			   :links (append
 				   ltoplinks
 				   (loop for var-link in var-links
@@ -1443,11 +1538,10 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 
 (defun print-dmrs (dmrs dmrs-display-structure)
   (dmrs-output-start-fn dmrs-display-structure
-			-1 -1
-		;;		 (dmrs-cfrom dmrs)
-		;;		 (dmrs-cto dmrs)
-			;;                 surface ident)
-			nil nil)
+			(or (dmrs-cfrom dmrs) -1)
+			(or (dmrs-cto dmrs) -1)
+			(dmrs-surface dmrs)
+			(dmrs-ident dmrs))
   (let* ((nodes (dmrs-nodes dmrs))
 	 (links (sort-dmrs-links-by-from (dmrs-links dmrs) nodes)))
     (dolist (node nodes) 
@@ -1655,22 +1749,28 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 
 #+:lkb
 (defun batch-output-dmrs nil  
-  (let ((ostream (if (and lkb::*ostream* 
+  (let ((sentence lkb::*sentence*)
+	(sentence-number lkb::*sentence-number*)
+	(ostream (if (and lkb::*ostream* 
                           (streamp lkb::*ostream*) 
                           (output-stream-p lkb::*ostream*)) 
                      lkb::*ostream*  t)))
-    (when *parse-record*
-          (let* ((parse (car *parse-record*))
-                 (mrs-struct (extract-mrs parse))
+    (format ostream "~%<S id='~A'>" sentence-number)
+    (format ostream "~%<string>~%~S~%</string>" sentence)
+    (loop for parse in *parse-record*
+	  do
+          (let* ((mrs-struct (extract-mrs parse))
                  (rmrs-struct 
 		  (mrs-to-rmrs mrs-struct))
 		 (dmrs-struct
-		  (rmrs-to-dmrs rmrs-struct))
-		 (crossing-links
-		  (dmrs-crossing-links dmrs-struct)))
-            (simple-output-dmrs dmrs-struct)
-	    (when crossing-links
-		(format t "~%Crossing links ~A" crossing-links))))
+		  (rmrs-to-dmrs rmrs-struct)))
+;;		 (crossing-links
+;;		  (dmrs-crossing-links dmrs-struct)))
+            (output-dmrs1 dmrs-struct 'dxml ostream)
+;;	    (when crossing-links
+	    ;;		(format t "~%Crossing links ~A" crossing-links))))
+	    ))
+    (format ostream "~%</S>")
     (finish-output ostream)))
 
 

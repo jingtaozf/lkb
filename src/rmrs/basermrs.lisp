@@ -12,7 +12,9 @@
   bindings
   cfrom
   cto
-  origin)
+  origin
+  surface
+  ident)
 
 ;;; origin values are currently :erg or :rasp - we need this
 ;;; because the handling of variables is different

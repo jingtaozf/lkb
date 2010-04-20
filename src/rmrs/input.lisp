@@ -51,7 +51,6 @@
 
 (defun read-rmrs (content origin)
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
-;;; FIX - attributes not dealt with
 ;;; <!ATTLIST rmrs
 ;;;          cfrom CDATA #REQUIRED
 ;;;          cto   CDATA #REQUIRED 
@@ -59,9 +58,22 @@
 ;;;          ident     CDATA #IMPLIED >
   (let ((top-h nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil)
-	(tag (car content)))
-    (unless (eql (car tag) '|rmrs|)
+	(tag (car content))
+	(surface nil)
+	(ident nil))
+    (unless (and (eql (first tag) '|rmrs|)
+		 (eql (second tag) '|cfrom|)
+		 (eql (fourth tag) '|cto|)
+		 (or (not (sixth tag)) 
+		     (eql (sixth tag) '|surface|)
+		     (eql (sixth tag) '|ident|))
+		 (or (not (eighth tag)) 
+		     (eql (eighth tag) '|ident|)))
       (error "~A is not an rmrs" content))
+    (setf surface (if (eql (sixth tag) '|surface|) (seventh tag)))
+    (setf ident (if (eql (sixth tag) '|ident|) 
+		    (seventh tag)
+		  (ninth tag)))
     (setf content (cdr content))
     (loop (let ((next-el (car content)))
 	    (if (xml-whitespace-string-p next-el)
@@ -98,7 +110,9 @@
 		 :h-cons (nreverse h-cons)
 		 :rmrs-args (nreverse rargs)
 		 :in-groups (nreverse ings)
-		 :origin origin))))
+		 :origin origin
+		 :surface surface
+		 :ident ident))))
 
 (defun read-rmrs-ep (content)
 ;;; <!ELEMENT ep ((realpred|gpred), label, var)>
