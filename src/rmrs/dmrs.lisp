@@ -92,7 +92,7 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 			(when dmrs (output-dmrs1 dmrs 'dxml ostream))))))))))))
 
 
-(defun rmrs-to-dmrs-fine-system-dir (idir odir)
+(defun rmrs-to-dmrs-fine-system-dir (idir odir &optional dirstr)
   ;;; this assumes a directory which has rmrs files as output by the
   ;;; fine system - each file contains a list of rmrss corresponding 
   ;;; to a single parse, with additional `junk' in between -
@@ -118,7 +118,8 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
                (concatenate 
                    'string "gunzip " idir namestring))
 	      (when (probe-file ifile-nongz)
-		(rmrs-to-dmrs-fine-system-file ifile-nongz ofile-nongz)
+		(rmrs-to-dmrs-fine-system-file 
+		 ifile-nongz ofile-nongz dirstr)
 		(excl::shell 
 		 (concatenate 
 		     'string "gzip " idir non-gzipped))
@@ -126,14 +127,10 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 		 (concatenate 
 		     'string "gzip " odir non-gzipped))))))))
 
-
 #|
 
-(rmrs-to-dmrs-fine-system-dir "~/erg.trunk.goo.10-04-19.pet/"
-			      "~/erg.trunk.goo.10-04-19.pet-dmrs/")
-
-(rmrs-to-dmrs-fine-system-dir "/usr/groups/mphil/project-data/erg.0909.hike.10-04-20.pet.rmrs/"
-		"/usr/groups/mphil/project-data/erg.0909.hike.10-04-20.pet.dmrs/")	      
+(rmrs-to-dmrs-fine-system-dir "/usr/groups/mphil/project-data/final/erg.0909.hike.10-04-20.pet.rmrs/"
+			      "/usr/groups/mphil/project-data/final/erg.0909.hike.10-04-20.pet.dmrs/" "erg.0909.hike.10-04-20.pet.rmrs")
 
 (rmrs-to-dmrs-fine-system-dir "~/ilongot-tmp-back/"
 			      "~/ilongot-tmp-back-dmrs/")
@@ -146,12 +143,51 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 
 
-(defun rmrs-to-dmrs-fine-system-file (ifile ofile)
+  ;;; assume that the file name is of the following format
+  ;;; grammar.version.corpus.date.parser.whatever
+  ;;; eg erg.1004.hike.10-04-20.pet
+  ;;; <dmrs-list grammar='erg' version='1004' corpus='hike' date='10-04-19' 
+  ;;;  parser='pet'>
+
+
+
+(defun rmrs-to-dmrs-fine-system-file (ifile ofile &optional str)
   (with-open-file (istream ifile
 		   :direction :input)
     (with-open-file (ostream ofile
 		     :direction :output :if-exists :supersede)
-      (write-line "<dmrs-list>" ostream)
+      (let ((grammar nil)
+	    (version nil)
+	    (corpus nil)
+	    (date nil)
+	    (parser nil))
+	(when str
+	  (let ((dot1 (position #\. str)))
+	    (when dot1
+	      (setf grammar (subseq str 0 dot1))
+	      (setf str (subseq str (+ 1 dot1)))
+	      (let ((dot2 (position #\. str)))
+		(when dot2
+		  (setf version (subseq str 0 dot2))
+		  (setf str (subseq str (+ 1 dot2)))
+		  (let ((dot3 (position #\. str)))
+		    (when dot3
+		      (setf corpus (subseq str 0 dot3))
+		      (setf str (subseq str (+ 1 dot3)))
+		      (let ((dot4 (position #\. str)))
+			(when dot4
+			  (setf date (subseq str 0 dot4))
+			  (setf str (subseq str (+ 1 dot4)))
+			  (let ((dot5 (position #\. str)))
+			    (when dot5
+			      (setf parser (subseq str 0 dot5)))))))))))))
+	(format ostream "~%<dmrs-list")
+	(when grammar (format ostream " grammar='~A'" grammar))
+	(when version (format ostream " version='~A'" version))
+	(when corpus (format ostream " corpus='~A'" corpus))
+	(when date (format ostream " date='~A'" date))
+	(when parser (format ostream " parser='~A'" parser))
+	(format ostream ">")
       (loop
       ;;; this is pretty horrible, but I can't currently think of a better
       ;;; approach I can quickly implement
@@ -178,7 +214,7 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 	      (let ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil))))
 		(when dmrs (output-dmrs1 dmrs 'dxml ostream)))))))
       (write-line "</dmrs-list>" ostream)
-      (finish-output ostream))))
+      (finish-output ostream)))))
 
 
 
@@ -218,7 +254,37 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 			    (with-open-file (ostream ofile
 				 :direction :output :if-exists :supersede
 					     :if-does-not-exist :create)
-			      	(mrs::layout-dmrs dmrs :svg ostream))))))))))))
+			      (mrs::layout-dmrs dmrs :svg ostream))))))))))))
+
+(defun dmrs-list-to-svg-directory (idir odir)
+  ;;; takes an input directory of dmrs-lists in XML and converts 
+  ;;; to a directory of SVG files, one file per element of the dmrs-list,
+  ;;; numbered in sequence
+  (let ((*package* (find-package :mrs)))
+    (let* ((ifiles (directory idir)))
+      (loop for ifile in ifiles
+	  do
+	    (let* ((namestring (file-namestring ifile)))
+	      (with-open-file (istream ifile
+			       :direction :input)
+		  (let ((dmrs-xml (parse-xml-removing-junk istream)))
+		    (when (and dmrs-xml 
+			       (not (xml-whitespace-string-p dmrs-xml)))
+		      (let ((dmrs-list (read-dmrs-list dmrs-xml)))
+			(when dmrs-list
+			  (let ((count 0))
+			    (dolist (dmrs dmrs-list)
+			      (let ((ofile (concatenate 'string odir
+							namestring 
+							(format nil ".~S" count)
+							".svg")))
+				(setf count (+ 1 count))
+				(with-open-file (ostream ofile
+						 :direction :output 
+						 :if-exists :supersede
+						 :if-does-not-exist :create)
+				  (mrs::layout-dmrs dmrs 
+						    :svg ostream)))))))))))))))
 
 
   
@@ -1605,6 +1671,21 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
       (let ((dmrs (parse-xml-removing-junk istream)))
 	(unless (xml-whitespace-string-p dmrs)
 	  (read-dmrs dmrs))))))
+
+(defun read-dmrs-list (content)
+  ;;; for now, ignores the meta data and just returns a list
+  ;;; of DMRSs.  FIX
+  (let ((dmrss nil) (tag (car content)))
+    (unless (and (listp tag) (eql (car tag) '|dmrs-list|))
+      (error "~A is not an dmrs list" content))
+    (setf content (cdr content))
+    (when content
+      (loop for next-el in content
+	  do
+	    (unless (xml-whitespace-string-p next-el)
+	      (push (read-dmrs next-el) dmrss))))
+    (nreverse dmrss)))
+
 
 (defun read-dmrs (content)
 ;;;  (pprint content lkb::*lkb-background-stream*)
