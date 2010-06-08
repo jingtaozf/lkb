@@ -31,6 +31,7 @@
 
 (defvar *text* nil)
 (defvar *sentence* nil)
+(defvar *sentence-number* nil)
 
 (defparameter *tchart-max* 0
   "set by the tokeniser to the maximum vertex in the tchart")
@@ -2645,6 +2646,7 @@ an unknown word, treat the gap as filled and go on from there.
                          #+:pooling
                          (reset-pools #+:gdebug t)
                          (parse user-input nil)
+			 (setf *sentence-number* nsent)
                          (setf *sentence* sentence)
                          (setf *parse-input* user-input)
                          (setf *ostream* ostream)
