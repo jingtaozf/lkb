@@ -25,14 +25,16 @@
 ;;; existing data sets in this scheme, dan and i came up with a break-down of
 ;;; identifiers as follows
 ;;;
-;;; [         1 --      1,999]  
-;;; [     2,000 --      9,999] --- The Cathedral and the Bazaar
-;;; [ 1,000,000 --  1,999,999] --- VerbMobil
-;;; [ 2,000,000 --  2,999,999] --- ecommerce
-;;; [ 3,000,000 --  3,999,999] --- LOGON
-;;; [ 4,000,000 --  4,999,999] --- SciBorg
-;;; [10,000,000 -- 19,999,999] --- WeScience
-;;; [20,000,000 -- 29,999,999] --- PTB
+;;; [                1 --             1,999] --- various test suites
+;;; [            2,000 --             9,999] --- The Cathedral and the Bazaar
+;;; [        1,000,000 --         1,999,999] --- VerbMobil
+;;; [        2,000,000 --         2,999,999] --- ecommerce
+;;; [        3,000,000 --         3,999,999] --- LOGON
+;;; [        4,000,000 --         4,999,999] --- SciBorg
+;;; [        5,000,000 --         5,099,999] --- BioScope
+;;; [       10,000,000 --        19,999,999] --- WeScience
+;;; [       20,000,000 --        29,999,999] --- PTB
+;;; [1,000,010,000,000 -- 1,128,928,700,510] --- WikiWoods
 ;;; 
 ;;; _fix_me_
 ;;; most of the old skeletons (and existing treebanks, where applicable) still
@@ -45,10 +47,12 @@
  ((:path . "handon") (:content . "Tourism Web Sites (HandOn)"))
  ((:path . "wescience") (:content . "Scholarly Literature (WeScience)"))
  ((:path . "ptb") (:content . "Penn Treebank (WSJ)"))
+ ((:path . "bioscope") (:content . "Bio-Medical Texts (BioScope)"))
  ((:path . "english") (:content . "TSNLP English Test Suite"))
  ((:path . "csli") (:content . "CSLI (LinGO) Test Suite"))
  ((:path . "mrs") (:content . "DELPH-IN MRS Test Suite"))
  ((:path . "cb") (:content . "The Cathedral and the Bazaar"))
  ((:path . "trec9") (:content . "TREC QA Questions (Ninth Conference)"))
- ((:path . "fracas") (:content . "FraCaS Semantics Test Suite")))
- 
+ ((:path . "fracas") (:content . "FraCaS Semantics Test Suite"))
+ ((:path . "petet") (:content . "Evaluation By Textual Entailment (trial)"))
+ ((:path . "redwoods") (:content . "Full Redwoods (JHPSTG & WeScience)")))

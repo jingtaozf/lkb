@@ -239,9 +239,9 @@
 3390@unknown@formal@none@1@S@More generally, Brooks's Law predicts that the complexity and communication costs of a project rise with the square of the number of developers, while work done only rises linearly.@1@29@@danf@5-9-2008
 3400@unknown@formal@none@1@S@Brooks's Law is founded on experience that bugs tend strongly to cluster at the interfaces between code written by different people, and that communications/coordination overhead on a project tends to rise with the number of interfaces between human beings.@1@39@@danf@5-9-2008
 3410@unknown@formal@none@1@S@Thus, problems scale with the number of communications paths between developers, which scales as the square of the number of developers (more precisely, according to the formula N*(N - 1)/2 where N is the number of developers).@1@37@@danf@5-9-2008
-3420@unknown@formal@none@1@S@The Brooks's Law analysis (and the resulting fear of large numbers in development groups) rests on a hidden assummption: that the communications structure of the project is necessarily a complete graph, that everybody talks to everybody else.@1@37@@danf@5-9-2008
+3420@unknown@formal@none@1@S@The Brooks's Law analysis (and the resulting fear of large numbers in development groups) rests on a hidden assumption: that the communications structure of the project is necessarily a complete graph, that everybody talks to everybody else.@1@37@@danf@5-9-2008
 3430@unknown@formal@none@1@S@But on open-source projects, the halo developers work on what are in effect separable parallel subtasks and interact with each other very little; code changes and bug reports stream through the core group, and only within that small core group do we pay the full Brooksian overhead.@1@47@@danf@5-9-2008
-3440@unknown@formal@none@1@S@There are are still more reasons that source-code–level bug reporting tends to be very efficient.@1@15@@danf@5-9-2008
+3440@unknown@formal@none@1@S@There are still more reasons that source-code–level bug reporting tends to be very efficient.@1@15@@danf@5-9-2008
 3450@unknown@formal@none@1@S@They center around the fact that a single error can often have multiple possible symptoms, manifesting differently depending on details of the user's usage pattern and environment.@1@27@@danf@5-9-2008
 3460@unknown@formal@none@1@S@Such errors tend to be exactly the sort of complex and subtle bugs (such as dynamic-memory-management errors or nondeterministic interrupt-window artifacts) that are hardest to reproduce at will or to pin down by static analysis, and which do the most to create long-term problems in software.@1@46@@danf@5-9-2008
 3470@unknown@formal@none@1@S@A tester who sends in a tentative source-code–level characterization of such a multi-symptom bug (e.g. "It looks to me like there's a window in the signal handling near line 1250" or "Where are you zeroing that buffer?") may give a developer, otherwise too close to the code to see it, the critical clue to a half-dozen disparate symptoms.@1@58@@danf@5-9-2008
@@ -474,7 +474,7 @@
 5740@unknown@formal@none@1@S@In The Mythical Man-Month, Fred Brooks observed that programmer time is not fungible; adding developers to a late software project makes it later.@1@23@@danf@5-9-2008
 5750@unknown@formal@none@1@S@As we've seen previously, he argued that the complexity and communication costs of a project rise with the square of the number of developers, while work done only rises linearly.@1@30@@danf@5-9-2008
 5760@unknown@formal@none@1@S@Brooks's Law has been widely regarded as a truism.@1@9@@danf@5-9-2008
-5770@unknown@formal@none@1@S@But we've examined in this essay a number of ways in which the process of open-source development falsifies the assumptionms behind it—and, empirically, if Brooks's Law were the whole picture Linux would be impossible.@1@34@@danf@5-9-2008
+5770@unknown@formal@none@1@S@But we've examined in this essay a number of ways in which the process of open-source development falsifies the assumptions behind it—and, empirically, if Brooks's Law were the whole picture Linux would be impossible.@1@34@@danf@5-9-2008
 5780@unknown@formal@none@1@S@Gerald Weinberg's classic The Psychology of Computer Programming supplied what, in hindsight, we can see as a vital correction to Brooks.@1@21@@danf@5-9-2008
 5790@unknown@formal@none@1@S@In his discussion of ``egoless programming'', Weinberg observed that in shops where developers are not territorial about their code, and encourage other people to look for bugs and potential improvements in it, improvement happens dramatically faster than elsewhere.@1@38@@danf@5-9-2008
 5800@unknown@formal@none@1@S@(Recently, Kent Beck's `extreme programming' technique of deploying coders in pairs looking over one anothers' shoulders might be seen as an attempt to force this effect.)@1@26@@danf@5-9-2008
@@ -637,7 +637,7 @@
 7370@unknown@formal@none@1@XP@Notes@1@1@@danf@5-9-2008
 7380@unknown@formal@none@1@S@In Programming Pearls, the noted computer-science aphorist Jon Bentley comments on Brooks's observation with ``If you plan to throw one away, you will throw away two.''.@1@26@@danf@5-9-2008
 7390@unknown@formal@none@1@S@He is almost certainly right.@1@5@@danf@5-9-2008
-7400@unknown@formal@none@1@S@The point of Brooks's observation, and Bentley's, isn't merely that you should expect first attempt to be wrong, it's that starting over with the right idea is usually more effective than trying to salvage a mess.@1@36@@danf@5-9-2008
+7400@unknown@formal@none@1@S@The point of Brooks's observation, and Bentley's, isn't merely that you should expect the first attempt to be wrong, it's that starting over with the right idea is usually more effective than trying to salvage a mess.@1@36@@danf@5-9-2008
 7410@unknown@formal@none@1@S@Examples of successful open-source, bazaar development predating the Internet explosion and unrelated to the Unix and Internet traditions have existed.@1@20@@danf@5-9-2008
 7420@unknown@formal@none@1@S@The development of the info-Zip compression utility during 1990–1992, primarily for DOS machines, was one such example.@1@17@@danf@5-9-2008
 7430@unknown@formal@none@1@S@Another was the RBBS bulletin board system (again for DOS), which began in 1983 and developed a sufficiently strong community that there have been fairly regular releases up to the present (mid-1999) despite the huge technical advantages of Internet mail and file-sharing over local BBSs.@1@45@@danf@5-9-2008
@@ -767,3 +767,4 @@
 8670@unknown@formal@none@1@S@John Buck <johnbuck\ssea.ece.umassd.edu> pointed out that MATLAB makes an instructive parallel to Emacs.@1@13@@danf@5-9-2008
 8680@unknown@formal@none@1@S@Russell Johnston <russjj\smail.com> brought me to consciousness about some of the mechanisms discussed in ``How Many Eyeballs Tame Complexity.''@1@19@@danf@5-9-2008
 8690@unknown@formal@none@1@S@Finally, Linus Torvalds's comments were helpful and his early endorsement very encouraging.@1@12@@danf@5-9-2008
+
