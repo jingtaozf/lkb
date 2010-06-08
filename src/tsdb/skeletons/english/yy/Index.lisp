@@ -1,5 +1,0 @@
-(((:path . "cell") (:content . "DT Cell Phone Groups (Development Section)"))
- ((:path . "ecpa") (:content . "Ecommerce Email (Product Availability)"))
- ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
- ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
- ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)")))
