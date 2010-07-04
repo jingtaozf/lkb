@@ -42,6 +42,12 @@
 
 (defparameter *pvm-pending-events* nil)
 
+(defun tmp (&optional context)
+  (declare (ignore context))
+  (let* ((tmp (or (getenv "PVMTMP") #+:logon (getenv "LOGONTMP")))
+         (tmp (and tmp (namestring (parse-namestring tmp)))))
+    (or tmp "/tmp")))
+
 (defun initialize-pvm ()
   (setf *pvm*
     (format
@@ -102,8 +108,8 @@
     (unless tid (setf tid (pvm_mytid)))
     (let ((file (format 
                  nil 
-                 "/tmp/~a.~a.~a.~a" 
-                 prefix user tid (gensym ""))))
+                 "~a/~a.~a.~a.~a" 
+                 (tmp :pvm) prefix user tid (gensym ""))))
     (when (probe-file file) (delete-file file))
     file)))
 
@@ -477,7 +483,7 @@
 
 (defun pvm_halt (&key (user (system:getenv "USER")))
   (pvm_quit)
-  (let ((file (format nil "/tmp/.pvm.halt.~a.~a" user (gensym ""))))
+  (let ((file (format nil "~a/.pvm.halt.~a.~a" (tmp :pvm) user (gensym ""))))
     (with-open-file (stream file :direction :output :if-exists :supersede)
       (format stream "halt~%"))
     (run-process 

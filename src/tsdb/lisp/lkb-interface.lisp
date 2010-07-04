@@ -967,6 +967,7 @@
 ;;;
 
 (defun release-temporary-storage (&key (task :parse))
+  (purge-edge-registry)
   (invalidate-marks)
   (invalidate-visit-marks)
   #+:pooling
@@ -1037,9 +1038,10 @@
 (defparameter tsdb::*reconstruct-hook*
   #-:tty
   #'(lambda (edge &optional (i-input "reconstructed item"))
-      (declare (ignore i-input))
       (when (edge-p edge)
-        (display-parse-tree edge nil)))
+        (if #+:lui (lui-status-p :tree) #-:lui nil
+          #+:lui (lui-show-parses (list edge) i-input) #-:lui nil
+          (display-parse-tree edge nil))))
   #+:tty
   nil)
 
@@ -1058,7 +1060,11 @@
          (name (intern prefix *lkb-package*))
          (instance (ignore-errors (get-unexpanded-psort-entry name))))
     (when instance 
-      (let* ((instance (if (smember dagp '(:word t))
+      (let* ((length (length (lex-entry-orth instance)))
+             (end (if (numberp end)
+                    end
+                    (and (numberp start) (+ start length))))
+             (instance (if (smember dagp '(:word t))
                          (get-lex-entry-from-id name)
                          instance))
              (tdfs (when (smember dagp '(:word t))
@@ -1077,11 +1083,13 @@
              (tdfs (if (eq mrs::*lnkp* :id) (lnk-tdfs tdfs (list id)) tdfs))
              (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
              (ids (list (lex-entry-id instance))))
-        (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
-                   :rule form :leaves (list form) :lex-ids ids
-                   :dag tdfs :from start :to end
-                   #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
-                   #-:logon :cto #-:logon (mrs::find-cto-hack start))))))
+        (values
+         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
+                    :rule form :leaves (list form) :lex-ids ids
+                    :dag tdfs :from start :to end
+                    #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
+                    #-:logon :cto #-:logon (mrs::find-cto-hack start))
+         length)))))
 
 (defun tsdb::find-rule (instance)
   (let* ((name (intern (if (stringp instance)

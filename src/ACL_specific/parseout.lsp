@@ -257,7 +257,10 @@
 |#
 
 (defun show-parse-tree-frame (parses &optional (title "Parse results"))
-  (mp:run-function title #'show-parse-tree-frame-really parses title)) 
+  (if #+:lui (lui-status-p :tree) #-:lui nil
+    (let ((input (format nil "~{~a~^ ~}" (edge-leaves (first parses)))))
+      #+:lui (lui-show-parses parses input) #-:lui nil)
+    (mp:run-function title #'show-parse-tree-frame-really parses title)) )
 
 (defun show-parse-tree-frame-really (parses &optional title)
   (let ((frame (clim:make-application-frame 'parse-tree-frame)))

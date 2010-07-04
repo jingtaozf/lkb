@@ -57,7 +57,10 @@
                              block
                              wait
                              (file
-                              (format nil "/tmp/pvm.debug.~a" (current-user))
+                              (format
+                               nil
+                               "~a/pvm.debug.~a"
+                               (tmp :pvm) (current-user))
                               filep)
                              (prefix "")
                              (stream *tsdb-io*))

@@ -233,8 +233,9 @@
       (cache-query query language cache)
       (let* ((user (current-user))
              (file (format
-                    nil "/tmp/.tsdb.io.~a.~a.~a"
-                    user (current-pid) (string-downcase (string (gensym "")))))
+                    nil "~a/.tsdb.io.~a.~a.~a"
+                    (tmp :tsdb) user (current-pid) 
+                    (string-downcase (string (gensym "")))))
              (data (if absolute 
                      (namestring language) 
                      (find-tsdb-directory language)))
@@ -253,8 +254,8 @@
                       query))
              (output (when (eq format :file)
                        (format
-                        nil "/tmp/.tsdb.data.~a.~a.~a"
-                        user (current-pid) 
+                        nil "~a/.tsdb.data.~a.~a.~a"
+                        (tmp :tsdb) user (current-pid) 
                         (string-downcase (string (gensym ""))))))
              (redirection 
               (if output (concatenate 'string " > \"" output "\"") ""))
@@ -374,12 +375,14 @@
          "~&create-cache(): `~a' is read-only.~%"
          data))
       (return-from create-cache
-        (pairlis '(:database :count :protocol) (list data 0 :ro)))))
+        (pairlis '(:database :count :protocol :granularity)
+                 (list data 0 :ro (profile-granularity data))))))
   (case protocol
     (:raw
      (loop 
-         with cache = (pairlis '(:database :count :protocol)
-                               (list data 0 protocol))
+         with cache = (pairlis '(:database :count :protocol :granularity)
+                               (list data 0 protocol
+                                     (profile-granularity data)))
          with path = (find-tsdb-directory data)
          with schema = (or schema (read-database-schema data))
          initially (when verbose
@@ -407,8 +410,9 @@
     (:cooked
      (let* ((user (current-user))
             (file (format
-                   nil "/tmp/.tsdb.cache.~a.~a.~a"
-                   user (current-pid) (string-downcase (string (gensym "")))))
+                   nil "~a/.tsdb.cache.~a.~a.~a"
+                   (tmp :tsdb) user (current-pid)
+                   (string-downcase (string (gensym "")))))
             (stream (open file 
                           :direction :output 
                           :if-exists :supersede :if-does-not-exist :create)))
@@ -423,8 +427,9 @@
             "~&create-cache(): tsdb(1) write cache in `~a'.~%"
             file)
            (force-output *tsdb-io*)))
-       (pairlis '(:database :file :stream :count :protocol)
-                (list data file stream 0 protocol))))))
+       (pairlis '(:database :file :stream :count :protocol :granularity)
+                (list data file stream 0 protocol
+                      (profile-granularity data)))))))
 
 (defun cache-query (query data cache)
   (let* ((database (get-field :database cache))
@@ -1366,8 +1371,14 @@
          (*print-level* nil)
          (*print-length* nil)
          (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (granularity
+          (or (get-field :granularity cache) (profile-granularity data)))
          (parse-id (get-field :parse-id record))
          (result-id (get-field :result-id record))
+         (score-id (get-field+ :score-id record -1))
+         (start (get-field+ :score-start record -1))
+         (end (get-field+ :score-end record -1))
+         (learner (get-field :learner record))
          (rank (get-field :rank record))
          (score (get-field+ :score record ""))
          (score (if (stringp score) score (format nil "~a" score))))
@@ -1376,6 +1387,11 @@
             (ofs *tsdb-ofs*))
         (write parse-id :stream stream) (write-char ofs stream)
         (write result-id :stream stream) (write-char ofs stream)
+        (when (>= granularity 201002)
+          (write start :stream stream) (write-char ofs stream)
+          (write end :stream stream) (write-char ofs stream)
+          (write score-id :stream stream) (write-char ofs stream)
+          (write-string learner stream) (write-char ofs stream))
         (write rank :stream stream) (write-char ofs stream)
         (write-string score stream)
         (terpri stream)

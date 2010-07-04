@@ -47,7 +47,10 @@
          (stream (if (output-stream-p excl:*initial-terminal-io*)
                    excl:*initial-terminal-io*
                    (ignore-errors
-                    (let ((file (format nil "/tmp/acl.debug.~a.~a" user pid)))
+                    (let ((file (format
+                                 nil
+                                 "~a/acl.debug.~a.~a"
+                                 (tmp :acl) user pid)))
                       (when (probe-file file) (delete-file file))
                       (open file :direction :output
                             :if-exists :supersede 
@@ -58,7 +61,8 @@
     (setf excl:*gc-after-hook*
       #'(lambda (global new old efficiency pending)
           (if global (incf gcs) (incf scavenges))
-          (when (and *tsdb-gc-message-p* (output-stream-p stream))
+          (when (and (or *tsdb-gc-message-p* *tsdb-gc-debug*)
+                     (output-stream-p stream))
             (let* ((statm (when (probe-file "/proc/self/statm")
                             (with-open-file (stream "/proc/self/statm")
                               (loop
@@ -113,10 +117,18 @@
                               (:count
                                (excl:print-type-counts t))
                               (:room
-                               (room))))))))
+                               (room))
+                              (:zoom
+                               (let ((*print-miser-width* 40)
+                                     (tpl:*zoom-print-circle* t)
+                                     (tpl:*zoom-print-level* nil)
+                                     (tpl:*zoom-print-length* nil))
+                                 (tpl::zoom-command
+                                  :from-read-eval-print-loop nil
+                                  :all t :brief t :count t)))))))))
           (unless global-gc-p
             ;;
-            ;; unfortunately, this breaks because of yet another bug in the
+            ;; unfortunately, this breaks because of yet another issue in the
             ;; Allegro memory management: when newspace is expanded during a
             ;; scavenge, the `copy new' value reported by the gc() statistics
             ;; is much bigger than would be appropriate.  this causes our .new.
@@ -145,7 +157,8 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when (and *tsdb-gc-message-p* (output-stream-p stream))
+                  (when (and (or *tsdb-gc-message-p* *tsdb-gc-debug*)
+                             (output-stream-p stream))
                     (format 
                      stream
                      "~&[~a] gc-after-hook(): ~a tenured; ~

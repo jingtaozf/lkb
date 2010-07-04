@@ -845,12 +845,13 @@
                  (update-tree-colours frame))))
 	    (show 
              (clim:with-application-frame (frame)
-               (draw-new-parse-tree (or (ctree-symbol tree)
-                                        (setf (ctree-symbol tree)
-                                          (make-new-parse-tree
-                                           (ctree-edge tree) 1)))
-                                    "Parse tree" nil
-                                    (compare-frame-chart frame))))
+               (display-parse-tree
+                nil nil
+                :symbol (or (ctree-symbol tree)
+                            (setf (ctree-symbol tree)
+                              (make-new-parse-tree (ctree-edge tree) 1)))
+                :title (format nil "Parse Tree #~a" (ctree-id tree))
+                :counter (compare-frame-chart frame))))
             (mrs
              (when edge
                (ignore-errors (funcall 'show-mrs-window edge))))

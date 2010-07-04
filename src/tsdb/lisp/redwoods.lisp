@@ -46,7 +46,11 @@
 
 (defparameter *redwoods-reconstruct-mode* :word)
 
+(defparameter *redwoods-composite-export-p* nil)
+
 (defparameter *redwoods-train-percentage* 100)
+
+(defparameter *redwoods-task* :rank)
 
 (defparameter *models* nil)
 
@@ -1280,7 +1284,9 @@
                               derivation)))))))
 
 (defun export-trees (data &key (condition *statistics-select-condition*)
-                               path prefix interrupt meter 
+                               path prefix
+                               (compositep *redwoods-composite-export-p*)
+                               interrupt meter 
                                (compressor "gzip -c -9") (suffix "gz")
                                (stream *tsdb-io*))
   
@@ -1297,8 +1303,9 @@
                      (t 0))
       with target = (format 
                      nil 
-                     "~a/~a"
-                     (or path (tmp)) (directory2file data))
+                     "~a~@[/~a~]"
+                     (or path (tmp :redwoods))
+                     (unless compositep (directory2file data)))
       with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze
@@ -1308,11 +1315,21 @@
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
       with gc-strategy = (install-gc-strategy 
-                          nil :tenure *tsdb-tenure-p* :burst t :verbose t)
-
+                          nil :tenure nil :burst t :verbose t)
+      with firstp = t with out with pid with foo
       initially
         #+:allegro (ignore-errors (mkdir target))
         (when meter (meter :value (get-field :start meter)))
+        (when compositep
+          (let ((file (format 
+                       nil "~a/~@[~a.~]~a~@[.~a~]" 
+                       target prefix (directory2file data) suffix)))
+            (multiple-value-setq (out foo pid)
+              (run-process
+               compressor :wait nil :input :stream
+               :output file :if-output-exists :supersede
+               :error-output nil))
+            (setf foo foo)))
       for item in items
       for i-wf = (get-field :i-wf item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
@@ -1341,10 +1358,6 @@
                            for bar in foo 
                            collect (get-field :result-id bar)))
                      (list (get-field :result-id (first results))))
-      for file = (format 
-                  nil 
-                  "~a/~@[~a.~]~d~@[.~a~]" 
-                  target prefix (+ parse-id offset) suffix)
       when results do
         (format 
          stream 
@@ -1354,37 +1367,49 @@
          (or (null version) (> (length active) 1))
          (length results))
         (clrhash *reconstruct-cache*)
-        
-        #+:allegro
-        (multiple-value-bind (stream foo pid)
-            (run-process
-             compressor :wait nil :input :stream
-             :output file :if-output-exists :supersede
-             :error-output nil)
-          (declare (ignore foo #-:allegro pid))
+        #+:lkb (lkb::release-temporary-storage)
 
-          (format
-           stream
-           ";;;~%;;; Redwoods export of `~a';~%;;; (~a@~a; ~a).~%;;;~%~%"
-           data (current-user) (current-host) (current-time :long :pretty))
-          (format 
-           stream
-           "[~d] (~a of ~d) {~d} `~a'~@[ [~a]~]~%~a~%"
-           (+ parse-id offset)
-           (length active) (length results) i-wf
-           input i-comment #\page)
-          
-          (export-tree item active :offset offset :stream stream)
-          (unless *redwoods-thinning-export-p*
-            (export-tree
-             item active :complementp t :offset offset :stream stream))
+        (if compositep
+          (unless firstp (format out "~c~%" (code-char 4)))
+          (let ((file (format 
+                       nil "~a/~@[~a.~]~d~@[.~a~]" 
+                       target prefix (+ parse-id offset) suffix)))
+            (multiple-value-setq (out foo pid)
+              (run-process
+               compressor :wait nil :input :stream
+               :output file :if-output-exists :supersede
+               :error-output nil))
+            (format
+             out
+             ";;;~%;;; Redwoods export of `~a';~%;;; (~a@~a; ~a).~%;;;~%~%"
+             data (current-user)
+             (current-host) (current-time :long :pretty))))
 
-          (force-output stream)
-          (close stream)
-          (sys:os-wait nil pid))
-        
+        (format 
+         out
+         "[~d] (~a of ~d) {~d} `~a'~@[ [~a]~]~%"
+         (+ parse-id offset)
+         (length active) (length results) i-wf
+         input (and (not (equal i-comment "nil"))))
+
+        (export-tree item active :offset offset :out out :stream stream)
+        (unless *redwoods-thinning-export-p*
+          (export-tree
+           item active :complementp t :offset offset :out out :stream stream))
+
+        (force-output out)
+        (unless compositep
+          (close out)
+          #+:allegro
+          (sys:os-wait nil pid)
+          (setf out nil pid nil))
+
+        (setf firstp nil)
         (when increment (meter-advance increment))
       when (interrupt-p interrupt) do
+        (when out (close out))
+        #+:allegro
+        (when pid (sys:os-wait nil pid))
         (format 
          stream
          "[~a] export-trees(): external interrupt signal~%"
@@ -1392,11 +1417,15 @@
         (force-output stream)
         (return)
       finally
+        (when compositep
+          (close out)
+          #+:allegro
+          (sys:os-wait nil pid))
         (when meter (meter :value (get-field :end meter)))
         (when gc-strategy (restore-gc-strategy gc-strategy))))
 
 (defun export-tree (item active 
-                    &key complementp (offset 0) (stream *tsdb-io*))
+                    &key complementp (offset 0) (out t) (stream *tsdb-io*))
 
   #+:debug
   (setf %item% item %active% active)
@@ -1444,82 +1473,89 @@
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
       when (and activep (or dag mrs)) do
         (format 
-         stream 
-         "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
-         (+ parse-id offset) result-id complementp)
+         out 
+         "~c~%[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
+         #\page (+ parse-id offset) result-id complementp)
         (setf lkb::*cached-category-abbs* nil)
         (when (or (eq *redwoods-export-values* :all)
                   (smember :derivation *redwoods-export-values*))
           (let ((*package* (find-package :tsdb)))
-            (format stream "~s~%~%~%" derivation)))
+            (format out "~s~%~%~%" derivation)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :tree *redwoods-export-values*))
           (if tree
-            (format stream "~a~%~%" tree)
-            (format stream "()~%~%")))
+            (format out "~a~%~%" tree)
+            (format out "()~%~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :avm *redwoods-export-values*))
-          (lkb::display-dag1 dag 'lkb::compact stream)
-          (format stream "~%~%"))
+          (lkb::display-dag1 dag 'lkb::compact out)
+          (format out "~%~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mrs *redwoods-export-values*))
-          (mrs::output-mrs1 mrs 'mrs::simple stream))
+          (mrs::output-mrs1 mrs 'mrs::simple out))
         (when (and (not (eq *redwoods-export-values* :all))
                    (smember :indexed *redwoods-export-values*))
-          (mrs::output-mrs1 mrs 'mrs::indexed stream))
+          (mrs::output-mrs1 mrs 'mrs::indexed out))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :prolog *redwoods-export-values*))
-          (mrs::output-mrs1 mrs 'mrs::prolog stream)
-          (format stream "~%"))
+          (mrs::output-mrs1 mrs 'mrs::prolog out)
+          (format out "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mrx *redwoods-export-values*))
-          (mrs::output-mrs1 mrs 'mrs::mrs-xml stream)
-          (format stream "~%"))
+          (mrs::output-mrs1 mrs 'mrs::mrs-xml out)
+          (format out "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :rmrs *redwoods-export-values*))
 	  (ignore-errors
-	   (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::compact stream)
-	   (format stream "~%")))
+	   (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::compact out)
+	   (format out "~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :xml *redwoods-export-values*))
 	  (ignore-errors
 	   (mrs::output-rmrs1
 	    (mrs::mrs-to-rmrs mrs)
-	    'mrs::xml stream nil nil i-input ident)
-	   (format stream "~%")))
+	    'mrs::xml out nil nil i-input ident)
+	   (format out "~%")))
         (when (or (eq *redwoods-export-values* :all)
+                  (smember :eds *redwoods-export-values*)
                   (smember :dependencies *redwoods-export-values*))
-          (ignore-errors (mrs::ed-output-psoa mrs :stream stream)))
+          (ignore-errors (mrs::ed-output-psoa mrs :stream out)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :triples *redwoods-export-values*))
           (ignore-errors
            (mrs::ed-output-psoa
             mrs :format :triples :cargp nil :markp nil :lnkp nil
-            :collocationp t :abstractp t :stream stream)))
+            :collocationp t :abstractp t :stream out)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mtriples *redwoods-export-values*))
           (ignore-errors
            (mrs::ed-output-psoa
             mrs :format :triples :cargp nil :markp t :lnkp nil
             :collocationp t :abstractp t
-            :stream stream)))
+            :stream out)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :ltriples *redwoods-export-values*))
           (ignore-errors
            (mrs::ed-output-psoa
             mrs :format :triples  :cargp t :markp nil :lnkp t
-            :collocationp nil :abstractp nil :stream stream)))
+            :collocationp nil :abstractp nil :stream out)))
+        ;;
+        ;; _fix_me_
+        ;; it appears this function is just called for its side effect, as it
+        ;; is not given access to the .out. stream?             (2-jun-10; oe)
+        ;;
         #+:cambridge
         (when (smember :qa *redwoods-export-values*)
           (mrs::output-rmrs-from-itsdb
            (+ parse-id offset) 
            (or (get-field :o-input item) (get-field :i-input item))
-           mrs))
-        (format stream "~c~%" #\page)))
+           mrs))))
 
 (defun semantic-equivalence (data
                              &key condition
-                                  (file (format nil "~a/equivalences" (tmp))))
+                                  (file (format
+                                         nil "~a/equivalences"
+                                         (tmp :redwoods))))
   
   (loop
       with stream = (open file :direction :output :if-exists :supersede)
@@ -2822,13 +2858,15 @@
         with condition
         = (case task
             ((:fc :rank)
-             (if resolvedp
-               (if (and condition (not (equal condition "")))
-                 (format nil "t-active > 0 && readings > 1 && (~a)" condition)
-                 "t-active > 0 && readings > 1")
-               (if (and condition (not (equal condition "")))
-                 (format nil "readings > 1 && (~a)" condition)
-                 "readings > 1")))
+             (if (eq *redwoods-task* :classify)
+               condition
+               (if resolvedp
+                 (if (and condition (not (equal condition "")))
+                   (format nil "t-active > 0 && readings > 1 && (~a)" condition)
+                   "t-active > 0 && readings > 1")
+                 (if (and condition (not (equal condition "")))
+                   (format nil "readings > 1 && (~a)" condition)
+                   "readings > 1"))))
             (t condition))
         for i from 0
         for remaining on profiles
@@ -2942,15 +2980,18 @@
    
    (t
     (let* ((thorough
-            (nconc
+            (append
              (when (or (>= *feature-grandparenting* 0)
                        (> *feature-ngram-size* 0))
                '(:derivation))
              (when *feature-flags*
-               '(:flags))))
+               '(:flags))
+             (when (eq *redwoods-task* :rank)
+               '(:surface))))
             (data (analyze
-                   profiles :thorough (cons :surface thorough)
-                   :condition condition :gold profiles)))
+                   profiles :thorough thorough :condition condition
+                   :gold (and (eq *redwoods-task* :rank) profiles)
+                   :commentp t)))
       (setf lastp lastp)
       (case task
         (:fc
@@ -2960,12 +3001,13 @@
                (loop
                    for item in data
                    do (call-raw-hook enhancer item)))
-         (setf data
-           (loop  
-               for item in data
-               for readings = (get-field :readings item)
-               for ranks = (length (get-field :ranks item))
-               unless (or (= readings ranks) (null ranks)) collect item))
+         (when (eq *redwoods-task* :rank)
+           (setf data
+             (loop  
+                 for item in data
+                 for readings = (get-field :readings item)
+                 for ranks = (length (get-field :ranks item))
+                 unless (or (= readings ranks) (null ranks)) collect item)))
          (cache-features
           data model :createp firstp
           :stream stream :verbose verbose))
@@ -3071,7 +3113,8 @@
              ;;
              (:svm (let* ((output (format
                                    nil "~a/.model.~a.~a.svm_weights"
-                                   (tmp) (current-user) (current-pid)))
+                                   (tmp :redwoods)
+                                   (current-user) (current-pid)))
 
                           ;;
                           ;; _fix_me_

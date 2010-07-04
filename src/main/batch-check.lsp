@@ -126,7 +126,19 @@
 					    start-path)
 		    lex-id
 		    (reverse start-path)
-		    output-stream))
+		    output-stream)
+          (when (and *lexicon-tokens-path*
+                     (null (existing-dag-at-end-of
+                            (tdfs-indef new-fs) *lexicon-tokens-path*)))
+            (format
+             output-stream "~%No *lexicon-tokens-path* (~{~a~^.~}) in ~a.~%"
+             *lexicon-tokens-path* lex-id))
+          (when (and *lexicon-last-token-path*
+                     (null (existing-dag-at-end-of
+                            (tdfs-indef new-fs) *lexicon-last-token-path*)))
+            (format
+             output-stream "~%No *lexicon-last-token-path* (~{~a~^.~}) in ~a.~%"
+             *lexicon-last-token-path* lex-id)))
 	new-fs)))))
 
 (defun sanitize (dag-instance id path &optional (ostream t))

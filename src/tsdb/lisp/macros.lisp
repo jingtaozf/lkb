@@ -38,11 +38,23 @@
 (defmacro smember (element list)
   `(loop for foo in (the list ,list) thereis (eq ,element foo)))
 
+(defmacro test-field (field alist)
+  `(consp (assoc ,field ,alist)))
+
 (defmacro get-field (field alist)
   `(rest (assoc ,field ,alist)))
 
 (defmacro get-field+ (field alist &optional default)
   `(or (rest (assoc ,field ,alist)) ,default))
+
+(defmacro set-field (field value alist)
+  `(loop
+       for list = ,alist then tail
+       for tail = (rest list)
+       when (eq ,field (first (first list)))
+       do (setf (rest (first list)) ,value) and return t
+       else when (null tail)
+       do (setf (rest list) (acons ,field ,value nil)) and return nil))
 
 (defmacro find-tsdb-directory (language &key test)
   `(let* ((home (make-pathname :directory *tsdb-home*))
@@ -97,8 +109,8 @@
      -1
      (/ ,time (cond
                ((zerop ,granularity) 10)
-               ((= ,granularity 9808) 100)
-               ((>= ,granularity 9902) 1000)))))
+               ((= ,granularity 199808) 100)
+               ((>= ,granularity 199902) 1000)))))
 
 (defmacro make-meter (start end)
   `(pairlis (list :start :end) (list ,start ,end)))

@@ -63,6 +63,29 @@
    (get-field :i-id item) (get-field :i-input item))
   (let ((flags (make-hash-table :test #'eql)))
     #+:mrs
+    (loop
+        for result in (get-field :results item)
+        for mrs = (get-field :mrs result)
+        for edge = (get-field :edge result)
+        for derivation = (get-field :derivation result)
+        when (and (or (null mrs) (and (stringp mrs) (string= mrs "")))
+                  (null edge)) 
+        do 
+          (setf edge (ignore-errors (reconstruct derivation)))
+          (when edge (nconc result (acons :edge edge nil)))
+        when (and (null mrs) edge)
+        do
+          (setf mrs (mrs::extract-mrs edge))
+          (when (mrs::psoa-p mrs) (nconc result (acons :mrs mrs nil)))
+        when (and (stringp mrs) (string= mrs "") edge)
+        do
+          (setf mrs (mrs::extract-mrs edge))
+          (when (mrs::psoa-p mrs) (setf (get-field :mrs result) mrs))
+        when (stringp mrs)
+        do
+          (setf mrs (mrs::read-mrs-from-string mrs))
+          (when (mrs::psoa-p mrs) (setf (get-field :mrs result) mrs)))
+    #+:mrs
     (when (and (smember :sparseness *filter-test*)
                (numberp *filter-mrs-relations-ratio*)
                (not (zerop *filter-mrs-relations-ratio*)))
@@ -70,11 +93,7 @@
           with length = (get-field :i-length item)
           for result in (get-field :results item)
           for id = (get-field :result-id result)
-          for mrs = (let ((mrs (get-field :mrs result)))
-                      (if (stringp mrs)
-                        (let ((mrs (mrs::read-mrs-from-string mrs)))
-                          (setf (get-field :mrs result) mrs))
-                        (and (mrs::psoa-p mrs) mrs)))
+          for mrs = (get-field :mrs result)
           for size = (and mrs (length (mrs::psoa-liszt mrs)))
           when (and (numberp length) (not (zerop length))
                     (or (null size) (zerop size)
@@ -85,11 +104,7 @@
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
-          for mrs = (let ((mrs (get-field :mrs result)))
-                      (if (stringp mrs)
-                        (let ((mrs (mrs::read-mrs-from-string mrs)))
-                          (setf (get-field :mrs result) mrs))
-                        (and (mrs::psoa-p mrs) mrs)))
+          for mrs = (get-field :mrs result)
           for nulls = nil
           when mrs do
             (loop
@@ -127,11 +142,7 @@
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
-          for mrs = (let ((mrs (get-field :mrs result)))
-                      (if (stringp mrs)
-                        (let ((mrs (mrs::read-mrs-from-string mrs)))
-                          (setf (get-field :mrs result) mrs))
-                        (and (mrs::psoa-p mrs) mrs)))
+          for mrs = (get-field :mrs result)
           for cheap = (when (and mrs (smember :cscope *filter-test*))
                         (let* ((stream (make-string-output-stream))
                                (*standard-output* stream)
@@ -270,27 +281,36 @@
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
-          for mrs = (let ((mrs (get-field :mrs result)))
-                      (if (stringp mrs)
-                        (let ((mrs (mrs::read-mrs-from-string mrs)))
-                          (setf (get-field :mrs result) mrs))
-                        (and (mrs::psoa-p mrs) mrs)))
+          for mrs = (get-field :mrs result)
           for fragments = (when mrs (mt:fragmentp mrs))
           when fragments
           do 
             (let ((output (format nil "~a fragment~p" fragments fragments)))
               (push (list :fragmentation output) (gethash id flags)))))
 
+    #+:mrs
+    (when (smember :lnk *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (get-field :mrs result)
+          for bogus = nil
+          when mrs do
+            (loop
+                for ep in (mrs:psoa-liszt mrs)
+                unless (mrs::rel-lnk ep)
+                do (push (mrs:rel-pred ep) bogus))
+          when bogus
+          do 
+            (let ((output (format nil "~{`~(~a~)'~^, ~}" bogus)))
+              (push (list :lnk output) (gethash id flags)))))
+    
     #+:mt
     (when (smember :semi *filter-test*)
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
-          for mrs = (let ((mrs (get-field :mrs result)))
-                      (if (stringp mrs)
-                        (let ((mrs (mrs::read-mrs-from-string mrs)))
-                          (setf (get-field :mrs result) mrs))
-                        (and (mrs::psoa-p mrs) mrs)))
+          for mrs = (get-field :mrs result)
           for invalid = (when mrs (mt:test-semi-compliance mrs))
           when invalid
           do 
@@ -355,6 +375,11 @@
                        (format 
                         t 
                         "    fragmentation: ~a.~%"
+                        (second foo)))
+                      (:lnk
+                       (format 
+                        t 
+                        "    surface linking: ~a.~%"
                         (second foo)))
                       (:semi
                        (format 

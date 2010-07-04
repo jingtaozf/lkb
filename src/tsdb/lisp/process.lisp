@@ -87,7 +87,7 @@
          (fan (or fan
                   (when (eq type :translate)
                     (merge-pathnames
-                     (user-homedir-pathname)
+                     (make-pathname :directory (log-directory))
                      (make-pathname 
                       :name (directory2file data)
                       :type "fan")))))
@@ -96,7 +96,7 @@
                   #+:null
                   (when (eq type :translate)
                     (merge-pathnames
-                     (user-homedir-pathname)
+                     (make-pathname :directory (log-directory))
                      (make-pathname 
                       :name (directory2file data)
                       :type "xml")))))
@@ -366,8 +366,8 @@
                              (stream *tsdb-io*)
                              (file (format 
                                     nil 
-                                    "/tmp/pvm.debug.~a"
-                                    (current-user)))
+                                    "~a/pvm.debug.~a"
+                                    (tmp :pvm) (current-user)))
                              status interrupt)
   
   (initialize-tsdb)
@@ -1451,12 +1451,19 @@
   ;; PVM buffer could not be read because of array size limitations :-{), fix
   ;; up .result. with information from .item.
   ;;
-  (when (null (get-field :i-id result))
-    (nconc result (acons :i-id (get-field :i-id item) nil)))
-  (when (null (get-field :parse-id result))
-    (nconc result (acons :parse-id (get-field :parse-id item) nil)))
-  (when (null (get-field :run-id result))
-    (nconc result (acons :run-id (get-field :run-id item) nil)))
+  ;; as we moved to 64-bit integers in tsdb(1) (`long long') to accomodate the
+  ;; Wikipedia identifier space, we cannot trust values transmitted via PVM (in
+  ;; the integer range exceeding 2,147,483,647).  however, i see no reason why
+  ;; :i-id and :parse-id should be passed to clients in the first place.  they
+  ;; should be purged from the [incr tsdb()] C API eventually; in the meantime,
+  ;; always propagate these values from .item. into .result.     (9-oct-09; oe)
+  ;;
+  (let ((i-id (get-field :i-id item))
+        (parse-id (get-field :parse-id item))
+        (run-id (get-field :run-id item)))
+    (when i-id (set-field :i-id i-id result))
+    (when parse-id (set-field :parse-id parse-id result))
+    (when run-id (set-field :run-id run-id result)))
   
   (let* ((readings (get-field :readings result))
          (results (get-field :results result)))

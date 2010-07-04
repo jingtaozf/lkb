@@ -216,7 +216,7 @@
     ;;
     ;; _fix_me_
     ;; incorporate support for grammar checking application, using an
-    ;; additional set of `mal' rules that detect and correct certain errors
+    ;; additional set of `mal' rules that detect and correct certain error
     ;; types, hence want to be available in parsing at times but probably never
     ;; in generation.  this would seem to call for a better generalization,
     ;; allowing grammars to tag rules according to various contexts for use,

@@ -356,13 +356,24 @@
           (remove-duplicates grammars :test #'string-equal)))
     (when (null (rest grammars)) (first grammars))))
 
-(defun tmp (&optional (context :redwoods))
+(defun log-directory (&optional context)
+  (declare (ignore context))
+  (case context
+    (t
+     (let* ((log #+:logon (getenv "LOGONLOG") #-:logon nil)
+            (log (and log (namestring (parse-namestring log)))))
+       (or log (namestring (user-homedir-pathname)))))))
+
+(defun tmp (&optional context)
   (case context
     (:redwoods
-     (let* ((tmp (getenv "REDWOODSTMP"))
+     (let* ((tmp (or (getenv "REDWOODSTMP") #+:logon (getenv "LOGONTMP")))
             (tmp (and tmp (namestring (parse-namestring tmp)))))
        (or tmp "/tmp")))
-    (t "/tmp")))
+    (t
+     (let* ((tmp #+:logon (getenv "LOGONTMP") #-:logon nil)
+            (tmp (and tmp (namestring (parse-namestring tmp)))))
+       (or tmp "/tmp")))))
 
 (defun current-application ()
   (cond ((and *pvm-clients*
@@ -458,8 +469,8 @@
         (format nil "~2,'0d-~2,'0d-~2,'0d" (mod year 100) month day))
        ((member long '(:tsdb))
         (format
-         nil "~a-~a-~a ~2,'0d:~2,'0d" 
-         day (nth (- month 1) months) year hour minute))
+         nil "~a-~a-~a ~2,'0d:~2,'0d:~2,'0d" 
+         day (nth (- month 1) months) year hour minute second))
        ((member long '(:pretty :readable))
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d h)" 
@@ -503,32 +514,31 @@
   (let* ((conses (get-field+ :conses result 0))
          (symbols (get-field+ :symbols result 0))
          (others (get-field+ :others result 0))
-         (total (+ conses symbols others)))
-    (concatenate 'string
-      (pprint-potentially-large-integer conses)
-      (unless (zerop conses)
-        (string separator))
-      (pprint-potentially-large-integer symbols)
-      (unless (zerop symbols)
-        (string separator))
-      (pprint-potentially-large-integer others)
-      (unless (zerop others)
-        (string separator))
-      (unless (zerop total)
-        "= ")
-      (pprint-potentially-large-integer total))))
-
+         total)
+    (when (or (not (numberp conses)) (= conses -1)) (setf conses 0))
+    (when (or (not (numberp symbols)) (= symbols -1)) (setf symbols 0))
+    (when (or (not (numberp others)) (= others -1)) (setf others 0))
+    (setf total (+ conses symbols others))
+    
+    (if (and (zerop conses) (zerop symbols))
+      (pprint-potentially-large-integer total)
+      (concatenate 'string
+        (pprint-potentially-large-integer conses)
+        (string separator)
+        (pprint-potentially-large-integer symbols)
+        (string separator)
+        (pprint-potentially-large-integer others)
+        "= "
+        (pprint-potentially-large-integer total)))))
 
 (defun pprint-potentially-large-integer (n)
-  (cond #+:null
-        ((zerop n) "")
-        ((not (numberp n)) "")
+  (cond ((not (numberp n)) "")
         ((>= n (* (expt 2 30) 10)) (format nil "~dg" (round n (expt 2 30))))
-        ((>= n (expt 2 30)) (format nil "~,1fg" (/ n (expt 2 30))))
+        ((>= n (expt 2 30)) (format nil "~,1fG" (/ n (expt 2 30))))
         ((>= n (* (expt 2 20) 10)) (format nil "~dm" (round n (expt 2 20))))
-        ((>= n (expt 2 20)) (format nil "~,1fm" (/ n (expt 2 20))))
+        ((>= n (expt 2 20)) (format nil "~,1fM" (/ n (expt 2 20))))
         ((>= n (* (expt 2 10) 10)) (format nil "~dk" (round n (expt 2 10))))
-        ((>= n (expt 2 10)) (format nil "~,1fk" (/ n (expt 2 10))))
+        ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 
 (defun create-output-stream (file 

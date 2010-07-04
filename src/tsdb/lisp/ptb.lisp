@@ -140,6 +140,10 @@
    ((string-equal pos "-lrb-") "(")
    #+:null
    ((string-equal pos "-rrb-") ")")
+   ((string-equal token "``") "“")
+   ((string-equal token "''") "”")
+   ((string-equal token "`") "‘")
+   ((string-equal token "'") "’")
    (t token)))
 
 (defun ptb-preprocess (string 

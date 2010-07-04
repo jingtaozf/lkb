@@ -1,5 +1,21 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: TSDB -*-
 
+;;;
+;;; Copyright (c) 1996 -- 2000 Stephan Oepen (oe@coli.uni-sb.de)
+;;; Copyright (c) 2001 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2007 -- 2010 Stephan Oepen (oe@ifi.uio.no)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;        file:
 ;;;      module:
@@ -16,7 +32,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(in-package "TSDB")
+(in-package :tsdb)
 
 (defparameter *import-tsnlp-style-p* nil)
 
@@ -47,6 +63,8 @@
     "Message-ID:"))
 
 (defparameter *import-result-hook* nil)
+
+(defparameter *import-normalize-p* t)
 
 (defun do-import-database (source target &key absolute meter except)
   
@@ -145,18 +163,18 @@
      ((and (null status) (null create))
       (format *tsdb-io* "import-items(): invalid database `~a'.~%" data)
       2)
-     ((eq (get-field :status status) :ro)
+     ((and (eq (get-field :status status) :ro) (not (eq create :purge)))
       (format *tsdb-io* "import-items(): read-only database `~a'.~%" data)
       3)
      ((and (null tstatus) (null create))
       (format *tsdb-io* "import-items(): invalid database `~a'.~%" target)
       12)
-     ((eq (get-field :status tstatus) :ro)
+     ((and (eq (get-field :status tstatus) :ro) (not (eq create :purge)))
       (format *tsdb-io* "import-items(): read-only database `~a'.~%" target)
       13)
      (t
       (when (and create 
-                 (or (null status)
+                 (or (null status) (eq create :purge)
                      (not (find "item" (read-database-schema path :absolute t)
                                 :test #'string= :key #'first))))
         (unless (purge-directory path)
@@ -175,7 +193,7 @@
           
         (select "i-id" :integer "item" nil path :absolute t))
       (when (and create tpath
-                 (or (null tstatus)
+                 (or (null tstatus) (eq create :purge)
                      (not (find "item" (read-database-schema tpath :absolute t)
                                 :test #'string= :key #'first))))
         (unless (purge-directory tpath)
@@ -249,7 +267,8 @@
            (item
             (insert
              path "item" item :absolute t 
-             :normalize (not (smember format '(:conll)))
+             :normalize (and *import-normalize-p*
+                             (not (smember format '(:conll))))
              :meter (if item-phenomenon 
                       imeter
                       (when (and imeter ipmeter)
@@ -287,12 +306,21 @@
   (let* ((lines (and meter (get-field :lines (wc file))))
          (increment (when (and lines (> lines 0))
                       (/ (mduration meter) lines)))
-         (stream (open file :direction :input :if-does-not-exist :error))
          (format "none")
          (author (current-user))
          (date (current-time))
          (index 0)
-         item phenomenon item-phenomenon)
+         stream pid foo item phenomenon item-phenomenon)
+    (setf foo foo)
+    (if (ppcre:scan "\\.gz$" (namestring file))
+      (let ((file (probe-file file)))
+        (when file
+          (multiple-value-setq (stream foo pid)
+            (run-process
+             (format nil "gzip -d -c '~a'" (namestring file))
+             :wait nil :output :stream :input "/dev/null"
+             :error-output "/dev/null" :if-error-output-exists :append))))
+      (setf stream (open file :direction :input :if-does-not-exist :error)))
     (when stream
       #+:allegro
       (when encoding (setf (stream-external-format stream) encoding))
@@ -346,19 +374,29 @@
                        (comment 
                         (format
                          nil
-                         "~@[~a~]~@[ ~a~]"
-                         comment
+                         "~@[~a~]~:[~; ~]~@[~a~]"
+                         comment comment
                          (when break
                            (normalize-string 
                             (subseq string (+ break (length separator)))))))
+                       (comment
+                        (let ((n (- (length comment) 1)))
+                          (or 
+                           (when (and (< 0 n)
+                                      (char= (schar comment 0) #\()
+                                      (char= (schar comment n) #\)))
+                             (ignore-errors (read-from-string comment)))
+                           (unless (string= comment "") comment))))
                        (string (if break
                                  (subseq string 0 (max break 0)) 
                                  string))
-                       (input (string-trim '(#\Space #\Tab) string))
+                       (input (if *import-normalize-p*
+                                (string-trim '(#\Space #\Tab) string)
+                                string))
                        (oinput 
                         (when (find-attribute-reader :i-input)
                           (funcall (find-attribute-reader :i-input) input))))
-                  (multiple-value-bind (ninput length)
+                  (multiple-value-bind (ninput length tokens)
                       (if (get-field :header extras)
                         (values input -1)
                         (normalize-item (or oinput input)))
@@ -371,16 +409,28 @@
                                   (t 1))))
                         (when (functionp shift)
                           (setf id (funcall shift id)))
-                        (push (pairlis '(:i-id :i-origin :i-register :i-format
-                                         :i-difficulty :i-category :i-input
-                                         :i-wf :i-length :i-comment
-                                         :i-author :i-date)
-                                       (list id origin register format
-                                             difficulty category 
-                                             (if oinput input ninput)
-                                             wf length
-                                             comment author date))
-                              item)
+                        (when tokens
+                          (cond
+                           ((null comment)
+                            (setf comment (acons :tokens tokens nil)))
+                           ((consp comment)
+                            (nconc comment (acons :tokens tokens nil)))))
+                        (push
+                         (pairlis '(:i-id :i-origin :i-register
+                                    :i-format :i-difficulty :i-category
+                                    :i-input :i-wf :i-length :i-comment
+                                    :i-author :i-date)
+                                  (list id origin register
+                                        format difficulty category 
+                                        (if oinput input ninput)
+                                        wf length
+                                        (if (stringp comment)
+                                          comment
+                                          (write-to-string
+                                           comment 
+                                           :case :downcase))
+                                        author date))
+                         item)
                         (when phenomenon
                           (push (pairlis '(:ip-id :i-id :p-id
                                            :ip-author :ip-date)
@@ -391,6 +441,8 @@
             (setf context nil))
 
       (close stream)
+      #+:allegro
+      (when (integerp pid) (sys:os-wait nil pid))
       (when meter (meter :value (get-field :end meter)))
       (values 
        (nreverse item) (nreverse phenomenon) (nreverse item-phenomenon)))))
@@ -412,13 +464,22 @@
   (let* ((lines (and meter (get-field :lines (wc file))))
          (increment (when (and lines (> lines 0))
                       (/ (mduration meter) lines)))
-         (stream (open file :direction :input :if-does-not-exist :error))
          (format "none")
          (author (current-user))
          (date (current-time))
          (index 0)
          (delta 0)
-         item phenomenon item-phenomenon output titem tis)
+         stream pid foo item phenomenon item-phenomenon output titem tis)
+    (setf foo foo)
+    (if (ppcre:scan "\\.gz$" (namestring file))
+      (let ((file (probe-file file)))
+        (when file
+          (multiple-value-setq (stream foo pid)
+            (run-process
+             (format nil "gzip -d -c '~a'" (namestring file))
+             :wait nil :output :stream :input "/dev/null"
+             :error-output "/dev/null" :if-error-output-exists :append))))
+      (setf stream (open file :direction :input :if-does-not-exist :error)))
     (when stream
       #+:allegro
       (when encoding (setf (stream-external-format stream) encoding))
@@ -541,6 +602,8 @@
             (setf context :item))
 
       (close stream)
+      #+:allegro
+      (when (integerp pid) (sys:os-wait nil pid))
       (when meter (meter :value (get-field :end meter)))
       (values
        ;;
@@ -557,42 +620,51 @@
                 (member char *import-punctuation* :test #'char=)))
          (whitespacep (char)
            (member char '(#\Space #\Tab #\Newline) :test #'char=)))
-    (let ((string (string-trim '(#\Space #\Tab #\Newline) string))
-          (result (make-array 4096
-                              :element-type 'character
-                              :adjustable t :fill-pointer 0))
-          (n 0)
-          (previous :whitespace)
-          foo)
-      (loop
-          for i from 0 to (- (length string) 1) by 1
-          for current = (char string i)
-          do
-            (cond
-             ((and (whitespacep current) (eq previous :regular))
-              (vector-push-extend #\Space result 1024)
-              (setf previous :whitespace)
-              (incf n))
-             ((and (whitespacep current) (eq previous :whitespace)))
-             ((and (punctuationp current) (eq previous :regular))
-              (vector-push-extend #\Space result 1024)
-              (vector-push-extend current result 1024)
-              (vector-push-extend #\Space result 1024)
-              (setf previous :whitespace)
-              (incf n))
-             ((and (punctuationp current) (eq previous :whitespace))
-              (vector-push-extend current result 1024)
-              (vector-push-extend #\Space result 1024)
-              (setf previous :whitespace))
-             (t
-              (vector-push-extend current result 1024)
-              (setf previous :regular))))
-      (when (eq previous :regular) (incf n))
-      (when *tsdb-preprocessing-hook*
-        (multiple-value-setq (foo n) 
-          (call-safe-hook *tsdb-preprocessing-hook* string)))
-      (setf foo foo)
-      (values (string-right-trim '(#\Space) result) (or n -1)))))
+    (if *import-normalize-p*
+      (let ((string (string-trim '(#\Space #\Tab #\Newline) string))
+            (result (make-array 
+                     4096 :element-type 'character
+                     :adjustable t :fill-pointer 0))
+            (n 0)
+            (previous :whitespace))
+        (loop
+            for i from 0 to (- (length string) 1) by 1
+            for current = (char string i)
+            do
+              (cond
+               ((and (whitespacep current) (eq previous :regular))
+                (vector-push-extend #\Space result 1024)
+                (setf previous :whitespace)
+                (incf n))
+               ((and (whitespacep current) (eq previous :whitespace)))
+               ((and (punctuationp current) (eq previous :regular))
+                (vector-push-extend #\Space result 1024)
+                (vector-push-extend current result 1024)
+                (vector-push-extend #\Space result 1024)
+                (setf previous :whitespace)
+                (incf n))
+               ((and (punctuationp current) (eq previous :whitespace))
+                (vector-push-extend current result 1024)
+                (vector-push-extend #\Space result 1024)
+                (setf previous :whitespace))
+               (t
+                (vector-push-extend current result 1024)
+                (setf previous :regular))))
+        (when (eq previous :regular) (incf n))
+        (let ((result (string-right-trim '(#\Space) result))
+              tokens)
+          (when *tsdb-preprocessing-hook*
+            (multiple-value-setq (tokens n) 
+              (call-safe-hook *tsdb-preprocessing-hook* result))
+            (unless (numberp n) (setf n (length tokens))))
+          (values result (or n -1) tokens)))
+      (let ((n (length (ppcre:split "[ \\t]+" string)))
+            tokens)
+        (when *tsdb-preprocessing-hook*
+          (multiple-value-setq (tokens n) 
+            (call-safe-hook *tsdb-preprocessing-hook* string))
+          (unless (numberp n) (setf n (length tokens))))
+        (values string n tokens)))))
 
 (defun strip-identifier (string)
   (multiple-value-bind (start end) 

@@ -118,7 +118,8 @@
 (defparameter *edge-registry* (make-hash-table))
 
 (defun purge-edge-registry ()
-  (clrhash *edge-registry*))
+  (when (hash-table-p *edge-registry*)
+    (clrhash *edge-registry*)))
 
 (defun register-edge (edge)
   (if (hash-table-p *edge-registry*)

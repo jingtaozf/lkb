@@ -455,14 +455,21 @@
 ;;; to the graph package - then displays it with active nodes
 
 #-tty
-(defun display-parse-tree (edge display-in-chart-p)
-  (when display-in-chart-p 
-    (display-edge-in-chart edge))
-  (let ((edge-symbol (make-new-parse-tree edge 1)))
-    (draw-new-parse-tree edge-symbol 
-			 (format nil "Edge ~A ~A" (edge-id edge) 
-				 (if (g-edge-p edge) "G" "P"))
-			 nil)))
+(defun display-parse-tree (edge display-in-chart-p
+                           &key input symbol title counter)
+  (when (and edge display-in-chart-p) (display-edge-in-chart edge))
+  (let ((symbol (or symbol (and edge (make-new-parse-tree edge 1))))
+        (edge (or edge (and symbol (get symbol 'edge-record))))
+        (title (or title 
+                   (and edge (format
+                              nil
+                              "Edge ~A ~A" (edge-id edge)
+                              (if (g-edge-p edge) "G" "P"))))))
+    (when symbol
+      (with-parser-lock ()
+        (if #+:lui (lui-status-p :tree) #-:lui nil
+          #+:lui (lui-show-parses (list edge) input) #-:lui nil
+          (draw-new-parse-tree symbol title nil counter))))))
    
 (defun make-new-parse-tree (edge level &optional labelp)
   (let ((tree (with-unification-context (nil)

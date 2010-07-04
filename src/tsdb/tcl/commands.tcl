@@ -1,6 +1,7 @@
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment
-# Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 2007 -- 2009 Stephan Oepen (oe@ifi.uio.no)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -1303,6 +1304,7 @@ proc tsdb_filters {} {
   set code "(";
   if {$globals(filters,sparseness)} { set code "$code :sparseness"; }
   if {$globals(filters,predicate)} { set code "$code :predicate"; }
+  if {$globals(filters,lnk)} { set code "$code :lnk"; }
   if {$globals(filters,syntax)} { set code "$code :syntax"; }
   if {$globals(filters,semi)} { set code "$code :semi"; }
   if {$globals(filters,ascope)} { set code "$code :ascope"; }

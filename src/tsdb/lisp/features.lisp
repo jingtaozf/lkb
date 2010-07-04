@@ -474,14 +474,7 @@
           ;; is generated, so we need to deliberately release quasi-destructive
           ;; intermediate structures; this was hard to debug.   (21-nov-07; oe)
           ;;
-          #+:debug
-          (excl:print-type-counts)
-          (lkb::release-temporary-storage)
-          #+:debug
-          (let ((*tsdb-gc-debug* nil))
-            (excl:print-type-counts)
-            (excl:gc)
-            (excl:print-type-counts)))
+          (lkb::release-temporary-storage))
 
 	(loop
 	    with i = 0
@@ -493,7 +486,7 @@
               (format
                stream
                "~&[~a] cache-features(): ~
-                ignoring item # ~d (no edge for ~d)~%"
+                ignoring item # ~d (no features for ~d)~%"
                (current-time :long :short) iid rid)
 	      (return)
 	    else do
@@ -842,6 +835,11 @@
                      (loop
                          with n = (length weights)
                          with average = (/ (sum weights) n)
+                         ;;
+                         ;; _fix_me_
+                         ;; i suspect that should be (rest weights) below, to
+                         ;; compute the degree of (im)balance among daughters.
+                         ;;                                     (26-may-10; oe)
                          for foo in weights
                          sum (expt (- foo average) 2) into bar
                          finally

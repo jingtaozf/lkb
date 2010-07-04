@@ -4,7 +4,8 @@ exec $LOGONROOT/lingo/lkb/bin/linux.x86.32/swish++ "$0" "$@"
 
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment
-# Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 2007 -- 2009 Stephan Oepen (oe@ifi.uio.no)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -1142,6 +1143,9 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Predicate" \
     -variable globals(filters,predicate) \
     -command tsdb_filters -state disabled;
+  .menu.options.menu.filters add checkbutton -label "MRS Linking" \
+    -variable globals(filters,lnk) \
+    -command tsdb_filters;
   .menu.options.menu.filters add checkbutton -label "MRS Syntax" \
     -variable globals(filters,syntax) \
     -command tsdb_filters;

@@ -45,8 +45,8 @@
                    meter))
          (ometer (when output
                    (madjust + (madjust * meter 0.5) (mduration imeter))))
-         (items (select '("i-id" "i-wf" "i-length" "i-input")
-                        '(:integer :integer :integer :string)
+         (items (select '("i-id" "i-wf" "i-length" "i-input" "i-comment")
+                        '(:integer :integer :integer :string :string)
                         "item"
                         (unless mrs condition)
                         data
@@ -93,6 +93,16 @@
                               (max oedges (get-field+ :o-edges record -1)))
                           collect record))
                   do
+                    (let* ((comment (get-field :i-comment item))
+                           (n (when (stringp comment) (- (length comment) 1))))
+                      (when (and n (< 3 n)
+                                 (char= (schar comment 0) #\()
+                                 (char= (schar comment 1) #\()
+                                 (char= (schar comment (- n 1)) #\))
+                                 (char= (schar comment n) #\)))
+                        (let ((comment (ignore-errors 
+                                        (read-from-string comment))))
+                          (nconc item comment))))
                     (nconc
                      item
                      (pairlis '(:o-gc :o-edges :outputs)

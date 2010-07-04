@@ -183,6 +183,9 @@
        #+:lkb
        (:file "rasp")
        (:file "chasen")
+       #+:lkb
+       (:file "genia")
+       (:file "fsc")
        (:file "hunter")
        #+:lkb
        (:file "pcfg")

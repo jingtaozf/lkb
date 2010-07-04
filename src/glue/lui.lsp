@@ -56,6 +56,10 @@
   (declare (ignore runtimep))
   
   (lui-shutdown)
+  #+:linux
+  (let ((display (getenv "DISPLAY")))
+    (when (and (null port) (or (null display) (equal display "")))
+      (return-from lui-initialize)))
   (setf *lui-application*
     (let* ((directory 
             #-(or :darwin :macosx)

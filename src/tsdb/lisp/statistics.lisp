@@ -269,7 +269,9 @@
          (edge (and relations
                      (find "edge" relations :key #'first :test #'string=)))
          (update (and relations
-                      (find "update" relations :key #'first :test #'string=))))
+                      (find "update" relations :key #'first :test #'string=)))
+         (score (and relations
+                      (find "score" relations :key #'first :test #'string=))))
     (cond 
      ((null run)
       -1)
@@ -277,9 +279,9 @@
           (not (find "end" (rest run) :key #'first :test #'string=)))
       0)
      ((not (find "environment" (rest run) :key #'first :test #'string=))
-      9902)
+      199902)
      ((null update)
-      9903)
+      199903)
      ((and update 
            (find "e-epsilons" (rest edge) 
                  :key #'first :test #'string=))
@@ -292,8 +294,11 @@
            (find "e-parents" (rest edge) :key #'first :test #'string=)
            (not (find "surface" (rest result) :key #'first :test #'string=)))
       200306)
-     ((find "surface" (rest result) :key #'first :test #'string=)
+     ((and (find "surface" (rest result) :key #'first :test #'string=)
+           (not (find "learner" (rest score) :key #'first :test #'string=)))
       200509)
+     ((find "learner" (rest score) :key #'first :test #'string=)
+      201002)
      (t
       (error "profile-granularity(): invalid `~a'" data)))))
 
@@ -330,12 +335,12 @@
                     *filter-test* *filter-mrs-relations-ratio*)))
          (key (format 
                nil 
-               "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
+               "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : comment~]~@[~* : trees~]~
                 ~@[ for ~a~]~@[~* : extras~]~@[~* : output~]~
                 ~@[ on ~a~@[ (scores)~]~]" 
                data condition 
                (if (listp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
-               trees filter extras output
+               commentp trees filter extras output
                (cond
                 ((stringp score) score)
                 (score "itself")
@@ -403,13 +408,31 @@
                               (when commentp '(:string)))
                              "item" condition data 
                              :meter imeter :sort :i-id :sourcep t))
-	       (item (if taggingp
+	       (item (if (or taggingp commentp)
                        (loop
                            for foo in item
-                           for i-input = (get-field :i-input foo)
-                           for tags = (call-raw-hook 
-                                       *tsdb-tagging-hook* i-input)
-                           when tags do (nconc foo (acons :tags tags nil))
+                           when taggingp do
+                             (let* ((i-input (get-field :i-input foo))
+                                    (tags (call-raw-hook 
+                                           *tsdb-tagging-hook* i-input)))
+                               (when tags (nconc foo (acons :tags tags nil))))
+                           when commentp do
+                             ;;
+                             ;; _hack_
+                             ;; see whether the comment string looks much like
+                             ;; an association list; if so, parse that list.
+                             ;;
+                             (let* ((comment (get-field :i-comment foo))
+                                    (n (when (stringp comment)
+                                         (- (length comment) 1))))
+                               (when (and n (< 3 n)
+                                          (char= (schar comment 0) #\()
+                                          (char= (schar comment 1) #\()
+                                          (char= (schar comment (- n 1)) #\))
+                                          (char= (schar comment n) #\)))
+                                 (let ((comment (ignore-errors
+                                                 (read-from-string comment))))
+                                   (nconc foo comment))))
                            finally (return item))
 		       item))
                (output (when output
@@ -881,7 +904,7 @@
                                              (>= conses 0)
                                              (>= symbols 0)
                                              (>= others 0))
-                                    (if (>= format 9903)
+                                    (if (>= format 199903)
                                       (+ conses symbols others)
                                       (+ (* conses 8) (* symbols 24) others)))
                       when (and space (>= space lower))
@@ -2676,7 +2699,7 @@
     (items 
      &key (fields *statistics-performance-summary*)
           (extras *statistics-extra*)
-          restrictor (format 9902))
+          restrictor (format 199902))
   
   (loop
       with fields = (append fields extras)
@@ -2736,7 +2759,7 @@
                                (minus-one-p others))
                         (setf value -1)
                         (setf value
-                          (if (>= format 9903)
+                          (if (>= format 199903)
                             (+ (if (minus-one-p conses) 0 conses)
                                (if (minus-one-p symbols) 0 symbols) 
                                (if (minus-one-p others) 0 others))
@@ -3446,7 +3469,7 @@
                    (setf ymax (if ymax (max ymax value) value))))
       (setf ymin 0 ymax (apply #'max frequencies)))
 
-    (let* ((title (or title "Generic tsdb(1) graph"))
+    (let* ((title (or title "Generic [incr tsdb()] Graph"))
            (xtitle (or xtitle 
                        (format nil "Item Dimension `~(~a~)'" dimension)))
            (width (if units (- xmax xmin) 0))
@@ -3499,14 +3522,14 @@
              "graph -font {Helvetica 10 bold} -plotbackground white \\~%  ~
               -width 15c -height 10c -rightmargin 10  \\~%  ~
               -title ~s~%"
-             title)
+             (tcl-escape-braces title))
             (format 
              stream
              "barchart -font {Helvetica 10 bold} -plotbackground white \\~%  ~
               -width 15c -height 10c -rightmargin 10  \\~%  ~
               -barmode normal -barwidth ~f -invertxy no\\~%  ~
               -title ~s~%"
-             (* aggregate 0.7) title))
+             (* aggregate 0.7) (tcl-escape-braces title)))
          (format 
           stream "data x ~a~%" 
           (list2tcl units :format "~,4f"))

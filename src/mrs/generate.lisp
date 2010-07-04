@@ -315,49 +315,15 @@
   ;; actually get to implementing this design ...               (22-jan-09; oe)
   ;;
   (setf input-sem (mt:map-mrs input-sem :semi :backward))
-  
+
   ;;
-  ;; as of late in 2006, progress on the SMAF front required dan to change all
-  ;; `ersatz' entries (as they are currently identified by sub-string match on
-  ;; their orthography :-{) to be [ CARG *top* ].  while recorded derivations
-  ;; in [incr tsdb()] do not preserve the actual surface form, reconstructing
-  ;; derivations and reading off MRSs results in ill-formed EPs, viz. ones with
-  ;; an underdetermined CARG.  to at least allow re-generation from such MRSs,
-  ;; attempt to frob our input MRS as needed.                   (23-dec-06; oe)
+  ;; per request by dan, manufacture a top handle, if missing and enable the
+  ;; generator `input compliance' mechanism.                     (8-mar-10; oe)
   ;;
-  #+:logon
-  (loop
-      with carg = (mrs:vsym "CARG")
-      for ep in (mrs:psoa-liszt input-sem)
-      for pred = (mrs:rel-pred ep)
-      for constant
-      = (cond
-         ((string-equal pred "yofc_rel") "DecimalErsatz")
-         ((string-equal pred "card_rel") "DecimalErsatz")
-         ((string-equal pred "ord_rel") "DecimalErsatz")
-         ((string-equal pred "dofw_rel") "DateErsatz")
-         ((string-equal pred "dofm_rel") "DateErsatz")
-         ((string-equal pred "gen_numval_rel") "DecadeErsatz")
-         ((string-equal pred "numbered_hour_rel") "HourErsatz")
-         ((string-equal pred "named_rel") "NameErsatz")
-         (t "CARG"))
-      for parameterizedp = (consp (gethash pred mrs::*relation-index*))
-      do
-        (loop
-            for role in (mrs:rel-flist ep)
-            for value = (mrs:fvpair-value role)
-            when (eq (mrs:fvpair-feature role) carg) do
-              (when (or (eq value *toptype*) (eq value *string-type*))
-                (setf (mrs:fvpair-value role) constant))
-              (setf parameterizedp nil)
-            finally
-              (when parameterizedp
-                (push
-                 (mrs::make-fvpair :feature carg :value constant)
-                 (mrs:rel-flist ep)))))
-                          
-  #+:null
-  (let ((fixup (mt::transfer-mrs input-sem :filter nil :task :generate)))
+  (when (and mrs::*rel-handel-path* (null (mrs:psoa-top-h input-sem)))
+    (setf (mrs:psoa-top-h input-sem)
+      (mrs::make-var :id (funcall mrs::*variable-generator*) :type "h")))
+  (let ((fixup (mt::transfer-mrs input-sem :filter nil :task :fixup)))
     (when (rest fixup)
       (error 'generation/fixup-ambiguity :mrss fixup))
     (when fixup

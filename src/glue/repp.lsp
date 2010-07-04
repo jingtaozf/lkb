@@ -1,4 +1,4 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB; Coding: utf-8; -*-
 
 
 ;;; Copyright (c) 2000--2007 Stephan Oepen; see `licence.txt' for conditions.
@@ -42,7 +42,11 @@
 
 (in-package :lkb)
 
-(defparameter *repp-characterize-p* nil)
+(defparameter *repp-characterize-p* t)
+
+(defparameter *repp-characterization-beam* 2)
+
+(defparameter *repp-characterization-range* 500)
 
 (defparameter *repp-debug-p* t)
 
@@ -59,8 +63,7 @@
   version
   tokenizer
   rules
-  groups
-  legacy)
+  groups)
 
 (defmethod print-object ((object repp) stream)
   (format 
@@ -77,7 +80,7 @@
   target)
 
 (defstruct token
-  id form from to (start -1) (end -1) tags class ersatz legacy)
+  id form stem from to (start -1) (end -1) tags ersatz)
 
 (defun read-repp (file &key id (repp (make-repp) reppp) (prefix ""))
   (when (probe-file file)
@@ -148,30 +151,17 @@
                  ((member c '(#\! #\- #\+ #\^) :test #'char=)
                   (if (and start end)
                     (let* ((type (case c
-                                   (#\! :replace)
-                                   (#\- :substitute)
-                                   (#\+ :augment)
-                                   (#\^ :ersatz)))
+                                   (#\! :replace)))
                            (source (subseq line 1 start))
                            (target (subseq line end))
                            (scanner
                             (ignore-errors
                              (ppcre:create-scanner 
-                              (if (eq type :replace)
-                                source
-                                (format nil "^~a$" source)))))
+                              source)))
                            (match (make-fsr :type type :source source
                                             :scanner scanner :target target)))
-                      (unless (or (eq type :replace) (null (rest repps)))
-                        (format
-                         t
-                         "~aread-repp(): [~d] legacy `~a' invalid in group~%"
-                         prefix n c)
-                        (setf scanner nil))
                       (if scanner
-                        (if (eq type :replace)
-                          (push match (repp-rules (first repps)))
-                          (push match (repp-legacy (first repps))))
+                        (push match (repp-rules (first repps)))
                         (format
                          t
                          "~aread-repp(): [~d] invalid pattern `~a'~%"
@@ -192,9 +182,7 @@
               ;;
               (unless reppp
                 (setf (repp-rules repp)
-                  (nreverse (repp-rules repp)))
-                (setf (repp-legacy repp)
-                  (nreverse (repp-legacy repp))))
+                  (nreverse (repp-rules repp))))
               (unless reppp
               #+:debug
                 (format t "~a~%" repp)
@@ -214,7 +202,9 @@
   (when (null repp)
     (return-from repp (and (eq format :string) input)))
   
-  (let ((string input)
+  (let ((*repp-characterize-p*
+         (unless (smember format '(:string :lkb)) *repp-characterize-p*))
+        (string input)
         (length 0)
         tokens)
     (loop
@@ -302,50 +292,6 @@
                 (format t "  (~a) [~a:~a] |~a|~%" id from to form)))
           finally (return (nreverse result))))
     
-    ;;
-    ;; _fix_me_
-    ;; for a limited transition period, still apply the old (FSPP) legacy,
-    ;; token-level rules.  once the HandOn release is done, ditch this code.
-    ;;                                                         (17-oct-08; oe)
-    (loop
-        for token in tokens
-        for form = (token-form token)
-        do
-          (loop
-              for rule in (repp-legacy repp)
-              for type = (fsr-type rule)
-              for scanner = (fsr-scanner rule)
-              for target = (fsr-target rule)
-              for match = (ppcre:regex-replace scanner form target)
-              when (and (eq verbose :trace) (not (string= form match))) do
-                (format
-                 t
-                 "~&|~a|~%  |~a|~%  |~a|~%~%"
-                 (fsr-source rule) token match)
-              unless (string= form match) do
-                ;;
-                ;; _fix_me_
-                ;; regex-replace() always returns a fresh string, even if the
-                ;; pattern did _not_ match; to make this more efficient, it
-                ;; seems, we would have to use scan() and then glue together
-                ;; the result from parsing .target. and filling in register
-                ;; matches as needed :-{.                     (31-jan-03; oe)
-                ;;
-                ;;
-                ;; _fix_me_
-                ;; to do ersatzes properly, they should no longer be available
-                ;; to subsequent rule processing: presumably, we should build
-                ;; an ersatzing table and use non-string tokens (indices into
-                ;; the table) instead.                         (1-feb-03; oe)
-                ;;
-                (case type
-                  (:substitute
-                   (setf form (setf (token-form token) match)))
-                  (:ersatz
-                   (setf form (setf (token-ersatz token) match)))
-                  (:augment
-                   (push (cons type match) (token-legacy token))))))
-
     (when *repp-characterize-p*
       (loop
           with alignment = (repp-align input tokens)
@@ -360,7 +306,7 @@
                 for index = (aref alignment i)
                 when index do
                   (unless start (setf start index))
-                  (setf end index))
+                  (setf end (+ index 1)))
             (when (null start) (setf start end))
             (when (null start) (setf start last end last))
             (setf (token-start token) start)
@@ -368,122 +314,143 @@
             (setf last end)
             (incf offset n)))
     
-    (case format
-      ((:string :lkb)
-       (let ((forms (loop
-                        for token in tokens
-                        collect (or (token-ersatz token) (token-form token)))))
-         (if (eq format :string)
-           (values (format nil "~{~a~^ ~}" forms) (length forms))
-           (values forms length))))
-      (:pet
-       (loop
-           for token in tokens
-           for id = (token-id token)
-           for form = (token-form token)
-           for ersatz = (token-ersatz token)
-           for from = (token-from token)
-           for to = (token-to token)
-           for yy = (format 
-                     nil 
-                     "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                      1, \"~a\"~@[ \"~a\"~], 0, \"null\")"
-                     id from to 
-                     *repp-characterize-p* 
-                     (token-start token) (token-end token)
-                     (escape-string (or ersatz form))
-                     (when ersatz (escape-string form)))
-           collect yy into yys
-           do
-             (loop
-                 for legacy in (token-legacy token)
-                 for yy = (format 
-                           nil 
-                           "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                            1, \"~a\" \"~a\", 0, \"null\")"
-                           id from to 
-                           *repp-characterize-p* 
-                           (token-start token) (token-end token)
-                           (rest legacy) form)
-                 do (push yy yys))
-           finally 
-             (return
-               (values (format nil "~{~a~^ ~}" yys) length))))
-      (:list
-       (error "repp(): output format :list is no longer supported."))
-      (:sppp
-       (let (result)
-         (loop 
-             for token in tokens
-             for form = (or (token-ersatz token) (token-form token))
-             for from = (token-from token)
-             for to = (token-to token)
-             for start = (token-start token)
-             for end = (token-end token)
-             for list = (pairlis '(:start :end :from :to :form)
-                                 (list from to start end form))
-             do
-               (push list result)
-               (loop
-                   for legacy in (token-legacy token)
-                   for list = (pairlis '(:start :end :from :to :form)
-                                        (list from to start end (rest legacy)))
-                   do (push list result)))
-         (values (nreverse result) length)))
-      (:raw
-       (values tokens length)))))
+    (values (repp-format tokens format) length)))
 
-(defun repp-align (string tokens &optional (start 0) solutions)
+(defun repp-align (string tokens &optional (start 0) solutions (space 0))
   (unless (stringp tokens)
     (let ((forms (loop for token in tokens collect (token-form token))))
       (setf tokens (format nil "~{~a~}" forms)))
+    ;;
+    ;; each solution is a vector, with one cell per character in the .tokens.
+    ;; sequences (i.e. no cells corresponding to whitespace in the original
+    ;; .string.), plus two extra cells at the end for bookkeeping: the total
+    ;; count of alignments at position .n., and the highest index into .string.
+    ;; at position .n. + 1.
+    ;;
     (let* ((n (length tokens))
            (solution (make-array (+ n 2))))
       (setf (aref solution n) 0)
       (setf solutions (list solution))))
-  (if (>= start (length tokens))
-    (loop
-        with n = (length tokens)
-        with top = (first solutions)
-        for solution in (rest solutions)
-        when (> (aref solution n) (aref top n))
-        do (setf top solution)
-        finally (return top))
-    (let ((n (length tokens))
-          matches)
+  (let ((n (length tokens)))
+    (if (>= start (length tokens))
       (loop
-          for i from 0 to (- (length string) 1)
-          for c = (char string i)
-          when (char= c (char tokens start)) do
-            (loop
-                for solution in solutions
-                when (or (null (aref solution (+ n 1)))
-                         (< (aref solution (+ n 1)) i))
-                do
-                  ;;
-                  ;; we assume that .solutions. are ordered according to how
-                  ;; many alignment points they contain, with larger alignments
-                  ;; at the top of the list.  hence, if there is an earlier
-                  ;; match with the same alignment point for the current token
-                  ;; index (i.e. the same .i. at position .start.), then we are
-                  ;; guaranteed to find larger matches before smaller ones; for
-                  ;; example #(0 1 ...) prior to #(- 1 ...).
-                  ;;
-                  (unless (loop
-                              for match in matches
-                              thereis (and (eql (aref match start) i)
-                                           (> (aref match n)
-                                              (aref solution n))))
-                    (let ((copy (copy-seq solution)))
-                      (setf (aref copy start) i)
-                      (incf (aref copy n))
-                      (setf (aref copy (+ n 1)) i)
-                      (push copy matches)))))
-      (labels ((n (solution) (aref solution n)))
-        (let* ((solutions (sort (nconc matches solutions) #'> :key #'n))
-               (beam
-                (loop for solution in solutions repeat n collect solution)))
-          (repp-align string tokens (incf start) beam))))))
+          with top = (first solutions)
+          for solution in (rest solutions)
+          when (> (aref solution n) (aref top n))
+          do (setf top solution)
+          finally (return top))
+      (let ((l (length string))
+            matches)
+        (when (smember (char string start) '(#\space #\tab)) (incf space))
+        (loop
+            with b = (char tokens start)
+            with range = (when (numberp *repp-characterization-range*)
+                           (round *repp-characterization-range* 2))
+            for i from (if range (max 0 (+ (- start range) space)) 0)
+            to (if range (min (+ start range space) (- l 1)) (- l 1))
+            for c = (char string i)
+            when (or (char= b c)
+                     (and (char= c #\") (or (char= b #\“) (char= b #\”)))
+                     (and (char= c #\') (or (char= b #\‘) (char= b #\’)))
+                     (and (char= c #\`) (char= b #\‘)))
+            do
+              (loop
+                  for solution in solutions
+                  when (or (null (aref solution (+ n 1)))
+                           (< (aref solution (+ n 1)) i))
+                  do
+                    ;;
+                    ;; we assume that .solutions. are ordered according to how
+                    ;; many alignment points they contain, with larger
+                    ;; alignments at the top of the list.  hence, if there is
+                    ;; an earlier match with the same alignment point for the
+                    ;; current token index (i.e. the same .i. at position
+                    ;; .start.), then we are guaranteed to find larger matches
+                    ;; before smaller ones; for example #(0 1 ...) prior to 
+                    ;; #(- 1 ...).  avoid finding new solutions for the same 
+                    ;; alignment point that are inferior to an existing 
+                    ;; solution; it cannot possibly end up better.
+                    ;;
+                    (unless (loop
+                                for match in matches
+                                thereis (and (eql (aref match start) i)
+                                             (> (aref match n)
+                                                (aref solution n))))
+                      (let ((copy (copy-seq solution)))
+                        (setf (aref copy start) i)
+                        (incf (aref copy n))
+                        (setf (aref copy (+ n 1)) i)
+                        (push copy matches)))))
+        (labels ((n (solution) (aref solution n)))
+          (let* ((solutions (sort (nconc matches solutions) #'> :key #'n))
+                 ;;
+                 ;; *repp-characterization-beam* controls how far we search 
+                 ;; into the space of candidate but (at present) inferior 
+                 ;; solutions.  in principle, it may yield a better alignment
+                 ;; to skip over a sub-sequence, at some point, leaving 
+                 ;; characters unaligned.  a beam size of five, say, will keep
+                 ;; solutions available that are up to five alignments worse
+                 ;; than the current best one.
+                 ;;
+                 (beam
+                  (loop
+                      with top = (- (aref (first solutions) n)
+                                    *repp-characterization-beam*)
+                      for solution in solutions
+                      while (>= (aref solution n) top)
+                      collect solution)))
+            (repp-align string tokens (incf start) beam space)))))))
+
+(defun repp-format (tokens format)
+  (case format
+    (:raw
+     tokens)
+    (:list
+     (loop
+         for token in tokens
+         collect
+           (pairlis '(:id :start :end :form :stem :tag)
+                    (list (token-id token)
+                          (token-start token) (token-end token)
+                          (token-form token)
+                          (or (token-stem token) (token-form token))
+                          (first (token-tags token))))))
+    ((:string :lkb)
+     (let ((forms (loop
+                      for token in tokens
+                      collect (or (token-ersatz token) (token-form token)))))
+       (if (eq format :string)
+         (format nil "~{~a~^ ~}" forms)
+         forms)))
+    (:pet
+     (loop
+         for token in tokens
+         for form = (token-form token)
+         for ersatz = (token-ersatz token)
+         for yy = (format 
+                   nil 
+                   "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+                     1, \"~a\"~@[ \"~a\"~], 0, \"null\"~
+                     ~@[,~{ ~s ~,4f~}~])" 
+                   (token-id token)
+                   (token-from token) (token-to token)
+                   *repp-characterize-p* 
+                   (token-start token) (token-end token)
+                   (escape-string (or ersatz form))
+                   (when ersatz (escape-string form))
+                   (token-tags token))
+         collect yy into result
+         finally (return (format nil "~{~a~^ ~}" result))))
+    (:sppp
+     (loop 
+         for token in tokens
+         for form = (or (token-ersatz token) (token-form token))
+         for from = (token-from token)
+         for to = (token-to token)
+         for start = (token-start token)
+         for end = (token-end token)
+         collect (pairlis '(:start :end :from :to :form)
+                          (list from to start end form))))))
 
 (defun escape-string (string &key (syntax :c))
   (declare (ignore syntax))
@@ -515,38 +482,22 @@
 (defun repp-for-pet (string &optional tagger &rest arguments)
   (let* ((*repp-calls* (or (getf arguments :calls) *repp-calls*))
          (repp (or (getf arguments :repp) (first *repps*)))
-         (format (or (getf arguments :format) :pet))
+         (raw (getf arguments :raw))
+         (format (if raw :raw (or (getf arguments :format) :pet)))
          (verbose (getf arguments :verbose))
+         (tokens (repp string :repp repp :format :raw :verbose verbose))
+         (length (length tokens))
          (result
-          (if (or (keywordp tagger)
-                  (and (consp tagger) (keywordp (first tagger))))
-            (multiple-value-bind (tokens length)
-                (case (if (keywordp tagger) tagger (first tagger))
-                  (:tnt
-                   (apply 
-                    #'tnt
-                    (repp string :repp repp :format :raw :verbose verbose)
-                    (unless (keywordp tagger) (rest tagger)))))
-              (loop
-                  for token in tokens
-                  for form = (token-form token)
-                  for ersatz = (token-ersatz token)
-                  for yy = (format 
-                            nil 
-                            "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                             1, \"~a\"~@[ \"~a\"~], 0, \"null\"~
-                             ~@[,~{ ~s ~,4f~}~])" 
-                            (token-id token)
-                            (token-from token) (token-to token)
-                            *repp-characterize-p* 
-                            (token-start token) (token-end token)
-                            (escape-string (or ersatz form))
-                            (when ersatz (escape-string form))
-                            (token-tags token))
-                  collect yy into result
-                  finally 
-                    (return (values (format nil "~{~a~^ ~}" result) length))))
-            (repp string :repp repp :format format :verbose verbose))))
+          (repp-format
+           (if (or (keywordp tagger)
+                   (and (consp tagger) (keywordp (first tagger))))
+             (case (if (keywordp tagger) tagger (first tagger))
+               (:tnt
+                (apply 
+                 #'tnt tokens
+                 (unless (keywordp tagger) (rest tagger)))))
+             tokens)
+           format)))
     (let ((stream (getf arguments :stream)))
       (cond
        ((or (streamp stream) (eq stream t))
@@ -556,11 +507,11 @@
                          :direction :output :if-exists :supersede)
           (format stream "~a~%" result)))
        (t                 
-        result)))))
+        (values result length))))))
 
 (defparameter *taggers*
   #+:logon
-  '((:tnt "tnt -z100 ${LOGONROOT}/coli/tnt/models/wsj -" 2))
+  '((:tnt "${LOGONROOT}/bin/tnt -z100 ${LOGONROOT}/coli/tnt/models/wsj -" 2))
   #-:logon
   '((:tnt "tnt -z100 /user/oe/src/tnt/models/wsj -")))
 
@@ -575,23 +526,43 @@
                   (characterp (char string 0)) (char= (char string 0) #\%)
                   (characterp (char string 1)) (char= (char string 1) #\%))))
 
-    (let* ((run (or run 
+    (let* ((tmp
+            (let* ((tmp (or (getenv "TNTTMP") #+:logon (getenv "LOGONTMP")))
+                   (tmp (and tmp (namestring (parse-namestring tmp)))))
+              (or tmp "/tmp")))
+           (run (or run 
 		    (loop
 			for run in *taggers*
                         when (eq (first run) :tnt)
 			return (second run))
 		    "tnt -z100 /user/oe/src/tnt/models/wsj -"))
 	   (command (format nil "exec ~a" run *taggers*))
-	   (input (format nil "/tmp/.tnt.in.~a" (current-user)))
-	   (output (format nil "/tmp/.tnt.out.~a" (current-user)))
+	   (input (format nil "~a/.tnt.in.~a" tmp (current-user)))
+	   (output (format nil "~a/.tnt.out.~a" tmp (current-user)))
 	   (length 0) analyses)
       (with-open-file (stream input :direction :output :if-exists :supersede)
+        ;;
+        ;; _fix_me_
+        ;; this is unnecessary complicated, nowadays: REPP no longer creates
+        ;; token-level ambiguity, hence we are guaranteed a linear sequence of
+        ;; tokens (at least until i change my mind about REPP once again :-).
+        ;;                                                      (25-jan-10; oe)
         (loop
             with i = -1
             for token in tokens
             for from = (token-from token)
             for form = (or (token-ersatz token) (token-form token))
             unless (= i from) do
+              (setf form
+                (cond
+                 ((string= form "“") "``")
+                 ((string= form "”") "''")
+                 ((string= form "‘") "`")
+                 ((string= form "’") "'")
+                 ((string= form "…") "...")
+                 ((string= form "—") "---")
+                 ((string= form "–") "--")
+                 (t form)))
               (setf i from)
               (incf length)
               (format stream "~a~%" form)
@@ -607,7 +578,7 @@
                                       :adjustable t :fill-pointer 0)
             with i = 0
             for string = (read-line stream nil nil)
-            while (and string (not (zerop (length string))))
+            while (and string (not (string= string "")))
             unless (commentp string) do 
               (incf i)
               (loop

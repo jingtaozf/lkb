@@ -1,6 +1,7 @@
 #
 # [incr tsdb()] --- Competence and Performance Profiling Environment
-# Copyright (c) 1996 -- 2008 Stephan Oepen (oe@ifi.uio.no)
+# Copyright (c) 1996 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+# Copyright (c) 2007 -- 2009 Stephan Oepen (oe@ifi.uio.no)
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +48,7 @@ proc copyleft {action} {
                -  All Rights Reserved"
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
-        -text "$globals(name) is available free of royalties\
+        -text "$globals(name) is free software \
                under the GNU LGPL $pointer."
       if {[info exists globals(copyleft,key)]
           && [oe copyleft $globals(copyleft,key)]} {
@@ -60,7 +61,7 @@ proc copyleft {action} {
           -text "Until registered, after several minutes of continuous use\
                  a log entry will be generated and\n\
                  automatically sent to a central protocol server\
-                 (at Saarbruecken University)."
+                 (at Saarland University)."
       }; # else
       pack $copyleft.title \
         $copyleft.zero $copyleft.first $copyleft.second $copyleft.third \

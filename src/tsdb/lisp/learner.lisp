@@ -378,11 +378,11 @@
          (events (format 
                   nil
                   "~a/.model.~a.~a.events"
-                  (tmp) (current-user) (current-pid)))
+                  (tmp :redwoods) (current-user) (current-pid)))
          (trace (format 
                  nil
                  "~a/.model.~a.~a.trace"
-                 (tmp) (current-user) (current-pid)))
+                 (tmp :redwoods) (current-user) (current-pid)))
          (source (get-field :source (first items)))
          (cache (profile-find-context-cache source identity)))
     (unless (model-parameters model)
@@ -390,7 +390,7 @@
         (format 
          nil
          "~a/.model.~a.~a.weights"
-         (tmp) (current-user) (current-pid))))
+         (tmp :redwoods) (current-user) (current-pid))))
     (with-open-file (out events :direction :output
                      :if-does-not-exist :create
                      :if-exists :supersede
@@ -436,7 +436,8 @@
                         (let ((name (format 
                                      nil
                                      "~a/.model.~a.~a.variances"
-                                     (tmp) (current-user) (current-pid))))
+                                     (tmp :redwoods)
+                                     (current-user) (current-pid))))
                           (with-open-file (stream name
                                            :direction :output
                                            :if-exists :supersede)
@@ -546,7 +547,7 @@
          (events (format 
                   nil
                   "~a/.model.~a.~a.events"
-                  (tmp) (current-user) (current-pid)))
+                  (tmp :redwoods) (current-user) (current-pid)))
          (source (get-field :source (first items)))
          (cache (profile-find-context-cache source identity))
          active)
@@ -591,11 +592,11 @@
     (let* ((scores (format 
                     nil
                     "~a/.model.~a.~a.scores"
-                    (tmp) (current-user) (current-pid)))
+                    (tmp :redwoods) (current-user) (current-pid)))
            (output (format 
                     nil
                     "~a/.model.~a.~a.output"
-                    (tmp) (current-user) (current-pid)))
+                    (tmp :redwoods) (current-user) (current-pid)))
            (command 
             (case type
               (:mem            
@@ -736,7 +737,7 @@
                       (float (/ rsum nitems)) ;;average # results
                       nitems))))              ;;# items
 
-(defun print-score-file (&key (output (format nil "~a/scores" (tmp)))
+(defun print-score-file (&key (output (format nil "~a/scores" (tmp :redwoods)))
                               gold name pattern condition
                               (similarities '(:bleu)))
   (with-open-file (stream output :direction :output :if-exists :supersede)
@@ -768,7 +769,7 @@
             (force-output stream))))
   (purge-profile-cache gold))
 
-(defun summarize-folds (&key (output (format nil "~a/folds" (tmp)))
+(defun summarize-folds (&key (output (format nil "~a/folds" (tmp :redwoods)))
                              name pattern (score :accuracy) (type :total))
   (with-open-file (stream output :direction :output :if-exists :supersede
                           :if-not-exists :create)

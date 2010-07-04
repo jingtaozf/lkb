@@ -89,6 +89,8 @@
 
 (defparameter *derivations-ignore-tokens-p* nil)
 
+(defparameter *derivations-ignore-spans-p* nil)
+
 (defparameter *derivations-reconstruct-lnk-p* nil)
 
 (defparameter *derivations-reconstructor* nil)
@@ -136,23 +138,25 @@
 
 (defmacro derivation-start (derivation)
   `(with-derivation (derivation ,derivation)
-     (if (consp (second derivation))
-       (with-derivation (derivation (second derivation))
-         (fourth derivation))
-       (if (integerp (first derivation)) 
-         (fourth derivation)
-         (when (integerp (second derivation))
-           (second derivation))))))
+     (unless *derivations-ignore-spans-p*
+       (if (consp (second derivation))
+         (with-derivation (derivation (second derivation))
+           (fourth derivation))
+         (if (integerp (first derivation)) 
+           (fourth derivation)
+           (when (integerp (second derivation))
+             (second derivation)))))))
 
 (defmacro derivation-end (derivation)
   `(with-derivation (derivation ,derivation)
-     (if (consp (second derivation))
-       (with-derivation (derivation (second derivation))
-         (fifth derivation))
-       (if (integerp (first derivation)) 
-         (fifth derivation)
-         (when (integerp (second derivation))
-           (third derivation))))))
+     (unless *derivations-ignore-spans-p*
+       (if (consp (second derivation))
+         (with-derivation (derivation (second derivation))
+           (fifth derivation))
+         (if (integerp (first derivation)) 
+           (fifth derivation)
+           (when (integerp (second derivation))
+             (third derivation)))))))
 
 (defmacro derivation-daughters (derivation)
   `(with-derivation (derivation ,derivation)
@@ -420,9 +424,7 @@
                   start
                   %derivation-offset%))
          (end (derivation-end derivation))
-         (end (if (and (integerp end) (> end start))
-                end
-                (+ start 1)))
+         (end (and (integerp end) (> end start) end))
          (edge 
           (or (when (and *reconstruct-cache* cachep)
                 (loop
@@ -440,9 +442,10 @@
                        (tokens (derivation-tokens (first daughters)))
                        #-:lkb
                        (tokens nil)
-                       (entry 
-                        (find-lexical-entry surface root id start end)))
-                  (incf %derivation-offset%)
+                       entry length)
+                  (multiple-value-setq (entry length)
+                    (find-lexical-entry surface root id start end))
+                  (incf %derivation-offset% (or length 1))
                   (if (null entry)
                     (throw :fail
                            (values
