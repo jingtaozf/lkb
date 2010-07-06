@@ -1,7 +1,7 @@
 ;;; Copyright (c) 1993-2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;;   Bernard Jones
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :lkb)
 

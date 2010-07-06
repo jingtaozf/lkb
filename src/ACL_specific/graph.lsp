@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 
 ;;; Define :parse-tree, a new graph type for use with format-graph-from-root,

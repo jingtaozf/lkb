@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1998--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :common-lisp-user)
 

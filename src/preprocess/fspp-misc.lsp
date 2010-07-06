@@ -2,7 +2,7 @@
 
 ;;; Copyright (c) 2000--2006
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :fspp)
 

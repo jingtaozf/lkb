@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1991--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;;; bmw (aug-03)
 ;;; - fixed code broken by *lexicon*-related changes

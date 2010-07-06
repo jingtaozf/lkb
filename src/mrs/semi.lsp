@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2003-2004
 ;;;   Ben Waldron, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :mrs)
 

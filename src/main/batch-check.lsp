@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 ;;; Functions for checking instances are well formed
 

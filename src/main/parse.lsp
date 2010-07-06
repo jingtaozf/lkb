@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1991-2006
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,Ben Waldron
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;;; AAC April 2005 - rationalisation of morphology and MWEs 
 ;;; - also preparation for chart output from tokeniser

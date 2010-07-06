@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp -*-
 ;;; Copyright (c) 2000--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :cl-user)
 

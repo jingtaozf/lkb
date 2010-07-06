@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1992-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 ;;; Rewritten for new unifier
 

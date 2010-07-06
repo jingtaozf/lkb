@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2004-2005
 ;;;   Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;; interface to libpq (PostgreSQL version 8.0)
 ;;  for libpq documentation see the chapter "libpq - C Library"

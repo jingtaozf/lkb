@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2007
 ;;; Ben Waldron
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :lkb)
 

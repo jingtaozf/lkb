@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2004--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;;; Checking that a grammar obeys the algebra for composition
 ;;; and extracting the components so that algebra MRSs can be displayed

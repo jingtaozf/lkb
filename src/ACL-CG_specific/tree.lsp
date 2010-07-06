@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 
 ;;; This version for Allegro 5.0 on Windows NT/95/98 is

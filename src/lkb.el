@@ -1,7 +1,7 @@
 ;;; -*- mode:emacs-lisp -*-
 ;;; Copyright (c) 1998-2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
-;;;   Benjamin Waldron, Francis Bond; see `licence.txt' for conditions
+;;;   Benjamin Waldron, Francis Bond; see `LICENSE' for conditions
 ;;;
 
 ;;; bmw (sep 03)

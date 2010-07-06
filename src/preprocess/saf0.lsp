@@ -1,6 +1,6 @@
 ;; Copyright (c) 2006
 ;;;   Ben Waldron;
-;;; see `licence.txt' for conditions.
+;;; see `LICENSE' for conditions.
 
 ;;
 ;; code to convert SAF XML into SAF object

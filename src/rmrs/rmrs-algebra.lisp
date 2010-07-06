@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2007
 ;;; Ann Copestake
-;;; see `licence.txt' for conditions.
+;;; see `LICENSE' for conditions.
 
 ;;; Composition via algebra for RMRS
 ;;; This is (partly) an alternative to the code in comp.lisp and may

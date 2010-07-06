@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2006
 ;;;   Ben Waldron;
-;;; see `licence.txt' for conditions.
+;;; see `LICENSE' for conditions.
 
 (defpackage :lxml
   (:use :common-lisp) 

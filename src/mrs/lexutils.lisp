@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1998--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
-;;;   and Benjamin Waldron; see `licence.txt' for conditions.
+;;;   and Benjamin Waldron; see `LICENSE' for conditions.
 
 (in-package :lkb)
 

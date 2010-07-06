@@ -3,7 +3,7 @@
 
 <!-- 
 Copyright Ann Copestake 2003-2006.  Distributed under same licence
-conditions as the LKB and RMRS code - see licence.txt
+conditions as the LKB and RMRS code - see LICENSE
 This file corresponds to tsg15 plus ERG 03/06 (no msg)
 
 This version: allow rules to inherit - for now, just let them be the same as

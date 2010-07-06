@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2008
 ;;;   Ann Copestake
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 (in-package :mrs)
 

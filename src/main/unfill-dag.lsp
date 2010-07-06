@@ -19,7 +19,7 @@
 ;;;                 Saarland University, FR 4.7 Allgemeine Linguistik,
 ;;;                 PO Box 15 11 50, D-66041 Saarbruecken, Germany
 
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 (in-package :lkb)
 

@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 
 ;;; modifications by bmw (dec-03)

@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 
 ;;; ACL 5.0 Common Graphics port - based on version by Anthony Hull

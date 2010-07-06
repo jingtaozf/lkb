@@ -3,7 +3,7 @@
 
 ;;; Copyright (c) 2000--2002
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 
 (in-package :lkb)

@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;;;
 ;;; set of dummy back-end interface functions for MRS generation; mostly used

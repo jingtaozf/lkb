@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1991--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 
 ;;; Modified Jan 1995 to avoid unnecessary duplication in code

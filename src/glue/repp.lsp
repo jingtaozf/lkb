@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB; Coding: utf-8; -*-
 
 
-;;; Copyright (c) 2000--2007 Stephan Oepen; see `licence.txt' for conditions.
+;;; Copyright (c) 2000--2007 Stephan Oepen; see `LICENSE' for conditions.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

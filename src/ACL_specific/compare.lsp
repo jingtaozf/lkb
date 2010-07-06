@@ -1,6 +1,6 @@
 ;;; Copyright (c) 1998--2002
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `licence.txt' for conditions.
+;;;   see `LICENSE' for conditions.
 
 ;;;
 ;;; Tools to help build a treebank

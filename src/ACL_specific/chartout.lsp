@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1997-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Frederik Fouvry
-;;; see licence.txt for conditions
+;;; see LICENSE for conditions
 
 (in-package :lkb)
 
