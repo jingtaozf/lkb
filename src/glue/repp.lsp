@@ -341,7 +341,8 @@
           finally (return top))
       (let ((l (length string))
             matches)
-        (when (smember (char string start) '(#\space #\tab)) (incf space))
+        (when (and (< start l) (smember (char string start) '(#\space #\tab)))
+          (incf space))
         (loop
             with b = (char tokens start)
             with range = (when (numberp *repp-characterization-range*)
