@@ -92,6 +92,7 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 			(when dmrs (output-dmrs1 dmrs 'dxml ostream))))))))))))
 
 
+#+:allegro
 (defun rmrs-to-dmrs-fine-system-dir (idir odir &optional dirstr)
   ;;; this assumes a directory which has rmrs files as output by the
   ;;; fine system - each file contains a list of rmrss corresponding 
