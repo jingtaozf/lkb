@@ -48,6 +48,8 @@
 
 (defparameter *repp-characterization-range* 500)
 
+(defparameter *repp-unique-p* t)
+
 (defparameter *repp-debug-p* t)
 
 (defparameter *repps* nil)
@@ -402,7 +404,25 @@
                       collect solution)))
             (repp-align string tokens (incf start) beam space)))))))
 
-(defun repp-format (tokens format)
+(defun repp-unique (tokens)
+  (let ((tokens (sort tokens #'< :key #'token-id))
+        result)
+    (labels ((token= (foo bar)
+               (and (equal (token-form foo) (token-form bar))
+                    (equal (token-stem foo) (token-stem bar))
+                    (eql (token-from foo) (token-from bar))
+                    (eql (token-to foo) (token-to bar))
+                    (eql (token-start foo) (token-start bar))
+                    (eql (token-end foo) (token-end bar))
+                    (equal (token-tags foo) (token-tags bar)))))
+      (loop
+          for token in tokens
+          unless (member token result :test #'token=)
+          do (push token result)))
+    (nreverse result)))
+
+(defun repp-format (tokens format &key (uniquep *repp-unique-p*))
+  (when uniquep (setf tokens (repp-unique tokens)))
   (case format
     (:raw
      tokens)
@@ -538,8 +558,12 @@
 			return (second run))
 		    "tnt -z100 /user/oe/src/tnt/models/wsj -"))
 	   (command (format nil "exec ~a" run *taggers*))
-	   (input (format nil "~a/.tnt.in.~a" tmp (current-user)))
-	   (output (format nil "~a/.tnt.out.~a" tmp (current-user)))
+	   (input (format
+                   nil "~a/.tnt.in.~a.~a"
+                   tmp (current-user) (current-pid)))
+	   (output (format
+                    nil "~a/.tnt.out.~a.~a"
+                    tmp (current-user) (current-pid)))
 	   (length 0) analyses)
       (with-open-file (stream input :direction :output :if-exists :supersede)
         ;;

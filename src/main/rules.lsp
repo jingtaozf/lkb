@@ -680,6 +680,35 @@ base fs plus rule (except the type itself, of course)
 	      arg)
       t)))
 
+
+(defun dump-rule-filter (&optional (file t))
+  (declare (special common-lisp-user::*grammar-version*))
+  (let* ((stream (if (stringp file)
+                   (open file :direction :output
+                         :if-does-not-exist :create :if-exists :supersede)
+                   file))
+         (rules (append (get-indexed-lrules nil) (get-indexed-rules nil)))
+         (rules (sort rules #'< :key #'rule-apply-index)))
+    (format
+     stream ";;;~%;;; rule filter for grammar ~a~%;;;~%~%"
+     common-lisp-user::*grammar-version*)
+    (loop
+        for rule in rules
+        for filter = (rule-apply-filter rule)
+        do
+          (format stream "~%~(~a~)::~%" (rule-id rule))
+          (loop
+              for i from 0 to (- (length (rule-order rule)) 2)
+              do
+                (format stream "  ~a:" i)
+                (loop
+                    for argument in rules
+                    when (aref filter (rule-apply-index argument) i)
+                    do (format stream " ~(~a~)" (rule-id argument)))
+                (terpri stream)))
+    (when (stringp file) (close stream))
+    rules))
+  
 #|
 
 For lexical/morphological rule application we need

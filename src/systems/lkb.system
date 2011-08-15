@@ -122,9 +122,10 @@
     :depends-on (#+:psql "psql"
                  #+(and :preprocessor (not :sbcl)) "ppcre"
                  #+:preprocessor "preprocessor"
-                 #+:xml "s-xml" 
-                 #+:pxml "pxml")
+                 #+:xml "s-xml")
 
+    :initially-do
+    (require :pxml)
     :finally-do 
     (let* ((package (find-package :lkb))
            (symbol (find-symbol "*MRS-LOADED*" package)))
@@ -259,17 +260,19 @@
       :binary-pathname "glue"
       :components
 	      (#+:lui
-               (:file "dag" )         ; instrumented unifier for LUI use
+               (:file "dag" )        ; instrumented unifier for LUI use
                #+:lsp     
-               (:file "lsp")          ; socket-based LKB server mode
+               (:file "lsp")         ; socket-based LKB server mode
                #+:lui
-               (:file "lui" )         ; Linguistic User Interface
+               (:file "lui" )        ; Linguistic User Interface
+               #+(and :lsp :allegro)
+               (:file "rpc" )        ; XML-RPC server
                #+:preprocessor
-               (:file "repp" )        ; regular-expression pre-processor
+               (:file "repp" )       ; regular-expression pre-processor
                #+:xml
-               (:file "sppp")))       ; Simple (XML-base) PreProcessor Protocol
+               (:file "sppp")))      ; Simple PreProcessor Protocol (deprecated)
 
-     (:module "path notation input"     ; original LKB notation
+     (:module "path notation input"   ; original LKB notation
       :source-pathname "io-paths"     ; toplevel fns also used
       :binary-pathname "io-paths"     ; by TDL files (below)
       :components

@@ -435,6 +435,7 @@ warnings to print. 0: no warnings,
      gen-load-file-operation
      run-process getenv user-name
      *warning-level*
-     level-warn-p)
+     level-warn-p
+     #+:logon logon-directory #+:logon logon-file)
    "MAKE")
   (pushnew :disco-loadup *features*))

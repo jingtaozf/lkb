@@ -16,6 +16,8 @@
 
 (defparameter *tree-discriminants-blaze* nil)
 
+(defparameter *tree-discriminants-scorer* nil)
+
 (defvar *tree-discriminants-chart* nil)
 
 (defstruct discriminant
@@ -289,26 +291,30 @@
     lead))
 
 (defun update-discriminants (discriminants top toggle)
-  (loop
-      for foo in discriminants
-      when (or (and toggle (member top (discriminant-in foo) :test #'eq))
-               (and (null toggle)
-                    (eq top (first (discriminant-out foo)))
-                    (null (rest (discriminant-out foo)))))
-      do
-        (when (null (discriminant-toggle foo))
-          (setf (discriminant-toggle foo) :unknown)
-          (setf (discriminant-time foo) (get-universal-time)))
-        (setf (discriminant-state foo) t)
-      when (or (and toggle (member top (discriminant-out foo) :test #'eq))
-               (and (null toggle)
-                    (eq top (first (discriminant-in foo)))
-                    (null (rest (discriminant-in foo)))))
-      do
-        (when (eq (discriminant-toggle foo) t)
-          (setf (discriminant-toggle foo) :unknown)
-          (setf (discriminant-time foo) (get-universal-time)))
-        (setf (discriminant-state foo) nil)))
+  (if (consp top)
+    (loop
+        for edge in top
+        do (update-discriminants discriminants edge toggle))
+    (loop
+        for foo in discriminants
+        when (or (and toggle (member top (discriminant-in foo) :test #'eq))
+                 (and (null toggle)
+                      (eq top (first (discriminant-out foo)))
+                      (null (rest (discriminant-out foo)))))
+        do
+          (when (null (discriminant-toggle foo))
+            (setf (discriminant-toggle foo) :unknown)
+            (setf (discriminant-time foo) (get-universal-time)))
+          (setf (discriminant-state foo) t)
+        when (or (and toggle (member top (discriminant-out foo) :test #'eq))
+                 (and (null toggle)
+                      (eq top (first (discriminant-in foo)))
+                      (null (rest (discriminant-in foo)))))
+        do
+          (when (eq (discriminant-toggle foo) t)
+            (setf (discriminant-toggle foo) :unknown)
+            (setf (discriminant-time foo) (get-universal-time)))
+          (setf (discriminant-state foo) nil))))
 
 (defmacro skewed-discriminant-start (discriminant skew)
   `(if ,skew

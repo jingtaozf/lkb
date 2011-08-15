@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2002
+;;; Copyright (c) 2003--2010
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -49,6 +49,8 @@
 (defparameter *sppp-application* nil)
 
 (defparameter *sppp-coding-system* :utf-8)
+
+(defparameter *sppp-position-based-characterization-p* nil)
 
 (defparameter *sppp-input-buffer* 
   (make-array 2048 :element-type 'character :adjustable nil :fill-pointer 0))
@@ -230,38 +232,76 @@
 (defun sppp-serialize-tokens (tokens)
   #+:debug
   (setf %tokens tokens)
+  ;;
+  ;; _fix_me_
+  ;; this code assumed the original SPPP approach to characterization, counting
+  ;; character positions rather than character ranges.  thus, in |kim sleeps.|,
+  ;; |kim| is anchored at positions 0 -- 2, and the final period at 10 -- 10.
+  ;; in this setup (as currently documented on the DELPH-IN wiki at LkbSppp), a
+  ;; single character can correspond to distinct chart vertices, which is why
+  ;; the code below is so complex.  in REPP we have long moved to using ranges
+  ;; instead, and that is what FreeLing appears to be using just now.  i will
+  ;; make range-based characterization the default as of today, but preserve 
+  ;; the old code for backwards compatibility for a little while.
+  ;;                                                            (10-jul-10; oe)
   (let* ((n (loop
                 for token in tokens
                 maximize (rest (assoc :to token))))
-         (map (make-array (+ n 1))))
+         (map (make-array (+ n 1)))
+         (end 0))
     (loop
         for i from 0 to n
         do (setf (aref map i) (cons nil nil)))
-    (loop
-        for token in tokens
-        for from = (rest (assoc :from token))
-        for to = (rest (assoc :to token))
-        do
-          (setf (first (aref map from)) t)
-          (setf (rest (aref map to)) t))
-    (loop
-        with last = 0 with endp = t
-        for i from 0 to n
-        when (first (aref map i)) do
-          (unless endp (incf last))
-          (setf (first (aref map i)) last)
-          (setf endp nil)
-        when (rest (aref map i)) do
-          (unless (eql (first (aref map i)) last) (incf last))
-          (setf (rest (aref map i)) last)
-          (setf endp t))
-    (loop
-        for token in tokens
-        for from = (rest (assoc :from token))
-        for to = (rest (assoc :to token))
-        for start = (first (aref map from))
-        for end = (rest (aref map to))
-        do (nconc token (pairlis '(:start :end) (list start end))))
+    (cond
+     (*sppp-position-based-characterization-p*
+      (loop
+          for token in tokens
+          for from = (rest (assoc :from token))
+          for to = (rest (assoc :to token))
+          do
+            (setf (first (aref map from)) t)
+            (setf (rest (aref map to)) t))
+      (loop
+          with last = 0 with endp = t
+          for i from 0 to n
+          when (first (aref map i)) do
+            (unless endp (incf last))
+            (setf (first (aref map i)) last)
+            (setf endp nil)
+          when (rest (aref map i)) do
+            (unless (eql (first (aref map i)) last) (incf last))
+            (setf (rest (aref map i)) last)
+            (setf endp t))
+      (loop
+          for token in tokens
+          for from = (rest (assoc :from token))
+          for to = (rest (assoc :to token))
+          for start = (first (aref map from))
+          for end = (rest (aref map to))
+          do (nconc token (pairlis '(:start :end) (list start end)))))
+     (t
+      (loop
+          for token in tokens
+          for from = (rest (assoc :from token))
+          for to = (rest (assoc :to token))
+          do
+            (push token (first (aref map from)))
+            (push token (rest (aref map to)))
+            (setf end (max end to)))
+      (loop
+          with vertex = 0
+          for i from 0 to n
+          for tokens = (aref map i)
+          when (or (first tokens) (rest tokens)) do
+            (setf (aref map i) vertex)
+            (when (first tokens) (incf vertex)))
+      (loop
+          for token in tokens
+          for from = (rest (assoc :from token))
+          for to = (rest (assoc :to token))
+          for start = (aref map from)
+          for end = (aref map to)
+          do (nconc token (pairlis '(:start :end) (list start end))))))
     tokens))
 
 (defun sppp-xml-get (element attribute &key type)

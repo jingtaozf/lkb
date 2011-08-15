@@ -352,9 +352,33 @@
                (rest (pathname-directory (make-pathname :directory path))))))
 
 (defun lkb-pathname (directory name)
-  (merge-pathnames
-   (pathname name) ;; [bmw] was (make-pathname :name name)
-   directory))
+  (merge-pathnames (pathname name) directory))
+
+#+:logon
+(defun make:logon-directory (path &optional format)
+  (let* ((root (getenv "LOGONROOT"))
+         (root (namestring (parse-namestring root)))
+         (root (make-pathname :directory root)))
+    (unless root
+      (error "logon-directory(): unable to determine global LOGONROOT."))
+    (let ((directory
+           (make-pathname 
+            :host (pathname-host root)
+            :device (pathname-device root)
+            :directory 
+            (append
+             (pathname-directory root)
+             (rest (pathname-directory (make-pathname :directory path)))))))
+      (if (eq format :string)
+        (namestring directory)
+        directory))))
+
+#+:logon
+(defun make:logon-file (path name &optional format)
+  (let ((file (lkb-pathname (logon-directory path) name)))
+    (if (eq format :string)
+      (namestring file)
+      file)))
 
 ;;;
 ;;; add optional .compile. argument to supress compilation when needed; this
@@ -373,9 +397,9 @@
       ;;
       ;; in order to protect concurrent processes compiling a file in parallel,
       ;; attempt puttting a mandatory lock on the source file while we compile
-      ;; and load it; try this out in the protected LOGON environment for now.
+      ;; and load it.
       ;;
-      #+(and :allegro :logon)
+      #+:allegro
       (with-open-file (foo file
                        :direction :output :if-exists :append)
         (excl.osi:with-stream-lock (foo)
@@ -387,13 +411,6 @@
              (if (and compile (member :compiler *features*))
                (compile-file file :verbose nil :print nil)
                file)))))
-      #+(and :allegro (not :logon))
-      (load
-       (handler-bind ((excl:compiler-no-in-package-warning
-                       #'(lambda (c) (declare (ignore c)) (muffle-warning))))
-         (if (and compile (member :compiler *features*))
-           (compile-file file :verbose nil :print nil)
-           file)))
       #+:lispworks
       (load 
        (if compile (compile-file file :load t :print nil :verbose nil) file))

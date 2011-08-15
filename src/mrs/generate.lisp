@@ -62,8 +62,8 @@
         (format
          t
          "~%Error: the constraint of feature `~a' must be equal to, ~
-           or be a supertype of, ~
-           type `~(~a~)' (the *string-type* parameter) ."
+          or be a supertype of, ~
+          type `~(~a~)' (the *string-type* parameter)."
          feature *string-type*)
         (force-output t)
         (return-from check-generator-environment :error))))
@@ -71,10 +71,10 @@
     (format 
      t
      "~%Warning: intersective rules and variable accessibility filtering ~
-        are incompatible - the generator will ignore intersective rules.")
+      are incompatible - the generator will ignore intersective rules.")
     (setf *intersective-rule-names* nil))
   (when (and (null *intersective-rule-names*) (null *gen-filtering-p*))
-    (format t "~%Warning: filtering off and no intersective rules specified"))
+    (format t "~%Warning: filtering off and no intersective rules specified."))
   (force-output t))
 
 
@@ -460,7 +460,7 @@
                         *intersective-rule-names*))
                   (spelling-change-rule-p r)))
           possible-grules))
-        tgc tcpu conses symbols others consistent partial #+:logon yield)
+        tgc tcpu conses symbols others consistent partial yield)
     
    (with-parser-lock ()
       (clear-gen-chart)
@@ -471,36 +471,6 @@
        #'(lambda () 
            (catch 'first
              ;; Add lexical edges
-             #-:logon
-             (dolist (found found-lex-items)
-               (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
-                      (word (extract-orth-from-fs lex-entry-fs))
-                      (edge
-                       (make-g-edge
-                        :id (next-edge) 
-                        :category (indef-type-of-tdfs lex-entry-fs)
-                        :rule word
-                        :dag lex-entry-fs
-                        :needed nil
-                        :rels-covered (mrs::found-lex-main-rels found)
-                        :children nil
-                        :leaves (list word)
-                        :lex-ids (list (mrs::found-lex-lex-id found))
-                        :lexemes (list found))))
-                 (when *gen-packing-p*
-                   (setf (g-edge-odag edge) lex-entry-fs)
-                   (setf (g-edge-dag edge) (copy-tdfs-partially lex-entry-fs)))
-                 (setf (g-edge-accessible edge)
-                   (collect-semantic-variables-in-fs (g-edge-dag edge)))
-                 (incf (statistics-copies *statistics*)) ; each lex entry will be a copy
-                 (with-agenda (when *gen-first-only-p* 
-                                (if *gen-scoring-hook*
-                                  (funcall 
-                                   *gen-scoring-hook*
-                                   (list :lexicon edge))
-                                  (gen-lex-priority lex-entry-fs)))
-                   (gen-chart-add-inactive edge input-sem input-rels))))
-             #+:logon
              (loop
                  for fl in found-lex-items
                  for edge = (unfold-found-lex fl)
@@ -513,7 +483,15 @@
                      (collect-semantic-variables-in-fs (g-edge-dag edge)))
                    ;; each lex entry will be a copy
                    (incf (statistics-copies *statistics*))
-                   (let ((priority
+                   ;;
+                   ;; with-agenda() closures over local variables, which seems
+                   ;; to badly interact with the binding established by loop();
+                   ;; not quite sure why, but we end up with the wrong .edge.
+                   ;; when the closure is eventually extracted from the agenda.
+                   ;; this resolves the best-first bug reported by berthold on
+                   ;; the `developers' list.                    (12-jul-10; oe)
+                   (let ((edge edge)
+                         (priority
                           (when *gen-first-only-p* 
                             (if *gen-scoring-hook*
                               (funcall *gen-scoring-hook* (list :lexicon edge))
@@ -535,7 +513,6 @@
            (declare (ignore tr ignore))
            (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
                  conses (* scons 8) symbols (* ssym 24) others sother)))
-      
       ;;
       ;; edges corresponding to lexical rule applications are not in the chart
       ;; initially, as lexical rules have been applied prior to invocation of
@@ -545,7 +522,6 @@
       ;; edges, it would be tricky avoiding unwanted combinatorics; for similar
       ;; reasons, suppress packing of these edges.               (1-jul-08; oe)
       ;;
-      #+:logon
       (loop
           with *gen-packing-p* = nil
           for edge in yield
@@ -1572,20 +1548,20 @@
    (format stream "~%"))
 
 (defun print-gen-chart-edge (e stream concise)
-   (format stream "[~A] ~A~A ~35,5T=> (~{~:A~^ ~}) ~A [~{~A~^ ~}]~%"
-      (g-edge-id e)
-      (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
-         (if concise (first (g-edge-lex-ids e)) (g-edge-rule e)))
-      (if (g-edge-needed e)
-         (format nil " / ~{~A~^ ~}" (g-edge-needed e))
-         "")
-      (g-edge-leaves e)
-      (if (and *gen-filtering-p* *gen-filtering-debug*)
-         (format nil " a~:A " (sort (copy-list (g-edge-accessible e)) #'<))
-         "")
-      (mapcan
-         #'(lambda (x) (if x (list (g-edge-id x))))
-         (g-edge-children e))))
+  (format 
+   stream "[~A] ~A~A ~35,5T=> (~{~:A~^ ~}) ~A [~{~A~^ ~}]~%"
+   (g-edge-id e)
+   (if (rule-p (g-edge-rule e))
+     (rule-id (g-edge-rule e))
+     (if concise (first (g-edge-lex-ids e)) (g-edge-rule e)))
+   (if (g-edge-needed e)
+     (format nil " / ~{~A~^ ~}" (g-edge-needed e))
+     "")
+   (g-edge-leaves e)
+   (if (and *gen-filtering-p* *gen-filtering-debug*)
+     (format nil " a~:A " (sort (copy-list (g-edge-accessible e)) #'<))
+     "")
+   (mapcan #'(lambda (x) (if x (list (g-edge-id x)))) (g-edge-children e))))
 
 
 (defun print-generator-lookup-summary (lex-items grules)

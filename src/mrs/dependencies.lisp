@@ -129,18 +129,30 @@
         (t 
          (format nil "_~(~a~)_" abstraction))))))
 
-(defun ed-output-psoa (psoa &key (stream t) (format :ascii)
-                                 cargp markp lnkp collocationp abstractp)
+(defun ed-output-psoa (psoa &key (stream t) (format :ascii) (propertyp t)
+                                 cargp markp lnkp collocationp abstractp
+                                 sortp dmrsp)
   (if (psoa-p psoa)
     (case format
       (:ascii
        (format stream "~a~%" (ed-convert-psoa psoa)))
       (:triples
        (let* ((eds (ed-convert-psoa psoa))
-              (triples (ed-explode
-                        eds
-                        :lnkp lnkp :cargp cargp
-                        :collocationp collocationp :abstractp abstractp)))
+              (triples
+               (if dmrsp
+                 (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
+                 (ed-explode
+                  eds
+                  :lnkp lnkp :cargp cargp :propertyp propertyp
+                  :collocationp collocationp :abstractp abstractp))))
+         (when sortp
+           (setf triples
+             (sort
+              triples
+              #'(lambda (foo bar)
+                  (or (string< (first foo) (first bar))
+                      (and (string= (first foo) (first bar))
+                           (string< (second foo) (second bar))))))))
          (loop
              with *package* = (find-package :lkb)
              initially (unless markp (format stream "{~%"))
@@ -756,3 +768,41 @@
     (clrhash %eds-symbol-table%)
     (clrhash %eds-representatives-table%)
     (clrhash %eds-equivalences%)))
+
+(defun dmrs-explode (dmrs)
+  (labels ((label (id)
+             (loop
+                 for node in (dmrs-nodes dmrs)
+                 when (= (dmrs-node-id node) id)
+                 return
+                   (let* ((pred (dmrs-node-pred node))
+                          (pred (if (realpred-p pred)
+                                  (format
+                                   nil "_~a_~a~@[_~a~]"
+                                   (realpred-lemma pred)
+                                   (realpred-pos pred)
+                                   (realpred-sense pred))
+                                  (ppcre::regex-replace "_rel$" pred "")))
+                          (from (dmrs-node-cfrom node))
+                          (to (dmrs-node-cto node))
+                          (carg (dmrs-node-carg node)))
+                     (format
+                      nil "~a~:[~*~*~;<~a:~a>~]~@[(~a)~]"
+                      pred (and from to) from to carg)))))
+    (loop
+        with rstr = (vsym "RSTR") with arg0 = (vsym "ARG0")
+        for link in (dmrs-links dmrs)
+        for from = (label (dmrs-link-from link))
+        for to = (label (dmrs-link-to link))
+        for role = (let* ((role (dmrs-link-pre link))
+                          (role 
+                           (cond
+                            ((null role)
+                             (vsym (format nil "/~a" (dmrs-link-post link))))
+                            ((stringp role)
+                             (vsym role))
+                            (t role))))
+                     (if (eq role rstr) arg0 role))
+        when role
+        collect (list from role to))))
+  

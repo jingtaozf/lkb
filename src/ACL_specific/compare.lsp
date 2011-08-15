@@ -48,6 +48,8 @@
 
 (def-lkb-parameter *tree-display-semantics-p* t)
 
+(defparameter *tree-initialization-hook* nil)
+
 (defparameter *tree-completion-hook* nil)
 
 (defstruct ctree 
@@ -228,7 +230,24 @@
   ;; extract (minimal) set of elementary properties to discriminate analyses
   ;;
   (unless (compare-frame-exact frame)
-    (setf (compare-frame-discriminants frame) 
+    ;;
+    ;; _fix_me_
+    ;; there are different usages of the 'exact' mode, including picking out
+    ;; derivations among realization results that can be aligned (in various
+    ;; interpretations of that term) with the 'gold' parse that provided the
+    ;; input semantics for generation.  i dimly recall that discriminants in
+    ;; that setup ended up ill-defined (presumably because one and the same
+    ;; edge can occur in different surface positions), hence we disabled the
+    ;; extraction of discriminants below.  in another 'exact' use case, viz.
+    ;; finding matching lexical sub-trees in a lexical-only profile, it would
+    ;; seem possible to extract discriminants, which would then have their
+    ;; values determined by an update-discriminants() call below.  however, we
+    ;; would need another flag or something, to communicate whether or not the
+    ;; compare frame would actually extract discriminants.  so far, at least,
+    ;; there is no practical benefit to having available discriminants for the
+    ;; above use cases, however.                              (12-aug-11; oe)
+    ;;
+    (setf (compare-frame-discriminants frame)
       (find-discriminants
        edges
        :mode (compare-frame-mode frame)
@@ -284,12 +303,12 @@
   ;;
   (when (compare-frame-exact frame)
     (setf (compare-frame-lead frame) nil)
-    #+:null
-    (update-discriminants 
-     (compare-frame-discriminants frame)
-     (compare-frame-exact frame) t)
-    #+:null
-    (recompute-in-and-out frame)
+    (when (compare-frame-discriminants frame)
+      (update-discriminants 
+       (compare-frame-discriminants frame)
+       (compare-frame-exact frame) t)
+      #+:null
+      (recompute-in-and-out frame))
     (setf (compare-frame-in frame) nil)
     (setf (compare-frame-out frame) nil)
 
@@ -299,6 +318,37 @@
         do (push edge (compare-frame-in frame))
         else do (push edge (compare-frame-out frame))))
 
+  (when *tree-initialization-hook*
+    (let* ((hook *tree-initialization-hook*)
+           (extras (and (consp hook) (rest hook)))
+           (hook (if (consp hook) (first hook) hook))
+           (hook (typecase hook
+                   (function hook)
+                   (symbol (and (fboundp hook) (symbol-function hook)))
+                   (string (ignore-errors 
+                            (symbol-function (read-from-string hook)))))))
+      (multiple-value-bind (result condition) 
+          (when (functionp hook)
+            (ignore-errors (apply hook (cons frame extras))))
+        (if (= (length result) (length (compare-frame-discriminants frame)))
+          (loop
+              for discriminant in (compare-frame-discriminants frame)
+              for state in result
+              unless (eq state :unknown) do
+                (setf (discriminant-toggle discriminant) state)
+                (setf (discriminant-state discriminant) state)
+              finally (recompute-in-and-out frame))
+          (format
+           #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+           "tree-initialization-hook(): ~
+            discriminant count mismatch (~a vs. ~a).~%"
+           (length result) (length (compare-frame-discriminants frame))))
+        (when condition
+          (clim:beep)
+          (format
+           #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+           "tree-initialization-hook(): error `~a'.~%"
+           (normalize-string (format nil "~a" condition)))))))
 
   ;;
   ;; extract some quantitative summary measures on update procedure; entirely
