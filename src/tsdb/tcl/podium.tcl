@@ -480,34 +480,26 @@ proc main {} {
     -command {tsdb_set pretty_print_trace_p};
   .menu.process.menu.switches add separator;
   .menu.process.menu.switches add checkbutton \
-    -label "Write `run' Relation" \
+    -label "Write 'run' Relation" \
     -variable globals(write_run_p) -command {tsdb_set write_run_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `parse' Relation" \
+    -label "Write 'parse' Relation" \
     -variable globals(write_parse_p) -command {tsdb_set write_parse_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `result' Relation" \
+    -label "Write 'result' Relation" \
     -variable globals(write_result_p) -command {tsdb_set write_result_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `tree' Field" \
+    -label "Write 'tree' Field" \
     -variable globals(write_tree_p) -command {tsdb_set write_tree_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `mrs' Field" \
+    -label "Write 'mrs' Field" \
     -variable globals(write_mrs_p) -command {tsdb_set write_mrs_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `output' Relation" \
+    -label "Write 'output' Relation" \
     -variable globals(write_output_p) -command {tsdb_set write_output_p};
   .menu.process.menu.switches add checkbutton \
-    -label "Write `rule' Relation" \
+    -label "Write 'rule' Relation" \
     -variable globals(write_rule_p) -command {tsdb_set write_rule_p};
-  .menu.process.menu.switches add checkbutton \
-    -label "Write Lexicon Chart" \
-    -variable globals(write_lexicon_chart_p) \
-    -command {tsdb_set write_lexicon_chart_p};
-  .menu.process.menu.switches add checkbutton \
-    -label "Write Syntax Chart" \
-    -variable globals(write_syntax_chart_p) \
-    -command {tsdb_set write_syntax_chart_p};
   .menu.process.menu.switches add separator;
   .menu.process.menu.switches add radiobutton \
     -label "On Demand Garbage Collect" \
@@ -528,6 +520,9 @@ proc main {} {
   .menu.process.menu.switches add radiobutton \
     -label "Packed Derivations" -command {tsdb_set pvm_protocol} \
     -variable globals(process,protocol) -value 2;
+  .menu.process.menu.switches add radiobutton \
+    -label "Lexical Derivations" -command {tsdb_set pvm_protocol} \
+    -variable globals(process,protocol) -value 33;
 
   menu .menu.process.menu.variables -tearoff 0
   .menu.process.menu.variables add command \
@@ -943,9 +938,13 @@ proc main {} {
     -label "Update Flag Failures" \
     -variable globals(tree,update,flagp) \
     -command {tsdb_set update_flag_p};
-  .menu.trees.menu.switches add checkbutton \
+  .menu.trees.menu.switches add radiobutton \
     -label "Update Exact Match" \
-    -variable globals(tree,update,exactp) \
+    -variable globals(tree,update,exactp) -value :complete \
+    -command {tsdb_set update_exact_p};
+  .menu.trees.menu.switches add radiobutton \
+    -label "Update Subtree Match" \
+    -variable globals(tree,update,exactp) -value :inclusion \
     -command {tsdb_set update_exact_p};
   .menu.trees.menu.switches add checkbutton \
     -label "Compare Exact Match" \
@@ -1564,7 +1563,7 @@ proc yes-or-no-p {prompt} {
       no {return 0}
       default {
         tsdb_beep;
-        status "please answer `yes' or `no'" $timeout;
+        status "please answer 'yes' or 'no'" $timeout;
         after [expr int($timeout * 1000)];
         return [yes-or-no-p $prompt];
       }

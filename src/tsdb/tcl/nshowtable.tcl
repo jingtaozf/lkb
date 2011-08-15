@@ -200,7 +200,7 @@ proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
   ## Compute window title if not passed as `title' argument
 
   if {$title == ""} {
-      set title [format "tsdb(1) analysis: `%s'" $database]
+      set title [format "tsdb(1) analysis: '%s'" $database]
   }
 
   ## Open file
@@ -605,7 +605,7 @@ proc make_postscript {canvas name} {
 
     $canvas itemconfig region -fill $bg -outline $bg
     run_meter 500;
-    status "wrote `$file'" 10;
+    status "wrote '$file'" 10;
 }
 
 proc read_file_cell_contents {file viewer tbl canvas} {

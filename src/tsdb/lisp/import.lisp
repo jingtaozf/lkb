@@ -409,26 +409,27 @@
                                   (t 1))))
                         (when (functionp shift)
                           (setf id (funcall shift id)))
-                        (when tokens
-                          (cond
-                           ((null comment)
-                            (setf comment (acons :tokens tokens nil)))
-                           ((consp comment)
-                            (nconc comment (acons :tokens tokens nil)))))
                         (push
                          (pairlis '(:i-id :i-origin :i-register
                                     :i-format :i-difficulty :i-category
                                     :i-input :i-wf :i-length :i-comment
-                                    :i-author :i-date)
+                                    :i-tokens :i-author :i-date)
                                   (list id origin register
                                         format difficulty category 
                                         (if oinput input ninput)
                                         wf length
                                         (if (stringp comment)
                                           comment
-                                          (write-to-string
-                                           comment 
-                                           :case :downcase))
+                                          (when comment
+                                            (write-to-string
+                                             comment 
+                                             :case :downcase)))
+                                        (if (stringp tokens)
+                                          tokens
+                                          (when tokens
+                                            (write-to-string
+                                             tokens 
+                                             :case :downcase)))
                                         author date))
                          item)
                         (when phenomenon

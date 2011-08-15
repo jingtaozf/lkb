@@ -45,13 +45,13 @@
                    meter))
          (ometer (when output
                    (madjust + (madjust * meter 0.5) (mduration imeter))))
-         (items (select '("i-id" "i-wf" "i-length" "i-input" "i-comment")
-                        '(:integer :integer :integer :string :string)
-                        "item"
-                        (unless mrs condition)
-                        data
-                        :unique nil :sort :i-id
-                        :meter imeter))
+         (granularity (profile-granularity data))
+         (fields '("i-id" "i-wf" "i-length" "i-input" "i-comment"))
+         (fields (if (< granularity 201011) fields (cons "i-tokens" fields)))
+         (types '(:integer :integer :integer :string :string))
+         (types (if (< granularity 201011) types (cons :string types)))
+         (items (select fields types "item" (unless mrs condition) data
+                        :unique nil :sort :i-id :meter imeter))
          (outputs (when output
                     (select '("i-id" "o-ignore" "o-surface"
                               "o-wf" "o-gc" "o-edges")
@@ -93,6 +93,16 @@
                               (max oedges (get-field+ :o-edges record -1)))
                           collect record))
                   do
+                    (let* ((tokens (get-field :i-tokens item))
+                           (n (when (stringp tokens) (- (length tokens) 1))))
+                      (when (and n (< 3 n)
+                                 (char= (schar tokens 0) #\()
+                                 (char= (schar tokens 1) #\()
+                                 (char= (schar tokens (- n 1)) #\))
+                                 (char= (schar tokens n) #\)))
+                        (let ((tokens (ignore-errors 
+                                        (read-from-string tokens))))
+                          (when tokens (set-field :i-tokens tokens item)))))
                     (let* ((comment (get-field :i-comment item))
                            (n (when (stringp comment) (- (length comment) 1))))
                       (when (and n (< 3 n)
@@ -279,7 +289,7 @@
           ((null argument)
            (tsdb-do-cpus
             :action :active :host host :task task :stream *tsdb-io*))
-          ((member argument '(:active :list :kill))
+          ((member argument '(:active :list :kill :shutdown))
            (tsdb-do-cpus
             :action argument :host host :task task :stream *tsdb-io*))
           (t
@@ -335,7 +345,7 @@
          (cond
           ((stringp argument)
            (tsdb-do-set (quote *tsdb-skeleton-directory*) argument)
-           (tsdb-do-skeletons nil))
+           (tsdb-do-skeletons nil :format :short))
           (t
            (format *tsdb-io* "~&~%")
            (tsdb-do-skeletons nil))))
@@ -431,11 +441,9 @@
   (when (member name (list :all))
     (format 
      stream 
-     "~awrite output: ~:[no~;yes~]; ~
-      write lexicon chart: ~:[no~;yes~]; write syntax chart: ~:[no~;yes~];~%"
+     "~awrite output: ~:[no~;yes~];~%"
      prefix
-     *tsdb-write-output-p* 
-     *tsdb-write-lexicon-chart-p* *tsdb-write-syntax-chart-p*))
+     *tsdb-write-output-p*))
   (when (member name (list :all))
     (format 
      stream 
@@ -464,13 +472,17 @@
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((prefix (length *tsdb-home*))
+         (length (length home))
          (absolute (not (equal home *tsdb-home*)))
          (directories (subdirectories home))
          (directories
           (loop
               for directory in directories
-              for suffix = (when (string= *tsdb-home* directory :end2 prefix)
-                             (subseq directory prefix))
+              for suffix = (if (and (<= prefix length)
+                                    (string=
+                                     *tsdb-home* directory :end2 prefix))
+                             (subseq directory prefix)
+                             directory)
               when (and suffix
                         (or (null name) (string= name suffix))
                         (or (null pattern) (ppcre::scan pattern suffix)))
@@ -624,6 +636,13 @@
                         (and (not fdaughters) (not bdaughters)))
                     fpath bpath (string< fpath bpath))))))))
 
+(defun count-skeletons (&optional (skeletons *tsdb-skeletons*))
+  (loop
+      for skeleton in skeletons
+      for daughters = (get-field :daughters skeleton)
+      when daughters sum (count-skeletons daughters)
+      else sum 1))
+
 (defun tsdb-do-skeletons (source &key (stream *tsdb-io*) 
                                       (prefix "  ")
                                       (format :ascii)
@@ -692,9 +711,15 @@
             when increment do (meter-advance increment)
             do
               (print-skeleton skeleton prefix))))
-                     
+    (when (eq format :short)
+      (let ((n (count-skeletons)))
+        (format
+         stream "~a~a skeleton~p in `~a'."
+         prefix n n 
+         (namestring (make-pathname :directory directory)))))
     (when meter (meter :value (get-field :end meter)))
-    (when *tsdb-skeletons* (format stream "~%"))))
+    (when (and *tsdb-skeletons* (not (eq format :short)))
+      (format stream "~%"))))
 
 (defun tsdb-do-phenomena (&key (stream *tsdb-io*) 
                                (prefix "  ")
@@ -747,6 +772,16 @@
                prefix spawn
                prefix options)))))
     (:kill
+     (let ((n (length *pvm-clients*)))
+       (format stream "~atsdb(): shutting down ~a client~p ..." prefix n n))
+     (loop
+         for client in *pvm-clients*
+         do (kill-client client :prefix prefix))      
+     (sleep 1)
+     (setf *pvm-clients* nil)
+     (pvm_quit)
+     (format stream " done; no active PVM clients.~%~%"))
+    (:shutdown
      (format stream "~atsdb(): performing full PVM reset ..." prefix)
      (pvm_halt :user (current-user))
      (sleep 1)

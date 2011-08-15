@@ -39,7 +39,7 @@
 
 (defparameter *yy-k2y-rts-ra-ratio* nil)
 
-(defun yy-read-input (string)
+(defun yy-read-input (string &key (format :string))
   (let* ((i 0)
          (length (length string))
          (whitespace '(#\space #\tab #\newline)))
@@ -76,67 +76,86 @@
                    (when form
                      (setf i rest)
                      form))))
+             (read-characterization ()
+               (when (seek-character #\<)
+                 (let ((*readtable* (copy-readtable))
+                       from to)
+                   (set-syntax-from-char #\: #\" *readtable*)
+                   (set-syntax-from-char #\, #\" *readtable*)
+                   (set-syntax-from-char #\> #\" *readtable*)
+                   (read-character #\<)
+                   (setf from (read-form))
+                   (when (numberp from)
+                     (read-character #\:)
+                     (setf to (read-form))
+                     (read-character #\>)
+                     (read-character #\,)
+                     (and (numberp to) (values from to))))))
              (read-token ()
                (ignore-errors
-                (let (word start end inflection)
+                (let (id start end from to form surface inflection tags)
                   (read-character #\()
+                  (setf id (read-form))
+                  (read-character #\,)
                   (setf start (read-form))
                   (read-character #\,)
                   (setf end (read-form))
                   (read-character #\,)
-                  (cond
-                   ;;
-                   ;; the first, temporary format (YY 0.0) is no longer in use.
-                   ;;
-                   #+:null
-                   ((and (integerp start) (integerp end)
-                         (zerop (mod start 100)) (zerop (mod end 100)))
-                    (setf word (read-form))
-                    (read-form)
-                    (skip-to #\))
-                    (when (read-character #\))
-                      (list start end word nil)))
-                   ((and (integerp start) (integerp end))
-                    (setf start end)
-                    (setf end (read-form))
+                  (multiple-value-setq (from to) (read-characterization))
+                  ;;
+                  ;; skip over the path(s) this token is a member of; we are
+                  ;; assuming everything is connected with everything.
+                  ;;
+                  (skip-to #\,) (read-character #\,)
+                  (setf form (read-form))
+                  (when (seek-character #\") (setf surface (read-form)))
+                  (read-character #\,)
+                  ;;
+                  ;; skip over the inflection position
+                  ;;
+                  (skip-to #\,) (read-character #\,)
+                  ;;
+                  ;; _fix_me_
+                  ;; i guess inflection information can be a list, separating
+                  ;; elements by whitespact
+                  ;;
+                  (setf inflection (read-form))
+                  (when (seek-character #\,)
                     (read-character #\,)
-                    (when (seek-character #\<)
-                      (skip-to #\,)
-                      (read-character #\,))
-                    (read-form)
-                    (read-character #\,) (setf word (read-form))
-                    (when (seek-character #\") (read-form))
-                    (read-character #\,) (read-form)
-                    (read-character #\,) (setf inflection (read-form))
-                    (skip-to #\))
-                    (when (read-character #\))
-                      (list start end word inflection))))))))
-                    
-      (loop
-          with result = (make-array length
-                                    :element-type 'character
-                                    :adjustable nil :fill-pointer 0)
-          with positions = nil
-          with ntokens = 0
-          for token = (read-token)
-          for start = (first token)
-          for end = (second token)
-          for word = (third token)
-          while word
-          when (and word (numberp start) (numberp end)
-                    #+:null
-                    (if inflection (= (- end start) 1) (= (- end start) 100))
-                    #+:null
-                    (or (null inflection) (string= inflection "null"))
-                    (not (member start positions :test #'=)))
-          do
-            (unless (zerop ntokens) (vector-push #\space result))
-            (push start positions)
-            (loop
-                for c across word
-                do (vector-push c result))
-            (incf ntokens)
-          finally (unless (equal result "") (return result))))))
+                    (setf tags
+                      (loop
+                          while (not (seek-character #\)))
+                          collect (read-form))))
+                  (skip-to #\))
+                  (when (read-character #\))
+                    (pairlis '(:id :start :end :from :to 
+                               :form :surface :inflection :tags)
+                             (list id start end from to
+                                   form surface inflection tags)))))))
+      (let ((tokens (loop for token = (read-token) while token collect token)))
+        (setf tokens
+          (sort tokens #'< :key #'(lambda (token) (get-field :id token))))
+        (case format
+          (:raw
+           tokens)
+          (:string
+           (loop
+               with result =
+                 (make-array length
+                  :element-type 'character :adjustable nil :fill-pointer 0)
+               with positions = nil
+               with ntokens = 0
+               for token in tokens
+               for start = (get-field :start token)
+               for word = (or (get-field :surface token)
+                              (get-field :form token))
+               unless (member start positions :test #'=)
+               do 
+                  (push start positions)
+                  (unless (zerop ntokens) (vector-push #\space result))
+                  (loop for c across word do (vector-push c result))
+                  (incf ntokens)
+               finally (return (unless (equal result "") result)))))))))
 
 (labels ((|[|-reader (stream char)
            (declare (ignore char))
@@ -686,6 +705,15 @@
         finally (close index)))
   (when meter (meter :value (get-field :end meter))))
 
+(eval-when #+:ansi-eval-when (:load-toplevel :execute)
+	   #-:ansi-eval-when (load eval)
+  (let ((reader
+         #'(lambda (string)
+             (let ((*package* (find-package :tsdb)))
+               (yy-read-input string :format :raw)))))
+    (setf (gethash :p-input *statistics-readers*) reader)
+    (setf (gethash :p-tokens *statistics-readers*) reader)))
+
 #+:null
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
 	   #-:ansi-eval-when (load eval)

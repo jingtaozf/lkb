@@ -96,7 +96,8 @@
          (count (cfr-count cfr))
          (probability (cfr-probability cfr))
          (type (case (cfr-type cfr) 
-                 (:root "S") (:rule "R") (:irule "I") (:word "W")))
+                 (:root "S") (:rule "R")
+                 (:lexical "L") (:orthographemic "O") (:word "W")))
          (lhs (cfr-lhs cfr))
          (rhs (cfr-rhs cfr))
          (*print-case* :downcase))
@@ -119,8 +120,12 @@
                 (loop for code in rhs collect (code-to-symbol code table)))))
          (format
           stream
-          "(~d) [1 (0) ~s ~{~s~^ ~}] ~,4e {~d ~d}"
-          (cfr-id cfr) (code-to-symbol lhs table) rhs
+          "(~d) [~a (0) ~s ~{~s~^ ~}] ~,4e {~d ~d}"
+          (cfr-id cfr)
+          (case (cfr-type cfr) 
+            (:root 0) (:word 1) (:orthographemic 2) (:lexical 3)
+            (:rule 4) (t -1))
+          (code-to-symbol lhs table) rhs
           (log (cfr-probability cfr))
           (aref (cfg-counts cfg) lhs) (cfr-count cfr)))))
     (when suffix (format stream suffix))))
@@ -232,12 +237,12 @@
                 (setf (cfg-epsilon cfg) 
                   (min (cfg-epsilon cfg) probability))))))
 
-(defun estimate-cfg (items &key (stream *tsdb-io*))
+(defun estimate-cfg (items &key (cfg (make-cfg)) (estimate t)
+                                (stream *tsdb-io*))
 
   (loop
       with *package* = (find-package :lkb)
       with lkb::*edge-registry* = nil
-      with cfg = (make-cfg)
       for item in items
       for id = (get-field :i-id item)
       for ranks = (get-field :ranks item)
@@ -260,8 +265,8 @@
          stream
          "~&[~a] estimate-cfg(): ignoring item # ~d (no edge);~%"
          (current-time :long :short) id)
-      finally 
-        (estimate-probabilities cfg)
+      finally
+        (when estimate (estimate-probabilities cfg))
         (return cfg)))
 
 (defun edge-to-cfrs (edge cfg)
@@ -275,7 +280,7 @@
              (rhs (list (symbol-to-code root table))))
         (record-cfr (make-cfr :type :root :lhs lhs :rhs rhs) cfg)))
     (record-cfr rule cfg)
-    (unless (smember (cfr-type rule) '(:root :irule :word))
+    (unless (smember (cfr-type rule) '(:root :word))
       (loop
           for daughter in (lkb::edge-children edge)
           do (edge-to-cfrs daughter cfg)))))
@@ -301,13 +306,21 @@
           (make-cfr :type :word :lhs lhs :rhs rhs))))
      (t
       (let* ((lhs (symbol-to-code root table))
+             (rule (lkb::edge-rule edge))
+             (id (and (lkb::rule-p rule) (lkb::rule-id rule)))
+             (lexicalp (gethash id lkb::*lexical-rules*))
+             (orthographemicp (lkb::rule-orthographemicp rule))
+             (type (cond
+                    ((and lexicalp orthographemicp) :orthographemic)
+                    (lexicalp :lexical)
+                    (t :rule)))
              (rhs (loop
                       for edge in daughters
                       for root = (edge-root
                                   edge *pcfg-use-preterminal-types-p*)
                       collect (symbol-to-code root table))))
         (setf (lkb::edge-foo edge)
-          (make-cfr :type :rule :lhs lhs :rhs rhs)))))))
+          (make-cfr :type type :lhs lhs :rhs rhs)))))))
 
 (defun pcfg-score-edge (edge cfg &optional recursionp)
   
@@ -335,7 +348,7 @@
       
       (setf (lkb::edge-foo edge) cfg)
       (multiple-value-bind (score count)
-          (if (smember (cfr-type rule) '(:irule :word))
+          (if (eq (cfr-type rule) :word)
             (values probability 1)
             (loop
                 with result = 1

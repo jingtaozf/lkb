@@ -48,6 +48,8 @@
 
 (defparameter *redwoods-composite-export-p* nil)
 
+(defparameter *redwoods-index-export-p* nil)
+
 (defparameter *redwoods-train-percentage* 100)
 
 (defparameter *redwoods-task* :rank)
@@ -99,8 +101,7 @@
                       "readings >= 1"))
          (items
           (if (stringp data) 
-            (analyze data 
-                     :condition condition :meter meter :message meter)
+            (analyze data :condition condition :meter meter :message meter)
             data))
          (message (format 
                    nil 
@@ -573,16 +574,49 @@
                    (list parse-id gactive (- greadings gactive)))))
 
       (when exactp
-        (loop
-            with gderivation = (if (stringp gderivation)
-                                 (ignore-errors
-                                  (read-from-string gderivation nil nil))
-                                 gderivation)
-            initially (setf (lkb::compare-frame-exact frame) nil)
-            for edge in edges
-            for derivation = (lkb::edge-bar edge)
-            when (derivation-equal gderivation derivation) do
-              (push edge (lkb::compare-frame-exact frame))))
+        (let ((gderivation (if (stringp gderivation)
+                             (ignore-errors
+                              (read-from-string gderivation nil nil))
+                             gderivation)))
+          (setf (lkb::compare-frame-exact frame) nil)
+          (case exactp
+            (:inclusion
+             ;;
+             ;; against a lexical chart (the lattice resulting from lexical-
+             ;; only parsing), label those maximal sub-trees that participate
+             ;; in the 'gold' derivation.
+             ;;
+             (let* ((n (loop for edge in edges maximize (lkb::edge-to edge)))
+                    (chart
+                     (make-array (list (+ n 1) (+ n 1)) :initial-element nil)))
+               (labels ((process (derivation)
+                          (when (derivation-daughters derivation)
+                            (let* ((from (derivation-start derivation))
+                                   (to (derivation-end derivation))
+                                   (edge
+                                    (find
+                                     derivation (aref chart from to)
+                                     :key #'lkb::edge-bar
+                                     :test #'derivation-equal)))
+                              (if edge
+                                (push edge (lkb::compare-frame-exact frame))
+                                (loop
+                                    for daughter
+                                    in (derivation-daughters derivation)
+                                    do (process daughter)))))))
+                 (loop
+                     for edge in edges
+                     for from = (lkb::edge-from edge)
+                     for to = (lkb::edge-to edge)
+                     do 
+                       (push edge (aref chart from to)))
+                 (process gderivation))))
+            (t
+             (loop
+                 for edge in edges
+                 for derivation = (lkb::edge-bar edge)
+                 when (derivation-equal gderivation derivation) do
+                   (push edge (lkb::compare-frame-exact frame)))))))
 
       (when (and runp display (null %client%))
         (setf %client%
@@ -797,17 +831,16 @@
                             :start start :end end
                             :toggle toggle :state state)))
 
-(defun analyze-trees (&optional (data *tsdb-data*)
+(defun analyze-trees (&optional (profile *tsdb-data*)
                       &key (condition *statistics-select-condition*)
                            file append (format :latex)
                            meter)
   (let* ((stream (create-output-stream file append))
-         (items (if (stringp data)
-                  (analyze-aggregates data :condition condition :trees t
+         (items (if (stringp profile)
+                  (analyze-aggregates profile :condition condition :trees t
                                       :meter meter :format format) 
-                  data))
-         (averages 
-          (summarize-competence-parameters items))
+                  profile))
+         (averages (summarize-competence-parameters items))
          (averages (remove 0 averages 
                            :key #'(lambda (foo)
                                     (get-field :results (rest foo)))))
@@ -935,7 +968,24 @@
                        (get-field :aresults data) (get-field :alength data)
                        (get-field :aanalyses data)
                        (get-field :sresults data) (get-field :slength data)
-                       (get-field :sanalyses data))))))
+                       (get-field :sanalyses data))))
+            (:csv
+             (format
+              stream
+              "~a,~a,~a,~
+               ~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f~%"
+              profile name (get-field :items data)
+              (get-field :results data) (get-field :i-length data)
+              (get-field :analyses data)
+              (get-field :rresults data) (get-field :rlength data)
+              (get-field :ranalyses data)
+              (get-field :uresults data) (get-field :ulength data)
+              (get-field :uanalyses data)
+              (get-field :aresults data) (get-field :alength data)
+              (get-field :aanalyses data)
+              (get-field :sresults data) (get-field :slength data)
+              (get-field :sanalyses data)))))
+
     (let* ((total (rest (assoc :total averages)))
            (name "Total")
            (n (+ naggregates 3)))
@@ -990,7 +1040,23 @@
           "<tr>~%  ~
            <td class=\"ItsdbCaption\" colspan=~a align=right>~%    ~
            ~a~%  </td>~%</tr>~%</table>~%"
-          ncolumns caption)))
+          ncolumns caption))
+        (:csv
+         (format
+          stream
+          "~a,~a,~a,~
+           ~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f,~,2f~%"
+          profile name (get-field :items total)
+          (get-field :results total) (get-field :i-length total)
+          (get-field :analyses total)
+          (get-field :rresults total) (get-field :rlength total)
+          (get-field :ranalyses total)
+          (get-field :uresults total) (get-field :ulength total)
+          (get-field :uanalyses total)
+          (get-field :aresults total) (get-field :alength total)
+          (get-field :aanalyses total)
+          (get-field :sresults total) (get-field :slength total)
+          (get-field :sanalyses total))))
 
       #+:debug
       (format
@@ -1002,7 +1068,7 @@
         unambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
         ambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
         unannotated: ~d [~,2f ~,2f (~,2f) ~,2f]~%"
-       data
+       profile
        (get-field :items total)
        (get-field :results total)
        (get-field :i-length total)
@@ -1285,6 +1351,7 @@
 
 (defun export-trees (data &key (condition *statistics-select-condition*)
                                path prefix
+                               (index *redwoods-index-export-p*)
                                (compositep *redwoods-composite-export-p*)
                                interrupt meter 
                                (compressor "gzip -c -9") (suffix "gz")
@@ -1308,6 +1375,7 @@
                      (unless compositep (directory2file data)))
       with lkb::*chart-packing-p* = nil
       with *reconstruct-cache* = (make-hash-table :test #'eql)
+      with *derivations-print-lexical-type-p* = t
       with items = (analyze
                     data :thorough '(:derivation :mrs)
                     :condition condition :commentp t)
@@ -1330,10 +1398,19 @@
                :output file :if-output-exists :supersede
                :error-output nil))
             (setf foo foo)))
+        (when index
+          (let ((base (format
+                       nil "~a/~a"
+                       target (if compositep (directory2file data) "Index"))))
+            (ignore-errors (mkdir base))
+            (setf index (acons :base base nil))))
       for item in items
       for i-wf = (get-field :i-wf item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
-      for i-comment = (get-field :i-comment item)
+      for i-comment = (let ((foo (get-field :i-comment item)))
+                        (unless (or (string-equal foo "")
+                                    (string-equal foo "nil"))
+                          foo))
       for parse-id = (get-field :parse-id item)
       for results = (let ((results (get-field :results item)))
                       (sort (copy-list results) #'< 
@@ -1390,12 +1467,14 @@
          "[~d] (~a of ~d) {~d} `~a'~@[ [~a]~]~%"
          (+ parse-id offset)
          (length active) (length results) i-wf
-         input (and (not (equal i-comment "nil"))))
+         input i-comment)
 
-        (export-tree item active :offset offset :out out :stream stream)
+        (export-tree
+         item active :offset offset :out out :stream stream :index index)
         (unless *redwoods-thinning-export-p*
           (export-tree
-           item active :complementp t :offset offset :out out :stream stream))
+           item active :complementp t :offset offset
+           :out out :stream stream :index index))
 
         (force-output out)
         (unless compositep
@@ -1405,6 +1484,18 @@
           (setf out nil pid nil))
 
         (setf firstp nil)
+        ;;
+        ;; _fix_me_
+        ;; while TITAN limits our jobs to a maximum of 1024 open files, make
+        ;; sure to close all streams for each new item.        (28-nov-10; oe)
+        ;;
+        (when index
+          (loop
+              for entry in index
+              when (and (streamp (rest entry)) (open-stream-p (rest entry)))
+              do
+                (close (rest entry))
+                (setf (rest entry) nil)))
         (when increment (meter-advance increment))
       when (interrupt-p interrupt) do
         (when out (close out))
@@ -1421,11 +1512,18 @@
           (close out)
           #+:allegro
           (sys:os-wait nil pid))
+        (when index
+          (loop
+              for entry in index
+              for stream = (rest entry)
+              when (and (streamp stream) (open-stream-p stream))
+              do (close stream)))
         (when meter (meter :value (get-field :end meter)))
         (when gc-strategy (restore-gc-strategy gc-strategy))))
 
 (defun export-tree (item active 
-                    &key complementp (offset 0) (out t) (stream *tsdb-io*))
+                    &key complementp (offset 0) (out t)
+                         index (stream *tsdb-io*))
 
   #+:debug
   (setf %item% item %active% active)
@@ -1438,7 +1536,10 @@
           lkb::*deleted-daughter-features*)
       with i-input = (get-field :i-input item)
       with i-id = (get-field :i-id item)
-      with i-comment = (get-field :i-comment item)
+      with i-comment = (let ((foo (get-field :i-comment item)))
+                         (unless (or (string-equal foo "")
+                                     (string-equal foo "nil"))
+                           foo))
       with parse-id = (get-field :parse-id item)
       with results = (get-field :results item)
       for i from 1
@@ -1477,10 +1578,44 @@
          "~c~%[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
          #\page (+ parse-id offset) result-id complementp)
         (setf lkb::*cached-category-abbs* nil)
+        (when index
+          (labels ((register (entity start end &optional cache)
+                     (let ((stream (and cache (get-field entity index))))
+                       (unless stream
+                         (let* ((base (get-field :base index))
+                                (file (format nil "~a/~(~a~)" base entity)))
+                           (setf stream
+                             (open
+                              file :direction :output
+                              :if-exists :append :if-does-not-exist :create))
+                           (when cache (set-field entity stream index))))
+                       (format
+                        stream "~a ~a ~a ~a ~a ~a~%"
+                        i-id parse-id result-id start end
+                        (if complementp 0 1))
+                       (unless cache (close stream)))))
+            (let* ((sponsor (derivation-sponsor derivation))
+                   (nodes (derivation-nodes derivation))
+                   (yield (derivation-yield derivation)))
+              (when sponsor
+                (register
+                 sponsor
+                 (derivation-start derivation) (derivation-end derivation)
+                 t))
+              (loop
+                  for node in nodes
+                  for entity = (second node)
+                  for start = (fourth node)
+                  for end = (fifth node)
+                  for preterminalp = (smember entity yield)
+                  when preterminalp
+                  do (register (type-of-lexical-entry entity) start end t)
+                  else do (register entity start end (not preterminalp))))))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :derivation *redwoods-export-values*))
           (let ((*package* (find-package :tsdb)))
-            (format out "~s~%~%~%" derivation)))
+            (pprint-derivation derivation :stream out)
+            (format out "~%~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :tree *redwoods-export-values*))
           (if tree
@@ -1531,14 +1666,32 @@
           (ignore-errors
            (mrs::ed-output-psoa
             mrs :format :triples :cargp nil :markp t :lnkp nil
-            :collocationp t :abstractp t
-            :stream out)))
+            :collocationp t :abstractp t :stream out)))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :ltriples *redwoods-export-values*))
           (ignore-errors
            (mrs::ed-output-psoa
             mrs :format :triples  :cargp t :markp nil :lnkp t
             :collocationp nil :abstractp nil :stream out)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :striples *redwoods-export-values*))
+          (ignore-errors
+           (mrs::ed-output-psoa
+            mrs :format :triples  :cargp t :markp nil :lnkp t :propertyp nil
+            :collocationp nil :abstractp nil :sortp t :stream out)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :dtriples *redwoods-export-values*))
+          (ignore-errors
+           (mrs::ed-output-psoa
+            mrs :format :triples  :cargp t :markp nil :lnkp t :propertyp nil
+            :collocationp nil :abstractp nil :sortp t :dmrsp t :stream out)))
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :dmrx *redwoods-export-values*))
+          (ignore-errors
+           (mrs::output-dmrs1
+            (mrs::rmrs-to-dmrs (mrs::mrs-to-rmrs mrs))
+            'mrs::dxml out)
+           (format out "~%")))
         ;;
         ;; _fix_me_
         ;; it appears this function is just called for its side effect, as it
@@ -1613,7 +1766,7 @@
          (stream (create-output-stream file append))
          (aggregates (summarize-scores
                       data gold :condition condition 
-                     :spartanp spartanp :scorep scorep :n n
+                      :spartanp spartanp :scorep scorep :n n
                       :test test :loosep loosep
                       :format format :meter meter))
          (aggregates (nreverse aggregates))
@@ -1914,9 +2067,9 @@
               with anear = 0
               with aloose = 0
               with atsimilarities = (make-array
-                                    nsimilarities :initial-element 0)
+                                     nsimilarities :initial-element 0)
               with ansimilarities = (make-array
-                                    nsimilarities :initial-element 0)
+                                     nsimilarities :initial-element 0)
               with asuccesses = (and n (make-array n :initial-element 0))
               with arandom = 0
               for item in data
@@ -2823,8 +2976,8 @@
 (defun operate-on-profiles
     (profiles
      &key (condition *statistics-select-condition*)
-          (model (make-model)) (purgep t)
           (recursep t) internalp (stream *tsdb-io*) (verbose t) (task :fc)
+          (model (if (eq task :pcfg) (make-cfg) (make-model))) (purgep t)
           target initialp finalp firstp lastp
           (resolvedp t)
           (increment %redwoods-items-increment%) cache interrupt meter)
@@ -2832,6 +2985,7 @@
   (declare (ignore interrupt meter)
            (special *feature-item-enhancers* *feature-flags*
                     *feature-grandparenting* *feature-ngram-size*))
+
 
   ;;
   ;; invoke various memory-intensive operations successively on sub-sets of
@@ -2857,18 +3011,18 @@
         with gc = (install-gc-strategy nil :tenure nil :verbose verbose)
         with condition
         = (case task
-            ((:fc :rank)
+            ((:fc :rank :pcfg)
              (if (eq *redwoods-task* :classify)
                condition
-               (if resolvedp
-                 (if (and condition (not (equal condition "")))
-                   (format nil "t-active > 0 && readings > 1 && (~a)" condition)
-                   "t-active > 0 && readings > 1")
-                 (if (and condition (not (equal condition "")))
-                   (format nil "readings > 1 && (~a)" condition)
-                   "readings > 1"))))
+               (let ((n (if (eq task :pcfg) 0 1)))
+                 (if resolvedp
+                   (format
+                    nil "t-active > 0 && readings > ~a~@[ && (~a)~]"
+                    n (unless (equal condition "") condition))
+                   (format
+                    nil "readings > ~a~@[ && (~a)~]"
+                    n (unless (equal condition "") condition))))))
             (t condition))
-        for i from 0
         for remaining on profiles
         for active = (first remaining)
         for virtualp = (virtual-profile-p active)
@@ -2895,8 +3049,8 @@
     (when (eq task :fc)
       (let ((embassador (first profiles)))
         (print-model
-         model :file (profile-find-model embassador) :format :freeze))
-      model))
+         model :file (profile-find-model embassador) :format :freeze)))
+    model)
 
    ((virtual-profile-p profiles)
     (loop
@@ -2970,7 +3124,8 @@
              (current-time :long :short) profiles low high))
           (operate-on-profiles
            profiles :condition foo :model model :task task :stream stream
-           :internalp t :recursep nil :firstp (= i 1) :lastp (= i n)
+           :internalp t :recursep nil 
+           :initialp initialp :finalp finalp :firstp (= i 1) :lastp (= i n)
            :target target :cache cache :resolvedp resolvedp)
           ;;
           ;; do not expire the DB yet, while running sub-sets of items from it
@@ -2981,7 +3136,8 @@
    (t
     (let* ((thorough
             (append
-             (when (or (>= *feature-grandparenting* 0)
+             (when (or (eq task :pcfg)
+                       (>= *feature-grandparenting* 0)
                        (> *feature-ngram-size* 0))
                '(:derivation))
              (when *feature-flags*
@@ -2991,8 +3147,7 @@
             (data (analyze
                    profiles :thorough thorough :condition condition
                    :gold (and (eq *redwoods-task* :rank) profiles)
-                   :commentp t)))
-      (setf lastp lastp)
+                   :commentp t :tokensp (eq *redwoods-task* :classify))))
       (case task
         (:fc
          (loop
@@ -3062,7 +3217,20 @@
                  
                  (loop
                      for score in ranks
-                     do (write-score target score :cache cache))))))))))
+                     do (write-score target score :cache cache)))))
+        (:pcfg
+         (when data
+           (format
+            stream
+            "~&[~a] operate-on-profiles(): ~
+           ~a PCFG item~p [~a -- ~a].~%"
+            (current-time :long :short)
+            (length data) (length data)
+            (get-field :i-id (first data))
+            (get-field :i-id (first (last data))))
+           (estimate-cfg data :cfg model :estimate (and lastp finalp))
+           (when (and lastp finalp (or (stringp target) (streamp target)))
+             (print-cfg model :stream target :format :export)))))))))
 
 (defun train (source file
               &key (condition *statistics-select-condition*)
@@ -3239,24 +3407,27 @@
                                   (select-item-sets source))))
                       ;;
                       ;; when there are no item sets, manufacture a dummy list
-                      ;; of singleton sets, one per item
+                      ;; of singleton sets, one per item.
                       ;;
+                      ;; _fix_me_
+                      ;; for combinations of profiles where some provide item
+                      ;; sets while others do not, the code below breaks.  it
+                      ;; would seem we need to make sure to manufacture dummy
+                      ;; sets for all items not found in an item set.
+                      ;;                                        (23-oct-10; oe)
                       (if sets
                         (loop
                             for set in sets
                             for items
                             = (loop
                                   while data
-                                  for iid in set
+                                  for id in set
                                   for item
-                                  = (when (= (get-field :i-id (first data))
-                                             iid)
+                                  = (when (= (get-field :i-id (first data)) id)
                                       (pop data))
                                   when item collect item)
                             when items collect items)
-                        (loop
-                            for item in data
-                            collect (list item))))
+                        (loop for item in data collect (list item))))
         with increment = (when meter (/ (mduration meter) nfold))
         ;;
         ;; for some model types, never do more than one iteration; also, if
@@ -3522,12 +3693,11 @@
          (loop
              for result in (get-field :results item)
              for rid = (get-field :result-id result)
-             with active = (loop for r in (get-field :ranks item)
-                               collect (get-field :result-id  r))
-             for active-p = (if (member rid active :test #'=)
-                                1 0)
+             with active = (loop for rank in (get-field :ranks item)
+                               collect (get-field :result-id  rank))
+             for activep = (if (member rid active :test #'=) 1 0)
              collect (pairlis '(:result-id :rank :score) 
-                              (list rid active-p active-p)))
+                              (list rid activep activep)))
          item)))
 
 (defun kappa (actual expected)
@@ -3552,4 +3722,15 @@
            (mrs::output-mrs1 mrs 'mrs::simple stream)))
         (:raw
          mrs)))))
-
+
+;;;
+;;; generate summary statistics for a set of treebanked profiles
+;;;
+#+:null
+(loop
+    with *phenomena* = nil
+    with *statistics-aggregate-dimension* = :phenomena
+    with *tsdb-home* = (logon-directory "lingo/terg/tsdb/gold" :string)
+    for db in (find-tsdb-directories)
+    for name = (get-field :database db)
+    do (analyze-trees name :append "/tmp/redwoods.csv" :format :csv))

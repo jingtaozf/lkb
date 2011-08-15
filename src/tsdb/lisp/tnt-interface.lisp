@@ -77,14 +77,14 @@
 ;;; Essentials of this function (sans error checking) were provided by
 ;;; Stephan Oepen.
 
-(defun type-of-lexical-entry (instance)
+(defun type-of-lexical-entry (instance &optional package)
   (let* ((instance (lkb::get-lex-entry-from-id instance))
 	 (tdfs (and instance (lkb::lex-entry-full-fs instance)))
 	 (dag (and tdfs (lkb::tdfs-indef tdfs)))
 	 (type (when dag (lkb::type-of-fs dag))))
       (if (null type)
 	  (error "Null lexical entry type ~s~%" instance)
-	type)))
+        (if package (intern type package) type))))
 
 
 ;;;;---------------------------------------------------------------------

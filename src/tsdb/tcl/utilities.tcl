@@ -842,7 +842,7 @@ proc register_at_saabruecken {} {
     }; # if
     puts $socket "To: podium@coli.uni-sb.de";
     puts $socket \
-      "Subject: $globals(name) ($version) for `$globals(user)' on `$client'";
+      "Subject: $globals(name) ($version) for '$globals(user)' on '$client'";
     puts $socket ".";
     set status [gets $socket];
     if {[string range $status 0 2] != "250"} {
@@ -909,14 +909,6 @@ proc tsdb_set {variable {value ""}} {
         set variable "*tsdb-rule-statistics-p*"; 
         set value [lispify_truth_value $globals(write_rule_p)]
       }
-      write_syntax_chart_p {
-        set variable "*tsdb-write-syntax-chart-p*"; 
-        set value [lispify_truth_value $globals(write_syntax_chart_p)]
-      }
-      write_lexicon_chart_p {
-        set variable "*tsdb-write-lexicon-chart-p*"; 
-        set value [lispify_truth_value $globals(write_lexicon_chart_p)]
-      }
       pvm_protocol {
         set variable "*pvm-protocol*"; 
         set value $globals(process,protocol);
@@ -938,7 +930,7 @@ proc tsdb_set {variable {value ""}} {
         #
         # _fix_me_
         # this hardwires the set of time-measuring attributes for which gc()
-        # time will be discounted; should be configurable  (17-oct-99  -  oe)
+        # time will be discounted; should be configurable.  (17-oct-99  -  oe)
         #
         if {$globals(exclude_tgc_p)} {
           set value "(:tcpu)";
@@ -974,7 +966,7 @@ proc tsdb_set {variable {value ""}} {
       }
       update_exact_p {
         set variable "*redwoods-update-exact-p*";
-        set value [lispify_truth_value $globals(tree,update,exactp)];
+        set value $globals(tree,update,exactp);
       }
       compare_exact_p {
         set variable "*redwoods-agreement-exact-p*";
@@ -1047,12 +1039,12 @@ proc verify_ts_selection {{code ""} {access "read"}} {
     if {![info exists index] || [lindex $test_suites($index) 1] != "rw"} {
       tsdb_beep;
       status \
-        "database `$globals(data)' is write-protected (has `ro' status)" 5;
+        "database '$globals(data)' is write-protected (has 'ro' status)" 5;
       return 1;
     }; # fi
     if {[lindex $test_suites($index) 3] > 0
         && $globals(overwrite)
-        && [yes-or-no-p "overwrite non-empty `$globals(data)'"] != 1} {
+        && [yes-or-no-p "overwrite non-empty '$globals(data)'"] != 1} {
       return 1;
     }; # if
   }; # fi
@@ -1113,17 +1105,17 @@ proc entry_validate {entry {lower ""} {upper ""} {label ""}} {
         return 1;
       } else {
         set error [format "invalid (too large) value in entry field%s (%s)" \
-                   [expr {$label != "" ? " `$label'" : ""}] \
+                   [expr {$label != "" ? " '$label'" : ""}] \
                    "must be less or equal $upper"];
       }; # else
     } else {
       set error [format "invalid (too small) value in entry field%s (%s)" \
-                 [expr {$label != "" ? " `$label'" : ""}] \
+                 [expr {$label != "" ? " '$label'" : ""}] \
                  "must be greater or equal $lower"];
     }; # else
   } else {
     set error [format "invalid (non-numeric) value in entry field%s" \
-               [expr {$label != "" ? " `$label'" : ""}]];
+               [expr {$label != "" ? " '$label'" : ""}]];
   }; # else
 
   if {[info exists error]} {
@@ -1189,10 +1181,10 @@ proc show_text {file {container ""} {title ""} {width 80} {height 25}} {
   global globals;
 
   if {$container == ""} { set container ".relations[gensym]" };
-  if {$title == ""} { set title [format "tsdb(1) `%s' text view" $file] };
+  if {$title == ""} { set title [format "tsdb(1) '%s' text view" $file] };
 
   if {[catch {set in [open $file r]}]} { 
-    error "show_text(): unable to open `$file'."
+    error "show_text(): unable to open '$file'."
   };# if
 
   set toplevel [toplevel $container];
@@ -1238,10 +1230,10 @@ proc show_chart {file {container ""} {title ""}} {
   global globals;
 
   if {$container == ""} { set container ".relations[gensym]" };
-  if {$title == ""} { set title [format "tsdb(1) `%s' bar chart view" $file] };
+  if {$title == ""} { set title [format "tsdb(1) '%s' bar chart view" $file] };
 
   if {[catch {set in [open $file r]}]} { 
-    error "show_chart(): unable to open `$file'."
+    error "show_chart(): unable to open '$file'."
   };# if
 
   set toplevel [toplevel $container];

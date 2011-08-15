@@ -53,13 +53,13 @@ proc tsdb_file {action {index -1}} {
         set new [string_strip $globals(home) $anew];
         if {[file exists $anew]} {
           tsdb_beep;
-          status "database `$new' already exists" 10;
+          status "database '$new' already exists" 10;
         } else {
           set parent \
             [string range $anew 0 [string last $globals(slash) $anew]];
           if {[catch {file mkdir $parent}]} {
             tsdb_beep;
-            status "error creating parent directory `$parent'" 10;
+            status "error creating parent directory '$parent'" 10;
           } else {
             if {![catch {file rename -force -- $aold $anew}]} {
               set globals(data) $new;
@@ -68,7 +68,7 @@ proc tsdb_file {action {index -1}} {
               update_ts_list rename $old $new;
             } else {
               tsdb_beep;
-              status "mysterious error renaming `$old'" 10;
+              status "mysterious error renaming '$old'" 10;
             }; # else
           }; # else
         }; # else
@@ -93,14 +93,14 @@ proc tsdb_file {action {index -1}} {
         }; # if
         if {[file exists $anew]} {
           tsdb_beep;
-          status "database `$new' already exists" 10;
+          status "database '$new' already exists" 10;
           return;
         }; # if
         set parent \
           [string range $anew 0 [string last $globals(slash) $anew]];
         if {[catch {file mkdir $parent}]} {
           tsdb_beep;
-          status "error creating parent directory `$parent'" 10;
+          status "error creating parent directory '$parent'" 10;
           return;
         }; # if
         history_add profile $new;
@@ -115,7 +115,7 @@ proc tsdb_file {action {index -1}} {
       default { set prefix "purge"; }
     }; # switch
     if {[verify_ts_selection]} {return 1};
-    set prompt [format "%s `%s'" $prefix $globals(data)];
+    set prompt [format "%s '%s'" $prefix $globals(data)];
     if {[file isdirectory $globals(home)$globals(data)] 
         && [yes-or-no-p $prompt] == 1} {
       if {$index == "trees"} {
@@ -145,13 +145,13 @@ proc tsdb_file {action {index -1}} {
             set new $old;
             set anew $aold;
           }; # if
-          if {[file exists $anew] && [yes-or-no-p "overwrite `$new'"] == 0} {
+          if {[file exists $anew] && [yes-or-no-p "overwrite '$new'"] == 0} {
             return 1;
           }; # if
           catch {file mkdir $anew};
           if {![file isdirectory $anew] || ![file writable $anew]} {
             tsdb_beep;
-            status "target directory `$new' not writable" 10;
+            status "target directory '$new' not writable" 10;
             return 1;
           }; # if
           set pattern [file join $globals(home) $old *];
@@ -160,17 +160,17 @@ proc tsdb_file {action {index -1}} {
             set target [file join $anew $name];
             if {[catch {file copy -force $file $anew}]} {
               tsdb_beep;
-              status "mysterious error copying `$name'" 10;
+              status "mysterious error copying '$name'" 10;
               return 1;
             }; # if
             if {$name != "relations" && [file size $target] > 0} {
-              status "compressing file `$name' ...";
+              status "compressing file '$name' ...";
               if {"$globals(user)" != "bender" && "$globals(user)" != "danf"} {
                 after 200;
               }; # if
               if {[catch [eval "exec $globals(zipper) $target"]]} {
                 tsdb_beep;
-                status "mysterious error compressing `$name'" 10;
+                status "mysterious error compressing '$name'" 10;
                 return 1;
               }; # if
             }; # if
@@ -186,12 +186,12 @@ proc tsdb_file {action {index -1}} {
       set target $globals(input);
       if {[catch {file mkdir $target}]} {
         tsdb_beep;
-        status "error creating target directory `$target'" 10;
+        status "error creating target directory '$target'" 10;
         return 1;
       }; # if
       if {![file writable $target]} {
         tsdb_beep;
-        status "target directory `$target' not writable" 10;
+        status "target directory '$target' not writable" 10;
         return 1;
       }; # if
       history_add directory $target;
@@ -203,32 +203,32 @@ proc tsdb_file {action {index -1}} {
     set old $globals(data);
     set aold "$globals(home)$old";
     if {[file isdirectory $aold] 
-        && [yes-or-no-p "delete `$old'"] == 1} {
+        && [yes-or-no-p "delete '$old'"] == 1} {
       set aold "[file dirname [file join $aold .]]$globals(slash)"
       set files [glob -nocomplain -- "$aold/*"];
       foreach afile $files {
         set file [string_strip $globals(home) $afile];
-        status "deleting file `$file' ...";
+        status "deleting file '$file' ...";
         if {[catch {file delete -force -- $afile}]} {
           tsdb_beep;
-          status "deleting file `$file' ... failed";
+          status "deleting file '$file' ... failed";
           after 1000;
         }; # if
         if {"$globals(user)" != "bender"} {
           after 300;
         }; # if
       }; # foreach
-      status "deleting directory `$old' ...";
+      status "deleting directory '$old' ...";
       if {[catch {file delete -force -- $aold}]} {
-        status "deleting directory `$old' ... failed";
+        status "deleting directory '$old' ... failed";
         after 2000;
       }; # if
       after 500;
       if {[file exists $aold]} {
         tsdb_beep;
-        status "deletion of `$old' may be incomplete" 10;
+        status "deletion of '$old' may be incomplete" 10;
       } else {
-        status "database `$old' successfully deleted" 10;
+        status "database '$old' successfully deleted" 10;
       }; # else
       set globals(data) "";
       update_ts_list delete $old;
@@ -246,7 +246,7 @@ proc tsdb_import {code} {
       set source $globals(input);
       if {![file isfile $source] || ![file readable $source]} {
         tsdb_beep;
-        status "invalid file name `$source'" 10;
+        status "invalid file name '$source'" 10;
         return;
       }; # if
       history_add import $source;
@@ -266,14 +266,14 @@ proc tsdb_import {code} {
         }; # if
         if {[file exists $atarget]} {
           tsdb_beep;
-          status "database `$target' already exists" 10;
+          status "database '$target' already exists" 10;
           return;
         }; # if
         set parent \
           [string range $atarget 0 [string last $globals(slash) $atarget]];
         if {[catch {file mkdir $parent}]} {
           tsdb_beep;
-          status "error creating parent directory `$parent'" 10;
+          status "error creating parent directory '$parent'" 10;
           return;
         }; # if
         history_add profile $target;
@@ -290,7 +290,7 @@ proc tsdb_import {code} {
             }; # if
             if {[file exists $attarget]} {
               tsdb_beep;
-              status "database `$ttarget' already exists" 10;
+              status "database '$ttarget' already exists" 10;
               return;
             }; # if
             set tparent \
@@ -298,7 +298,7 @@ proc tsdb_import {code} {
                $attarget 0 [string last $globals(slash) $attarget]];
             if {[catch {file mkdir $tparent}]} {
               tsdb_beep;
-              status "error creating parent directory `$tparent'" 10;
+              status "error creating parent directory '$tparent'" 10;
               return;
             }; # if
 
@@ -324,7 +324,7 @@ proc tsdb_import {code} {
       if {![file isdirectory $source] 
           || ![file readable $source$globals(slash)relations]} {
         tsdb_beep;
-        status "invalid tsdb(1) database `$source'" 10;
+        status "invalid tsdb(1) database '$source'" 10;
         return;
       }; # if
       history_add directory $source;
@@ -339,14 +339,14 @@ proc tsdb_import {code} {
         }; # if
         if {[file exists $atarget]} {
           tsdb_beep;
-          status "database `$target' already exists" 10;
+          status "database '$target' already exists" 10;
           return;
         }; # if
         set parent \
           [string range $atarget 0 [string last $globals(slash) $atarget]];
         if {[catch {file mkdir $parent}]} {
           tsdb_beep;
-          status "error creating parent directory `$parent'" 10;
+          status "error creating parent directory '$parent'" 10;
           return;
         }; # if
 
@@ -374,7 +374,7 @@ proc tsdb_option {name} {
           set path $globals(input);
           if {![file isdirectory $path]} {
             tsdb_beep;
-            status "invalid directoy `$path'" 10;
+            status "invalid directoy '$path'" 10;
           } else {
             set path "[file dirname [file join $path .]]$globals(slash)"
             set globals(home) $path;
@@ -394,7 +394,7 @@ proc tsdb_option {name} {
           if {![file isdirectory $path]
               || ![file exists $index]} {
             tsdb_beep;
-            status "invalid directoy `$path'" 10;
+            status "invalid directoy '$path'" 10;
           } else {
             set path "[file dirname [file join $path .]]$globals(slash)"
             set globals(skeleton_directory) $path;
@@ -680,7 +680,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
         if {![info exists index] 
             || ![lindex $test_suites($index) 6]} {
           tsdb_beep;
-          status [format "no tree data available for `%s' ... |:-\{" $gold] 10;
+          status [format "no tree data available for '%s' ... |:-\{" $gold] 10;
           return 1;
         }; # if
         set command "$command :gold \"$gold\"";
@@ -910,7 +910,7 @@ proc analyze_trees {{code "trees"}} {
   if {![info exists index] 
       || ![lindex $test_suites($index) 6]} {
     tsdb_beep;
-    status [format "no tree data available for `%s' ... |:-\{" \
+    status [format "no tree data available for '%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
     set command \
@@ -940,7 +940,7 @@ proc analyze_update {{code ""}} {
   if {![info exists index] 
       || ![lindex $test_suites($index) 6]} {
     tsdb_beep;
-    status [format "no tree data available for `%s' ... |:-\{" \
+    status [format "no tree data available for '%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
     set command \
@@ -970,7 +970,7 @@ proc analyze_rules {view} {
   if {![info exists index] 
       || ![lindex $test_suites($index) 5]} {
     tsdb_beep;
-    status [format "no rule data available for `%s' ... |:-\{" \
+    status [format "no rule data available for '%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
     set attributes "(";
@@ -1025,7 +1025,7 @@ proc tsdb_graph {{code "graph"}} {
   if {$code == "chart"} {
     if {$globals(division) != ""} {
       set command \
-        "$command :title \"Aggregate Size (divided by `$globals(division)')\"";
+        "$command :title \"Aggregate Size (divided by '$globals(division)')\"";
     } else {
       set command "$command :title \"Aggregate Size\"";
     }; # else
@@ -1229,12 +1229,12 @@ proc tsdb_trees {action {modifier ""}} {
       if {[file isdirectory $file]
            || [file exists $file] && ![file writable $file]} {
         tsdb_beep;
-        status "target file `$file' not writable" 5;
+        status "target file '$file' not writable" 5;
         after 5000;
         return [tsdb_trees $action];
       }; # if
       if {[file exists $file] 
-          && [yes-or-no-p "overwrite existing `$file'"] != 1 } {
+          && [yes-or-no-p "overwrite existing '$file'"] != 1 } {
         return [tsdb_trees $action];
       }; # if
 

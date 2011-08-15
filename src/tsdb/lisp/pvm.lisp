@@ -264,15 +264,22 @@
                stream remote message)
               (force-output)))))))
 
-(defun expire-clients (clients)
+(defun expire-clients (clients &key (verbose t) (stream *tsdb-io*))
   (loop
       with now = (get-universal-time)
       for client in clients
       for status = (client-status client)
       for cpu = (client-cpu client)
-      when (and (consp status) cpu (numberp (cpu-quantum cpu))
+      when (and (consp status) (numberp (first status))
+                cpu (numberp (cpu-quantum cpu))
                 (> (- now (first status)) (cpu-quantum cpu)))
-      do (kill-client client)))
+      do
+        (setf (first status) :kill)
+        (when verbose
+          (format
+           stream "~&[~a] expire-clients(): killing <~x> after ~a seconds.~%"
+           (current-time :long :short) (client-tid client) (cpu-quantum cpu)))
+        (kill-client client)))
 
 (defun evaluate (form)
   (eval form))
@@ -379,7 +386,7 @@
                  item))
          (client (allocate-client
                   item :task type :class class :flags flags :wait wait))
-         (cpu (and client (pvm::client-cpu client)))
+         (cpu (and client (client-cpu client)))
          (tid (and client (client-tid client)))
          (protocol (and client (client-protocol client)))
          (tagger (when (cpu-p cpu) (cpu-tagger cpu)))

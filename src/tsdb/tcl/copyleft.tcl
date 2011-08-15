@@ -25,8 +25,8 @@ proc copyleft {action} {
   set large {Helvetica 18};
   set normalsize {Helvetica 12};
   set small {Helvetica 10};
-  set message "contacting protocol server `mail.coli.uni-sb.de' ...";
-  set pointer "(See `Help - Registration')";
+  set message "contacting protocol server 'mail.coli.uni-sb.de' ...";
+  set pointer "(See 'Help - Registration')";
   switch $action {
     initialize {
       if {[winfo exists .list.copyleft]} {

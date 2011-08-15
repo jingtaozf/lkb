@@ -732,10 +732,10 @@
       sum readings into rsum
       sum (/ gold readings) into sum 
       finally
-        (return (list (float (/ sum nitems))  ;;average random chance
-                      (float (/ gsum nitems)) ;;average # gold
-                      (float (/ rsum nitems)) ;;average # results
-                      nitems))))              ;;# items
+        (return (list (float (/ sum nitems))  ; average random chance
+                      (float (/ gsum nitems)) ; average # gold
+                      (float (/ rsum nitems)) ; average # results
+                      nitems))))              ; total # items
 
 (defun print-score-file (&key (output (format nil "~a/scores" (tmp :redwoods)))
                               gold name pattern condition

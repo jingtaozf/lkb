@@ -647,38 +647,47 @@
           finally (return (nconc groups (list (sort group #'<))))))))
 
 (defun read-database-schema (data &key absolute)
-  
-  (let* ((relations (call-tsdb "info relations" data :ro t :absolute absolute))
-         schema)
-    (with-input-from-string (stream relations)
-      (do* ((line (read-line stream nil nil) (read-line stream nil nil)))
-          ((null line) schema)
-        (let* ((line (string-trim '(#\Space #\Tab) line))
-               (colon (position #\: line)))
-          (unless (or (string= line "") (null colon))
-            (let ((relation (subseq line 0 colon))
-                  fields)
-              (do* ((line (read-line stream nil nil) 
+  (declare (special *tsdb-profile-cache*))
+  (let* ((key (format nil "~a schema" data)))
+    (or (gethash key *tsdb-profile-cache*)
+        (setf (gethash key *tsdb-profile-cache*)
+          (let ((relations
+                 (call-tsdb "info relations" data :ro t :absolute absolute))
+                schema)
+            (with-input-from-string (stream relations)
+              (do* ((line (read-line stream nil nil)
                           (read-line stream nil nil)))
-                  ((or (null line) 
-                       (string= (string-trim '(#\Space #\Tab #\Newline) line) 
-                                "")))
+                  ((null line) schema)
                 (let* ((line (string-trim '(#\Space #\Tab) line))
-                       (space (or (position #\Space line) (length line))))
-                  (unless (or (string= line "") (null space))
-                    (let* ((name (subseq line 0 space))
-                           (flags (subseq line space))
-                           (type (cond 
-                                  ((search "integer" flags) :integer)
-                                  ((search "string" flags) :string)
-                                  ((search "date" flags) :date)
-                                  ((search "position" flags) :position)))
-                           (field 
-                            (append (list name type) 
-                                    (and (search "key" flags) '(:key))
-                                    (and (search "unique" flags) '(:unique)))))
-                      (push field fields)))))
-              (push (cons relation (nreverse fields)) schema))))))))
+                       (colon (position #\: line)))
+                  (unless (or (string= line "") (null colon))
+                    (let ((relation (subseq line 0 colon))
+                          fields)
+                      (do* ((line (read-line stream nil nil) 
+                                  (read-line stream nil nil)))
+                          ((or (null line) 
+                               (string=
+                                (string-trim '(#\Space #\Tab #\Newline) line) 
+                                "")))
+                        (let* ((line (string-trim '(#\Space #\Tab) line))
+                               (space (or (position #\Space line)
+                                          (length line))))
+                          (unless (or (string= line "") (null space))
+                            (let* ((name (subseq line 0 space))
+                                   (flags (subseq line space))
+                                   (type
+                                    (cond 
+                                     ((search "integer" flags) :integer)
+                                     ((search "string" flags) :string)
+                                     ((search "date" flags) :date)
+                                     ((search "position" flags) :position)))
+                                   (field 
+                                    (append
+                                     (list name type) 
+                                     (and (search "key" flags) '(:key))
+                                     (and (search "unique" flags) '(:unique)))))
+                              (push field fields)))))
+                      (push (cons relation (nreverse fields)) schema)))))))))))
 
 (defun concatenate-profiles (profiles target
                              &key (condition *statistics-select-condition*))
@@ -860,6 +869,10 @@
            (parse-id (get-field+ :parse-id result -1))
            (run-id (get-field+ :run-id result -1))
            (i-id (get-field+ :i-id result -1))
+           (p-input
+            (normalize-string (get-field+ :p-input result "")  :escape rawp))
+           (p-tokens
+            (normalize-string (get-field+ :p-tokens result "")  :escape rawp))
            (readings (get-field+ :readings result -1))
            (first (round (get-field+ :first result -1)))
            (total (round (get-field+ :total result -1)))
@@ -903,6 +916,8 @@
           (write parse-id :stream stream) (write-char ofs stream)
           (write run-id :stream stream) (write-char ofs stream)
           (write i-id :stream stream) (write-char ofs stream)
+          (write-string p-input stream) (write-char ofs stream)
+          (write-string p-tokens stream) (write-char ofs stream)
           (write readings :stream stream) (write-char ofs stream)
           (write first :stream stream) (write-char ofs stream)
           (write total :stream stream) (write-char ofs stream)
@@ -938,7 +953,7 @@
                 (format
                  nil
                  "~a ~d ~d ~d ~
-                  ~d ~d ~d ~d ~d ~d ~
+                  ~s ~s ~d ~d ~d ~d ~d ~d ~
                   ~d ~d ~
                   ~d ~d ~d ~d ~
                   ~d ~d ~d ~d ~
@@ -948,7 +963,7 @@
                   ~a ~s ~s"
                  query
                  parse-id run-id i-id
-                 readings first total tcpu tgc treal
+                 p-input p-tokens readings first total tcpu tgc treal
                  words l-stasks
                  p-ctasks p-ftasks p-etasks p-stasks
                  aedges pedges raedges rpedges

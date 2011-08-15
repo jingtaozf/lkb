@@ -153,14 +153,14 @@ proc profile_input {prompt {default ""} {base ""} {context "directory"}} {
       }; # if
       if {[file exists $atarget]} {
         tsdb_beep;
-        status "database `$target' already exists" 10;
+        status "database '$target' already exists" 10;
         return -1;
       }; # if
       set parent \
         [string range $atarget 0 [string last $globals(slash) $atarget]];
       if {[catch {file mkdir $parent}]} {
         tsdb_beep;
-        status "error creating parent directory `$parent'" 10;
+        status "error creating parent directory '$parent'" 10;
         return -1;
       }; # if
       history_add $context $target;

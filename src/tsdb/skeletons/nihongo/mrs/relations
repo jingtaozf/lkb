@@ -6,6 +6,9 @@ item:
   i-difficulty :integer
   i-category :string
   i-input :string
+  i-tokens :string
+  i-gloss :string
+  i-translation :string
   i-wf :integer
   i-length :integer
   i-comment :string
@@ -86,6 +89,8 @@ parse:
   parse-id :integer :key                # unique parse identifier
   run-id :integer :key                  # test run for this parse
   i-id :integer :key                    # item parsed
+  p-input :string                       # initial (pre-processed) parser input
+  p-tokens :string                      # internal parser input: lexical lookup
   readings :integer                     # number of readings obtained
   first :integer                        # time to find first reading (msec)
   total :integer                        # total time for parsing (msec)
@@ -129,7 +134,7 @@ result:
   surface :string                       # surface string (e.g. realization)
   tree :string                          # phrase structure tree (CSLI labels)
   mrs :string                           # mrs for this reading
-  grade :string                         # arbitrary evaluation metric (BLEU)
+  flags :string                         # arbitrary annotation (e.g. BLEU)
 
 rule:
   parse-id :integer :key                # parse for this rule summary
@@ -142,7 +147,7 @@ rule:
 
 output:
   i-id :integer :key                    # item for this output specification
-  o-application :string                 # applicable appliaction(s)
+  o-application :string                 # applicable application(s)
   o-grammar :string                     # applicable grammar(s)
   o-ignore :string                      # ignore this item flag
   o-wf :integer                         # application-specific grammaticality
@@ -219,13 +224,19 @@ fold:
   f-etime :integer
   f-estimation :string
   f-accuracy :string
+  f-extras :string
   f-user :string
   f-host :string
   f-start :date
   f-end :date
+  f-comment :string
 
 score:
   parse-id :integer :key
   result-id :integer
+  score-start :integer
+  score-end :integer
+  score-id :integer
+  learner :string
   rank :integer
   score :string

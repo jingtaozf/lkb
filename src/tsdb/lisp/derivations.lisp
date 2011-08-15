@@ -32,53 +32,13 @@
 
 (in-package :tsdb)
 
+(defparameter *derivations-print-lexical-type-p* nil)
+
 (defparameter *derivations-comparison-level* :all)
 
 (defparameter *derivations-preterminals-equivalent-test* nil)
 
-(defparameter *derivations-equivalences*
-  #-:logon nil
-  #+:logon
-  '((yofc_gle yofc_ersatz yofc_3dig_ersatz year-ersatz)
-    (named_gle numvalcard3digit-4digit ratioersatz_n2 numvalcard4digit4digit
-     numvalcard3digit4digit wrappedweb-ersatz email-ersatz ratioersatz_n5
-     ratioersatz_n6 nameersatz identifierersatz_n1 web-ersatz number-ersatz
-     mailboxidersatz numvalcard3digit-3digit ratioersatz_n8 ratioersatz_n4
-     ratioersatz_n3 numvalcard3digit3digit ratioersatz_n7 mailboxnameersatz
-     numvalcard4digit-4digit phone-ersatz ratioersatz_n1)
-    (decade_gle fourdigit_plur_n1 decade_ersatz_n1 threedigit_plur_n1
-     twodigit_plur_n1)
-    (card_gle numvalcard12digit negdecimaldigit negcarddigit numvalcard2digit
-     numvalcard13plusdigit numvalcard9digit numvalcard10digit numvalcard6digit
-     numvalcard7digit numvalcard8digit fractionersatz numvalcard4digit
-     numvalcard3digit numvalcard5digit numvalcard1digit rangeersatz_2
-     numvalcard11digit decimalersatz decimalersatz_2 cardwithcommas)
-    (ord_gle sixdigitordersatz rangeersatz fourdigitordersatz onedigitordersatz
-     eightdigitordersatz elevendigitordersatz ninedigitordersatz
-     fivedigitordersatz threedigitordersatz twodigitordersatz tendigitordersatz
-     twelvedigitordersatz thirteenplusdigitersatz sevendigitordersatz)
-    (dofw_gle dofw-date)
-    (dofm_gle one_digit_euro_day two_digit_day twodigitdomersatz
-     two_digit_euro_day dofm-date-range onedigitdomersatz
-     dofm-date one_digit_day)
-    (be_c_am be_c_am_cx be_c_am_cx_2)
-    (be_c_are be_c_are_cx be_c_are_cx_2)
-    (be_c_is be_c_is_cx be_c_is_cx_2)
-    (be_id_am be_id_am_cx be_id_am_cx_2)
-    (be_id_are be_id_are_cx be_id_are_cx_2)
-    (be_id_is be_id_is_cx be_id_is_cx_2)
-    (be_it_cop_is be_it_cop_is_cx be_it_cop_is_cx_2)
-    (be_nv_is be_nv_is_cx be_nv_is_cx_2)
-    (be_th_cop_is be_th_cop_is_cx be_th_cop_is_cx_2)
-    (had_aux had_aux_cx had_aux_cx_2)
-    (had_better_aux had_better_cx had_better_cx_2)
-    (has_aux has_aux_cx has_aux_cx_2)
-    (have_bse_aux have_bse_aux_cx_1 have_bse_aux_cx_2)
-    (have_fin_aux have_fin_aux_cx have_fin_aux_cx_2)
-    (will_aux_pos will_aux_pos_cx will_aux_pos_cx_2)
-    (would_aux_pos would_aux_pos_cx would_aux_pos_cx_2)
-    (a_det a_det_2)
-    (email_n1 e_mail_n1 e_mail_n2 e_mail_n3 e_mail_n4)))
+(defparameter *derivations-equivalences* nil)
 
 (defparameter *derivations-yield-skews* 
   #-:logon nil
@@ -225,10 +185,40 @@
             (score (derivation-score derivation))
             (start (derivation-start derivation))
             (end (derivation-end derivation)))
-        (cons (list id root score start end)
-              (loop
-                  for daughter in (derivation-daughters derivation)
-                  nconc (derivation-nodes daughter)))))))
+        (when id
+          (cons (list id root score start end)
+                (loop
+                    for daughter in (derivation-daughters derivation)
+                    append (derivation-nodes daughter))))))))
+
+;;;
+;;; _fix_me_
+;;; in the following, we decline to fully parse the token feature structure.
+;;; in principle, the +FROM and +TO values could be reentrant with other parts
+;;; of the structure, in which case our naive assumptions about where to find
+;;; the values (made in derivation-from() and derivation-to()) will break.
+;;;                                                             (2-jul-11; oe)
+(defun derivation-from (derivation start)
+  (with-derivation (derivation derivation)
+    (if (= (derivation-start derivation) start)
+      (let* ((token (first (derivation-tokens derivation)))
+             (start (and (stringp token) (search "+FROM \"" token))))
+        (and start (parse-integer token :start (+ start 7) :junk-allowed t)))
+      (loop
+          for daughter in (derivation-daughters derivation)
+          thereis (and (derivation-id daughter)
+                       (derivation-from daughter start))))))
+
+(defun derivation-to (derivation end)
+  (with-derivation (derivation derivation)
+    (if (= (derivation-end derivation) end)
+      (let* ((token (first (last (derivation-tokens derivation))))
+             (start (and (stringp token) (search "+TO \"" token))))
+        (and start (parse-integer token :start (+ start 5) :junk-allowed t)))
+      (loop
+          for daughter in (derivation-daughters derivation)
+          thereis (and (derivation-id daughter)
+                       (derivation-to daughter end))))))
 
 (defun derivation-equal (gold blue 
                          &optional (level *derivations-comparison-level*))
@@ -288,7 +278,7 @@
                         #'(lambda (foo)
                             (member
                              foo *derivations-yield-skews* :test #'string=))
-                       byield))))
+                        byield))))
         (loop
             for gold in gyield for blue in byield
             always (and gold blue (node-equal gold blue)))))
@@ -311,6 +301,49 @@
             for daughter1 in (derivation-daughters gold)
             for daughter2 in (derivation-daughters blue)
             always (derivation-equal daughter1 daughter2 level)))))))
+
+(defun pprint-derivation (derivation &key (stream t))
+  (let ((sponsor (derivation-sponsor derivation))
+        (daughters (derivation-daughters derivation)))
+    (cond
+     (sponsor
+      (pprint-logical-block (stream derivation :prefix "(" :suffix ")")
+        (write sponsor :stream stream)
+        (write-char #\space stream)
+        (pprint-newline :fill stream)
+        (pprint-derivation (first (rest derivation)) :stream stream)))
+     (daughters
+      (pprint-logical-block (stream derivation :prefix "(" :suffix ")")
+        (let ((id (derivation-id derivation))
+              (root (derivation-root derivation))
+              (score (derivation-score derivation))
+              (start (derivation-start derivation))
+              (end (derivation-end derivation)))
+          (when id
+            (write id :stream stream)
+            (write-char #\space stream))
+          (if (null (derivation-daughters (first daughters)))
+            (let ((*print-case* :downcase)
+                  (type (when *derivations-print-lexical-type-p*
+                          (type-of-lexical-entry root :tsdb))))
+              (write root :stream stream)
+              (when type
+                (write-char #\/ stream)
+                (write type :stream stream)))
+            (write root :stream stream))
+          (write-char #\space stream)
+          (loop
+              for foo in (list score start end)
+              when foo do
+                (write foo :stream stream)
+                (write-char #\space stream)))
+        (loop
+            for daughter in (derivation-daughters derivation)
+            do
+              (pprint-newline :fill stream)
+              (pprint-derivation daughter :stream stream))))
+     (t
+      (write derivation :stream stream)))))
 
 ;;;
 ;;; functionality to reconstruct derivation trees and report nature of failure
@@ -444,7 +477,7 @@
                        (tokens nil)
                        entry length)
                   (multiple-value-setq (entry length)
-                    (find-lexical-entry surface root id start end))
+                    (find-lexical-entry surface root id start end dagp))
                   (incf %derivation-offset% (or length 1))
                   (if (null entry)
                     (throw :fail
@@ -455,7 +488,8 @@
                                   :noentry
                                   (format nil "`~a' (`~a')" root surface))))
                     #+:lkb 
-                    (if (and tokens (null *derivations-ignore-tokens-p*))
+                    (if (and (smember dagp '(:word t))
+                             tokens (null *derivations-ignore-tokens-p*))
                       (let ((tokens
                              (loop
                                  for token in tokens

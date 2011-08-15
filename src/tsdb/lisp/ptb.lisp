@@ -133,12 +133,9 @@
     (loop for node in tree append (extract-ptb-leaves node)))
    (t nil)))
 
-(defun rewrite-ptb-token (token pos)
-  (declare (ignore pos))
+(defun rewrite-ptb-token (token &optional pos)
   (cond
-   #+:null
    ((string-equal pos "-lrb-") "(")
-   #+:null
    ((string-equal pos "-rrb-") ")")
    ((string-equal token "``") "“")
    ((string-equal token "''") "”")

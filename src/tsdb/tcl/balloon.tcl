@@ -19,7 +19,7 @@ proc balloon_setup {file} {
 
   if {[catch {set input [open $file r]}] != 0} {
     tsdb_beep;
-    status "unable to open `$file' |:-(" 10;
+    status "unable to open '$file' |:-(" 10;
     return 1;
   }; # if
 

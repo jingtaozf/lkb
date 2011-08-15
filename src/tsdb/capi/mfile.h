@@ -16,8 +16,8 @@
 #ifndef _MFILE_H_
 #define _MFILE_H_
 
-#define MFILE_BUFF_SIZE 16384
-#define MFILE_MAX_LINE 1024
+#define MFILE_BUFF_SIZE 1048576
+#define MFILE_MAX_LINE 524288
 
 struct MFILE
 {

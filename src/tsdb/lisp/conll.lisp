@@ -40,7 +40,23 @@
          (loop
              for token in (ppcre:split "\\n" string)
              for conll = (ppcre:split "\\t" token)
+             when (= (length conll) 10)
              collect
+               ;;
+               ;; the earlier, CoNLL 2007 format
+               ;;
+               (loop
+                   for key in '(:id :form :lemma
+                                :cpos :pos :feat
+                                :head :deprel :phead :pdeprel)
+                   for value in conll
+                   when (smember key '(:id :head :phead))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else collect (cons key value))
+             else collect
+               ;;
+               ;; the richer, CoNLL 2009 format
+               ;;
                (loop
                    for key in '(:id :form :lemma :plemma
                                 :pos :ppos :feat :pfeat
@@ -72,10 +88,15 @@
       with end = 1
       for token in (conll-preprocess string :format :raw)
       for id = (get-field :id token)
-      for form = (get-field :form token)
-      for lemma = (if gold (get-field :lemma token) (get-field :plemma token))
-      for pos = (if gold (get-field :pos token) (get-field :ppos token))
-      for feat = (if gold (get-field :feat token) (get-field :pfeat token))
+      for form = (rewrite-conll-token (get-field :form token))
+      for plemma = (get-field :plemma token)
+      for lemma = (if (or gold (not plemma)) (get-field :lemma token) plemma)
+      for cpos = (get-field :cpos token)
+      for pos 
+      = (or cpos (if gold (get-field :pos token) (get-field :ppos token)))
+      for feat = (if (or gold (not plemma))
+                   (get-field :feat token)
+                   (get-field :pfeat token))
       for yy 
       = (case mode
           (:jacy
@@ -125,6 +146,19 @@
       when yy do (setf start end) (setf end (+ start 1))
       else do (incf end)
       finally (return (values (format nil "~{~a~^ ~}" (nreverse result)) i))))
+
+(defun rewrite-conll-token (token &optional pos)
+  (let ((token (rewrite-ptb-token token pos)))
+    ;;
+    ;; it would seem that, the CoNLL 2007 data at least, has braces instead of
+    ;; parentheses.  i dimly recall reading something about this problem in an
+    ;; early README file (maybe for the second PTB release), but i wonder why
+    ;; CoNLL in 2007 should have this problem?                  (3-nov-10; oe)
+    ;;
+    (cond
+     ((string-equal pos "{") "(")
+     ((string-equal pos "}") ")")
+     (t token))))
 
 (defparameter *conll-parole-a-map*
   '((("postype=ordinal" . "o") ("postype=qualificative" . "q") 0)
@@ -438,4 +472,11 @@
     for shift = #'(lambda (id) (+ id 20000000 (* i 100000)))
     do (do-import-items
          (format nil "/home/oe/src/conll09/en/09~2,'0d.txt" i)
+         (format nil "test/conll~2,'0d" i) :format :conll :shift shift))
+#+:null
+(loop
+    for i from 2 to 24
+    for shift = #'(lambda (id) (+ id 20000000 (* i 100000)))
+    do (do-import-items
+         (format nil "/home/oe/src/conll07/09~2,'0d.txt" i)
          (format nil "test/conll~2,'0d" i) :format :conll :shift shift))

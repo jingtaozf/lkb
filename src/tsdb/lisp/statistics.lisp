@@ -179,7 +179,7 @@
 (defun find-attribute-reader (attribute)
   (let* ((name (if (stringp attribute) 
                  (string-upcase attribute)
-                  attribute))
+                 attribute))
          (attribute (intern name :keyword)))
     (find-function (gethash attribute *statistics-readers*))))
 
@@ -297,8 +297,14 @@
      ((and (find "surface" (rest result) :key #'first :test #'string=)
            (not (find "learner" (rest score) :key #'first :test #'string=)))
       200509)
-     ((find "learner" (rest score) :key #'first :test #'string=)
+     ((and (find "learner" (rest score) :key #'first :test #'string=)
+           (not (find "p-input" (rest parse) :key #'first :test #'string=)))
       201002)
+     ((and (find "p-input" (rest parse) :key #'first :test #'string=)
+           (not (find "p-tokens" (rest parse) :key #'first :test #'string=)))
+      201011)
+     ((find "p-tokens" (rest parse) :key #'first :test #'string=)
+      *tsdb-current-granularity*)
      (t
       (error "profile-granularity(): invalid `~a'" data)))))
 
@@ -306,7 +312,7 @@
                 &key condition meter message thorough trees extras 
                      (readerp t) siftp filter output
                      score gold taggingp
-		     commentp sloppyp scorep burst purge)
+		     tokensp commentp inputp sloppyp scorep burst purge)
 
   (declare (ignore siftp)
            (optimize (speed 3) (safety 0) (space 0)))
@@ -319,7 +325,8 @@
          :condition condition :meter meter :message message :thorough thorough
          :trees trees :extras extras :readerp readerp
          :filter filter :output output
-         :score score :gold gold :taggingp taggingp :commentp commentp
+         :score score :gold gold 
+         :taggingp taggingp :tokensp tokensp :commentp commentp :inputp inputp
          :sloppyp sloppyp :scorep scorep :burst burst :purge purge))))
   
   (let* ((message (when message
@@ -335,12 +342,12 @@
                     *filter-test* *filter-mrs-relations-ratio*)))
          (key (format 
                nil 
-               "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : comment~]~@[~* : trees~]~
-                ~@[ for ~a~]~@[~* : extras~]~@[~* : output~]~
+               "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : comment~]~@[~* : input~]~
+                ~@[~* : trees~]~@[ for ~a~]~@[~* : extras~]~@[~* : output~]~
                 ~@[ on ~a~@[ (scores)~]~]" 
                data condition 
                (if (listp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t")
-               commentp trees filter extras output
+               commentp inputp trees filter extras output
                (cond
                 ((stringp score) score)
                 (score "itself")
@@ -348,23 +355,31 @@
                scorep))
          (relations (read-database-schema data))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
+         (tokensp (and tokensp (>= (profile-granularity data) 201011)))
          pfields ptypes result)
     #+:debug
     (format t "~&analyze(): `~a'~%" key)
     (when message (status :text message))
     (when meter (meter :value (get-field :start meter)))
+    ;;
+    ;; _fix_me_
+    ;; for this to actually be thread-safe, we would need to wrap all writing
+    ;; to the profile cache with a process lock.               (16-nov-10; oe)
+    ;;
     (loop while (eq (setf result (gethash key *tsdb-profile-cache*)) :seized))
     (unless result
       (setf (gethash key *tsdb-profile-cache*) :seized)
       (loop
-          for field in '("i-id" "parse-id" "readings" 
-                         "first" "total" "tcpu" "tgc"
-                         "p-etasks" "p-stasks" "p-ftasks"
-                         "unifications" "copies"
-                         "conses" "symbols" "others"
-                         "words" "l-stasks"
-                         "edges" "aedges" "pedges" "raedges" "rpedges"
-                         "gcs" "error")
+          for field 
+          in (append '("i-id" "parse-id" "readings" 
+                       "first" "total" "tcpu" "tgc"
+                       "p-etasks" "p-stasks" "p-ftasks"
+                       "unifications" "copies"
+                       "conses" "symbols" "others"
+                       "words" "l-stasks"
+                       "edges" "aedges" "pedges" "raedges" "rpedges"
+                       "gcs" "error")
+                     (and inputp '("p-input" "p-tokens")))
           for match = (find field parse :key #'first :test #'string=)
           when match do
             (push (first match) pfields)
@@ -402,13 +417,15 @@
                               :meter pmeter :sort :i-id))
                (item (select (append
                               '("i-id" "i-input" "i-length" "i-wf")
+                              (when tokensp '("i-tokens"))
                               (when commentp '("i-comment")))
                              (append
                               '(:integer :string :integer :integer)
+                              (when tokensp '(:string))
                               (when commentp '(:string)))
                              "item" condition data 
                              :meter imeter :sort :i-id :sourcep t))
-	       (item (if (or taggingp commentp)
+	       (item (if (or taggingp tokensp commentp)
                        (loop
                            for foo in item
                            when taggingp do
@@ -416,6 +433,24 @@
                                     (tags (call-raw-hook 
                                            *tsdb-tagging-hook* i-input)))
                                (when tags (nconc foo (acons :tags tags nil))))
+                           when tokensp do
+                             ;;
+                             ;; _hack_
+                             ;; see whether the comment string looks much like
+                             ;; an association list; if so, parse that list.
+                             ;;
+                             (let* ((tokens (get-field :i-tokens foo))
+                                    (n (when (stringp tokens)
+                                         (- (length tokens) 1))))
+                               (when (and n (< 3 n)
+                                          (char= (schar tokens 0) #\()
+                                          (char= (schar tokens 1) #\()
+                                          (char= (schar tokens (- n 1)) #\))
+                                          (char= (schar tokens n) #\)))
+                                 (let ((tokens (ignore-errors
+                                                 (read-from-string tokens))))
+                                   (when tokens
+                                     (set-field :i-tokens tokens foo)))))
                            when commentp do
                              ;;
                              ;; _hack_
@@ -493,6 +528,22 @@
                                 :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter))
                sorted)
+          ;;
+          ;; for a subset of top-level fields, call an optional item reader
+          ;;
+          (loop
+              for field in (and inputp '(:p-input :p-tokens))
+              for reader = (when (or (and (symbolp readerp) readerp)
+                                     (smember field readerp))
+                             (find-attribute-reader field))
+              when reader
+              do
+                (loop
+                    for item in all
+                    for value = (get-field field item)
+                    when value do
+                      (let ((foo (ignore-errors (funcall reader value))))
+                        (when foo (setf (get-field field item) foo)))))
           (setf result all)
           (when outputs
             (loop
@@ -615,7 +666,7 @@
                         &key condition meter message thorough trees extras 
                              (readerp t) filter output
                              score gold taggingp
-                             commentp sloppyp scorep burst purge)
+                             tokensp commentp inputp sloppyp scorep burst purge)
   (when (probe-file data)
     (with-open-file (stream data :direction :input)
       ;;
@@ -634,7 +685,8 @@
              :thorough thorough
              :trees trees :extras extras :readerp readerp :filter filter
              :output output :score score :gold gold  
-             :taggingp taggingp :commentp commentp
+             :taggingp taggingp :tokensp tokensp 
+             :commentp commentp :inputp inputp
              :sloppyp sloppyp :scorep scorep :burst burst :purge purge)
           into result
           finally (return (sort
@@ -1853,6 +1905,7 @@
                           &key (condition *statistics-select-condition*)
                                (show '(:i-input :i-wf))
                                (compare '(:words :readings))
+                               decorate
                                (sloppyp *statistics-detail-sloppy-alignment-p*)
                                (format :tcl)
                                (olabel "(g)old") 
@@ -1872,6 +1925,12 @@
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
          (compares (length compare))
+         (ogranularity (if (stringp olanguage)
+                         (profile-granularity olanguage)
+                         *tsdb-current-granularity*))
+         (ngranularity (if (stringp nlanguage)
+                         (profile-granularity olanguage)
+                         *tsdb-current-granularity*))
          (oitems
           (if (stringp olanguage) 
             (analyze olanguage 
@@ -1993,7 +2052,14 @@
              (format
               stream
               "layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%"
-              (+ i 2)))))
+              (+ i 2))))
+      (:ascii
+       (format
+        stream
+        "~%~acompare-in-detail():~%~
+         ~a  `~a' vs. `~a'~%~
+         ~a  on ~({~{`~a'~^ ~}}~) with ~([~{`~a'~^ ~}]~):~%~%"
+        prefix prefix olanguage nlanguage prefix compare decorate)))
     
     ;;
     ;; my first loop() (if bernd knew |:-) (28-jul-98 - oe@csli)
@@ -2026,8 +2092,10 @@
               "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
               (- row 1)))
             (:ascii
-             (unless (zerop (- row 3))
-               (format stream "~a== ~a~%" prefix (- row 3)))))
+             (let ((n (- row 3)))
+               (format 
+                stream "~:[~;~%~]~acompare-in-detail(): ~a difference~p.~%"
+                (> n 0) prefix n n))))
         while (or oitems nitems)
         do 
           (let* ((oitem (first oitems))
@@ -2054,6 +2122,28 @@
                              #'(lambda (attribute)
                                  (get-field attribute nitem))
                              compare))
+                 (odecoration (loop 
+                                  for field in decorate 
+                                  if (smember field *statistics-time-fields*)
+                                  collect
+                                    (let* ((raw (get-field field oitem))
+                                           (time (convert-time
+                                                  raw ogranularity)))
+                                      (if (or (null time) (minus-one-p time))
+                                            ""
+                                            (format nil "~,2f" time)))
+                                  else collect (get-field field oitem)))
+                 (ndecoration (loop 
+                                  for field in decorate 
+                                  if (smember field *statistics-time-fields*)
+                                  collect 
+                                    (let* ((raw (get-field field nitem))
+                                           (time (convert-time
+                                                  raw ngranularity)))
+                                      (if (or (null time) (minus-one-p time))
+                                        ""
+                                        (format nil "~,2f" time)))
+                                  else collect (get-field field nitem)))
                  clashes) 
             #+:cdebug
             (format
@@ -2206,7 +2296,7 @@
                   (:ascii
                    (format
                     stream
-                    "~a[~a~@[:~a~]]"
+                    "~a  [~a~@[:~a~]]"
                     prefix oi-id (and sloppyp ni-id))
                    (loop
                        for value in oshow
@@ -2222,6 +2312,10 @@
                           stream
                           " <~a|~a|~a>"
                           (length oclash) (length common) (length nclash)))
+                   (format
+                    stream
+                    " [~{~a~^ ~}] [~{~a~^ ~}]"
+                    odecoration ndecoration)
                    (format stream "~%")))
                 (incf row))
               (pop oitems)
@@ -2297,6 +2391,10 @@
                           stream
                           " <~a|~a|~a>"
                           (length oclash) (length common) (length nclash)))
+                   (format
+                    stream
+                    " [~{~a~^ ~}] [~{~a~^ ~}]"
+                    odecoration ndecoration)
                    (format stream "~%")))
                 (incf row))
               (pop oitems)
@@ -2373,6 +2471,10 @@
                           stream
                           " <~a|~a|~a>"
                           (length oclash) (length common) (length nclash)))
+                   (format
+                    stream
+                    " [~{~a~^ ~}] [~{~a~^ ~}]"
+                    odecoration ndecoration)
                    (format stream "~%")))
                 (incf row))
               (pop nitems)

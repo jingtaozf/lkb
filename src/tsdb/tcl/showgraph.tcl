@@ -108,7 +108,7 @@ proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""} \
     if { $Title != "" } {
 	set title $Title
     } else {
-      set title [format "tsdb(1) `%s' bar chart view" $FileName]
+      set title [format "tsdb(1) '%s' bar chart view" $FileName]
     }
 	
     ## Make toplevel window
@@ -265,7 +265,7 @@ proc graph_postscript {graph name} {
   $graph postscript output $file -landscape $globals(landscape) \
      -paperheight 29.7c -paperwidth 21c -decoration no
    run_meter 500;
-  status "wrote `$file'" 10;
+  status "wrote '$file'" 10;
 }
 
 proc read_graph_file {file graph} {
@@ -833,7 +833,7 @@ proc plot_overlay {graph {function {pow($x,2)}} {legend ""} {xx ""} {yy ""}} {
       -label $label \
       -color [expr {$function == "" ? "gray" : "red"}];
     adjust_graph_view $graph 2;
-    logger "(status: $graph `$readable' overlay)";
+    logger "(status: $graph '$readable' overlay)";
     update idletasks;
     after 500;
     return 0;
@@ -874,7 +874,7 @@ proc find_graph_point {action graph button x y balloon} {
       set id [lindex $foo $point(index)];
       if {$action == "post"} {
         local_balloon $balloon post \
-          "this data point corresponds to profile `$id'";
+          "this data point corresponds to profile '$id'";
       } elseif {$action == "browse"} {
         tsdb_browse runs "" 1 "$id";
       }; # if

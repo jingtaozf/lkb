@@ -76,17 +76,17 @@ proc yy_export_results {} {
     
     if {[catch {file mkdir $target}]} {
       tsdb_beep;
-      status "error creating target directory `$target'" 10;
+      status "error creating target directory '$target'" 10;
       return;
     }; # if
     if {![file writable $target]} {
       tsdb_beep;
-      status "target directory `$target' not writable" 10;
+      status "target directory '$target' not writable" 10;
       return;
     }; # if
     set index [file join $target "Index"];
     if {[file exists $index]
-        && [yes-or-no-p "overwrite non-empty `$target'"] != 1} {
+        && [yes-or-no-p "overwrite non-empty '$target'"] != 1} {
       return;
     }; # if
     history_add directory $target;

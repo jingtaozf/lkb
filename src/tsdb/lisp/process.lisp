@@ -57,7 +57,7 @@
   
   (initialize-tsdb)
 
-  (when (< (profile-granularity data) 200509)
+  (when (< (profile-granularity data) *tsdb-current-granularity*)
     (format
      stream
      "~%tsdb-do-process(): out-of-date profile `~a'.~%"
@@ -781,8 +781,8 @@
   ;; i.e. for everyone calling select() with a non-nil :readerp argument (this
   ;; includes the ubiquitous analyze(), which calls select() internally).  not
   ;; that i see reason to worry here, as the above comments apply to the batch
-  ;; processing unverse, where the latter only applies to profile analysis; for
-  ;; i can see the two universes are clearly separated, so a bit of overloading
+  ;; processing universe, but the latter only applies to profile analysis; for
+  ;; all i know the two universes are clearly separated, so some overloading of
   ;; the :o-input field should do us no harm.                   (13-nov-08; oe)
   ;;
   (when item
@@ -1460,10 +1460,12 @@
   ;;
   (let ((i-id (get-field :i-id item))
         (parse-id (get-field :parse-id item))
-        (run-id (get-field :run-id item)))
+        (run-id (get-field :run-id item))
+        (p-input (get-field :p-input item)))
     (when i-id (set-field :i-id i-id result))
     (when parse-id (set-field :parse-id parse-id result))
-    (when run-id (set-field :run-id run-id result)))
+    (when run-id (set-field :run-id run-id result))
+    (when p-input (set-field :p-input p-input result)))
   
   (let* ((readings (get-field :readings result))
          (results (get-field :results result)))

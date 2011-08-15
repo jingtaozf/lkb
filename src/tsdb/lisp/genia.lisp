@@ -109,9 +109,12 @@
                    (list i start end (first fields) (second fields)
                          (third fields) (fourth fields) (fifth fields)))))))
 
-(defun genia-for-pet (string &optional tagger &rest arguments)
-  (let* ((format (or (getf arguments :format) :pet))
-         (nep (or (getf arguments :nep) *genia-ne-p*))
+(defun genia+tagger-for-pet (string &optional tagger &rest arguments)
+  (let* ((format (getf arguments :format :pet))
+         (nep (getf arguments :nep *genia-ne-p*))
+         (stream (let ((stream (getf arguments :stream)))
+                   (remf arguments :stream)
+                   stream))
          (arguments (append arguments '(:raw t)))
          (tokens (apply #'lkb::repp-for-pet string tagger arguments))
          (length (length tokens))
@@ -136,7 +139,7 @@
                (declare (ignore category))
                (let ((left (aref map start 0))
                      (right (aref map end 1)))
-                 (when (and left right)
+                 (when (and left right (not (eq left right)))
                    (let* ((start (lkb::token-start left))
                           (end (lkb::token-end right))
                           ;;
@@ -163,11 +166,19 @@
                          :id (incf id) :form (subseq string start end)
                          :from (lkb::token-from left) :to (lkb::token-to right)
                          :start start :end end :tags (list category 1.0))
-                        new)))
-                   (loop
-                       for token in (member left tokens :test #'eq)
-                       until (eq token right) do (push token block)
-                       finally (push right block))))))
+                        new)
+                       ;;
+                       ;; the GENIA NE support can work in one of two ways: 
+                       ;; either just augmenting the token lattice (creating
+                       ;; multi-word tokens in addition to the basic tokens),
+                       ;; or letting the NE tokens `obstruct' their component
+                       ;; parts.
+                       ;;
+                       (unless (eq nep :add)
+                         (loop
+                             for token in (member left tokens :test #'eq)
+                             until (eq token right) do (push token block)
+                             finally (push right block)))))))))
       ;;
       ;; overwrite TnT tag assignments from corresponding GENIA tokens, where
       ;; applicable; do not squash NNP assignments for GENIA NN or NNS, though.
@@ -211,8 +222,157 @@
             when (and start (char= (char ne 0) #\O))
             do
               (synthesize start end category)
-              (setf start nil))))
+              (setf start nil)
+            finally
+              (when (and start end) (synthesize start end category)))))
     (nconc tokens new)
     (setf tokens
       (sort (set-difference tokens block) #'< :key #'lkb::token-start))
-    (values (lkb::repp-format tokens format) length)))
+    (let ((result (lkb::repp-format tokens format)))
+      (cond
+       ((or (streamp stream) (eq stream t))
+        (format stream "~a~%" result))
+       ((stringp stream)
+        (with-open-file (stream stream
+                         :direction :output :if-exists :supersede)
+          (format stream "~a~%" result))))
+      (values result length))))
+
+(defun read-items-from-genia-file (file)
+  (with-open-file (stream file)
+    (loop
+        with pmid with items
+        with author = (current-user) with date = (current-time)
+        for line = (read-line stream nil nil)
+        while line do
+          (multiple-value-bind (start end starts ends)
+              (ppcre:scan "<PMID>([0-9]+)</PMID>" line)
+            (declare (ignore start end))
+            (when (and starts ends)
+              (setf pmid
+                (parse-integer
+                 line :start (aref starts 0) :end (aref ends 0)))))
+          (multiple-value-bind (start end starts ends)
+              (ppcre:scan
+               "(<sentence[^>]*>)((?:(?!</sentence>).)*)</sentence>" line)
+            (declare (ignore start end))
+            (when (and starts ends)
+              (let* ((tag (subseq line (aref starts 0) (aref ends 0)))
+                     (id (search "id=\"S" tag))
+                     (id (parse-integer tag :start (+ id 5) :junk-allowed t))
+                     (body (subseq line (aref starts 1) (aref ends 1)))
+                     (length (ppcre:all-matches "<tok[^>]*>" body))
+                     (length (/ (length length) 2)))
+                (push
+                 (pairlis '(:i-id :i-category :i-wf :i-length :i-input
+                            :i-origin :i-register :i-difficulty 
+                            :i-author :i-date)
+                          (list (+ (* pmid 100) id) "S" 1 length body
+                                "GENIA Treebank" "formal" 1 author date))
+                 items))))
+        finally (return (nreverse items)))))
+
+(defun genia-for-pet (string &optional tagger &rest arguments)
+  (let* ((*package* (find-package :tsdb))
+         (format (getf arguments :format :pet))
+         (xml (with-input-from-string (stream string)
+                (net.xml.parser:parse-xml stream)))
+         (start 0) (from 0) (id 41)
+         tokens)
+    (labels ((process (xml &optional stringp)
+               (if (and (consp xml) (consp (first xml)))
+                 (case (first (first xml))
+                   (|tok|
+                    (let* ((tag (third (first xml)))
+                           (form (second xml)))
+                      (if (not stringp)
+                        (push
+                         (lkb::make-token
+                          :id (incf id) :from from :to (incf from)
+                          :start start :end (incf start (length form))
+                          :form form :tags (list tag 1))
+                         tokens)
+                        (push form tokens))))
+                   (|cons|
+                    (loop for foo in (rest xml) do (process foo stringp))))
+                 (when (stringp xml)
+                   (if (not stringp)
+                     (incf start (length xml))
+                     (push xml tokens))))))
+      (process (first xml) tagger)
+      (setf tokens (nreverse tokens))
+      (if tagger
+        (let ((string (format nil "~{~a~}" tokens)))
+          (apply #'genia+tagger-for-pet string tagger arguments))
+        (values (lkb::repp-format tokens format) (length tokens))))))
+
+#+:null
+(defun genia-blazing-hook (frame &key (port 8765) (host "localhost"))
+  (setf %frame frame)
+  (let* ((id (lkb::compare-frame-item frame))
+         (input (lkb::compare-frame-input frame))
+         (input (format nil "<item>~a</item>~%" input))
+         (discriminants
+          (loop
+              for discriminant in (lkb::compare-frame-discriminants frame)
+              for start = (lkb::discriminant-start discriminant)
+              for end = (lkb::discriminant-end discriminant)
+              for edge = (lkb::discriminant-top discriminant)
+              for derivation = (and edge (lkb::edge-bar edge))
+              for from = (and derivation (derivation-from derivation start))
+              for to = (and derivation (derivation-to derivation end))
+              for i from 0
+              collect
+                (format
+                 nil
+                 "<discriminant id=\"~a\" type=\"~(~a~)\" ~
+                  start=\"~a\" end=\"~a\"~@[ from=\"~a\"~]~@[ to=\"~a\"~] ~
+                  key=\"~a\">~a</discriminant>~%"
+                 i (xml-escape-string (lkb::discriminant-type discriminant))
+                 start end from to
+                 (xml-escape-string (lkb::discriminant-key discriminant))
+                 (xml-escape-string (lkb::discriminant-value discriminant)))))
+         (call (net.xml-rpc:encode-xml-rpc-call
+                "treeblaze" id 0 input discriminants))
+         (url (format nil "http://~a:~a/" host port)))
+    (handler-case
+        (let ((result (net.xml-rpc:xml-rpc-call call :url url)))
+          (pprint result)
+          (loop
+              for state in result
+              collect (if (stringp state)
+                        (let ((c (schar state 0)))
+                          (case c (#\+ t) (#\- nil) (t :unknown)))
+                        :unknown)))
+                        
+      (condition (condition)
+        (format
+         *error-output* "genia-blazing-hook(): error `~a'.~%"
+         (normalize-string (format nil "~a" condition)))))))
+
+#+:null
+(loop
+    with items with n = 0 with id = 0
+    with files = (loop
+                     for file in (directory "~/src/conll10/genia/xml/")
+                     when (equal (pathname-type file) "xml") collect file)
+    for file in (sort
+                 files #'<
+                 :key #'(lambda (file) (parse-integer (pathname-name file))))
+    do
+      (let* ((foo (read-items-from-genia-file file))
+             (k (length foo)))
+        (when (> (+ n k) 1000)
+          (let ((profile (format nil "genia/gtb~2,'0d" id)))
+            (format t "creating `~a'~%" profile)
+            (incf id)
+            (insert profile "item" items :normalize t)
+            (setf items nil)
+            (setf n 0)))
+        (setf items (nconc items foo))
+        (incf n k))
+    finally
+      (let ((profile (format nil "genia/gtb~2,'0d" id)))
+        (format t "creating `~a'~%" profile)
+        (incf id)
+        (insert profile "item" items :normalize t)))

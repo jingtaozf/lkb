@@ -34,7 +34,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (7-apr-10; beta)")
+(defparameter *tsdb-version* "2.0 (15-aug-11; beta)")
 
 (defparameter
   *tsdb-application*
@@ -60,7 +60,9 @@
 
 (defparameter *tsdb-encoding* #+:logon :utf-8 #-:logon nil)
 
-(defparameter *tsdb-protocol-file * nil)
+(defparameter *tsdb-protocol-file* nil)
+
+(defparameter *tsdb-current-granularity* 201108)
 
 (defparameter *tsdb-server-mode-p* nil)
 
@@ -79,10 +81,6 @@
 (defparameter *tsdb-write-edge-p* t)
 
 (defparameter *tsdb-write-passive-edges-p* nil)
-
-(defparameter *tsdb-write-lexicon-chart-p* nil)
-
-(defparameter *tsdb-write-syntax-chart-p* nil)
 
 (defparameter *tsdb-write-output-p* nil)
 
@@ -136,7 +134,7 @@
 
 (defparameter *tsdb-maximal-number-of-analyses* 0)
 
-(defparameter *tsdb-maximal-number-of-results* 5000)
+(defparameter *tsdb-maximal-number-of-results* 1000)
 
 (defparameter *tsdb-default-skeleton* "english")
 
