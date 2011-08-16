@@ -1,25 +1,10 @@
-At revision 9660.
-At revision 9660.
+At revision 9662.
+At revision 9662.
 property 'build' set on 'src/version.lsp'
 Sending        .build
-Authentication realm: <http://svn.delph-in.net:80> DELPH-IN SubVersioN Repository
 Sending        src/version.lsp
 Transmitting file data .
------------------------------------------------------------------------
-ATTENTION!  Your password for authentication realm:
-
-   <http://svn.delph-in.net:80> DELPH-IN SubVersioN Repository
-
-can only be stored to disk unencrypted!  You are advised to configure
-your system so that Subversion can store passwords encrypted, if
-possible.  See the documentation for details.
-
-You can avoid future appearances of this warning by setting the value
-of the 'store-plaintext-passwords' option to either 'yes' or 'no' in
-'/home2/brodbd/.subversion/servers'.
------------------------------------------------------------------------
-Store password unencrypted (yes/no)? 
-Committed revision 9661.
+Committed revision 9663.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1306,8 +1291,58 @@ make[2]: Entering directory `/projects/lingo/lkb'
               LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
                 cd /projects/lingo/acl; \
                 /projects/lingo/acl/alisp -I clim -qq && touch /projects/lingo/.yes; )
-The license file and current ACL version do not match.
-make[2]: *** [lkb_linux@cypriot] Error 1
+International Allegro CL Enterprise Edition
+8.1 [Linux (x86)] (Apr 16, 2010 13:21)
+Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+
+This development copy of Allegro CL is licensed to:
+   [TC8776] Radiation Oncology
+
+;; Optimization settings: safety 1, space 1, speed 1, debug 2.
+;; For a complete description of all compiler switches given the
+;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
+;   Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
+;     Loading /projects/lingo/lkb/src/general/defsystem.lisp
+;   Loading /projects/lingo/lkb/src/general/loadup-library.lisp
+T
+CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+; Autoloading for GENERATE-APPLICATION:
+;   Fast loading /projects/lingo/acl/code/genapp.fasl
+;     Fast loading from bundle code/fileutil.fasl.
+;     Fast loading /projects/lingo/acl/code/build.001
+;;; Installing build patch, version 1.
+Bundle is up to date.
+Error: The maintenance and support agreement for this Allegro CL
+       license expired on Sunday, August 15, 2010 12:00:00 AM .  Any
+       continued right under this license to distribute or deploy
+       Allegro CL based applications is contingent upon such an
+       agreement.  Please review the Franz Software License Agreement
+       provided with the Allegro CL distribution for further details.
+       If you need an updated license file please contact
+       sales@franz.com.
+  [condition type: SIMPLE-ERROR]
+
+Restart actions (select using :continue):
+ 0: retry the load of /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 2: recompile /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 3: Return to Top Level (an "abort" restart).
+ 4: Abort entirely from this (lisp) process.
+[1] CL-USER(3): :pop
+CL-USER(3): EOF
+Really exit lisp [n]? 
+; Exiting
 make[2]: Leaving directory `/projects/lingo/lkb'
+( \
+	  if [ ! -f /projects/lingo/.yes ]; then exit 1; fi; \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_linux.x86.32.tgz \
+              --exclude=".nfs*" \
+	      linux.x86.32 bin/linux.x86.32/yzlui; \
+	)
+tar: linux.x86.32: Cannot stat: No such file or directory
+bin/linux.x86.32/yzlui
+tar: Error exit delayed from previous errors
 make[1]: *** [lkb_linux_x86_32] Error 2
 make[1]: Leaving directory `/projects/lingo/lkb'
