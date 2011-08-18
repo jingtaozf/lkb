@@ -36,7 +36,6 @@
 (defun enable-gc-cursor (pid)
   (let ((gc-start (get-entry-point "gc_start"))
         (gc-end (get-entry-point "gc_end")))
-    #-:64bit
     (when (and gc-start gc-end (integerp pid))
       (enable_gc_cursor pid)
       #+(version>= 5 0)

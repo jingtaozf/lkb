@@ -528,16 +528,16 @@
         (pprint-potentially-large-integer symbols)
         (string separator)
         (pprint-potentially-large-integer others)
-        "= "
+        (string separator) "=" (string separator)
         (pprint-potentially-large-integer total)))))
 
 (defun pprint-potentially-large-integer (n)
   (cond ((not (numberp n)) "")
-        ((>= n (* (expt 2 30) 10)) (format nil "~dg" (round n (expt 2 30))))
+        ((>= n (* (expt 2 30) 10)) (format nil "~dG" (round n (expt 2 30))))
         ((>= n (expt 2 30)) (format nil "~,1fG" (/ n (expt 2 30))))
-        ((>= n (* (expt 2 20) 10)) (format nil "~dm" (round n (expt 2 20))))
+        ((>= n (* (expt 2 20) 10)) (format nil "~dM" (round n (expt 2 20))))
         ((>= n (expt 2 20)) (format nil "~,1fM" (/ n (expt 2 20))))
-        ((>= n (* (expt 2 10) 10)) (format nil "~dk" (round n (expt 2 10))))
+        ((>= n (* (expt 2 10) 10)) (format nil "~dK" (round n (expt 2 10))))
         ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 

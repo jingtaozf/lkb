@@ -95,7 +95,7 @@
 ;; call status after invoking this function
 (def-foreign-call (connectdb "PQconnectdb")
     ((conninfo (* :char)))
-  :returning PGconn
+  :returning ((* PGconn))
   :strings-convert t)
 
 ;; PQsetdbLogin OBSOLETE

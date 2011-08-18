@@ -1300,7 +1300,6 @@
 	     (when (clim:displayed-output-record-p node)
 	       (setf (clim:displayed-output-record-ink node) ink))
 	     (clim:map-over-output-records #'recolor-node node)))
-    (declare (dynamic-extent recolor-node))
     (recolor-node record)))
 
 (defun frame-cursor (frame &optional (cursor :default))
