@@ -1,15 +1,10 @@
-At revision 9712.
-U    src/ACL_specific/compare.lsp
-U    src/psql/pq-libpq.lsp
-U    src/tsdb/lisp/utilities.lisp
-U    src/tsdb/lisp/macros.lisp
-U    src/tsdb/lisp/gc.lisp
-Updated to revision 9712.
+At revision 9715.
+At revision 9715.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 9713.
+Committed revision 9716.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -522,6 +517,7 @@ chgrp: invalid group `build'
 ./tex/delph-in.sty
 ./tex/mrs.sty
 ./tex/lkbavm.sty
+./Makefile81
 ( \
 	  cd /projects/lingo/lkb; \
 	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_data.tgz \
@@ -1336,7 +1332,7 @@ Allocated 5242880 bytes for new space
 
 ;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Aug 18, 2011 14:33)
+8.1 [Linux (x86)] (Aug 18, 2011 14:40)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2452,7 +2448,7 @@ Evaluation stack:
    (LET)
    (LET)
    (EVAL)
-   (EXCL::PROCESS-SCRIPT "/tmp/genappa283051433191")
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa292701440011")
    (TPL:START-INTERACTIVE-TOP-LEVEL
       #<EXCL:TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
         #x48114bda>
@@ -2485,10 +2481,10 @@ make[2]: Leaving directory `/projects/lingo/lkb'
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 linux.x86.32/
-linux.x86.32/lkb
+linux.x86.32/files.bu
 linux.x86.32/acli817.pll
 linux.x86.32/lkb.lic
-linux.x86.32/files.bu
+linux.x86.32/lkb
 bin/linux.x86.32/yzlui
 ( \
 	  cd /projects/lingo/lkb; \
