@@ -23,7 +23,7 @@ LN=ln -s
 CVS=cvs -q -z9
 SVN=svn
 TAR=tar
-MAKE=make
+MAKE=make -f Makefile81
 TEE=tee
 ALISP=/projects/lingo/acl-8.1/alisp
 
