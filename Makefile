@@ -148,7 +148,7 @@ lkb_linux@cypriot:
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
-	) | ( ACL_LOCALE=C \
+	) | ( ACL_LOCALE=en_US.UTF-8 \
               LD_LIBRARY_PATH=${ROOT}/lkb/lib/linux.x86.32 \
                 cd ${ROOT}/acl; \
                 ${ALISP} -I clim -qq && touch ${ROOT}/.yes; )
