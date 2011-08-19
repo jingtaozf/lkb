@@ -1,10 +1,10 @@
-At revision 9715.
-At revision 9715.
+At revision 9723.
+At revision 9723.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 9716.
+Committed revision 9724.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1288,16 +1288,16 @@ make[2]: Entering directory `/projects/lingo/lkb'
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
-	) | ( ACL_LOCALE=C \
+	) | ( ACL_LOCALE=en_US.UTF-8 \
               LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
                 cd /projects/lingo/acl; \
                 /projects/lingo/acl/alisp -I clim -qq && touch /projects/lingo/.yes; )
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Apr 16, 2010 13:21)
-Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+8.2 [Linux (x86)] (Aug 16, 2011 13:24)
+Copyright (C) 1985-2010, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
-   [TC8776] Radiation Oncology
+   [TC8776] UWMC Radiation Oncology
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the
@@ -1312,31 +1312,25 @@ CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
 ;   Fast loading from bundle code/fileutil.fasl.
 ; Autoloading for GENERATE-APPLICATION:
 ;   Fast loading /projects/lingo/acl/code/genapp.fasl
-;     Fast loading /projects/lingo/acl/code/build.001
-;;; Installing build patch, version 1.
+;     Fast loading from bundle code/build.fasl.
 Bundle is up to date.
 Initial generation spread = 1
 Allocated 10485760 bytes for old space
 Allocated 5242880 bytes for new space
-;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl/code/eval.001
-; fasl /projects/lingo/acl/code/hash.002
-;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl/sys/environ.003
-;;;;;;;; fasl /projects/lingo/acl/code/syscall.001
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl/code/toplevel.001
-; fasl /projects/lingo/acl/code/misc.001
-; fasl /projects/lingo/acl/code/aclstart.001
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Fast loading /projects/lingo/acl/code/locale-base.001
-;;; Installing locale-base patch, version 1
-;;;
+; fasl /projects/lingo/acl/sys/startup.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl/code/random.001
+;;;;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl/code/misc.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Fast loading /projects/lingo/acl/code/proc2base.001
+;;; Installing proc2base patch, version 1
+;;;;
 
 
-;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Aug 18, 2011 14:40)
-Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+8.2 [Linux (x86)] (Aug 19, 2011 10:30)
+Copyright (C) 1985-2010, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
-   [TC8776] Radiation Oncology
+   [TC8776] UWMC Radiation Oncology
 
 
  #|
@@ -1368,18 +1362,25 @@ T
  (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
        '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
          #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl"
-         #P"sys:;sys;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
+         #P"sys:;sys;.fasl" #P"sys:;zlib;.fasl" #P"sys:;uri;.fasl"
+         #P"sys:;tester;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
          (:LIB-BUNDLE #P"sys:;private;.fasl")
          (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
          (:LIB-BUNDLE #P"sys:;clos;.fasl")
-         (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+         (:LIB-BUNDLE #P"sys:;sys;.fasl")
+         (:LIB-BUNDLE #P"sys:;zlib;.fasl")
+         (:LIB-BUNDLE #P"sys:;uri;.fasl")
+         (:LIB-BUNDLE #P"sys:;tester;.fasl")))
  |#
 
 (:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
  #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+ #P"sys:;zlib;.fasl" #P"sys:;uri;.fasl" #P"sys:;tester;.fasl"
  (:LIB-BUNDLE #P"sys:;code;.fasl") (:LIB-BUNDLE #P"sys:;private;.fasl")
  (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
- (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")) 
+ (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")
+ (:LIB-BUNDLE #P"sys:;zlib;.fasl") (:LIB-BUNDLE #P"sys:;uri;.fasl")
+ (:LIB-BUNDLE #P"sys:;tester;.fasl")) 
  #|
  (SETQ EXCL::*APP-RUNTIME-MODE* T)
  |#
@@ -1389,15 +1390,15 @@ T
  (PUSHNEW :ALLEGRO-CL-RUNTIME *FEATURES*)
  |#
 
-(:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC
- :COMPILER :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX
- :REDHAT9 :LINUX86 :X86 :VERIFY-STACK :VERIFY-CAR-CDR
- :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES :MODULE-VERSIONS :IEEE
- :IEEE-FLOATING-POINT :CONFORMING-IEEE :ICS :COMMON-LISP :ANSI-CL
- :DRAFT-ANSI-CL-2 :X3J13 :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>=
- :ALLEGRO-VERSION= :NEW-ENVIRONMENTS :SYMBOL-VALUE-VECTOR :PROCESS7
- :USE-THREAD-LIBS :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.1 :TLSVALUES :TLSBNP
- :SSL-SUPPORT) 
+(:ALLEGRO-CL-RUNTIME :COMPILER :USE-STRUCTS-IN-COMPILER :CLOS
+ :ATOMIC-SUBWORD-SETF :ATOMIC-SETF :DYNLOAD :DLFCN :UNIX :LINUX
+ :REDHAT9 :LINUX86 :X86 :VERIFY-STACK :VERIFY-CAR-CDR :LITTLE-ENDIAN
+ :ENCAPSULATING-EFS :DOUBLE-FLOAT-RANDOM-FIX :RELATIVE-PACKAGE-NAMES
+ :MODULE-VERSIONS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE
+ :GNU-SOURCE :ICS :COMMON-LISP :ANSI-CL :DRAFT-ANSI-CL-2 :X3J13
+ :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-VERSION=
+ :NEW-ENVIRONMENTS :GSGC :FLAVORS :MULTIPROCESSING :USE-THREAD-LIBS
+ :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.2 :SMP-MACROS :SSL-SUPPORT) 
  #|
  (FORCE-OUTPUT)
  |#
@@ -1423,7 +1424,8 @@ T
 
 T 
  #|
- (PROCLAIM '(OPTIMIZE (DEBUG 2) (SPEED 3) (SPACE 1) (SAFETY 1)))
+ (PROCLAIM '(OPTIMIZE (DEBUG 2) (SPEED 3) (COMPILATION-SPEED 1)
+             (SPACE 1) (SAFETY 1)))
  |#
 
 T 
@@ -1453,50 +1455,39 @@ NIL
 
 NIL 
  #|
- (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\f)
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\i)
  |#
 ; Autoloading for MATCH-REGEXP:
 ; Fast loading from bundle code/regexp.fasl.
-Loaded patch file /projects/lingo/acl/update/pfa001.001.
-Loaded patch file /projects/lingo/acl/update/pfa003.001.
-Loaded patch file /projects/lingo/acl/update/pfa004.002.
-Loaded patch file /projects/lingo/acl/update/pfa005.001.
-Loaded patch file /projects/lingo/acl/update/pfa006.001.
-Loaded patch file /projects/lingo/acl/update/pfa007.001.
-Loaded patch file /projects/lingo/acl/update/pfa008.001.
-Loaded patch file /projects/lingo/acl/update/pfa009.001.
-Loaded patch file /projects/lingo/acl/update/pfa010.001.
-Loaded patch file /projects/lingo/acl/update/pfa011.001.
-Loaded patch file /projects/lingo/acl/update/pfa013.001.
-Loaded patch file /projects/lingo/acl/update/pfa014.001.
-Loaded patch file /projects/lingo/acl/update/pfa015.001.
-Loaded patch file /projects/lingo/acl/update/pfa016.001.
-Loaded patch file /projects/lingo/acl/update/pfa017.001.
-Loaded patch file /projects/lingo/acl/update/pfa018.001.
-Loaded patch file /projects/lingo/acl/update/pfa019.001.
-Loaded patch file /projects/lingo/acl/update/pfa021.001.
-Loaded patch file /projects/lingo/acl/update/pfa022.001.
-Loaded patch file /projects/lingo/acl/update/pfa023.001.
-Loaded patch file /projects/lingo/acl/update/pfa024.001.
-Loaded patch file /projects/lingo/acl/update/pfa025.003.
-Loaded patch file /projects/lingo/acl/update/pfa026.001.
-Loaded patch file /projects/lingo/acl/update/pfa027.001.
+Loaded patch file /projects/lingo/acl/update/pia001.001.
+Loaded patch file /projects/lingo/acl/update/pia002.001.
+Loaded patch file /projects/lingo/acl/update/pia003.001.
+Loaded patch file /projects/lingo/acl/update/pia004.001.
+Loaded patch file /projects/lingo/acl/update/pia005.001.
+Loaded patch file /projects/lingo/acl/update/pia006.001.
+Loaded patch file /projects/lingo/acl/update/pia007.001.
+Loaded patch file /projects/lingo/acl/update/pia008.001.
+Loaded patch file /projects/lingo/acl/update/pia010.001.
+Loaded patch file /projects/lingo/acl/update/pia011.001.
+Loaded patch file /projects/lingo/acl/update/pia012.001.
 
  #|
- (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\f)
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\i)
  |#
-Loaded patch file /projects/lingo/acl/update/pfb001.001.
-Loaded patch file /projects/lingo/acl/update/pfb002.001.
-Loaded patch file /projects/lingo/acl/update/pfb004.001.
-Loaded patch file /projects/lingo/acl/update/pfb005.001.
-Loaded patch file /projects/lingo/acl/update/pfb006.001.
+Loaded patch file /projects/lingo/acl/update/pib001.001.
+Loaded patch file /projects/lingo/acl/update/pib002.001.
+Loaded patch file /projects/lingo/acl/update/pib003.001.
+Loaded patch file /projects/lingo/acl/update/pib004.001.
+Loaded patch file /projects/lingo/acl/update/pib005.001.
+Loaded patch file /projects/lingo/acl/update/pib006.002.
+Loaded patch file /projects/lingo/acl/update/pib008.001.
 
  #|
  (REQUIRE :CLIMXM)
  |#
-; Fast loading /projects/lingo/acl/code/climxm.005
-;   Fast loading /projects/lingo/acl/code/climg.005
-;;; Installing climxm patch, version 5.
+; Fast loading /projects/lingo/acl/code/climxm.001
+;   Fast loading /projects/lingo/acl/code/climg.001
+;;; Installing climxm patch, version 1.
 ;   Autoloading for class SYNONYM-STREAM:
 ;     Fast loading /projects/lingo/acl/code/streamc.002
 ;;; Installing streamc patch, version 2.
@@ -1504,8 +1495,10 @@ Loaded patch file /projects/lingo/acl/update/pfb006.001.
 ;       Fast loading from bundle code/efft-void.fasl.
 ;       Fast loading from bundle code/efft-latin1-base.fasl.
 ;     Fast loading from bundle code/process.fasl.
-;       Fast loading from bundle code/proc2common.fasl.
-;         Fast loading from bundle code/proc2-s.fasl.
+;       Fast loading /projects/lingo/acl/code/proc2common.002
+;;; Installing proc2common patch, version 2.
+;         Fast loading /projects/lingo/acl/code/proc2-s.001
+;;; Installing proc2-s patch, version 1.
 ;   Autoloading for FIRST:
 ;     Fast loading from bundle code/list2.fasl.
 ; Autoloading for FOREIGN-FUNCTIONS:CONVERT-FOREIGN-NAME:
@@ -1513,12 +1506,8 @@ Loaded patch file /projects/lingo/acl/update/pfb006.001.
 ;   Foreign loading clim2:climxm.so.
 ; Autoloading for FOREIGN-FUNCTIONS::CSTRUCT-CONSTRUCTOR-GENERATOR-3:
 ;   Fast loading from bundle code/defctype.fasl.
-Loaded patch file /projects/lingo/acl/update/pfj001.002.
-Loaded patch file /projects/lingo/acl/update/pfj003.001.
-Loaded patch file /projects/lingo/acl/update/pfj004.001.
-Loaded patch file /projects/lingo/acl/update/pfj005.001.
-Loaded patch file /projects/lingo/acl/update/pfj006.001.
-Loaded patch file /projects/lingo/acl/update/pfj007.001.
+Loaded patch file /projects/lingo/acl/update/pij001.003.
+Loaded patch file /projects/lingo/acl/update/pij004.001.
 
 T 
  #|
@@ -1565,877 +1554,68 @@ T
              (LOAD #P"/projects/lingo/lkb/src/ACL_specific/build.lsp")))
  |#
 ; Fast loading from bundle code/eli.fasl.
-;   Fast loading /projects/lingo/acl/code/lep.001
-;;; Installing lep patch, version 1.
+;   Fast loading from bundle code/lep.fasl.
 ;     Fast loading from bundle code/lze.fasl.
 ;   Autoloading for package "DEBUGGER":
-;     Fast loading /projects/lingo/acl/code/debug.001
-;;; Installing debug patch, version 1.
+;     Fast loading from bundle code/debug.fasl.
 ;   Autoloading for package "ACL-SOCKET":
 ;     Fast loading from bundle code/sock-s.fasl.
 ; Fast loading /projects/lingo/acl/code/sock.003
 ;;; Installing sock patch, version 3.
 ; Autoloading for FOREIGN-FUNCTIONS:GET-FOREIGN-TYPE:
-;   Fast loading from bundle code/defftype.fasl.
+;   Fast loading /projects/lingo/acl/code/defftype.001
+;;; Installing defftype patch, version 1.
 ;     Fast loading /projects/lingo/acl/code/compftype.001
 ;;; Installing compftype patch, version 1.
-; Autoloading for FOREIGN-FUNCTIONS::IFOREIGN-TYPE-FWRAPPER:
-;   Fast loading from bundle code/defftype.fasl.
+; Autoloading for FOREIGN-FUNCTIONS::IFOREIGN-TYPE-FOBJECT-WRAPPER:
+;   Fast loading /projects/lingo/acl/code/defftype.001
+;;; Installing defftype patch, version 1.
 ; Loading /projects/lingo/lkb/src/ACL_specific/build.lsp
 ;   Loading /projects/lingo/lkb/src/general/loadup.lisp
 ;     Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
 ;       Loading /projects/lingo/lkb/src/general/defsystem.lisp
 ;     Loading /projects/lingo/lkb/src/general/loadup-library.lisp
-;   Fast loading from bundle code/seq2.fasl.
 ;   Fast loading from bundle code/safeseq.fasl.
 ;   Fast loading from bundle code/streama.fasl.
 ;   Fast loading from bundle code/tpl-debug.fasl.
 ;   Fast loading from bundle code/tpl-proc.fasl.
 ;   Fast loading from bundle code/sigio.fasl.
 ;   Fast loading from bundle code/emacs.fasl.
-;   Fast loading /projects/lingo/acl/code/scm.002
-;;; Installing scm patch, version 2.
+;   Fast loading from bundle code/scm.fasl.
 ;   Fast loading from bundle code/walker.fasl.
-;   Fast loading from bundle code/trace.fasl.
-;   Fast loading from bundle code/inspect.fasl.
-;   Fast loading from bundle code/loop.fasl.
-;   Fast loading from bundle clos/constructor.fasl.
-;   Fast loading from bundle clos/mcombin.fasl.
-;   Fast loading /projects/lingo/acl/code/uri.010
-;;; Installing uri patch, version 10.
-;   Fast loading /projects/lingo/acl/code/euc.fasl
-;   Fast loading from bundle code/ffcompat.fasl.
-;   Fast loading from bundle code/ef-1250.fasl.
-;   Fast loading from bundle code/efft-1250-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1250-BASE' 
-;   Fast loading from bundle code/ef-1251.fasl.
-;   Fast loading from bundle code/efft-1251-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1251-BASE' 
-;   Fast loading from bundle code/ef-1252.fasl.
-;   Fast loading from bundle code/efft-1252-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1252-BASE' 
-;   Fast loading from bundle code/ef-1253.fasl.
-;   Fast loading from bundle code/efft-1253-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1253-BASE' 
-;   Fast loading from bundle code/ef-1254.fasl.
-;   Fast loading from bundle code/efft-1254-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1254-BASE' 
-;   Fast loading from bundle code/ef-1255.fasl.
-;   Fast loading from bundle code/efft-1255-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1255-BASE' 
-;   Fast loading from bundle code/ef-1256.fasl.
-;   Fast loading from bundle code/efft-1256-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1256-BASE' 
-;   Fast loading from bundle code/ef-1257.fasl.
-;   Fast loading from bundle code/efft-1257-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1257-BASE' 
-;   Fast loading from bundle code/ef-1258.fasl.
-;   Fast loading from bundle code/efft-1258-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':1258-BASE' 
-;   Fast loading from bundle code/ef-874.fasl.
-;   Fast loading from bundle code/efft-874-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':874-BASE' 
-;   Fast loading from bundle code/ef-932.fasl.
-;   Fast loading from bundle code/efft-932-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':932-BASE' 
-;   Fast loading from bundle code/ef-936.fasl.
-;   Fast loading from bundle code/efft-936-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':936-BASE' 
-;   Fast loading from bundle code/ef-949.fasl.
-;   Fast loading from bundle code/efft-949-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':949-BASE' 
-;   Fast loading from bundle code/ef-950.fasl.
-;   Fast loading from bundle code/efft-950-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':950-BASE' 
-;   Fast loading from bundle code/ef-big5.fasl.
-;   Fast loading from bundle code/efft-big5-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':BIG5-BASE' 
-;   Fast loading from bundle code/ef-e-cr.fasl.
-;   Fast loading from bundle code/ef-e-crcrlf.fasl.
-;   Fast loading from bundle code/ef-e-crlf.fasl.
-;   Fast loading from bundle code/ef-emacs-mule.fasl.
-;   Fast loading from bundle code/efft-emacs-mule-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EMACS-MULE-BASE' 
-;   Fast loading from bundle code/ef-euc.fasl.
-;   Fast loading from bundle code/efft-euc-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':EUC-BASE' 
-;   Fast loading from bundle code/ef-fat.fasl.
-;   Fast loading from bundle code/efft-fat-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':FAT-BASE' 
-;   Fast loading from bundle code/ef-gb2312.fasl.
-;   Fast loading from bundle code/efft-gb2312-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':GB2312-BASE' 
-;   Fast loading from bundle code/ef-iso-2022-jp.fasl.
-;     Fast loading from bundle code/ef-jis.fasl.
-;   Fast loading from bundle code/efft-jis-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':JIS-BASE' 
-;   Fast loading from bundle code/ef-iso8859-14.fasl.
-;   Fast loading from bundle code/efft-iso8859-14-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-14-BASE' 
-;   Fast loading from bundle code/ef-iso8859-15.fasl.
-;   Fast loading from bundle code/efft-iso8859-15-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-15-BASE' 
-;   Fast loading from bundle code/ef-iso8859-2.fasl.
-;   Fast loading from bundle code/efft-iso8859-2-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-2-BASE' 
-;   Fast loading from bundle code/ef-iso8859-3.fasl.
-;   Fast loading from bundle code/efft-iso8859-3-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-3-BASE' 
-;   Fast loading from bundle code/ef-iso8859-4.fasl.
-;   Fast loading from bundle code/efft-iso8859-4-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-4-BASE' 
-;   Fast loading from bundle code/ef-iso8859-5.fasl.
-;   Fast loading from bundle code/efft-iso8859-5-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-5-BASE' 
-;   Fast loading from bundle code/ef-iso8859-6.fasl.
-;   Fast loading from bundle code/efft-iso8859-6-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-6-BASE' 
-;   Fast loading from bundle code/ef-iso8859-7.fasl.
-;   Fast loading from bundle code/efft-iso8859-7-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-7-BASE' 
-;   Fast loading from bundle code/ef-iso8859-8.fasl.
-;   Fast loading from bundle code/efft-iso8859-8-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-8-BASE' 
-;   Fast loading from bundle code/ef-iso8859-9.fasl.
-;   Fast loading from bundle code/efft-iso8859-9-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':ISO8859-9-BASE' 
-;   Fast loading from bundle code/ef-koi8-r.fasl.
-;   Fast loading from bundle code/efft-koi8-r-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':KOI8-R-BASE' 
-;   Fast loading from bundle code/ef-shiftjis.fasl.
-;   Fast loading from bundle code/efft-shiftjis-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':SHIFTJIS-BASE' 
-;   Fast loading from bundle code/ef-unicode.fasl.
-;   Fast loading from bundle code/efft-unicode-base.fasl.
-;; Note: Switching the following external-formats to runtime mode
-;;       since prebuilt filled templates for them were found and loaded:
-;;       ':UNICODE-BASE' 
-;   Loading /projects/lingo/lkb/src/systems/lkb.system
-;   Loading /projects/lingo/lkb/src/systems/psql.system
-;;; Compiling file /projects/lingo/lkb/src/psql/pq-package.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/psql/pq-package.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/psql/pq-package.fasl
-;;; Compiling file /projects/lingo/lkb/src/psql/pq-libpq.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/psql/pq-libpq.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/psql/pq-libpq.fasl
-;   Loading /projects/lingo/lkb/src/systems/ppcre.system
-;;; Compiling file /projects/lingo/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
-;;; Compiling file
-;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
-;   Loading /projects/lingo/lkb/src/systems/preprocessor.system
-;;; Compiling file /projects/lingo/lkb/src/ppcre/packages.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/specials.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/util.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/errors.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/lexer.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/parser.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/regex-class.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/convert.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/optimize.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/closures.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
-;;; Compiling file
-;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/scanner.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/api.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
-;;; Compiling file /projects/lingo/lkb/src/ppcre/PATCHES.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
-;   Loading /projects/lingo/lkb/src/systems/s-xml.system
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/fspp-package.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/fspp-package.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/preprocess/fspp-package.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/smaf-package.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/smaf-package.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/preprocess/smaf-package.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/lxml.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/lxml.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/lxml.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/saf0.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/saf0.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf0.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/saf.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/saf.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/saf2xml.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/saf2xml.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf2xml.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/x-preprocess.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/x-preprocess.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/preprocess/x-preprocess.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/saf-conf.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/saf-conf.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf-conf.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/fspp-misc.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/fspp-misc.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/fspp-misc.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/package.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/dom.lisp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/lxml-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/sxml-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
-;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml-struct-dom.lisp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
-;   Fast loading /projects/lingo/acl/code/pxml.fasl
-;   Loading /projects/lingo/lkb/src/lkb-package.lsp
-;   Loading /projects/lingo/lkb/src/mrs-package.lsp
-;   Loading /projects/lingo/lkb/src/mt-package.lsp
-;;; Compiling file /projects/lingo/lkb/src/version.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/version.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/version.fasl
-;   Loading /projects/lingo/lkb/src/main/initializations.lsp
-;;; Compiling file /projects/lingo/lkb/src/main/globals.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/globals.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/globals.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/statistics.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/statistics.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/statistics.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/ssp.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/ssp.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/ssp.fasl
-;;; Compiling file /projects/lingo/lkb/src/ACL_specific/graphics.lsp
-;   Fast loading /projects/lingo/acl/code/climps.006
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/graphics.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/ACL_specific/graphics.fasl
-;;; Compiling file /projects/lingo/lkb/src/ACL_specific/misc.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/misc.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/misc.fasl
-;;; Compiling file /projects/lingo/lkb/src/ACL_specific/topmenu.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/topmenu.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/topmenu.fasl
-;;; Compiling file /projects/lingo/lkb/src/ACL_specific/dialog.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/dialog.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/dialog.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/types.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/types.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/types.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/dag.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/dag.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/dag.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/yadu.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/yadu.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/yadu.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/gen.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/gen.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/gen.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/structs.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/structs.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/structs.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/user-fns.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/user-fns.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/user-fns.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/marks.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/marks.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/marks.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/checktypes.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/checktypes.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/checktypes.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/cdb.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/cdb.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/cdb.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/leaf.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/leaf.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/leaf.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/lex.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/lex.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/lex.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/clex.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/clex.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/clex.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/rules.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/rules.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/rules.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/parse.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/parse.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/parse.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/active.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/active.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/active.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/unpack.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/unpack.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/unpack.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/brackets.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/brackets.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/brackets.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/morph.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/morph.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/morph.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/check-unif.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/check-unif.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/check-unif.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/discriminants.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/main/discriminants.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/discriminants.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/unfill-dag.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/unfill-dag.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/unfill-dag.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/generics.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/generics.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/generics.fasl
-;;; Compiling file /projects/lingo/lkb/src/main/compound-lex.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/main/compound-lex.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/main/compound-lex.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/preprocess.lsp
-; Autoloading for package "EXCL.OSI":
-;   Fast loading /projects/lingo/acl/code/osi.004
-;;; Installing osi patch, version 4.
-;     Fast loading from bundle code/fileutil.fasl.
-;   Autoloading for package "REGEXP":
-;     Fast loading /projects/lingo/acl/code/regexp2-s.001
-;;; Installing regexp2-s patch, version 1.
-;   Autoloading for REGEXP::MAKE-VM-CLOSURE:
-;     Fast loading /projects/lingo/acl/code/regexp2.fasl
-;       Fast loading /projects/lingo/acl/code/yacc.fasl
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/preprocess.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/preprocess/preprocess.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/graph.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/graph.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/graph.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/external-smaf.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/external-smaf.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/preprocess/external-smaf.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/server.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/server.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/server.fasl
-;;; Compiling file /projects/lingo/lkb/src/preprocess/hook-mrs.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/preprocess/hook-mrs.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/hook-mrs.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/headers.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/headers.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/headers.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/lex-database.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/lex-database.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lex-database.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/lex-entry.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/lex-entry.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lex-entry.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-msc.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/psql-msc.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-msc.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/extract.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/extract.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/extract.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/gentdl.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/gentdl.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/gentdl.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psqllex.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/psqllex.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psqllex.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-database.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-database.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-database.fasl
-;;; Compiling file
-;;;   /projects/lingo/lkb/src/lexdb/external-lex-database.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/external-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/lexdb/external-lex-database.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database0.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database0.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database0.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database2.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database2.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database2.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-entry.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-entry.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-entry.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/command.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/command.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/command.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-emacs.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-emacs.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-emacs.fasl
-;;; Compiling file /projects/lingo/lkb/src/lexdb/lexport.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/lexport.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lexport.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/menus.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/menus.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/menus.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/async.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/async.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/async.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/outputfs.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputfs.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/outputfs.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/outputtdfs.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputtdfs.fasl
-;;; Fasl write complete
-;   Fast loading
-;      /projects/lingo/lkb/src/.l1cl/io-general/outputtdfs.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/outputsrc.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputsrc.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/outputsrc.fasl
-;;; Compiling file /projects/lingo/lkb/src/io-general/toplevel.lsp
-;;; Writing fasl file
-;;;   /projects/lingo/lkb/src/.l1cl/io-general/toplevel.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/toplevel.fasl
-;;; Compiling file /projects/lingo/lkb/src/glue/dag.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/dag.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/dag.fasl
-;;; Compiling file /projects/lingo/lkb/src/glue/lsp.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/lsp.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/lsp.fasl
-;;; Compiling file /projects/lingo/lkb/src/glue/lui.lsp
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/lui.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/lui.fasl
-;;; Compiling file /projects/lingo/lkb/src/glue/rpc.lsp
-;   Fast loading /projects/lingo/acl/code/aserve.003
-;;; Installing aserve patch, version 3.
-;     Fast loading /projects/lingo/acl/code/acldns.001
-;;; Installing acldns patch, version 1.
-;   Autoloading for package "TOP-LEVEL.DEBUG":
-;     Fast loading from bundle code/autozoom.fasl.
-;   Fast loading /projects/lingo/acl/code/xml-rpc.001
-;;; Installing xml-rpc patch, version 1.
-;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/rpc.fasl
-;;; Fasl write complete
-;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/rpc.fasl
-;;; Compiling file /projects/lingo/lkb/src/glue/repp.lsp
-Error (from DEBUG): Meaningless character name “ [file position =
-                    13179]
+Error (from ERROR): Attempt to load the walker module for excl::walk or
+                    excl::old-compiler-walk, which is deprecated in
+                    favor of the clos walker, excl::walk-form, and the
+                    newer version of excl::compiler-walk.
+Continuable error: Load it anyway
 Evaluation stack:
+Warning: while extracting symbols from /usr/lib/libXm.so.3: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXpm.so.4: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXext.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXp.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXt.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libX11.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXmu.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libSM.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libICE.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXau.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /usr/lib/libXdmcp.so.6: couldn't find .symtab section
+Warning: while extracting symbols from /lib/libnss_ldap.so.2: couldn't find .symtab section
+Warning: while extracting symbols from /lib/libcom_err.so.2: couldn't find .symtab section
+Warning: while extracting symbols from /lib/libkeyutils.so.1: couldn't find .symtab section
+Warning: while extracting symbols from /lib/libselinux.so.1: couldn't find .symtab section
+Warning: while extracting symbols from /lib/libsepol.so.1: couldn't find .symtab section
 
    (EXCL::INTERNAL-INVOKE-DEBUGGER)
-   (ERROR)
-   (EXCL::.READER-ERROR)
-   (EXCL::INTERNAL-READER-ERROR)
-   (EXCL::SHARP-BACKSLASH-1)
-   (EXCL::READ-DISPATCH-CHAR)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ-MAYBE-NOTHING)
-   (EXCL::READ-LIST)
-   (EXCL::READ2)
-   (EXCL::READ1)
-   (EXCL::READ-WITH-POSITION)
- ->((FLET COMPILE-FILE EXCL::CONTINUATION))
-   (COMPILE-FILE)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (FUNCALL)
-   (EXCL::%INVOKE)
-   (LET)
-   (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKE)
-   (COND)
-   (EXCL::EVALUATE-A-TAGBODY)
-   (DOLIST)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKE)
-   (COND)
-   (EXCL::EVALUATE-A-TAGBODY)
-   (DOLIST)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKE)
-   (LET)
-   (MULTIPLE-VALUE-BIND)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (MULTIPLE-VALUE-PROG1)
-   (LET*)
-   (PROGV)
-   (LET)
-   (FLET)
-   (UNWIND-PROTECT)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (BLOCK)
-   (:UNKNOWN)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKE)
+   (CERROR)
+ ->((:TOP-LEVEL-FORM "walker.cl" 1589))
+   (SYS::..RUNTIME-OPERATION "rfun" :UNKNOWN-ARGS)
+   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
+   (EXCL::LOAD-2)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::REQUIRE-LOCATE-MODULE)
+   (REQUIRE)
    (EVAL)
    (EXCL::SLOLOAD)
    (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
@@ -2448,10 +1628,10 @@ Evaluation stack:
    (LET)
    (LET)
    (EVAL)
-   (EXCL::PROCESS-SCRIPT "/tmp/genappa292701440011")
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa299491030441")
    (TPL:START-INTERACTIVE-TOP-LEVEL
-      #<EXCL:TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
-        #x48114bda>
+      #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
+        #x4810e052>
       #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
    (EXCL::START-LISP-EXECUTION NIL)
 
@@ -2481,10 +1661,157 @@ make[2]: Leaving directory `/projects/lingo/lkb'
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 linux.x86.32/
-linux.x86.32/files.bu
-linux.x86.32/acli817.pll
 linux.x86.32/lkb.lic
+linux.x86.32/acli8218.pll
+linux.x86.32/files.bu
 linux.x86.32/lkb
+linux.x86.32/locales/
+linux.x86.32/locales/en_IN
+linux.x86.32/locales/fr_CH
+linux.x86.32/locales/bn_IN
+linux.x86.32/locales/zh_CN
+linux.x86.32/locales/de_DE@euro
+linux.x86.32/locales/gl_ES
+linux.x86.32/locales/vi_VN
+linux.x86.32/locales/ru_UA
+linux.x86.32/locales/eu_ES
+linux.x86.32/locales/en_ZA
+linux.x86.32/locales/ja_JP
+linux.x86.32/locales/ar_OM
+linux.x86.32/locales/af_ZA
+linux.x86.32/locales/it_CH
+linux.x86.32/locales/es_PE
+linux.x86.32/locales/ms_MY
+linux.x86.32/locales/no_NO
+linux.x86.32/locales/en_GB@euro
+linux.x86.32/locales/es_EC
+linux.x86.32/locales/nl_BE@euro
+linux.x86.32/locales/es_AR
+linux.x86.32/locales/zh_HK
+linux.x86.32/locales/cs_CZ
+linux.x86.32/locales/zh_TW
+linux.x86.32/locales/ar_LB
+linux.x86.32/locales/ru_RU
+linux.x86.32/locales/mk_MK
+linux.x86.32/locales/kok_IN
+linux.x86.32/locales/ar_IN
+linux.x86.32/locales/te_IN
+linux.x86.32/locales/es_ES@euro
+linux.x86.32/locales/en_NZ
+linux.x86.32/locales/nn_NO
+linux.x86.32/locales/en_BE@euro
+linux.x86.32/locales/ar_MA
+linux.x86.32/locales/is_IS
+linux.x86.32/locales/nl_NL
+linux.x86.32/locales/fr_CA
+linux.x86.32/locales/sv_FI
+linux.x86.32/locales/kw_GB
+linux.x86.32/locales/ko_KR
+linux.x86.32/locales/ta_IN
+linux.x86.32/locales/it_IT
+linux.x86.32/locales/ar_BH
+linux.x86.32/locales/sh_YU
+linux.x86.32/locales/fa_IN
+linux.x86.32/locales/es_ES
+linux.x86.32/locales/bg_BG
+linux.x86.32/locales/en_BE
+linux.x86.32/locales/es_PR
+linux.x86.32/locales/id_ID
+linux.x86.32/locales/be_BY
+linux.x86.32/locales/ar_SA
+linux.x86.32/locales/es_PA
+linux.x86.32/locales/fo_FO
+linux.x86.32/locales/sl_SI
+linux.x86.32/locales/fr_LU
+linux.x86.32/locales/zh_SG
+linux.x86.32/locales/fr_BE
+linux.x86.32/locales/nl_NL@euro
+linux.x86.32/locales/mt_MT
+linux.x86.32/locales/tr_TR
+linux.x86.32/locales/en_CA
+linux.x86.32/locales/es_VE
+linux.x86.32/locales/ca_ES
+linux.x86.32/locales/es_UY
+linux.x86.32/locales/lt_LT
+linux.x86.32/locales/ar_JO
+linux.x86.32/locales/es_US
+linux.x86.32/locales/sv_SE
+linux.x86.32/locales/es_CR
+linux.x86.32/locales/ar_IQ
+linux.x86.32/locales/sv_FI@al
+linux.x86.32/locales/mr_IN
+linux.x86.32/locales/es_CL
+linux.x86.32/locales/ca_ES@euro
+linux.x86.32/locales/de_AT@euro
+linux.x86.32/locales/pt_PT
+linux.x86.32/locales/ar_TN
+linux.x86.32/locales/es_BO
+linux.x86.32/locales/pt_BR
+linux.x86.32/locales/th_TH
+linux.x86.32/locales/ar_AE
+linux.x86.32/locales/hr_HR
+linux.x86.32/locales/es_HN
+linux.x86.32/locales/en_HK
+linux.x86.32/locales/de_DE
+linux.x86.32/locales/ar_EG
+linux.x86.32/locales/de_CH
+linux.x86.32/locales/fi_FI
+linux.x86.32/locales/nb_NO
+linux.x86.32/locales/sv_SE@euro
+linux.x86.32/locales/ar_KW
+linux.x86.32/locales/ar_YE
+linux.x86.32/locales/fa_IR
+linux.x86.32/locales/ar_SD
+linux.x86.32/locales/fr_FR@euro
+linux.x86.32/locales/da_DK
+linux.x86.32/locales/en_IE
+linux.x86.32/locales/en_US
+linux.x86.32/locales/el_GR
+linux.x86.32/locales/ar_DZ
+linux.x86.32/locales/lv_LV
+linux.x86.32/locales/ga_IE
+linux.x86.32/locales/el_GR@euro
+linux.x86.32/locales/hi_IN
+linux.x86.32/locales/pl_PL
+linux.x86.32/locales/kl_GL
+linux.x86.32/locales/fr_BE@euro
+linux.x86.32/locales/es_CO
+linux.x86.32/locales/es_NI
+linux.x86.32/locales/ro_RO
+linux.x86.32/locales/de_BE
+linux.x86.32/locales/de_LU
+linux.x86.32/locales/ar_QA
+linux.x86.32/locales/sk_SK
+linux.x86.32/locales/es_GT
+linux.x86.32/locales/sr_YU
+linux.x86.32/locales/pt_PT@euro
+linux.x86.32/locales/fi_FI@euro
+linux.x86.32/locales/he_IL
+linux.x86.32/locales/en_BW
+linux.x86.32/locales/nl_BE
+linux.x86.32/locales/fr_LU@euro
+linux.x86.32/locales/it_IT@euro
+linux.x86.32/locales/es_SV
+linux.x86.32/locales/en_SG
+linux.x86.32/locales/en_AU
+linux.x86.32/locales/de_LU@euro
+linux.x86.32/locales/en_IE@euro
+linux.x86.32/locales/sq_AL
+linux.x86.32/locales/ar_LY
+linux.x86.32/locales/en_ZW
+linux.x86.32/locales/en_PH
+linux.x86.32/locales/fr_FR
+linux.x86.32/locales/es_PY
+linux.x86.32/locales/gv_GB
+linux.x86.32/locales/ar_SY
+linux.x86.32/locales/hu_HU
+linux.x86.32/locales/en_GB
+linux.x86.32/locales/da_DK@euro
+linux.x86.32/locales/et_EE
+linux.x86.32/locales/de_AT
+linux.x86.32/locales/es_MX
+linux.x86.32/locales/uk_UA
+linux.x86.32/locales/es_DO
 bin/linux.x86.32/yzlui
 ( \
 	  cd /projects/lingo/lkb; \
