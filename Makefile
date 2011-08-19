@@ -169,7 +169,7 @@ lkb_linux_x86_64:
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( cd /logon/oe/src/logon/franz/linux.x86.64; \
-              ACL_LOCALE=C ./alisp -I clim -qq && touch ${LROOT}/.yes; )
+              ACL_LOCALE=en_US.utf8 ./alisp -I clim -qq && touch ${LROOT}/.yes; )
 	( \
 	  if [ ! -f ${LROOT}/.yes ]; then exit 1; fi; \
 	  cd ${LROOT}/lkb; \
