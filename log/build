@@ -1,10 +1,10 @@
-At revision 9730.
-At revision 9730.
+At revision 9733.
+At revision 9733.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 9731.
+Committed revision 9734.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1326,7 +1326,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-8.2 [Linux (x86)] (Aug 19, 2011 10:43)
+8.2 [Linux (x86)] (Aug 19, 2011 10:54)
 Copyright (C) 1985-2010, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1628,7 +1628,7 @@ Warning: while extracting symbols from /lib/libsepol.so.1: couldn't find .symtab
    (LET)
    (LET)
    (EVAL)
-   (EXCL::PROCESS-SCRIPT "/tmp/genappa311591043571")
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa320691054271")
    (TPL:START-INTERACTIVE-TOP-LEVEL
       #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
         #x4810e052>
@@ -1661,157 +1661,157 @@ make[2]: Leaving directory `/projects/lingo/lkb'
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 linux.x86.32/
-linux.x86.32/files.bu
+linux.x86.32/lkb
+linux.x86.32/lkb.lic
 linux.x86.32/locales/
-linux.x86.32/locales/ar_YE
-linux.x86.32/locales/ar_KW
-linux.x86.32/locales/fi_FI
-linux.x86.32/locales/nb_NO
-linux.x86.32/locales/de_CH
-linux.x86.32/locales/ar_EG
-linux.x86.32/locales/de_DE
-linux.x86.32/locales/da_DK
-linux.x86.32/locales/ar_SD
-linux.x86.32/locales/fa_IR
-linux.x86.32/locales/ca_ES@euro
-linux.x86.32/locales/lv_LV
-linux.x86.32/locales/ga_IE
-linux.x86.32/locales/ar_DZ
-linux.x86.32/locales/en_US
-linux.x86.32/locales/el_GR
-linux.x86.32/locales/en_IE
-linux.x86.32/locales/de_AT@euro
-linux.x86.32/locales/sv_FI@al
-linux.x86.32/locales/kl_GL
-linux.x86.32/locales/hi_IN
-linux.x86.32/locales/pl_PL
-linux.x86.32/locales/es_CL
-linux.x86.32/locales/mr_IN
-linux.x86.32/locales/fr_FR@euro
-linux.x86.32/locales/es_CR
-linux.x86.32/locales/ar_IQ
-linux.x86.32/locales/sv_SE@euro
-linux.x86.32/locales/el_GR@euro
-linux.x86.32/locales/es_BO
-linux.x86.32/locales/th_TH
-linux.x86.32/locales/ar_AE
-linux.x86.32/locales/pt_BR
-linux.x86.32/locales/ar_TN
-linux.x86.32/locales/pt_PT
-linux.x86.32/locales/es_HN
-linux.x86.32/locales/en_HK
-linux.x86.32/locales/hr_HR
-linux.x86.32/locales/en_ZW
-linux.x86.32/locales/ar_LY
-linux.x86.32/locales/sq_AL
-linux.x86.32/locales/pt_PT@euro
-linux.x86.32/locales/gv_GB
-linux.x86.32/locales/fr_BE@euro
-linux.x86.32/locales/ar_SY
-linux.x86.32/locales/fr_FR
-linux.x86.32/locales/es_PY
-linux.x86.32/locales/en_PH
-linux.x86.32/locales/fr_LU@euro
-linux.x86.32/locales/it_IT@euro
 linux.x86.32/locales/en_GB
 linux.x86.32/locales/hu_HU
-linux.x86.32/locales/de_LU@euro
-linux.x86.32/locales/en_IE@euro
-linux.x86.32/locales/es_DO
-linux.x86.32/locales/fi_FI@euro
+linux.x86.32/locales/el_GR@euro
 linux.x86.32/locales/uk_UA
+linux.x86.32/locales/es_DO
+linux.x86.32/locales/et_EE
 linux.x86.32/locales/de_AT
 linux.x86.32/locales/es_MX
-linux.x86.32/locales/et_EE
-linux.x86.32/locales/es_CO
-linux.x86.32/locales/es_GT
-linux.x86.32/locales/sr_YU
-linux.x86.32/locales/de_LU
-linux.x86.32/locales/sk_SK
-linux.x86.32/locales/ar_QA
-linux.x86.32/locales/ro_RO
-linux.x86.32/locales/es_NI
-linux.x86.32/locales/de_BE
+linux.x86.32/locales/en_ZW
+linux.x86.32/locales/fr_FR@euro
+linux.x86.32/locales/sq_AL
+linux.x86.32/locales/ar_LY
+linux.x86.32/locales/fr_FR
+linux.x86.32/locales/es_PY
+linux.x86.32/locales/sv_SE@euro
+linux.x86.32/locales/gv_GB
+linux.x86.32/locales/ar_SY
+linux.x86.32/locales/en_PH
 linux.x86.32/locales/he_IL
 linux.x86.32/locales/nl_BE
 linux.x86.32/locales/en_BW
 linux.x86.32/locales/en_AU
 linux.x86.32/locales/en_SG
+linux.x86.32/locales/de_AT@euro
 linux.x86.32/locales/es_SV
+linux.x86.32/locales/es_CO
+linux.x86.32/locales/sk_SK
+linux.x86.32/locales/ar_QA
+linux.x86.32/locales/de_LU
+linux.x86.32/locales/sr_YU
+linux.x86.32/locales/es_GT
+linux.x86.32/locales/ca_ES@euro
+linux.x86.32/locales/ro_RO
+linux.x86.32/locales/es_NI
+linux.x86.32/locales/de_BE
+linux.x86.32/locales/ar_DZ
+linux.x86.32/locales/ga_IE
+linux.x86.32/locales/lv_LV
+linux.x86.32/locales/en_IE
+linux.x86.32/locales/en_US
+linux.x86.32/locales/el_GR
 linux.x86.32/locales/da_DK@euro
-linux.x86.32/locales/es_EC
-linux.x86.32/locales/de_DE@euro
-linux.x86.32/locales/no_NO
-linux.x86.32/locales/ru_RU
-linux.x86.32/locales/ar_LB
-linux.x86.32/locales/zh_TW
-linux.x86.32/locales/cs_CZ
-linux.x86.32/locales/zh_HK
-linux.x86.32/locales/es_AR
-linux.x86.32/locales/ar_IN
-linux.x86.32/locales/mk_MK
-linux.x86.32/locales/is_IS
-linux.x86.32/locales/nn_NO
-linux.x86.32/locales/ar_MA
-linux.x86.32/locales/en_NZ
-linux.x86.32/locales/te_IN
-linux.x86.32/locales/nl_BE@euro
-linux.x86.32/locales/fr_CH
-linux.x86.32/locales/bn_IN
-linux.x86.32/locales/en_IN
-linux.x86.32/locales/en_GB@euro
+linux.x86.32/locales/pl_PL
+linux.x86.32/locales/hi_IN
+linux.x86.32/locales/kl_GL
+linux.x86.32/locales/nb_NO
+linux.x86.32/locales/fi_FI
+linux.x86.32/locales/ar_YE
+linux.x86.32/locales/ar_KW
+linux.x86.32/locales/de_DE
+linux.x86.32/locales/de_CH
+linux.x86.32/locales/ar_EG
+linux.x86.32/locales/ar_SD
+linux.x86.32/locales/da_DK
 linux.x86.32/locales/kok_IN
-linux.x86.32/locales/zh_CN
-linux.x86.32/locales/es_ES@euro
-linux.x86.32/locales/eu_ES
-linux.x86.32/locales/ja_JP
-linux.x86.32/locales/en_ZA
-linux.x86.32/locales/vi_VN
-linux.x86.32/locales/ru_UA
+linux.x86.32/locales/fa_IR
+linux.x86.32/locales/de_LU@euro
+linux.x86.32/locales/en_IE@euro
+linux.x86.32/locales/es_BO
+linux.x86.32/locales/ar_AE
+linux.x86.32/locales/th_TH
+linux.x86.32/locales/pt_BR
+linux.x86.32/locales/fr_LU@euro
+linux.x86.32/locales/pt_PT
+linux.x86.32/locales/it_IT@euro
+linux.x86.32/locales/ar_TN
+linux.x86.32/locales/es_HN
+linux.x86.32/locales/en_HK
+linux.x86.32/locales/hr_HR
+linux.x86.32/locales/fi_FI@euro
+linux.x86.32/locales/es_CL
+linux.x86.32/locales/pt_PT@euro
+linux.x86.32/locales/es_CR
+linux.x86.32/locales/ar_IQ
+linux.x86.32/locales/mr_IN
+linux.x86.32/locales/fr_BE@euro
 linux.x86.32/locales/en_BE@euro
-linux.x86.32/locales/gl_ES
-linux.x86.32/locales/ms_MY
-linux.x86.32/locales/es_PE
-linux.x86.32/locales/af_ZA
-linux.x86.32/locales/it_CH
-linux.x86.32/locales/ar_OM
+linux.x86.32/locales/es_VE
+linux.x86.32/locales/ca_ES
+linux.x86.32/locales/es_ES@euro
+linux.x86.32/locales/mt_MT
+linux.x86.32/locales/tr_TR
+linux.x86.32/locales/en_CA
+linux.x86.32/locales/sv_SE
+linux.x86.32/locales/lt_LT
+linux.x86.32/locales/es_UY
+linux.x86.32/locales/ar_JO
+linux.x86.32/locales/es_US
+linux.x86.32/locales/ar_SA
 linux.x86.32/locales/fo_FO
 linux.x86.32/locales/es_PA
-linux.x86.32/locales/ar_SA
-linux.x86.32/locales/id_ID
+linux.x86.32/locales/nl_BE@euro
 linux.x86.32/locales/be_BY
+linux.x86.32/locales/id_ID
 linux.x86.32/locales/fr_BE
 linux.x86.32/locales/zh_SG
 linux.x86.32/locales/fr_LU
 linux.x86.32/locales/sl_SI
-linux.x86.32/locales/ca_ES
-linux.x86.32/locales/es_VE
-linux.x86.32/locales/en_CA
-linux.x86.32/locales/mt_MT
-linux.x86.32/locales/tr_TR
-linux.x86.32/locales/sv_SE
-linux.x86.32/locales/es_US
-linux.x86.32/locales/es_UY
-linux.x86.32/locales/lt_LT
-linux.x86.32/locales/ar_JO
-linux.x86.32/locales/kw_GB
+linux.x86.32/locales/en_GB@euro
+linux.x86.32/locales/ar_BH
+linux.x86.32/locales/sh_YU
+linux.x86.32/locales/it_IT
+linux.x86.32/locales/en_BE
+linux.x86.32/locales/bg_BG
+linux.x86.32/locales/es_PR
+linux.x86.32/locales/fa_IN
+linux.x86.32/locales/es_ES
 linux.x86.32/locales/sv_FI
-linux.x86.32/locales/fr_CA
-linux.x86.32/locales/nl_NL@euro
+linux.x86.32/locales/kw_GB
 linux.x86.32/locales/nl_NL
+linux.x86.32/locales/fr_CA
+linux.x86.32/locales/de_DE@euro
 linux.x86.32/locales/ta_IN
 linux.x86.32/locales/ko_KR
-linux.x86.32/locales/sh_YU
-linux.x86.32/locales/ar_BH
-linux.x86.32/locales/it_IT
-linux.x86.32/locales/bg_BG
-linux.x86.32/locales/en_BE
-linux.x86.32/locales/es_PR
-linux.x86.32/locales/es_ES
-linux.x86.32/locales/fa_IN
+linux.x86.32/locales/mk_MK
+linux.x86.32/locales/ar_IN
+linux.x86.32/locales/nn_NO
+linux.x86.32/locales/ar_MA
+linux.x86.32/locales/is_IS
+linux.x86.32/locales/te_IN
+linux.x86.32/locales/en_NZ
+linux.x86.32/locales/es_EC
+linux.x86.32/locales/nl_NL@euro
+linux.x86.32/locales/no_NO
+linux.x86.32/locales/cs_CZ
+linux.x86.32/locales/zh_TW
+linux.x86.32/locales/zh_HK
+linux.x86.32/locales/ru_RU
+linux.x86.32/locales/ar_LB
+linux.x86.32/locales/es_AR
+linux.x86.32/locales/ru_UA
+linux.x86.32/locales/vi_VN
+linux.x86.32/locales/en_ZA
+linux.x86.32/locales/ja_JP
+linux.x86.32/locales/eu_ES
+linux.x86.32/locales/sv_FI@al
+linux.x86.32/locales/gl_ES
+linux.x86.32/locales/es_PE
+linux.x86.32/locales/ms_MY
+linux.x86.32/locales/ar_OM
+linux.x86.32/locales/af_ZA
+linux.x86.32/locales/it_CH
+linux.x86.32/locales/bn_IN
+linux.x86.32/locales/fr_CH
+linux.x86.32/locales/en_IN
+linux.x86.32/locales/zh_CN
 linux.x86.32/acli8218.pll
-linux.x86.32/lkb
-linux.x86.32/lkb.lic
+linux.x86.32/files.bu
 bin/linux.x86.32/yzlui
 ( \
 	  cd /projects/lingo/lkb; \
