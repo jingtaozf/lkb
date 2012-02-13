@@ -18,11 +18,8 @@ if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
     cpu=$(uname -m)
   fi
   case "${cpu}" in
-    i?86)
+    i?86|x86_64)
       os="linux.x86.32"
-      ;;
-    x86_64)
-      os="linux.x86.64"
       ;;
     *)
       echo "lkb: unknown Linux variant (check \`uname -m'); exit."
