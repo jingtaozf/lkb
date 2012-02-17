@@ -1,552 +1,10 @@
-U    wescience.mem
-U    lexicon.tdl
-U    lexdb.meta
-U    mtr.tdl
-D    ace/preprocessor.fsr
-D    ace/mrs.vpm
-D    ace/generation.ignore
-A    ace/ace-erg-qc.txt
-U    ace/config.tdl
-U    lexdb.rev
-U    redwoods.xls
-U    speech.grm
-U    inflr.tdl
-U    constructions.tdl
-U    irregs.tab
-U    genia.mem
-U    rpp/xml.rpp
-U    rpp/wiki.rpp
-A    rpp/html.rpp
-A    rpp/lgt.rpp
-U    rpp/tokenizer.rpp
-U    rpp/setup.lsp
-U    redwoods.mem
-U    erg.smi
-U    speech/constr-speech.tdl
-U    speech/syntax-speech.tdl
-U    letypes.tdl
-U    syntax.tdl
-U    lkb/user-fns.lsp
-U    lkb/globals.lsp
-U    lkb/mrsglobals.lsp
-U    lkb/script
-A    lkb/nogen-lex.set
-A    lkb/nogen-rules.set
-U    core.smi
-U    educ/lextypes-epgy.tdl
-U    educ/lexicon-epgy.tdl
-U    educ/constr-epgy.tdl
-U    educ/lexrinst-epgy.tdl
-U    auxverbs.tdl
-U    idioms.mtr
-U    lexrules.tdl
-U    tmt.tdl
-A    pet/regression.yy
-U    pet/common.set
-U    pet/english.set
-U    pet/repp.txt
-U    pet/wiki.set
-A    pet/html.set
-U    pet/regression.txt
-U    pet/repp.set
-U    erg.hds
-U    lexrinst.tdl
-U    tsdb/gold/hike/run.gz
-U    tsdb/gold/hike/parse.gz
-U    tsdb/gold/hike/preference.gz
-U    tsdb/gold/hike/result.gz
-U    tsdb/gold/hike/update.gz
-U    tsdb/gold/hike/item-set.gz
-U    tsdb/gold/hike/decision.gz
-U    tsdb/gold/hike/item.gz
-U    tsdb/gold/hike/tree.gz
-U    tsdb/gold/jh0/run.gz
-U    tsdb/gold/jh0/parse.gz
-U    tsdb/gold/jh0/preference.gz
-U    tsdb/gold/jh0/result.gz
-U    tsdb/gold/jh0/relations
-U    tsdb/gold/jh0/update.gz
-U    tsdb/gold/jh0/item-set.gz
-U    tsdb/gold/jh0/decision.gz
-U    tsdb/gold/jh0/item.gz
-U    tsdb/gold/jh0/tree.gz
-U    tsdb/gold/jh1/run.gz
-U    tsdb/gold/jh1/parse.gz
-U    tsdb/gold/jh1/preference.gz
-U    tsdb/gold/jh1/result.gz
-U    tsdb/gold/jh1/relations
-U    tsdb/gold/jh1/update.gz
-U    tsdb/gold/jh1/item-set.gz
-U    tsdb/gold/jh1/decision.gz
-U    tsdb/gold/jh1/item.gz
-U    tsdb/gold/jh1/tree.gz
-U    tsdb/gold/jh2/run.gz
-U    tsdb/gold/jh2/parse.gz
-U    tsdb/gold/jh2/preference.gz
-U    tsdb/gold/jh2/result.gz
-U    tsdb/gold/jh2/relations
-U    tsdb/gold/jh2/update.gz
-U    tsdb/gold/jh2/item-set.gz
-U    tsdb/gold/jh2/decision.gz
-U    tsdb/gold/jh2/item.gz
-U    tsdb/gold/jh2/tree.gz
-U    tsdb/gold/jh3/run.gz
-U    tsdb/gold/jh3/parse.gz
-U    tsdb/gold/jh3/preference.gz
-U    tsdb/gold/jh3/result.gz
-U    tsdb/gold/jh3/relations
-U    tsdb/gold/jh3/update.gz
-U    tsdb/gold/jh3/item-set.gz
-U    tsdb/gold/jh3/decision.gz
-U    tsdb/gold/jh3/item.gz
-U    tsdb/gold/jh3/tree.gz
-U    tsdb/gold/jh4/run.gz
-U    tsdb/gold/jh4/parse.gz
-U    tsdb/gold/jh4/preference.gz
-U    tsdb/gold/jh4/result.gz
-U    tsdb/gold/jh4/relations
-U    tsdb/gold/jh4/update.gz
-U    tsdb/gold/jh4/item-set.gz
-U    tsdb/gold/jh4/decision.gz
-U    tsdb/gold/jh4/item.gz
-U    tsdb/gold/jh4/tree.gz
-U    tsdb/gold/rondane/run.gz
-U    tsdb/gold/rondane/parse.gz
-U    tsdb/gold/rondane/preference.gz
-U    tsdb/gold/rondane/result.gz
-U    tsdb/gold/rondane/relations
-U    tsdb/gold/rondane/update.gz
-U    tsdb/gold/rondane/decision.gz
-U    tsdb/gold/rondane/item.gz
-U    tsdb/gold/rondane/tree.gz
-A    tsdb/gold/redwoods
-A    tsdb/gold/redwoods/virtual
-U    tsdb/gold/jh5/run.gz
-U    tsdb/gold/jh5/parse.gz
-U    tsdb/gold/jh5/preference.gz
-U    tsdb/gold/jh5/result.gz
-U    tsdb/gold/jh5/relations
-U    tsdb/gold/jh5/update.gz
-U    tsdb/gold/jh5/item-set.gz
-U    tsdb/gold/jh5/decision.gz
-U    tsdb/gold/jh5/item.gz
-U    tsdb/gold/jh5/tree.gz
-U    tsdb/gold/jhu/run.gz
-U    tsdb/gold/jhu/parse.gz
-U    tsdb/gold/jhu/preference.gz
-U    tsdb/gold/jhu/result.gz
-U    tsdb/gold/jhu/relations
-U    tsdb/gold/jhu/update.gz
-U    tsdb/gold/jhu/item-set.gz
-U    tsdb/gold/jhu/decision.gz
-U    tsdb/gold/jhu/item.gz
-U    tsdb/gold/jhu/tree.gz
-U    tsdb/gold/ecpr/run.gz
-U    tsdb/gold/ecpr/parse.gz
-U    tsdb/gold/ecpr/preference.gz
-U    tsdb/gold/ecpr/result.gz
-U    tsdb/gold/ecpr/relations
-U    tsdb/gold/ecpr/update.gz
-U    tsdb/gold/ecpr/decision.gz
-U    tsdb/gold/ecpr/item.gz
-U    tsdb/gold/ecpr/tree.gz
-U    tsdb/gold/csli/run.gz
-U    tsdb/gold/csli/parse.gz
-U    tsdb/gold/csli/preference.gz
-U    tsdb/gold/csli/result.gz
-U    tsdb/gold/csli/update.gz
-U    tsdb/gold/csli/decision.gz
-U    tsdb/gold/csli/item.gz
-U    tsdb/gold/csli/tree.gz
-U    tsdb/gold/ws10/run.gz
-U    tsdb/gold/ws10/parse.gz
-U    tsdb/gold/ws10/preference.gz
-U    tsdb/gold/ws10/result.gz
-U    tsdb/gold/ws10/relations
-U    tsdb/gold/ws10/update.gz
-U    tsdb/gold/ws10/decision.gz
-U    tsdb/gold/ws10/item.gz
-U    tsdb/gold/ws10/tree.gz
-U    tsdb/gold/ws11/run.gz
-U    tsdb/gold/ws11/parse.gz
-U    tsdb/gold/ws11/preference.gz
-U    tsdb/gold/ws11/result.gz
-U    tsdb/gold/ws11/relations
-U    tsdb/gold/ws11/update.gz
-U    tsdb/gold/ws11/decision.gz
-U    tsdb/gold/ws11/item.gz
-U    tsdb/gold/ws11/tree.gz
-U    tsdb/gold/ws12/run.gz
-U    tsdb/gold/ws12/parse.gz
-U    tsdb/gold/ws12/preference.gz
-U    tsdb/gold/ws12/result.gz
-U    tsdb/gold/ws12/relations
-U    tsdb/gold/ws12/update.gz
-U    tsdb/gold/ws12/decision.gz
-U    tsdb/gold/ws12/item.gz
-U    tsdb/gold/ws12/tree.gz
-U    tsdb/gold/ws13/run.gz
-U    tsdb/gold/ws13/parse.gz
-U    tsdb/gold/ws13/preference.gz
-U    tsdb/gold/ws13/result.gz
-U    tsdb/gold/ws13/relations
-U    tsdb/gold/ws13/update.gz
-U    tsdb/gold/ws13/decision.gz
-U    tsdb/gold/ws13/item.gz
-U    tsdb/gold/ws13/tree.gz
-U    tsdb/gold/trec/run.gz
-U    tsdb/gold/trec/parse.gz
-U    tsdb/gold/trec/preference.gz
-U    tsdb/gold/trec/result.gz
-U    tsdb/gold/trec/relations
-U    tsdb/gold/trec/update.gz
-U    tsdb/gold/trec/decision.gz
-U    tsdb/gold/trec/item.gz
-U    tsdb/gold/trec/tree.gz
-U    tsdb/gold/mrs/run.gz
-U    tsdb/gold/mrs/parse.gz
-U    tsdb/gold/mrs/preference.gz
-U    tsdb/gold/mrs/result.gz
-U    tsdb/gold/mrs/update.gz
-U    tsdb/gold/mrs/item-set.gz
-U    tsdb/gold/mrs/decision.gz
-U    tsdb/gold/mrs/item.gz
-U    tsdb/gold/mrs/tree.gz
-U    tsdb/gold/sc01/run.gz
-U    tsdb/gold/sc01/parse.gz
-U    tsdb/gold/sc01/preference.gz
-U    tsdb/gold/sc01/result.gz
-U    tsdb/gold/sc01/relations
-U    tsdb/gold/sc01/update.gz
-U    tsdb/gold/sc01/decision.gz
-U    tsdb/gold/sc01/item.gz
-U    tsdb/gold/sc01/tree.gz
-U    tsdb/gold/sc02/run.gz
-U    tsdb/gold/sc02/parse.gz
-U    tsdb/gold/sc02/preference.gz
-U    tsdb/gold/sc02/result.gz
-U    tsdb/gold/sc02/relations
-U    tsdb/gold/sc02/update.gz
-U    tsdb/gold/sc02/decision.gz
-U    tsdb/gold/sc02/item.gz
-U    tsdb/gold/sc02/tree.gz
-U    tsdb/gold/sc03/run.gz
-U    tsdb/gold/sc03/parse.gz
-U    tsdb/gold/sc03/preference.gz
-U    tsdb/gold/sc03/result.gz
-U    tsdb/gold/sc03/relations
-U    tsdb/gold/sc03/update.gz
-U    tsdb/gold/sc03/decision.gz
-U    tsdb/gold/sc03/item.gz
-U    tsdb/gold/sc03/tree.gz
-U    tsdb/gold/ecoc/run.gz
-U    tsdb/gold/ecoc/parse.gz
-U    tsdb/gold/ecoc/preference.gz
-U    tsdb/gold/ecoc/result.gz
-U    tsdb/gold/ecoc/relations
-U    tsdb/gold/ecoc/update.gz
-U    tsdb/gold/ecoc/decision.gz
-U    tsdb/gold/ecoc/item.gz
-U    tsdb/gold/ecoc/tree.gz
-U    tsdb/gold/ps/run.gz
-U    tsdb/gold/ps/parse.gz
-U    tsdb/gold/ps/preference.gz
-U    tsdb/gold/ps/result.gz
-U    tsdb/gold/ps/relations
-U    tsdb/gold/ps/update.gz
-U    tsdb/gold/ps/item-set.gz
-U    tsdb/gold/ps/decision.gz
-U    tsdb/gold/ps/item.gz
-U    tsdb/gold/ps/tree.gz
-U    tsdb/gold/cb/run.gz
-U    tsdb/gold/cb/parse.gz
-U    tsdb/gold/cb/preference.gz
-U    tsdb/gold/cb/result.gz
-U    tsdb/gold/cb/relations
-U    tsdb/gold/cb/update.gz
-U    tsdb/gold/cb/decision.gz
-U    tsdb/gold/cb/item.gz
-U    tsdb/gold/cb/tree.gz
-U    tsdb/gold/tgk/run.gz
-U    tsdb/gold/tgk/parse.gz
-U    tsdb/gold/tgk/preference.gz
-U    tsdb/gold/tgk/result.gz
-U    tsdb/gold/tgk/relations
-U    tsdb/gold/tgk/update.gz
-U    tsdb/gold/tgk/item-set.gz
-U    tsdb/gold/tgk/decision.gz
-U    tsdb/gold/tgk/item.gz
-U    tsdb/gold/tgk/tree.gz
-U    tsdb/gold/vm31/run.gz
-U    tsdb/gold/vm31/parse.gz
-U    tsdb/gold/vm31/preference.gz
-U    tsdb/gold/vm31/result.gz
-U    tsdb/gold/vm31/relations
-U    tsdb/gold/vm31/update.gz
-U    tsdb/gold/vm31/decision.gz
-U    tsdb/gold/vm31/item.gz
-U    tsdb/gold/vm31/tree.gz
-U    tsdb/gold/vm13/run.gz
-U    tsdb/gold/vm13/parse.gz
-U    tsdb/gold/vm13/preference.gz
-U    tsdb/gold/vm13/result.gz
-U    tsdb/gold/vm13/relations
-U    tsdb/gold/vm13/update.gz
-U    tsdb/gold/vm13/decision.gz
-U    tsdb/gold/vm13/item.gz
-U    tsdb/gold/vm13/tree.gz
-U    tsdb/gold/vm32/run.gz
-U    tsdb/gold/vm32/parse.gz
-U    tsdb/gold/vm32/preference.gz
-U    tsdb/gold/vm32/result.gz
-U    tsdb/gold/vm32/relations
-U    tsdb/gold/vm32/update.gz
-U    tsdb/gold/vm32/decision.gz
-U    tsdb/gold/vm32/item.gz
-U    tsdb/gold/vm32/tree.gz
-U    tsdb/gold/ecos/run.gz
-U    tsdb/gold/ecos/parse.gz
-U    tsdb/gold/ecos/preference.gz
-U    tsdb/gold/ecos/result.gz
-U    tsdb/gold/ecos/relations
-U    tsdb/gold/ecos/update.gz
-U    tsdb/gold/ecos/decision.gz
-U    tsdb/gold/ecos/item.gz
-U    tsdb/gold/ecos/tree.gz
-U    tsdb/gold/ws01/run.gz
-U    tsdb/gold/ws01/parse.gz
-U    tsdb/gold/ws01/preference.gz
-U    tsdb/gold/ws01/result.gz
-U    tsdb/gold/ws01/relations
-U    tsdb/gold/ws01/update.gz
-U    tsdb/gold/ws01/decision.gz
-U    tsdb/gold/ws01/item.gz
-U    tsdb/gold/ws01/tree.gz
-U    tsdb/gold/ws02/run.gz
-U    tsdb/gold/ws02/parse.gz
-U    tsdb/gold/ws02/preference.gz
-U    tsdb/gold/ws02/result.gz
-U    tsdb/gold/ws02/relations
-U    tsdb/gold/ws02/update.gz
-U    tsdb/gold/ws02/decision.gz
-U    tsdb/gold/ws02/item.gz
-U    tsdb/gold/ws02/tree.gz
-U    tsdb/gold/tg1/run.gz
-U    tsdb/gold/tg1/parse.gz
-U    tsdb/gold/tg1/preference.gz
-U    tsdb/gold/tg1/result.gz
-U    tsdb/gold/tg1/relations
-U    tsdb/gold/tg1/update.gz
-U    tsdb/gold/tg1/item-set.gz
-U    tsdb/gold/tg1/decision.gz
-U    tsdb/gold/tg1/item.gz
-U    tsdb/gold/tg1/tree.gz
-U    tsdb/gold/tg2/run.gz
-U    tsdb/gold/tg2/parse.gz
-U    tsdb/gold/tg2/preference.gz
-U    tsdb/gold/tg2/result.gz
-U    tsdb/gold/tg2/relations
-U    tsdb/gold/tg2/update.gz
-U    tsdb/gold/tg2/item-set.gz
-U    tsdb/gold/tg2/decision.gz
-U    tsdb/gold/tg2/item.gz
-U    tsdb/gold/tg2/tree.gz
-U    tsdb/gold/ws03/run.gz
-U    tsdb/gold/ws03/parse.gz
-U    tsdb/gold/ws03/preference.gz
-U    tsdb/gold/ws03/result.gz
-U    tsdb/gold/ws03/relations
-U    tsdb/gold/ws03/update.gz
-U    tsdb/gold/ws03/decision.gz
-U    tsdb/gold/ws03/item.gz
-U    tsdb/gold/ws03/tree.gz
-U    tsdb/gold/psk/run.gz
-U    tsdb/gold/psk/parse.gz
-U    tsdb/gold/psk/preference.gz
-U    tsdb/gold/psk/result.gz
-U    tsdb/gold/psk/relations
-U    tsdb/gold/psk/update.gz
-U    tsdb/gold/psk/item-set.gz
-U    tsdb/gold/psk/decision.gz
-U    tsdb/gold/psk/item.gz
-U    tsdb/gold/psk/tree.gz
-U    tsdb/gold/ws04/run.gz
-U    tsdb/gold/ws04/parse.gz
-U    tsdb/gold/ws04/preference.gz
-U    tsdb/gold/ws04/result.gz
-U    tsdb/gold/ws04/relations
-U    tsdb/gold/ws04/update.gz
-U    tsdb/gold/ws04/decision.gz
-U    tsdb/gold/ws04/item.gz
-U    tsdb/gold/ws04/tree.gz
-U    tsdb/gold/ws05/run.gz
-U    tsdb/gold/ws05/parse.gz
-U    tsdb/gold/ws05/preference.gz
-U    tsdb/gold/ws05/result.gz
-U    tsdb/gold/ws05/relations
-U    tsdb/gold/ws05/update.gz
-U    tsdb/gold/ws05/decision.gz
-U    tsdb/gold/ws05/item.gz
-U    tsdb/gold/ws05/tree.gz
-U    tsdb/gold/tgu/run.gz
-U    tsdb/gold/tgu/parse.gz
-U    tsdb/gold/tgu/preference.gz
-U    tsdb/gold/tgu/result.gz
-U    tsdb/gold/tgu/relations
-U    tsdb/gold/tgu/update.gz
-U    tsdb/gold/tgu/item-set.gz
-U    tsdb/gold/tgu/decision.gz
-U    tsdb/gold/tgu/item.gz
-U    tsdb/gold/tgu/tree.gz
-U    tsdb/gold/fracas/run.gz
-U    tsdb/gold/fracas/parse.gz
-U    tsdb/gold/fracas/preference.gz
-U    tsdb/gold/fracas/result.gz
-U    tsdb/gold/fracas/relations
-U    tsdb/gold/fracas/update.gz
-U    tsdb/gold/fracas/decision.gz
-U    tsdb/gold/fracas/item.gz
-U    tsdb/gold/fracas/tree.gz
-U    tsdb/gold/ws06/run.gz
-U    tsdb/gold/ws06/parse.gz
-U    tsdb/gold/ws06/preference.gz
-U    tsdb/gold/ws06/result.gz
-U    tsdb/gold/ws06/relations
-U    tsdb/gold/ws06/update.gz
-U    tsdb/gold/ws06/decision.gz
-U    tsdb/gold/ws06/item.gz
-U    tsdb/gold/ws06/tree.gz
-U    tsdb/gold/ws07/run.gz
-U    tsdb/gold/ws07/parse.gz
-U    tsdb/gold/ws07/preference.gz
-U    tsdb/gold/ws07/result.gz
-U    tsdb/gold/ws07/relations
-U    tsdb/gold/ws07/update.gz
-U    tsdb/gold/ws07/decision.gz
-U    tsdb/gold/ws07/item.gz
-U    tsdb/gold/ws07/tree.gz
-U    tsdb/gold/ws08/run.gz
-U    tsdb/gold/ws08/parse.gz
-U    tsdb/gold/ws08/preference.gz
-U    tsdb/gold/ws08/result.gz
-U    tsdb/gold/ws08/relations
-U    tsdb/gold/ws08/update.gz
-U    tsdb/gold/ws08/decision.gz
-U    tsdb/gold/ws08/item.gz
-U    tsdb/gold/ws08/tree.gz
-U    tsdb/gold/ws09/run.gz
-U    tsdb/gold/ws09/parse.gz
-U    tsdb/gold/ws09/preference.gz
-U    tsdb/gold/ws09/result.gz
-U    tsdb/gold/ws09/relations
-U    tsdb/gold/ws09/update.gz
-U    tsdb/gold/ws09/decision.gz
-U    tsdb/gold/ws09/item.gz
-U    tsdb/gold/ws09/tree.gz
-A    tsdb/gold/wescience
-A    tsdb/gold/wescience/virtual
-U    tsdb/gold/psu/run.gz
-U    tsdb/gold/psu/parse.gz
-U    tsdb/gold/psu/preference.gz
-U    tsdb/gold/psu/result.gz
-U    tsdb/gold/psu/relations
-U    tsdb/gold/psu/update.gz
-U    tsdb/gold/psu/item-set.gz
-U    tsdb/gold/psu/decision.gz
-U    tsdb/gold/psu/item.gz
-U    tsdb/gold/psu/tree.gz
-A    tsdb/gold/rtc000
-A    tsdb/gold/rtc000/output.gz
-A    tsdb/gold/rtc000/parameter
-A    tsdb/gold/rtc000/analysis
-A    tsdb/gold/rtc000/run.gz
-A    tsdb/gold/rtc000/fold
-A    tsdb/gold/rtc000/item-set
-A    tsdb/gold/rtc000/parse.gz
-A    tsdb/gold/rtc000/set
-A    tsdb/gold/rtc000/preference.gz
-A    tsdb/gold/rtc000/result.gz
-A    tsdb/gold/rtc000/relations
-A    tsdb/gold/rtc000/update.gz
-A    tsdb/gold/rtc000/item-phenomenon
-A    tsdb/gold/rtc000/edge
-A    tsdb/gold/rtc000/phenomenon
-A    tsdb/gold/rtc000/rule
-A    tsdb/gold/rtc000/score
-A    tsdb/gold/rtc000/decision.gz
-A    tsdb/gold/rtc000/item.gz
-A    tsdb/gold/rtc000/tree.gz
-U    tsdb/gold/ecpa/run.gz
-U    tsdb/gold/ecpa/parse.gz
-U    tsdb/gold/ecpa/preference.gz
-U    tsdb/gold/ecpa/result.gz
-U    tsdb/gold/ecpa/relations
-U    tsdb/gold/ecpa/update.gz
-U    tsdb/gold/ecpa/decision.gz
-U    tsdb/gold/ecpa/item.gz
-U    tsdb/gold/ecpa/tree.gz
-U    tsdb/gold/vm6/run.gz
-U    tsdb/gold/vm6/parse.gz
-U    tsdb/gold/vm6/preference.gz
-U    tsdb/gold/vm6/result.gz
-U    tsdb/gold/vm6/relations
-U    tsdb/gold/vm6/update.gz
-U    tsdb/gold/vm6/decision.gz
-U    tsdb/gold/vm6/item.gz
-U    tsdb/gold/vm6/tree.gz
-A    tsdb/gold/rtc001
-A    tsdb/gold/rtc001/output.gz
-A    tsdb/gold/rtc001/parameter
-A    tsdb/gold/rtc001/analysis
-A    tsdb/gold/rtc001/run.gz
-A    tsdb/gold/rtc001/fold
-A    tsdb/gold/rtc001/item-set
-A    tsdb/gold/rtc001/parse.gz
-A    tsdb/gold/rtc001/set
-A    tsdb/gold/rtc001/preference.gz
-A    tsdb/gold/rtc001/result.gz
-A    tsdb/gold/rtc001/relations
-A    tsdb/gold/rtc001/update.gz
-A    tsdb/gold/rtc001/item-phenomenon
-A    tsdb/gold/rtc001/edge
-A    tsdb/gold/rtc001/phenomenon
-A    tsdb/gold/rtc001/rule
-A    tsdb/gold/rtc001/score
-A    tsdb/gold/rtc001/decision.gz
-A    tsdb/gold/rtc001/item.gz
-A    tsdb/gold/rtc001/tree.gz
-U    tsdb/gold/jhk/run.gz
-U    tsdb/gold/jhk/parse.gz
-U    tsdb/gold/jhk/preference.gz
-U    tsdb/gold/jhk/result.gz
-U    tsdb/gold/jhk/relations
-U    tsdb/gold/jhk/update.gz
-U    tsdb/gold/jhk/item-set.gz
-U    tsdb/gold/jhk/decision.gz
-U    tsdb/gold/jhk/item.gz
-U    tsdb/gold/jhk/tree.gz
-U    README
-U    inflr-pnct.tdl
-U    semi.vpm
-U    lextypes.tdl
-U    parse-nodes.tdl
-U    tmr/pos.tdl
-U    tmr/ne1.tdl
-U    tmr/ne2.tdl
-U    tmr/punctuation.tdl
-U    fundamentals.tdl
-U    redwoods.pcfg
-U    trigger.mtr
-U    lfr.tdl
-U    english.grm
-Updated to revision 10682.
-U    etc/lkb
-Updated to revision 10682.
+At revision 10699.
+At revision 10699.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 10683.
+Committed revision 10700.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1874,7 +1332,7 @@ Allocated 5242880 bytes for new space
 
 ;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Feb 14, 2012 14:10)
+8.1 [Linux (x86)] (Feb 17, 2012 11:25)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -3255,7 +2713,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-111828352 bytes have been tenured, next gc will be global.
+112362944 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -4377,7 +3835,7 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/gc.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/yy.lisp
-[14:12:12] gc-after-hook(): {L#1 N=2.2M O=16 E=88%} [S=100M R=88M].
+[11:27:02] gc-after-hook(): {L#1 N=2.2M O=16 E=88%} [S=100M R=88M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
@@ -4386,14 +3844,14 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/mt.lisp
-[14:12:12] gc-after-hook(): {L#2 N=6.5M O=255K E=74%} [S=100M R=88M].
-[14:12:13] gc-after-hook(): {L#3 N=5.0M O=0 E=89%} [S=100M R=88M].
-[14:12:14] gc-after-hook(): {L#4 N=3.2M O=511K E=82%} [S=100M R=88M].
+[11:27:03] gc-after-hook(): {L#2 N=6.5M O=255K E=82%} [S=100M R=88M].
+[11:27:03] gc-after-hook(): {L#3 N=5.0M O=0 E=81%} [S=100M R=88M].
+[11:27:03] gc-after-hook(): {L#4 N=3.2M O=511K E=84%} [S=100M R=88M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/derivations.lisp
-[14:12:15] gc-after-hook(): {L#5 N=2.1M O=0 E=84%} [S=101M R=89M].
+[11:27:04] gc-after-hook(): {L#5 N=2.1M O=0 E=86%} [S=101M R=89M].
 ;;; Writing fasl file
 ;;;   /projects/lingo/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -4404,16 +3862,16 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/redwoods.lisp
-[14:12:16] gc-after-hook(): {L#6 N=2.4M O=384K E=91%} [S=101M R=89M].
-[14:12:16] gc-after-hook(): {L#7 N=9.8M O=552 E=76%} [S=101M R=89M].
-[14:12:16] gc-after-hook(): {L#8 N=7.3M O=6.6K E=74%} [S=101M R=89M].
-[14:12:17] gc-after-hook(): {L#9 N=11M O=116K E=69%} [S=101M R=89M].
-[14:12:17] gc-after-hook(): {L#10 N=9.2M O=3.9K E=62%} [S=101M R=89M].
-[14:12:17] gc-after-hook(): {L#11 N=9.2M O=0 E=68%} [S=104M R=92M].
+[11:27:04] gc-after-hook(): {L#6 N=2.4M O=384K E=86%} [S=101M R=89M].
+[11:27:05] gc-after-hook(): {L#7 N=9.8M O=552 E=78%} [S=101M R=89M].
+[11:27:05] gc-after-hook(): {L#8 N=7.3M O=6.6K E=71%} [S=101M R=89M].
+[11:27:05] gc-after-hook(): {L#9 N=11M O=116K E=70%} [S=101M R=89M].
+[11:27:06] gc-after-hook(): {L#10 N=9.2M O=3.9K E=62%} [S=101M R=89M].
+[11:27:06] gc-after-hook(): {L#11 N=9.2M O=0 E=68%} [S=104M R=92M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
-[14:12:18] gc-after-hook(): {L#12 N=5.8M O=2.7M E=63%} [S=104M R=92M].
+[11:27:06] gc-after-hook(): {L#12 N=5.8M O=2.7M E=63%} [S=104M R=92M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -4426,7 +3884,7 @@ Warning: without-interrupts is deprecated; see
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
-[14:12:18] gc-after-hook(): {L#13 N=5.8M O=0 E=64%} [S=110M R=96M].
+[11:27:07] gc-after-hook(): {L#13 N=5.8M O=0 E=67%} [S=110M R=96M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/rasp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/rasp.fasl
 ;;; Fasl write complete
@@ -4444,8 +3902,8 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/fsc.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/hunter.lisp
-[14:12:19] gc-after-hook(): {L#14 N=2.6M O=5.1M E=60%} [S=110M R=98M].
-[14:12:20] gc-after-hook(): {L#15 N=3.0M O=43K E=87%} [S=110M R=98M].
+[11:27:07] gc-after-hook(): {L#14 N=2.6M O=5.1M E=64%} [S=110M R=98M].
+[11:27:08] gc-after-hook(): {L#15 N=3.0M O=43K E=88%} [S=110M R=98M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
@@ -4458,16 +3916,16 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/features.lisp
-[14:12:20] gc-after-hook(): {L#16 N=2.4M O=340K E=88%} [S=110M R=98M].
+[11:27:08] gc-after-hook(): {L#16 N=2.4M O=340K E=87%} [S=110M R=98M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
-[14:12:21] gc-after-hook(): {L#17 N=2.4M O=82K E=90%} [S=110M R=98M].
+[11:27:08] gc-after-hook(): {L#17 N=2.4M O=82K E=87%} [S=110M R=98M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/learner.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
-[14:12:21] gc-after-hook(): {L#18 N=1.9M O=833K E=86%} [S=110M R=98M].
+[11:27:09] gc-after-hook(): {L#18 N=1.9M O=833K E=85%} [S=110M R=98M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/experiment.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/experiment.fasl
 ;;; Fasl write complete
@@ -4483,13 +3941,13 @@ make[2]: Leaving directory `/projects/lingo/lkb'
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 linux.x86.32/
-linux.x86.32/libacli817.so
 linux.x86.32/lkb
-linux.x86.32/lkb.lic
 linux.x86.32/files.bu
-linux.x86.32/acli817.pll
 linux.x86.32/climxm.so
+linux.x86.32/lkb.lic
+linux.x86.32/acli817.pll
 linux.x86.32/lkb.dxl
+linux.x86.32/libacli817.so
 bin/linux.x86.32/yzlui
 ( \
 	  cd /projects/lingo/lkb; \
@@ -5059,7 +4517,6 @@ erg/pet/smaf.conf
 erg/pet/wiki.set
 erg/pet/global.set
 erg/pet/regression.yy
-erg/pet/html.set
 erg/pet/flop.set
 erg/pet/common.set
 erg/pet/robust.set
@@ -5120,8 +4577,6 @@ erg/rpp/quotes.rpp
 erg/rpp/lkb.rpp
 erg/rpp/latex.rpp
 erg/rpp/setup.lsp
-erg/rpp/html.rpp
-erg/rpp/lgt.rpp
 erg/rpp/xml.rpp
 erg/rpp/tokenizer.rpp
 erg/rpp/robustness.rpp
