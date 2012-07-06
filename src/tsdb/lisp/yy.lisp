@@ -39,7 +39,7 @@
 
 (defparameter *yy-k2y-rts-ra-ratio* nil)
 
-(defun yy-read-input (string &key (format :string))
+(defun yy-read-input (string &key (format :string) (sort :id))
   (let* ((i 0)
          (length (length string))
          (whitespace '(#\space #\tab #\newline)))
@@ -134,7 +134,24 @@
                                    form surface inflection tags)))))))
       (let ((tokens (loop for token = (read-token) while token collect token)))
         (setf tokens
-          (sort tokens #'< :key #'(lambda (token) (get-field :id token))))
+          (case sort
+            (:id
+             (sort tokens #'< :key #'(lambda (token) (get-field :id token))))
+            (t
+             (sort
+              tokens
+              #'(lambda (token1 token2)
+                  (let ((start1 (get-field :start token1))
+                        (end1 (get-field :end token1))
+                        (start2 (get-field :start token2))
+                        (end2 (get-field :end token2)))
+                    (when (and (numberp start1) (numberp end1)
+                               (numberp start2) (numberp end2))
+                      (or (< start1 start2)
+                          (and (= start1 start2) (< end1 end2))
+                          (and (= start1 start2) (= end1 end2)
+                               (string< (get-field :form token1)
+                                        (get-field :form token2)))))))))))
         (case format
           (:raw
            tokens)
@@ -147,8 +164,7 @@
                with ntokens = 0
                for token in tokens
                for start = (get-field :start token)
-               for word = (or (get-field :surface token)
-                              (get-field :form token))
+               for word = (get-field :form token)
                unless (member start positions :test #'=)
                do 
                   (push start positions)
@@ -156,6 +172,19 @@
                   (loop for c across word do (vector-push c result))
                   (incf ntokens)
                finally (return (unless (equal result "") result)))))))))
+
+(defun yy-print-token (token &key (prefix "") (stream *tsdb-io*))
+  (let* ((from (get-field :from token))
+         (to (get-field :to token))
+         (characterization 
+          (and (numberp from) (numberp to) (<= 0 from to)
+               (format nil "<~a:~a>" from to))))
+    (format
+     stream "~a(~a, ~a, ~a~@[, ~a~], 1, ~s~@[ ~s~], 0, ~s~@[,~{ ~s~}~])"
+     prefix (get-field :id token)
+     (get-field :start token) (get-field :end token)
+     characterization (get-field :form token) (get-field :surface token)
+     (get-field :inflection token) (get-field :tags token))))
 
 (labels ((|[|-reader (stream char)
            (declare (ignore char))
@@ -710,7 +739,7 @@
   (let ((reader
          #'(lambda (string)
              (let ((*package* (find-package :tsdb)))
-               (yy-read-input string :format :raw)))))
+               (yy-read-input string :format :raw :sort t)))))
     (setf (gethash :p-input *statistics-readers*) reader)
     (setf (gethash :p-tokens *statistics-readers*) reader)))
 

@@ -1,3 +1,5 @@
+;;; -*- mode: common-lisp; coding: utf-8; package: tsdb -*-
+
 (in-package :tsdb)
 
 ;;;
@@ -142,6 +144,18 @@
    ((string-equal token "`") "‘")
    ((string-equal token "'") "’")
    (t token)))
+
+(defun ptb-escape (string)
+  (setf string
+    (cond
+     ((string= string "“") "``")
+     ((string= string "”") "''")
+     ((string= string "…") "...")
+     ((string= string "—") "--")
+     ((string= string "–") "--")
+     (t string)))
+  (setf string (substitute #\` (code-char #x2018) string))
+  (setf string (substitute #\' (code-char #x2019) string)))
 
 (defun ptb-preprocess (string 
                        &key rawp (plainp t) (posp *ptb-use-pos-tags-p*)

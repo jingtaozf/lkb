@@ -956,9 +956,18 @@ proc tsdb_set {variable {value ""}} {
           set value [lispify_truth_value 0];
         }; # else
       }
+      score_all_p {
+        set variable "*redwoods-score-all-p*";
+        set value [lispify_truth_value $globals(tree,score_all_p)];
+      }
       use_item_sets_p {
         set variable "*redwoods-use-item-sets-p*";
         set value [lispify_truth_value $globals(tree,use_item_sets_p)];
+      }
+      update_reject_p {
+        set variable "*tree-skeptical-update-p*";
+        set package ":lkb";
+        set value [lispify_truth_value $globals(tree,update,rejectp)];
       }
       update_flag_p {
         set variable "*redwoods-update-flag-p*";

@@ -10,6 +10,8 @@
 ;;;
 (defparameter *failure-raw-output-p* nil)
 
+(defparameter *unify-robust-p* :default)
+
 (defparameter %failures% nil)
 
 ;;;
@@ -74,17 +76,20 @@
         (failure-glb object) (failure-glb object)
         (failure-context object) (failure-context object))))))
 
-(defun debug-yadu! (tdfs1 tdfs2 path)
+(defun debug-yadu! (tdfs1 tdfs2 path &key (robustp *unify-robust-p*))
   #+:debug
   (setf %tdfs1 tdfs1 %tdfs2 tdfs2 %path path)
-  (with-unification-context (ignore)
+  (if *within-unification-context-p*
     (let* ((dag1 (tdfs-indef tdfs1))
            (tdfs2 (create-temp-parsing-tdfs tdfs2 path))
            (dag2 (tdfs-indef tdfs2))
            (*unify-wffs* t)
            (*expanding-types* nil)
+           (*unify-robust-p* robustp)
            (result (debug-unify-dags dag1 dag2)))
-      (when result (make-tdfs :indef result)))))
+      (when result (make-tdfs :indef result)))
+    (with-unification-context (ignore)
+      (debug-yadu! tdfs1 tdfs2 path :robustp robustp))))
 
 (defun debug-unify-dags (dag1 dag2)
   #+:debug
@@ -95,7 +100,7 @@
 (defun debug-unify1 (dag1 dag2 path)
   (setf dag1 (deref-dag dag1))
   (setf dag2 (deref-dag dag2))
-  (when (dag-copy dag1)
+  (when (consp (dag-copy dag1))
     (let* ((prefix (reverse (dag-copy dag1)))
            (suffix (subseq (reverse path) (length prefix)))
            (failure
@@ -146,7 +151,62 @@
       (push (make-failure 
              :nature :type :path (reverse path)
              :type1 (unify-get-type dag1) :type2 (unify-get-type dag2))
-            %failures%)))))
+            %failures%)
+      (case *unify-robust-p*
+        (:lub
+         (let* ((type (least-common-supertype
+                       (unify-get-type dag1) (unify-get-type dag2)))
+                (features (appropriate-features-of type)))
+           (declare (ignore features))
+           (setf (dag-arcs dag1) nil)))
+        (:size
+         (let ((i (debug-unify-size dag1))
+               (j (debug-unify-size dag2))
+               k l)
+           (when (= i j)
+             ;;
+             ;; if need be, use the count of subtypes as a tie-breaker, making
+             ;; the (debatable) assumption that more subtypes indicate a larger
+             ;; degree of uncertainty.
+             ;;
+             (let* ((type1 (get-type-entry (unify-get-type dag1)))
+                    (type2 (get-type-entry (unify-get-type dag2))))
+               (setf k (length (ltype-descendants type1)))
+               (setf l (length (ltype-descendants type2)))))
+           (cond
+            ((or (< i j) (and k l (> k l)))
+             (setf (dag-forward dag1) dag2)
+             (debug-unify-arcs dag1 dag2 path)
+             (setf (dag-copy dag2) nil))
+            (t
+             (setf (dag-forward dag2) dag1)
+             (debug-unify-arcs dag1 dag2 path)
+             (setf (dag-copy dag1) nil)))))
+        (:default
+         ;;
+         ;; the cheapest possible strategy: arbitrarily select one of the two
+         ;; input dags as the result dag; still recurse over all arcs to try
+         ;; and pick up additional information (on shared arcs).
+         ;;
+         (setf (dag-forward dag2) dag1)
+         (debug-unify-arcs dag1 dag2 path)
+         (setf (dag-copy dag1) nil)))))))
+
+(defun debug-unify-size (dag)
+  (let ((n 0)
+        seen)
+    (labels ((traverse (dag)
+               (unless (member dag seen :test #'eq)
+                 (incf n)
+                 (push dag seen)
+                 (loop
+                     for arc in (dag-arcs dag)
+                     do (traverse (dag-arc-value arc)))
+                 (loop
+                     for arc in (dag-comp-arcs dag)
+                     do (traverse (dag-arc-value arc))))))
+      (traverse dag))
+    n))
 
 (defun debug-unify-arcs-find-arc (feature arcs comp-arcs)
   (or
@@ -192,8 +252,9 @@
     (when new-arcs
       (setf (dag-comp-arcs dag1) new-arcs))))
 
-(defun debug-copy-dag (dag &optional path)
-  (let ((dag (deref-dag dag))
+(defun debug-copy-dag (dag &optional path &key (robustp *unify-robust-p*))
+  (let ((*unify-robust-p* robustp)
+        (dag (deref-dag dag))
         (copy (dag-copy dag)))
     (cond
      ((dag-p copy) copy)
@@ -228,17 +289,21 @@
 ;;;
 ;;;
 ;;;
-(defun read-dag (stream &key path coreferences)
+(defparameter *token-ignore* nil)
+
+(defun read-dag (stream &key path coreferences (ignore *token-ignore*))
   (when (stringp stream)
     (return-from read-dag
       (with-input-from-string (stream stream)
-        (read-dag stream :path path :coreferences coreferences))))
+        (read-dag
+         stream :path path :coreferences coreferences :ignore ignore))))
   (if (null coreferences)
     (let ((*package* (find-package *lkb-package*))
           (*readtable* (copy-readtable)))
       (set-syntax-from-char #\= #\( *readtable*)
-      (progn;ignore-errors
-       (read-dag stream :coreferences (make-hash-table :test #'eql))))
+      (ignore-errors
+       (read-dag
+        stream :coreferences (make-hash-table :test #'eql) :ignore ignore)))
     (let ((c (peek-char t stream nil nil))
           unifications)
       (when (and c (char= c #\#))
@@ -265,9 +330,10 @@
               for feature = (read stream nil nil)
               for value = (read-dag
                            stream :path (cons feature path)
-                           :coreferences coreferences)
+                           :coreferences coreferences :ignore ignore)
               for c = (peek-char t stream nil nil)
-              when value do (nconc unifications value)
+              when (and value (not (smember feature ignore)))
+              do (nconc unifications value)
               until (or (null c) (char= c #\]))
               finally (when (and c (char= c #\])) (read-char stream)))))
       (if (null path)

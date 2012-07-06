@@ -59,6 +59,11 @@
      (counts-absolute 0) (counts-contexts 0)
      (counts-events 0) (counts-relevant 0)
      ;;
+     ;; finally, a generic `custom' feature selection mechanism
+     ;;
+     #+:onet
+     (custom *feature-custom*)
+     ;;
      ;; for learning curve computation: only use percentage of training data
      ;;
      (train-percentage '(100))
@@ -135,7 +140,6 @@
                       target source :similarities score-similarities))
                    (purge-profile-cache target))
                  executep)))
-             
       (let ((total 0)
             (experiment 0)
             (thresholds
@@ -168,8 +172,9 @@
                   (*feature-lm-p* (listify lm-p))
                   (*feature-flags* (listify flags))
                   (*feature-random-sample-size* (listify random-sample-size))
-                  (*feature-frequency-threshold* thresholds))
-                 
+                  (*feature-frequency-threshold* thresholds)
+                  #+:onet
+                  (*feature-custom* (listify custom)))
           (let ((run 0)
                 (skipped 0))
             (case type

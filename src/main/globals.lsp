@@ -78,6 +78,13 @@
 (def-lkb-parameter *lexicon-tokens-path* nil)
 (def-lkb-parameter *lexicon-last-token-path* nil)
 
+;;;
+;;; token feature structures are grammar-specific bundles of properties that
+;;; were input to parsing; to look up individual components, assume a number
+;;; of (customizable) paths.
+;;;
+(def-lkb-parameter *token-id-path* nil)
+
 (def-lkb-parameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")

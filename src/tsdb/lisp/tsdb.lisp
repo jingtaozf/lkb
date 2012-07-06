@@ -49,8 +49,6 @@
 (defun cache-connection (data &key absolute unique ro verbose)
 
   (declare (ignore verbose))
-  #+:debug
-  (when absolute (break))
   (loop
       with path = (if absolute (namestring data) (find-tsdb-directory data))
       for connection in (copy-list %tsdb-connection-cache%)
@@ -346,8 +344,7 @@
                  (loop
                      for c = (read-char stream nil :eof)
                      until (eq c :eof)
-                     do
-                       (vector-push-extend c result 32768))
+                     do (vector-push-extend c result 32768))
                  (close stream)
                  #+:allegro (sys:os-wait nil pid)
                  (unless *tsdb-debug-mode-p*
@@ -1390,11 +1387,11 @@
           (or (get-field :granularity cache) (profile-granularity data)))
          (parse-id (get-field :parse-id record))
          (result-id (get-field :result-id record))
-         (score-id (get-field+ :score-id record -1))
          (start (get-field+ :score-start record -1))
          (end (get-field+ :score-end record -1))
-         (learner (get-field :learner record))
-         (rank (get-field :rank record))
+         (score-id (get-field+ :score-id record -1))
+         (learner (get-field+ :learner record ""))
+         (rank (get-field+ :rank record -1))
          (score (get-field+ :score record ""))
          (score (if (stringp score) score (format nil "~a" score))))
     (if rawp

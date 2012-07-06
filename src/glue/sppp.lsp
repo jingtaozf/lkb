@@ -317,6 +317,7 @@
              (second attributes))))))
 
 (defun xml-escape-string (string)
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0)))
   (if (and string (stringp string))
     (loop
         with padding

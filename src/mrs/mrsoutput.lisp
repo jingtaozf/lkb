@@ -145,18 +145,29 @@ duplicate variables")
 	 (ing-fs (path-value fs (list (vsym "ING") (vsym "LIST"))))
 	 ;;; FIX - hardwired names
 	 (ing (when ing-fs (construct-ing ing-fs nil *variable-generator*)))
-         (psoa
+         (hcons (when (and top-h-fs *top-hcons*)
+                  (let ((top (create-new-handle-var *variable-generator*)))
+                    (make-hcons
+                     :relation *top-hcons*
+                     :outscpd (create-variable top-h-fs *variable-generator*)
+                     :scarg top))))
+         (top (if hcons
+                (hcons-scarg hcons)
+                (if top-h-fs
+                  (create-variable top-h-fs *variable-generator*)
+                  (when *rel-handel-path* 
+                    (create-new-handle-var *variable-generator*)))))
+         (psoa 
           (make-psoa
-           :top-h (if top-h-fs
-                    (create-variable top-h-fs *variable-generator*)
-                    (when *rel-handel-path*
-                      (create-new-handle-var *variable-generator*)))
+           :top-h top
            :index (when (is-valid-fs index-fs)
                     (create-variable index-fs *variable-generator*))
            :liszt (nreverse (construct-liszt 
                              liszt-fs nil *variable-generator*))
-           :h-cons (nreverse (construct-h-cons 
-                              h-cons-fs nil *variable-generator*))
+           :h-cons (append
+                    (and hcons (list hcons))
+                    (nreverse
+                     (construct-h-cons h-cons-fs nil *variable-generator*)))
            :a-cons (nreverse (construct-a-cons
                               a-cons-fs nil *variable-generator*))))
 	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)

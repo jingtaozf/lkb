@@ -92,6 +92,9 @@
    #+:null
    '((12 :nmtrs) (13 :tratio) (14 :ratio))))
 
+#+:onet
+(defparameter *feature-custom* nil)
+
 (defparameter *feature-preference-weightings*
   '((0 :binary) (1 :bleu) (2 :wa) (3 :waft)))
 
@@ -134,7 +137,8 @@
     *feature-ngram-back-off-p*
     *feature-lm-p*
     *feature-frequency-threshold*
-    *feature-random-sample-size*))
+    *feature-random-sample-size*
+    #+:onet *feature-custom*))
 
 (defparameter *feature-float-valued-tids* '(42 43 -1))
 
@@ -698,6 +702,15 @@
     (when (and derivationp (null edge)) (return-from result-to-event))
 
     ;;
+    ;; for experimentation with the Google 1T n-gram data, we need to define a
+    ;; `generic' interface for user-defined features.
+    ;;
+    #+:onet
+    (loop
+        for feature in (get-field :features result)
+        do (record-feature feature event model :rop rop))
+    
+    ;;
     ;; in the LOGON universe, at least, .edge. can correspond to a fragmented
     ;; generator output, where there is no internal structure available besides
     ;; the concatenated surface string of the component fragments.
@@ -1095,6 +1108,11 @@
           for foo in *feature-flags*
           for features = (retrieve-features fc iid rid 43 (list (first foo)))
           do (record-features features event model)))
+    #+onet
+    (loop
+        for (tid . parameters) in *feature-custom*
+        for features = (retrieve-features fc iid rid tid parameters)
+        do (record-features features event model))
     event))
 
 (defun edge-root (edge &optional
@@ -1106,6 +1124,12 @@
                 (type-of-lexical-entry instance)
                 instance)))
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))
+
+(defun pos-of-lexical-entry (identifier)
+  (let* ((type (type-of-lexical-entry identifier))
+         (name (symbol-name type))
+         (separator (and type (position #\_ name :test #'char=))))
+    (when separator (intern (subseq name 0 separator) :keyword))))
 
 (defun lm-item-enhancer (item)
   #+:logon

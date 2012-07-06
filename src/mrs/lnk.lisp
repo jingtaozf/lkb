@@ -27,24 +27,50 @@
 ;;; fourth mode is used in generation, where surface linking actually is a two-
 ;;; stage process (see comments in `generate.lsp').              (4-dec-06; oe)
 ;;;
-(defun output-lnk (lnk &key (stream t))
+
+(defun valid-lnk-p (lnk)
+  (case (first lnk)
+    (:characters
+     (let ((start (second lnk))
+           (end (third lnk)))
+       (and (numberp start) (numberp end) (>= start 0) (>= end start))))
+    (:vertices
+     (and (second lnk) (third lnk)))
+    (:tokens
+     (rest lnk))
+    (:id
+     (and (second lnk) (null (rest (rest lnk)))))))
+
+(defun output-lnk (lnk &key (stream t) format)
   (if stream
     (when *show-lnk-p*
-      (case (first lnk)
-        (:characters
-         (let ((start (second lnk))
-               (end (third lnk)))
-           (when (and (numberp start) (numberp end)
-                      (>= start 0) (>= end 0))
-             (format stream "<~a:~a>" (second lnk) (third lnk)))))
-        (:vertices
-         (format stream "<~a#~a>" (second lnk) (third lnk)))
-        (:tokens
-         (format stream "<~{~a~^ ~}>" (rest lnk)))
-        (:id
-         (format stream "<@~a>" (second lnk)))))
+      (cond
+       ((eq format :latex)
+        (case (first lnk)
+          (:characters
+           (format stream "\\slnkc{~a}{~a}" (second lnk) (third lnk)))))
+       (t
+        (case format
+          (:html (format stream "&lang;"))
+          (t (format stream "<")))
+        (case (first lnk)
+          (:characters
+           (let ((start (second lnk))
+                 (end (third lnk)))
+             (when (and (numberp start) (numberp end)
+                        (>= start 0) (>= end 0))
+               (format stream "~a:~a" (second lnk) (third lnk)))))
+          (:vertices
+           (format stream "~a#~a" (second lnk) (third lnk)))
+          (:tokens
+           (format stream "~{~a~^ ~}" (rest lnk)))
+          (:id
+           (format stream "@~a" (second lnk))))
+        (case format
+          (:html (format stream "&rang;"))
+          (t (format stream ">"))))))
     (with-output-to-string (stream)
-      (output-lnk lnk :stream stream))))
+      (output-lnk lnk :stream stream :format format))))
 
 (defun read-lnk (&optional (stream t))
   (ignore-errors

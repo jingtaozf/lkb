@@ -37,7 +37,7 @@
 (defun create_run (tid data run-id comment interactive protocol custom)
   (let* ((comment (if (stringp comment) comment ""))
          (interactive (if interactive 1 0))
-         (version (logand protocol 31))
+         (version (and (numberp protocol) (logand protocol 31)))
          (protocol (if (and (numberp protocol) (>= version 1) (<= version 2))
                      protocol
                      1))

@@ -2283,7 +2283,7 @@
   ;; this function is a little overly eager in making copies, thus breaking 
   ;; eq-ness() of variables in the result; for now, we only use it for display
   ;; purposes (to overlay the OUTPUT and DEFAULT parts of MTRs), hence no need
-  ;; to loose sleep yet.                                       (9-jan-04; oe)
+  ;; to lose sleep yet.                                        (9-jan-04; oe)
   ;;
   (let* ((top (when (mrs:psoa-top-h mrs1)
                 (merge-values 
@@ -2453,7 +2453,7 @@
         do
           (format
            t
-           "pural_mark_~a_ef := plural_mark_amtr &~%~
+           "plural_mark_~a_ef := plural_mark_amtr &~%~
             [ CONTEXT.RELS < [ PRED ~s ] > ].~%~%"
            (normalize pred) pred))))
 

@@ -66,7 +66,8 @@
 
 (defparameter *import-normalize-p* t)
 
-(defun do-import-database (source target &key absolute meter except)
+(defun do-import-database (source target
+                                  &key absolute meter except uncompress)
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((tpath (if absolute (namestring target) (find-tsdb-directory target)))
@@ -104,9 +105,15 @@
               (let ((sfile (make-pathname :directory source :name compressed))
                     (tfile (make-pathname :directory tpath :name compressed)))
                 (when (probe-file sfile)
-                  (if (member relation except :test #'equal)
-                    (touch tfile)
-                    (cp sfile tfile))))
+                  (cond
+                   ((member relation except :test #'equal)
+                    (touch (make-pathname :directory tpath :name relation)))
+                   (t
+                    (cp sfile tfile)
+                    (when uncompress
+                      (run-process 
+                       (format nil "~a '~a'" "gzip -d -f" (namestring tfile))
+                       :wait t))))))
               (when increment (meter-advance increment))
             finally
               (let ((sfile 

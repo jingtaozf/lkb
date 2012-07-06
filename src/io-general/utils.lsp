@@ -404,13 +404,13 @@
                        :direction :output :if-exists :append)
         (excl.osi:with-stream-lock (foo)
           (load
-           (handler-bind ((excl:compiler-no-in-package-warning
-                           #'(lambda (c)
-                               (declare (ignore c))
-                               (muffle-warning))))
-             (if (and compile (member :compiler *features*))
-               (compile-file file :verbose nil :print nil)
-               file)))))
+           (if (and compile (member :compiler *features*))
+             (handler-bind ((excl:compiler-no-in-package-warning
+                             #'(lambda (c)
+                                 (declare (ignore c))
+                                 (muffle-warning))))
+                 (compile-file file :verbose nil :print nil))
+               file))))
       #+:lispworks
       (load 
        (if compile (compile-file file :load t :print nil :verbose nil) file))

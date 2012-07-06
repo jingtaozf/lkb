@@ -42,6 +42,8 @@
 ;;;
 (def-lkb-parameter *tree-automatic-update-p* 0)
 
+(def-lkb-parameter *tree-skeptical-update-p* nil)
+
 (def-lkb-parameter *tree-update-match-hook* nil)
 
 (def-lkb-parameter *tree-save-on-reject-p* t)
@@ -330,19 +332,22 @@
       (multiple-value-bind (result condition) 
           (when (functionp hook)
             (ignore-errors (apply hook (cons frame extras))))
-        (if (= (length result) (length (compare-frame-discriminants frame)))
+        (cond
+         ((= (length result) (length (compare-frame-discriminants frame)))
           (loop
               for discriminant in (compare-frame-discriminants frame)
               for state in result
               unless (eq state :unknown) do
                 (setf (discriminant-toggle discriminant) state)
                 (setf (discriminant-state discriminant) state)
-              finally (recompute-in-and-out frame))
+              finally (recompute-in-and-out frame)))
+         ((null result))
+         (t
           (format
            #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
            "tree-initialization-hook(): ~
             discriminant count mismatch (~a vs. ~a).~%"
-           (length result) (length (compare-frame-discriminants frame))))
+           (length result) (length (compare-frame-discriminants frame)))))
         (when condition
           (clim:beep)
           (format
@@ -383,6 +388,12 @@
   (when (find :reject (compare-frame-preset frame) :key #'discriminant-type)
     (setf (compare-frame-in frame) nil)
     (setf (compare-frame-out frame) edges))
+
+  (when (and runp *tree-skeptical-update-p*)
+    (let ((gactive (compare-frame-gactive frame)))
+      (when (and (numberp gactive) (zerop gactive))
+        (setf (compare-frame-in frame) nil)
+        (setf (compare-frame-out frame) (compare-frame-edges frame)))))
 
   ;;
   ;; always update tree and discriminant state here: this will cause the frame
@@ -1594,3 +1605,19 @@
            (discriminant-key item) indentation
            (discriminant-value item) indentation))
     (format stream "~v,0t</table>" indentation)))
+
+(defun ptb-compare-hook (frame &key size)
+  (declare (ignore extras))
+  (let* ((input (compare-frame-input frame))
+         (input (if (stringp input)
+                  (let ((symbol (find-symbol "READ-PTB-FROM-STRING" :tsdb)))
+                    (when symbol (funcall (symbol-function symbol) input))
+                    input)))
+         (comment (compare-frame-comment frame)))
+    (when (and (consp input) (stringp comment))
+      (setf (compare-frame-input frame) comment)
+      (lui-display-tree input comment :size size))
+    nil))
+
+#+:null
+(setf lkb::*tree-initialization-hook* '("lkb::ptb-compare-hook" :size 8))

@@ -43,9 +43,9 @@ proc copyleft {action} {
         -text "$globals(name)  -  version $globals(version)"
       frame $copyleft.zero -bg $bg -height 5
       label $copyleft.first -bg $bg -fg grey -font $small \
-        -text "Copyleft (c) 1995 - 2008 \
+        -text "Copyleft (c) 1995 - 2012 \
                by Stephan Oepen (oe@ifi.uio.no) \
-               -  All Rights Reserved"
+               - All Rights Reserved"
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
         -text "$globals(name) is free software \
@@ -58,7 +58,7 @@ proc copyleft {action} {
       } else {
         frame $copyleft.fourth -bg $bg -height 5
         label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
-          -text "Until registered, after several minutes of continuous use\
+          -text "Until registered, after several minutes of continuous use, \
                  a log entry will be generated and\n\
                  automatically sent to a central protocol server\
                  (at Saarland University)."

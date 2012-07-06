@@ -1,3 +1,5 @@
+;;; -*- mode: common-lisp; coding: utf-8; package: tsdb -*-
+
 (in-package :tsdb)
 
 ;;;
@@ -15,8 +17,11 @@
 ;;; License for more details.
 ;;; 
 
+(defparameter *conll-type* :starsem)
 
-(defun read-items-from-conll-file (file &key (base 1) (offset 0) shift)
+(defun read-items-from-conll-file (file
+                                   &key (base 1) (offset 0) shift
+                                        (type *conll-type*))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (loop
@@ -25,28 +30,79 @@
           for line = (read-line stream nil nil)
           while line
           when (string= line "")
-          collect (let ((i id)
-                        (length (length input))
-                        (string (format nil "~{~a~^~%~}" (nreverse input))))
-                    (when (functionp shift) (setf i (funcall shift i)))
-                    (incf id)
-                    (setf input nil)
-                    (pairlis '(:i-id :i-wf :i-length :i-input)
-                             (list (+ offset i) 1 length string)))
+          collect
+            (let* ((i id)
+                   (length (length input))
+                   (string (format nil "~{~a~^~%~}" (nreverse input)))
+                   (tokens (conll-preprocess string :type type :format :raw))
+                   (negations
+                    (when (eq type :starsem)
+                      (handler-case (starsem-summarize-tokens tokens)
+                        (condition (condition)
+                          (warn (format nil "~a" condition))
+                          nil)))))
+              (if (eq type :starsem)
+                (labels ((segment (chapter)
+                           (cond
+                            ;;
+                            ;; based on chapter names, carve up the identifier
+                            ;; space as follows, one segment per chapter:
+                            ;; [0-1] wisteria
+                            ;; [2-17] baskervilles
+                            ;;
+                            ((search "wisteria" chapter :end2 8)
+                             (- (parse-integer chapter :start 8) 1))
+                            ((search "baskervilles" chapter :end2 12)
+                             (+ (parse-integer chapter :start 12) 1))
+                            ((search "cardboard" chapter :end2 9)
+                             16)
+                            ((search "circle" chapter :end2 6)
+                             (+ (parse-integer chapter :start 6) 16)))))
+                  (let* ((token (first tokens))
+                         (segment (or (segment (get-field :chapter token)) 0))
+                         (sentence (get-field :sentence token)))
+                    (setf i (+ 10000 (* segment 1000) sentence))))
+                (when (functionp shift) (setf i (funcall shift i))))
+              (incf id)
+              (when (consp tokens)
+                (setf tokens (write-to-string tokens :case :downcase)))
+              (when (consp negations)
+                (setf negations (write-to-string negations :case :downcase)))
+              (setf input nil)
+              (pairlis '(:i-id :i-wf :i-length :i-input :i-tokens :i-comment)
+                       (list (+ offset i) 1 length string tokens negations)))
           else do (push line input)))))
 
-(defun conll-preprocess (string &key (format :string) gaps (mode :erg))
+(defun conll-preprocess (string &key (format :string) gaps (mode :erg) type)
   (let ((tokens
          (loop
              for token in (ppcre:split "\\n" string)
              for conll = (ppcre:split "\\t" token)
-             when (= (length conll) 10)
+             when (eq type :starsem)
+             collect
+               ;;
+               ;; the 2012 *SEM pseudo-CoNLL format
+               ;;
+               (loop
+                   for key in '(:chapter :sentence :id :form :stem :ppos :ptb)
+                   for value = (pop conll)
+                   when (smember key '(:sentence :id))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   into token
+                   else collect (cons key value) into token
+                   finally
+                     (let* ((id (get-field :id token))
+                            (length (length (get-field :form token))))
+                       (set-field :start (* id 100) token)
+                       (set-field :end (+ (* id 100) length) token))
+                     (return (acons :starsem conll token)))
+             else when (= (length conll) 10)
              collect
                ;;
                ;; the earlier, CoNLL 2007 format
                ;;
                (loop
-                   for key in '(:id :form :lemma
+                   for key in '(:id :form :stem
                                 :cpos :pos :feat
                                 :head :deprel :phead :pdeprel)
                    for value in conll
@@ -58,7 +114,7 @@
                ;; the richer, CoNLL 2009 format
                ;;
                (loop
-                   for key in '(:id :form :lemma :plemma
+                   for key in '(:id :form :stem :plemma
                                 :pos :ppos :feat :pfeat
                                 :head :phead :deprel :pdeprel
                                 :fillpred :pred :apreds)
@@ -73,24 +129,25 @@
               (loop
                   for token in tokens
                   unless (and (null gaps) (eq mode :srg)
-                              (string= (get-field :lemma token) "_")
+                              (string= (get-field :stem token) "_")
                               (string= (get-field :pos token) "p"))
                   collect (get-field :form token))))
          (format nil "~{~a~^ ~}" forms))))))
 
 (defun conll-for-pet (string &optional tagger
-                      &key gold (characterize t) (mode :erg))
+                      &key gold (characterize t) (mode :erg)
+                           type stream)
   (declare (ignore tagger))
   (loop
       with result
       with i = 0
       with start = 0 
       with end = 1
-      for token in (conll-preprocess string :format :raw)
+      for token in (conll-preprocess string :format :raw :type type)
       for id = (get-field :id token)
       for form = (rewrite-conll-token (get-field :form token))
       for plemma = (get-field :plemma token)
-      for lemma = (if (or gold (not plemma)) (get-field :lemma token) plemma)
+      for lemma = (if (or gold (not plemma)) (get-field :stem token) plemma)
       for cpos = (get-field :cpos token)
       for pos 
       = (or cpos (if gold (get-field :pos token) (get-field :ppos token)))
@@ -106,7 +163,7 @@
                (format 
                 nil 
                 "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                  1, \"~a\", 0, \"null\"~@[, \"~a+~a\" 1.0~])"
+                  1, ~s, 0, \"null\"~@[, \"~a+~a\" 1.0~])"
                 id i (+ i 1) characterize start end form pos feat))))
           (:srg
            (unless (and (string= lemma "_") (string= pos "p"))
@@ -124,7 +181,7 @@
                  = (format 
                     nil 
                     "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-                     1, \"~a\" \"~a\", 0, \"$~a\"~@[, ~s 1.0~])"
+                     1, ~s \"~a\", 0, \"$~a\"~@[, ~s 1.0~])"
                     id i (+ i 1) characterize start end stem form tag pos)
                  when tag collect yy into result
                  finally
@@ -136,16 +193,27 @@
                       id form pos feat))
                    (return result))))
           (t
-           (format 
-            nil 
-            "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
-              1, \"~a\", 0, \"null\"~@[, ~s 1.0~])"
-            id i (+ i 1) characterize i (+ i 1) form pos)))
+           (let ((start (or (get-field :start token) i))
+                 (end (or (get-field :end token) (+ i 1))))
+             (format 
+              nil 
+              "(~d, ~d, ~d, ~:[~*~*~;<~a:~a>, ~]~
+               1, ~s, 0, \"null\"~@[, ~s 1.0~])"
+              id i (+ i 1) characterize start end form pos))))
       when (consp yy) do (setf result (nconc yy result)) (incf i)
       when (stringp yy) do (push yy result) (incf i)
       when yy do (setf start end) (setf end (+ start 1))
       else do (incf end)
-      finally (return (values (format nil "~{~a~^ ~}" (nreverse result)) i))))
+      finally
+        (setf result (nreverse result))
+        (cond
+         ((or (streamp stream) (eq stream t))
+          (format stream "~{~a~^ ~}" (nreverse result)))
+         ((stringp stream)
+          (with-open-file (stream stream
+                           :direction :output :if-exists :supersede)
+            (format stream "~{~a~^ ~}" result))))
+        (return (values (format nil "~{~a~^ ~}" result) i))))
 
 (defun rewrite-conll-token (token &optional pos)
   (let ((token (rewrite-ptb-token token pos)))
@@ -393,7 +461,7 @@
                 ~a	_	_~%"
                id
                (loop
-                   for key in '(:form :lemma :plemma :pos :ppos :feat :pfeat)
+                   for key in '(:form :stem :plemma :pos :ppos :feat :pfeat)
                    collect (get-field key token))
                head (get-field :head token) 
                (get-field :fillpred token)))
@@ -403,7 +471,7 @@
                "~a~{	~a~}	~a	~a~{	~a~}~%"
                id
                (loop
-                   for key in '(:form :lemma :plemma :pos :ppos :feat :pfeat)
+                   for key in '(:form :stem :plemma :pos :ppos :feat :pfeat)
                    collect (get-field key token))
                (get-field :head token) (get-field :phead token)
                (loop
@@ -449,14 +517,6 @@
                   collect (acons :rank 1 rank))
               nil))))))
 
-#+:null         
-(eval-when #+:ansi-eval-when (:load-toplevel :execute)
-	   #-:ansi-eval-when (load eval)
-  (setf (gethash :i-input *statistics-readers*)
-    #'(lambda (string)
-        (let ((*package* (find-package :tsdb)))
-          (ptb-preprocess string :plainp t)))))
-
 #+:null
 (loop
     for i in '("00" "01" "02" "03" "04" "05" "06" "07"
@@ -465,7 +525,7 @@
     do (do-import-items
          (format nil "/home/oe/src/ptb/mrg/~a" i)
          (format nil "test/wsj~a" i) :format :ptb))
-
+
 #+:null
 (loop
     for i from 2 to 21
@@ -473,6 +533,7 @@
     do (do-import-items
          (format nil "/home/oe/src/conll09/en/09~2,'0d.txt" i)
          (format nil "test/conll~2,'0d" i) :format :conll :shift shift))
+
 #+:null
 (loop
     for i from 2 to 24

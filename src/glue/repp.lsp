@@ -280,15 +280,15 @@
       (loop
           with result
           with i = 0
-          with id = 41
+          with id = 0
           for form in (ppcre:split (repp-tokenizer repp) string)
           unless (string= form "")
           do
-            (let* ((id (incf id))
-                   (from i) (to (incf i))
+            (let* ((from i) (to (incf i))
                    (token
                     (make-token :id id :form form :from from :to to)))
               (incf length)
+              (incf id)
               (push token result)
               (when verbose
                 (format t "  (~a) [~a:~a] |~a|~%" id from to form)))

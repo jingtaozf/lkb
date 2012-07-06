@@ -1049,6 +1049,7 @@
                                  &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
+         (*edge-registry* nil)
          (name (string-upcase (string instance)))
          (n (length name))
          (bracket (position #\[ name))
@@ -1081,7 +1082,6 @@
              ;; instantiate-generic-lexical-entry() call.        (7-dec-06; oe)
              ;;
              (tdfs (if (eq mrs::*lnkp* :id) (lnk-tdfs tdfs (list id)) tdfs))
-             (tdfs (if *recording-word* (unify-in-word tdfs form) tdfs))
              (ids (list (lex-entry-id instance))))
         (values
          (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
@@ -1091,7 +1091,41 @@
                     #-:logon :cto #-:logon (mrs::find-cto-hack start))
          length)))))
 
-(defun tsdb::instantiate-lexical-entry (edge tokens &optional (dagp t))
+(defun tsdb::find-lexical-type (form instance 
+                                &optional id start end (dagp t))
+
+  (let* ((*package* *lkb-package*)
+         (*edge-registry* nil)
+         (name (string-upcase (string instance)))
+         (offset (if (char= (char name 0) #\@) 1 0))
+         (name (intern (subseq name offset) *lkb-package*))
+         (instance (ignore-errors
+                    (eval-possible-leaf-type *leaf-types* name)
+                    (get-type-entry name))))
+    (when instance 
+      (let* ((tdfs (when (smember dagp '(:word t))
+                     (copy-tdfs-completely (ltype-tdfs instance))))
+             ;;
+             ;; _fix_me_
+             ;; by calling lnk-tdfs() outside of a unification context, we end
+             ;; up making another copy of .tdfs. :-{.  it should suffice to use
+             ;; lnk-tdfs() directly on the FS of the lexical entry (as it will
+             ;; then end up making a copy after the unifications, but then we
+             ;; would still have to worry about getting the LNK effect into the
+             ;; instantiate-generic-lexical-entry() call.        (7-dec-06; oe)
+             ;;
+             (tdfs (if (eq mrs::*lnkp* :id) (lnk-tdfs tdfs (list id)) tdfs)))
+        (values
+         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
+                    :rule form :leaves (list form) :lex-ids nil
+                    :dag tdfs :from start :to end
+                    #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
+                    #-:logon :cto #-:logon (mrs::find-cto-hack start))
+         (length form))))))
+
+(defun tsdb::instantiate-lexical-entry (edge tokens 
+                                        &optional (dagp t) robustp)
+
   (let* ((dagp (smember dagp '(:rule t)))
          (*unify-debug* :return)
          (%failure% nil)
@@ -1105,18 +1139,26 @@
             then (append path *list-tail*)
             for i from 0
             while result do
-              (setf result (yadu! result token (append path *list-head*)))
+              (setf result
+                (if robustp
+                  (debug-yadu!
+                   result token (append path *list-head*)
+                   :robustp robustp)
+                  (yadu! result token (append path *list-head*))))
               (incf status)
                                   
             finally
               (when result
                 (let ((token (first (last tokens))))
                   (setf result
-                    (yadu! result token *lexicon-last-token-path*)))
+                    (if robustp
+                      (debug-yadu!
+                       result token *lexicon-last-token-path* :robustp robustp)
+                      (yadu! result token *lexicon-last-token-path*))))
                 (when result
                   (setf (edge-dag edge) (copy-tdfs-elements result)))))))
     (if (or result (null dagp))
-      edge
+      (values edge nil)
       (values status %failure%))))
 
 (defun tsdb::find-rule (instance)
@@ -1128,8 +1170,10 @@
                    (get-grammar-rule-entry name))))
     rule))
 
-(defun tsdb::instantiate-rule (rule edges id &optional (dagp t))
+(defun tsdb::instantiate-rule (rule edges id
+                               &optional (dagp t) robustp)
   (let* ((dagp (smember dagp '(:rule t)))
+         (*edge-registry* nil)
          (*unify-debug* :return)
          (%failure% nil)
          (status 0)
@@ -1149,24 +1193,33 @@
             for i from 0
             do
               (setf status i)
-              (setf result (yadu! result tdfs path))
+              (setf result
+                (if robustp
+                  (debug-yadu! result tdfs path :robustp robustp)
+                  (yadu! result tdfs path)))
+
             finally
               (when result
                 (when (eq mrs::*lnkp* :id) (lnk-tdfs result (list id)))
-                (setf result (restrict-and-copy-tdfs result))))))
+                (setf result
+                  (if robustp
+                    (let ((dag (debug-copy-dag
+                                (tdfs-indef result) nil :robustp robustp)))
+                      (make-tdfs :indef dag))
+                    (restrict-and-copy-tdfs result)))))))
+    #+:null (check-dag (tdfs-indef result))
     (if (or result (null dagp))
-      (make-edge :id id :category (and result (indef-type-of-tdfs result))
-                 :rule rule
-                 :leaves (loop 
-                             for edge in edges
-                             append (edge-leaves edge))
-                 :lex-ids (loop 
-                             for edge in edges
-                             append (edge-lex-ids edge))
-                 :dag result
-                 :children edges
-                 :from (edge-from (first edges)) 
-                 :to (edge-to (first (last edges))))
+      (values
+       (make-edge :id id :category (and result (indef-type-of-tdfs result))
+                  :rule rule
+                  :leaves (loop for edge in edges append (edge-leaves edge))
+                  :lex-ids (loop
+                               for edge in edges
+                               append (edge-lex-ids edge))
+                  :dag result :children edges
+                  :from (edge-from (first edges))
+                  :to (edge-to (first (last edges))))
+       nil)
       (values status %failure%))))
 
 ;;;

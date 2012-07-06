@@ -794,6 +794,13 @@
            (client (get-field :client run))
            (cpu (and client (client-cpu client)))
 	   (tagger (when (cpu-p cpu) (cpu-tagger cpu)))
+           ;;
+           ;; _fix_me_
+           ;; for full generality, the preprocessing hook should be given the
+           ;; full item, for example to extract the `i-tokens' field.  we may
+           ;; have to invent an `input' slot in the cpus and then gradually
+           ;; convert existing code to item-based preprocessing.
+           ;;                                                   (25-feb-12; oe)
            (p-input (cond
                      ((and (cpu-p cpu) (cpu-preprocessor cpu))
                       (call-hook 
@@ -1308,8 +1315,8 @@
             (when (cpu-p (client-cpu client))
               (format
                stream
-               "~&process-queue(): client exit on `~a' <~x>~%"
-               (client-host client) remote))
+               "~&[~a] process-queue(): client exit on `~a' <~x>~%"
+               (current-time :long :short) (client-host client) remote))
             (setf (client-status client) :exit)
             (when (and *process-client-retries* client)
               (let* ((cpu (client-cpu client))
@@ -1400,15 +1407,13 @@
                         when (consp (run-status run)) collect run)))
           (format
            stream
-           "process-queue(): ~
+           "~&[~a] process-queue(): ~
             external interrupt signal~
             ~:[~*~; (~d active client~:p)~].~%"
-           busy (length busy))
+           (current-time :long :short) busy (length busy))
           (force-output stream))
-        (return-from process-queue
-          (pairlis '(:pending :interrupt)
-                   (list pending t)))))
-
+        (return-from process-queue 
+          (pairlis '(:pending :interrupt) (list pending t)))))
 
 (defun receive-item (nitems &key wait stream verbose interrupt)
   (declare (ignore nitems))

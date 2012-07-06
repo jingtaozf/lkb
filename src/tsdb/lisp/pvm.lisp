@@ -46,8 +46,8 @@
       (pvm_kill tid))
     (format
      stream
-     "~&~akill-client(): ignoring invalid client `~a'.~%"
-     prefix client)))
+     "~&~a[~a] kill-client(): ignoring invalid client `~a'.~%"
+     prefix (current-time :long :short) client)))
 
 (defun initialize-cpus (&key cpus
                              (classes '(:all))
@@ -56,6 +56,7 @@
                              count
                              block
                              wait
+                             quantum
                              (file
                               (format
                                nil
@@ -94,8 +95,9 @@
   (when (and filep (null reset))
     (format
      stream
-     "~&~ainitialize-cpus(): ignoring (protocol) `file' argument (no reset).~%"
-     prefix ))
+     "~&~a[~a] initialize-cpus(): ~
+      ignoring (protocol) `file' argument (no reset).~%"
+     prefix (current-time :long :short)))
   ;;
   ;; first, create as many clients as we have cpus ...
   ;;
@@ -137,16 +139,17 @@
                           (if (null encoding)
                             (format
                              stream
-                             "~ainitialize-cpus(): ~
+                             "~a[~a] initialize-cpus(): ~
                               changing *pvm-encoding* to ~(~a~).~%"
-                             prefix
+                             prefix (current-time :long :short)
                              (setf encoding
                                (setf *pvm-encoding* (cpu-encoding cpu))))
                             (format
                              stream
-                             "~ainitialize-cpus(): ~
+                             "~a[~a] initialize-cpus(): ~
                               ignoring cpu encoding ~(~a~).~%"
-                             prefix (cpu-encoding cpu))))
+                             prefix (current-time :long :short)
+                             (cpu-encoding cpu))))
                         (pvm_create
                          (cpu-spawn cpu) (cpu-options cpu)
                          :host node :architecture (cpu-architecture cpu)))
@@ -155,12 +158,14 @@
             do
               (format
                stream
-               "~ainitialize-cpus(): `~a' communication error <~x>.~%"
-               prefix node tid)
+               "~a[~a] initialize-cpus(): `~a' communication error <~x>.~%"
+               prefix (current-time :long :short) node tid)
             when ptask
             do
               (let* ((cpu (let ((cpu (copy-cpu cpu)))
                             (when task (setf (cpu-task cpu) (list task)))
+                            (when (numberp quantum) 
+                              (setf (cpu-quantum cpu) quantum))
                             cpu))
                      (client (make-client
                               :tid tid :task ptask :cpu cpu :host node
@@ -215,17 +220,18 @@
               (when (and (client-p client) (cpu-p (client-cpu client)))
                 (format
                  stream
-                 "~&~await-for-clients(): client exit on `~a' <~x>~%"
-                 prefix (client-host client) remote))
+                 "~&~a[~a] wait-for-clients(): client exit on `~a' <~x>~%"
+                 prefix (current-time :long :short) 
+                 (client-host client) remote))
               (setf *pvm-clients* (delete client *pvm-clients*))))
            
            ((null client)
             (when *pvm-debug-p*
               (format
                stream
-               "~&~await-for-clients(): ~
+               "~&~a[~a] wait-for-clients(): ~
                 ignoring message from alien <~x>:~%~s~%~%"
-               prefix remote message)
+               prefix (current-time :long :short) remote message)
               (force-output)))
            
            ((eql tag %pvm_lisp_message%)
@@ -240,28 +246,28 @@
                 (setf (client-protocol client) (third content))
                 (format
                  stream
-                 "~await-for-clients(): ~
+                 "~a[~a] wait-for-clients(): ~
                   `~a' registered as tid <~x> [~2,'0d:~2,'0d].~%"
-                 prefix (client-host client) (client-tid client)
-                 minutes seconds))
+                 prefix (current-time :long :short)
+                 (client-host client) (client-tid client) minutes seconds))
               (when (and block (eql (client-tid client) block))
                 (return-from wait-for-clients client)))
              (t
               (when *pvm-debug-p*
                 (format
                  stream
-                 "~&~await-for-clients(): ~
+                 "~&~a[~a] wait-for-clients(): ~
                   ignoring unexpected message from <~x>:~%~s~%~%"
-                 prefix remote message)
+                 prefix (current-time :long :short) remote message)
                 (force-output)))))
 
            (t
             (when *pvm-debug-p*
               (format
                stream
-               "~&~await-for-clients(): ~
+               "~&~a[~a] wait-for-clients(): ~
                 ignoring dubious message from <~x>:~%~s~%~%"
-               stream remote message)
+               prefix (current-time :long :short) remote message)
               (force-output)))))))
 
 (defun expire-clients (clients &key (verbose t) (stream *tsdb-io*))

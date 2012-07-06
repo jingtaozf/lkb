@@ -42,7 +42,7 @@
          (command (format 
                    nil 
                    "~a~@[ -r '~a'~] -i ~a -F ~
-                    '(\"%m\" \"%M\" \"%P-+%Tn-%Fn\" \"%y\")\\n'" 
+                    '(\"%m\" \"%M\" \"%P-:%Tn-%Fn\" \"%y\")\\n'" 
                    *chasen-application*
                    #+:logon (and logon (format nil "~a/.chasenrc" logon))
                    #-:logon nil

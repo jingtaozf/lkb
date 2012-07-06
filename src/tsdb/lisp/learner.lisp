@@ -151,15 +151,19 @@
   (let ((features (and full (feature-environment :format format))))
     (case format
       (:string
-       (format 
-        nil
-        "~@[[~a] ~]~@[~a ~]MM[~(~a~)] MI[~@[~a~]] ~
-         RT[~@[~e~]] AT[~@[~e~]] VA[~@[~e~]]~
-         ~@[~* PC[~a]~]"
-        prefix features *maxent-method* *maxent-iterations*
-        *maxent-relative-tolerance* *maxent-absolute-tolerance*
-        *maxent-variance* full (or *redwoods-train-percentage* 100)))
-      (:compact
+       (concatenate
+        'string
+        (format 
+         nil
+         "~@[[~a] ~]~@[~a ~]MM[~(~a~)] MI[~@[~a~]] ~
+          RT[~@[~e~]] AT[~@[~e~]] VA[~@[~e~]]~
+          ~@[~* PC[~a]~]"
+         prefix features *maxent-method* *maxent-iterations*
+         *maxent-relative-tolerance* *maxent-absolute-tolerance*
+         *maxent-variance* full (or *redwoods-train-percentage* 100))
+        #+:onet
+        (format nil "~@[ C[~a]~]" *feature-custom*)))
+       (:compact
        (format 
         nil
         "~(~@[~a~]mem_~@[~a_~]rt~e_at~e_v~e~@[_pc~d~]~)"
@@ -240,6 +244,7 @@
          (format stream ":begin :features ~d.~%~%" (symbol-table-count table))
          (loop
              with *print-case* = :downcase
+             with *print-right-margin* = 65536
              with *package* = (find-package :lkb)
              with map = (model-map model)
              with i = 0
@@ -1065,8 +1070,7 @@
                          collect (copy-tree item)))
              (nkeys (loop for sim in similarities
                         collect ;;; eg., (:nwa :nbleu :nneva) 
-                          (read-from-string 
-                           (format nil ":n~a" sim))))
+                          (read-from-string (format nil ":n~a" sim))))
              (nkey-alist (pairlis similarities nkeys))
              (keys (append 
                     (list :i-id :accuracy :naccuracy);; :r-id
@@ -1079,32 +1083,31 @@
             for i-id = (get-field :i-id item)
             do 
               (multiple-value-bind (i score loosep similarities)
-                  (score-item item gitem 
-                              :test test :n n :loosep loosep)
-;;;                     (= i 0)  means no match
-;;;                     (<= i n) means we have a hit
-;;;                     (= i 1)  means exact match              
+                  (score-item item gitem :test test :n n :loosep loosep)
+                ;; (= i 0)  means no match
+                ;; (<= i n) means we have a hit
+                ;; (= i 1)  means exact match              
                 (declare (ignore loosep))
-                (push (if (= i 1) (float score) 0) 
-                      (get-field :accuracy scores))
-                (push (if (<= i n) (float score) 0) 
-                      (get-field :naccuracy scores))
+                (push
+                 (if (= i 1) (float score) 0) (get-field :accuracy scores))
+                (push
+                 (if (<= i n) (float score) 0) (get-field :naccuracy scores))
                 (push i-id (get-field :i-id scores))
                 (loop
                     for (key score nscore) in similarities
-                    do (push (float score) 
-                             (get-field key scores))
-                       (push (float nscore) 
-                             (get-field 
-                              (get-field key nkey-alist) scores)))))
+                    do
+                      (push (float score) (get-field key scores))
+                      (push
+                       (float nscore)
+                       (get-field (get-field key nkey-alist) scores)))))
         (loop 
             for (key . list) in scores
-            do (setf (get-field key scores)
-                 (nreverse list)))
+            do (setf (get-field key scores) (nreverse list)))
         (loop 
             for list in scores
-            do (prin1 list eval-stream)
-               (terpri eval-stream)))
+            do
+              (prin1 list eval-stream)
+              (terpri eval-stream)))
     
     (force-output eval-stream)
     (close eval-stream)

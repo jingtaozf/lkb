@@ -105,8 +105,7 @@
        (dolist (fvpair (rel-flist rel))
          (when (and (eq (fvpair-feature fvpair) *scope-feat*))
            (return t))))
-   (not (member (rel-pred rel) *top-level-rel-types* 
-                :test #'equal))))
+   (not (member (rel-pred rel) *top-level-rel-types* :test #'equal))))
 
 
 (defvar *quant-list* nil)

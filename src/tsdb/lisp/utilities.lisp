@@ -220,7 +220,31 @@
           (return result))
     string))
 
+(defun latex-escape-string (string)
+  (if (and string (or (stringp string) (symbolp string)))
+    (loop
+        with string = (string string)
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (member c '(#\_ #\% #\# #\{ #\}) :test #'char=) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    string))
+
 (defun xml-escape-string (string)
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0)))
   (if (and string (stringp string))
     (loop
         with padding
@@ -338,7 +362,7 @@
 
 (defun complement! (fn)
   #'(lambda (&rest args) (not (apply fn args))))
-
+
 (defun find! (item sequence 
               &key (test #'eql) key)
   (funcall #'remove item sequence 
@@ -717,10 +741,9 @@
   (let* ((path (if (stringp path) path (namestring path)))
          (pattern (make-pathname :directory path :name :wild))
          (contents (directory pattern)))
-    (when contents
-      (dolist (file contents)
-        (delete-file file))
-      path)))
+    (if contents
+      (loop for file in contents do (delete-file file) finally (return path))
+      (and (directoryp path) path))))
 
 (defun mkdir (path &key parentp)
   (if parentp
@@ -745,8 +768,10 @@
        unable to create directories on this platform; ~
        see `utilities.lisp'."))))
 
-(defun directory2file (string)
-  (substitute #\. *tsdb-slash* string :test #'char=))
+(defun directory2file (path)
+  (if (pathnamep path)
+    (directory2file (namestring path))
+    (substitute #\. *tsdb-slash* path :test #'char=)))
 
 (defun remove-key-argument (key arguments &optional result)
   (cond

@@ -130,7 +130,7 @@
              ((char= c #\#) (lkb::read-tdl-comment stream))
              (t
               (let* ((line (read-line stream nil nil))
-                     (line (string-trim '(#\space #\tab) line)))
+                     (line (string-trim '(#\space #\tab #\return) line)))
                 (cond
                  ((search "predicates:" line :start2 0)
                   (setf context :predicates))

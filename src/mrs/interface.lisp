@@ -324,6 +324,9 @@ For attempting to learn null semantics
 (defun get-mrs-indexed-string (parse) 
   (return-mrs-info-string parse :indexed))
 
+(defun get-eds-string (parse) 
+  (return-mrs-info-string parse :eds))
+
 (defun get-mrs-resolved-string (parse)
   (return-mrs-info-string parse :first-scoped))
   
@@ -333,18 +336,22 @@ For attempting to learn null semantics
 (defun return-mrs-info-string (parse info-type)
   (let* ((*package* (find-package :lkb))
          (mrs-struct (extract-mrs parse)))
-    (with-output-to-string (stream)
-      (ecase info-type
-        (:simple (output-mrs1 mrs-struct 'simple stream))
-        (:indexed (output-mrs1 mrs-struct 'indexed stream))
-        (:first-scoped (let ((binding-sets (make-scoped-mrs mrs-struct)))
-                   (when binding-sets
-                     (with-output-to-string (stream) 
-                       (setf *canonical-bindings* (canonical-bindings 
-                                                   (first binding-sets)))
-                       (output-scoped-mrs mrs-struct :stream stream)))))
-        (:count-scopes (format stream "~A" 
-                               (length (make-scoped-mrs mrs-struct))))))))
+    (string-trim 
+     '(#\space #\newline)
+     (with-output-to-string (stream)
+       (ecase info-type
+         (:simple (output-mrs1 mrs-struct 'simple stream))
+         (:indexed (output-mrs1 mrs-struct 'indexed stream))
+         (:eds (ed-output-psoa mrs-struct :stream stream))
+         (:first-scoped 
+          (let ((binding-sets (make-scoped-mrs mrs-struct)))
+            (when binding-sets
+              (with-output-to-string (stream) 
+                (setf *canonical-bindings*
+                  (canonical-bindings (first binding-sets)))
+                (output-scoped-mrs mrs-struct :stream stream)))))
+         (:count-scopes 
+          (format stream "~A" (length (make-scoped-mrs mrs-struct)))))))))
 
 (defun read-mrs-from-string (string)
   (if (psoa-p string)

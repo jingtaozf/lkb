@@ -34,9 +34,11 @@
 
 (defparameter *derivations-print-lexical-type-p* nil)
 
+(defparameter *derivations-print-tokens-p* t)
+
 (defparameter *derivations-comparison-level* :all)
 
-(defparameter *derivations-preterminals-equivalent-test* nil)
+(defparameter *derivations-preterminals-test* :eq)
 
 (defparameter *derivations-equivalences* nil)
 
@@ -53,9 +55,13 @@
 
 (defparameter *derivations-reconstruct-lnk-p* nil)
 
+(defparameter *derivations-reconstruct-robust-p* nil)
+
 (defparameter *derivations-reconstructor* nil)
 
 (defparameter *derivation-heads* nil)
+
+(defparameter *derivation-token-cache* nil)
 
 (defmacro with-derivation ((output input) &body body)
   `(let ((,output
@@ -140,6 +146,16 @@
                  for son in (derivation-daughters derivation)
                  maximize (derivation-depth son)))))))
 
+(defun derivation-preterminals (derivation)
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((daughters (derivation-daughters derivation)))
+        (if (null (derivation-daughters (first daughters)))
+          (list derivation)
+          (loop 
+              for daughter in daughters
+              nconc (derivation-preterminals daughter)))))))
+
 (defun derivation-yield (derivation)
   (with-derivation (derivation derivation)
     (unless (null derivation)
@@ -149,6 +165,19 @@
           (loop 
               for daughter in daughters
               nconc (derivation-yield daughter)))))))
+
+(defun derivation-tokenization (derivation)
+  (labels ((traverse (derivation)
+             (with-derivation (derivation derivation)
+               (unless (null derivation)
+                 (let ((daughters (derivation-daughters derivation)))
+                   (if (null (derivation-daughters (first daughters)))
+                     (list (derivation-start derivation)
+                           (derivation-end derivation))
+                     (loop 
+                         for daughter in daughters
+                         nconc (traverse daughter))))))))
+    (remove-duplicates (traverse derivation))))
 
 (defun derivation-leafs (derivation)
   (with-derivation (derivation derivation)
@@ -220,6 +249,30 @@
           thereis (and (derivation-id daughter)
                        (derivation-to daughter end))))))
 
+(defun derivation-token-ids (derivation)
+  #+:lkb
+  (labels ((extract (dag)
+             (when (and (lkb::dag-p dag) (stringp (lkb::dag-type dag)))
+               (let ((n (ignore-errors (parse-integer (lkb::dag-type dag)))))
+                 (and (numberp n) n)))))
+    (loop
+        for token in (derivation-tokens derivation)
+        for dag = (lkb::read-dag token)
+        for id = (lkb::existing-dag-at-end-of
+                  (lkb::tdfs-indef dag) lkb::*token-id-path*)
+        append (lkb::dag-to-list id :key #'extract))))
+
+#+:null
+(defun derivation-tnt-main (derivation &key prefix)
+  #+:lkb
+  (loop
+      for token in (derivation-tokens derivation)
+      for dag = (lkb::read-dag token)
+      for main = (lkb::existing-dag-at-end-of
+                  (lkb::tdfs-indef dag) '(lkb::+tnt lkb::+main lkb::+tag))
+      unless main do 
+        (format t "~@[[~a] ~]~a~%" prefix token)))
+
 (defun derivation-equal (gold blue 
                          &optional (level *derivations-comparison-level*))
   (labels ((node-equal (gold blue)
@@ -261,46 +314,80 @@
                 ((integerp blue) (= gold blue))
                 ((stringp blue) 
                  (string-equal (format nil "~d" gold) blue)))))))
-    (cond
-     ((eq level :yield)
-      (let* ((gyield (derivation-yield gold))
-             (gyield (if (functionp *derivations-yield-skews*)
-                       (remove-if *derivations-yield-skews* gyield)
-                       (remove-if
-                        #'(lambda (foo)
-                            (member
-                             foo *derivations-yield-skews* :test #'string=))
-                        gyield)))
-             (byield (derivation-yield blue))
-             (byield (if (functionp *derivations-yield-skews*)
-                       (remove-if *derivations-yield-skews* byield)
-                       (remove-if
-                        #'(lambda (foo)
-                            (member
-                             foo *derivations-yield-skews* :test #'string=))
-                        byield))))
-        (loop
-            for gold in gyield for blue in byield
-            always (and gold blue (node-equal gold blue)))))
-     ((and (null gold) (null blue)) t)
-     ((and (atom gold) (atom blue)) (node-equal gold blue))
-     ((or (null (derivation-daughters gold)) 
-          (null (derivation-daughters blue)))
-      (if *derivations-ignore-leafs-p*
-        t
-        (let* ((gleafs (derivation-leafs gold))
-               (bleafs (derivation-leafs blue)))
-          (every #'(lambda (gold blue)
-                     (and (stringp gold) (stringp blue)
-                          (string-equal gold blue)))
-                 gleafs bleafs))))
-     (t
-      (when (derivation-equal 
-             (derivation-root gold) (derivation-root blue) level)
-        (loop
-            for daughter1 in (derivation-daughters gold)
-            for daughter2 in (derivation-daughters blue)
-            always (derivation-equal daughter1 daughter2 level)))))))
+    (let ((gdaughters (derivation-daughters gold))
+          (bdaughters (derivation-daughters blue)))
+      (cond
+       ((eq level :tokenization)
+        (equal (derivation-tokenization gold) (derivation-tokenization blue)))
+       ((eq level :yield)
+        (let* ((gyield (derivation-yield gold))
+               (gyield (if (functionp *derivations-yield-skews*)
+                         (remove-if *derivations-yield-skews* gyield)
+                         (remove-if
+                          #'(lambda (foo)
+                              (member
+                               foo *derivations-yield-skews* :test #'string=))
+                          gyield)))
+               (byield (derivation-yield blue))
+               (byield (if (functionp *derivations-yield-skews*)
+                         (remove-if *derivations-yield-skews* byield)
+                         (remove-if
+                          #'(lambda (foo)
+                              (member
+                               foo *derivations-yield-skews* :test #'string=))
+                          byield))))
+          (loop
+              for gold in gyield for blue in byield
+              always (and gold blue (node-equal gold blue)))))
+       ((and (atom gold) (atom blue)) (node-equal gold blue))
+       ;;
+       ;; the leaf nodes are surface strings (and, in principle, corresponding
+       ;; token feature structures; the latter are not compared here, though).
+       ;;
+       ((or (null gdaughters) (null bdaughters))
+        (or *derivations-ignore-leafs-p*
+            (let* ((gleafs (derivation-leafs gold))
+                   (bleafs (derivation-leafs blue)))
+              (every #'(lambda (gold blue)
+                         (and (stringp gold) (stringp blue)
+                              (string-equal gold blue)))
+                     gleafs bleafs))))
+       ;;
+       ;; preterminal nodes are lexical entries or lexical types
+       ;;
+       ((and (null (derivation-daughters (first gdaughters)))
+             (null (derivation-daughters (first bdaughters))))
+        (or (eq *derivations-preterminals-test* :ignore)
+            (case *derivations-preterminals-test*
+              #+:lkb
+              (:type
+               (labels ((type (root)
+                          (let ((root (string root)))
+                            (if (char= (schar root 0) #\@)
+                              (intern (subseq root 1) lkb::*lkb-package*)
+                              (ignore-errors
+                               (type-of-lexical-entry
+                                (intern root lkb::*lkb-package*)))))))
+                 (let ((gtype (type (derivation-root gold)))
+                       (btype (type (derivation-root blue))))
+                   (and gtype btype (eq btype gtype)))))
+              (:eq
+               (when (node-equal (derivation-root gold) (derivation-root blue))
+                 (loop
+                     for daughter1 in gdaughters
+                     for daughter2 in bdaughters
+                     always (derivation-equal daughter1 daughter2 level))))
+              (t
+               (error
+                "derivation-equal(): ~
+                 invalid *derivations-preterminals-test* (~(~s~))."
+                *derivations-preterminals-test*)))))
+       (t
+        (when (node-equal (derivation-root gold) (derivation-root blue))
+          (loop
+              for daughter1 in gdaughters
+              for daughter2 in bdaughters
+              always (derivation-equal daughter1 daughter2 level))))))))
 
 (defun pprint-derivation (derivation &key (stream t))
   (let ((sponsor (derivation-sponsor derivation))
@@ -343,7 +430,89 @@
               (pprint-newline :fill stream)
               (pprint-derivation daughter :stream stream))))
      (t
-      (write derivation :stream stream)))))
+      (if *derivations-print-tokens-p*
+        (write derivation :stream stream)
+        (let ((form (first derivation)))
+          (write-char #\( stream)
+          (write form :stream stream)
+          (write-char #\) stream)))))))
+
+(defun parseval (derivation gderivation &key log)
+  (declare (ignore log))
+  ;;
+  ;; compute the ParsEval scores for comparing a parse tree to a gold-standard
+  ;; tree (for the same input string); the function returns three values: the
+  ;; count of correct bracketings, the total count of bracketings in the parse
+  ;; tree, and the total count of bracketings in the gold-standard tree.
+  ;;
+  (labels ((explode (derivation &optional (topp t))
+             ;;
+             ;; a recursive helper function, to traverse the tree and for each
+             ;; node return a list of bracketings; we make sure to include the
+             ;; bracketing for a node before bracketings extracted from its
+             ;; daughters, so as to keep track of the right-most end vertex.
+             ;;
+             (let ((daughters (derivation-daughters derivation)))
+               (nconc
+                (when topp
+                  (list (derivation-sponsor derivation)
+                        (derivation-start (first daughters))
+                        (derivation-end (first daughters))))
+                (unless (and (null (rest daughters))
+                             (null (derivation-daughters (first daughters))))
+                  (let ((root (derivation-root derivation))
+                        (start (derivation-start derivation))
+                        (end (derivation-end derivation)))
+                    (cons (list root start end)
+                          (loop
+                              for daughter in daughters
+                              append (explode daughter nil))))))))
+           (intersect (set1 set2 &key (test #'eql))
+             ;;
+             ;; much like intersection(), except well-defined on multi-sets.
+             ;;
+             (loop
+                 with set2 = (append set2 (list (gensym "")))
+                 for foo in set1
+                 for bar = (member foo set2 :test test)
+                 when bar 
+                 do
+                   (setf (first bar) (first (rest bar)))
+                   (setf (rest bar) (rest (rest bar)))
+                 and collect foo)))
+    (let* ((test (and derivation (explode derivation)))
+           (gold (and gderivation (explode gderivation)))
+           (correct (intersect gold test :test #'equal)))
+      (pairlis '(:test :gold :correct)
+               (list (length test) (length gold) (length correct))))))
+
+(defun tagging-accuracy (derivation gderivation)
+  (labels ((type (root)
+             #+:lkb
+             (let ((root (string root)))
+               (if (char= (schar root 0) #\@)
+                 (intern (subseq root 1) lkb::*lkb-package*)
+                 (ignore-errors
+                  (type-of-lexical-entry
+                   (intern root lkb::*lkb-package*))))))
+           (explode (derivation)
+             (loop
+                 for preterminal in (derivation-preterminals derivation)
+                 collect (list (type (derivation-root preterminal))
+                               (derivation-start preterminal)
+                               (derivation-end preterminal)))))
+    (let* ((test (and derivation (explode derivation)))
+           (gold (and gderivation (explode gderivation)))
+           (correct (intersection gold test :test #'equal)))
+      (pairlis '(:test :gold :correct)
+               (list (length test) (length gold) (length correct))))))
+
+(defun f-one (test gold correct)
+  (let* ((precision (and test correct (divide correct test)))
+         (recall (and gold correct (divide correct gold))))
+    (if (and precision recall)
+      (divide (* 2 precision recall) (+ precision recall))
+      0)))
 
 ;;;
 ;;; functionality to reconstruct derivation trees and report nature of failure
@@ -410,7 +579,12 @@
            "~&~%(~d) `~a' --- success.~%"))))
       result)))
 
-(defun reconstruct (derivation &optional (dagp t) &key counter (cachep t))
+(defun reconstruct (derivation
+                    &optional (dagp t)
+                    &key counter 
+                         (robustp *derivations-reconstruct-robust-p*)
+                         (cachep t))
+  
   (if *derivations-reconstructor*
     (let ((hook (typecase *derivations-reconstructor*
                   (null nil)
@@ -437,18 +611,28 @@
                   (and (consp (second derivation))
                        (with-derivation (derivation (second derivation))
                          (numberp (first derivation)))))
-            (catch :fail
-              (reconstruct-derivation
-               derivation dagp t :counter counter :cachep cachep))
+            (if robustp
+              (or
+               (ignore-errors
+                (reconstruct-derivation
+                 derivation dagp t
+                 :counter counter :robustp nil :cachep cachep))
+               (catch :fail
+                 (reconstruct-derivation
+                  derivation dagp t
+                  :counter counter :robustp robustp :cachep cachep)))
+              (catch :fail
+                (reconstruct-derivation
+                 derivation dagp t
+                 :counter counter :robustp robustp :cachep cachep)))
             (reconstruct-cfg-derivation derivation)))))))
 
 (defun reconstruct-derivation (derivation
                                &optional (dagp t) topp
-                               &key counter (cachep t))
-  (declare (special %derivation-offset% %edges%) 
-           #-:lkb (ignore topp))
-  #+:debug
-  (pprint (list %derivation-offset% derivation))
+                               &key counter robustp (cachep t))
+
+  (declare (special %derivation-offset% %edges%))
+
   (let* ((root (derivation-root derivation))
          (daughters (derivation-daughters derivation))
          (id (if counter (funcall counter) (derivation-id derivation)))
@@ -477,7 +661,9 @@
                        (tokens nil)
                        entry length)
                   (multiple-value-setq (entry length)
-                    (find-lexical-entry surface root id start end dagp))
+                    (if (char= (char (string root) 0) #\@)
+                      (find-lexical-type surface root id start end dagp)  
+                      (find-lexical-entry surface root id start end dagp)))
                   (incf %derivation-offset% (or length 1))
                   (if (null entry)
                     (throw :fail
@@ -502,7 +688,7 @@
                                       (list derivation i :notoken token)))
                                  collect dag)))
                         (multiple-value-bind (result failure)
-                            (instantiate-lexical-entry entry tokens)
+                            (instantiate-lexical-entry entry tokens t robustp)
                           (if (null failure)
                             result
                             (throw :fail 
@@ -515,8 +701,9 @@
                         (loop
                             for daughter in daughters
                             for item = (reconstruct-derivation
-                                        daughter dagp topp
-                                        :counter counter :cachep cachep)
+                                        daughter dagp nil
+                                        :counter counter :robustp robustp
+                                        :cachep cachep)
                             collect item))
                        (rule (find-rule root)))
                   (if (null rule)
@@ -524,7 +711,7 @@
                            (values nil (list derivation 0 :norule 
                                              (format nil "`~a'" root))))
                     (multiple-value-bind (result failure)
-                        (instantiate-rule rule items id dagp)
+                        (instantiate-rule rule items id dagp robustp)
                       (if (null failure)
                         result
                         (throw :fail 
@@ -534,7 +721,7 @@
       (push edge (gethash id *reconstruct-cache*)))
     #+:lkb
     (when (and topp (null (lkb::edge-string edge)))
-      (setf (lkb::edge-string edge) 
+      (setf (lkb::edge-string edge)
         (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge))))
     edge))
 
@@ -576,18 +763,46 @@
      :start (derivation-start derivation) :end (derivation-end derivation)
      :from from :to to :head head :daughters daughters)))
 
-(defun read-heads (file)
+(defun read-heads (file &key test (stream *tsdb-io*))
+  #-:lkb
+  (declare (ignore test))
   (setf *derivation-heads*
     (when (probe-file file)
-      (with-open-file (stream file :direction :input)
+      (with-open-file (input file :direction :input)
         (loop
             with *package* = (find-package :tsdb)
-            for rule = (read stream nil nil)
-            for arity = (read stream nil nil)
-            for head = (read stream nil nil)
-            while (and rule arity head)
-            collect (cons rule (pairlis
-                                '(:arity :head) (list arity head))))))))
+            for rule = (read input nil nil)
+            for arity = (read input nil nil)
+            for head = (read input nil nil)
+            while rule
+            when (or (null arity) (null head)) do
+              (format
+               stream "read-heads(): ignoring invalid rule `~(~a~)'.~%"
+               rule)
+            else do
+              (let (#+:lkb
+                    (id (intern rule lkb::*lkb-package*)))
+                #+:lkb
+                (unless (gethash id lkb::*rules*)
+                  (format
+                   stream "read-heads(): unknown rule `~(~a~)'.~%"
+                   rule)))
+            and collect 
+              (cons rule (pairlis '(:arity :head) (list arity head)))))))
+  #+:lkb
+  (when test
+    (let ((rules
+           (loop for rule being each hash-value in lkb::*rules* collect rule)))
+      (loop
+          with *package* = (find-package :tsdb)
+          for rule in (sort rules #'string< :key #'lkb::rule-id)
+          for id = (intern (lkb::rule-id rule) :tsdb)
+          unless (member id *derivation-heads* :key #'first)
+          do
+            (format
+             stream "~(~a~) ~a ~a~%"
+             id (length (lkb::rule-rhs rule)) (lkb::rule-head rule))))))
+
 ;;;
 ;;; interface function for RASP: given a RASP derivation tree, create (LKB)
 ;;; edge structures from it, so we can draw and compare trees. 
@@ -635,20 +850,25 @@
                                     for edge in edges
                                     append (lkb::edge-leaves edge)))))))
 
-(defun qtree (derivation &key (stream t))
-  (let ((root (if (atom derivation) derivation (derivation-root derivation)))
-        (daughters (unless (atom derivation)
-                     (derivation-daughters derivation))))
+(defun qtree (derivation &key typep (stream t))
+  (let* ((daughters (unless (atom derivation)
+                      (derivation-daughters derivation)))
+         (preterminalp (when (consp daughters)
+                         (null (derivation-daughters (first daughters)))))
+         (root (if (atom derivation) derivation (derivation-root derivation)))
+         (root (if (and typep preterminalp) (type-of-lexical-entry root) root))
+         (root (latex-escape-string (string root))))
     (cond
      ((null daughters)
-      (format stream "\\leaf{~a}~%" root))
+      (format stream "\\leaf{\\textit{~a}}~%" root))
      (t
       (loop
           for daughter in daughters
-          do
-            (qtree daughter :stream stream)
+          do (qtree daughter :stream stream :typep typep)
           finally
-             (format stream "\\branch{~d}{~a}~%" (length daughters) root))))))
+             (format
+              stream "\\branch{~d}{~(~a~)}~%"
+              (length daughters) root))))))
 
 ;;;
 ;;; install conversion routine and equality predicate for derivations (uniform

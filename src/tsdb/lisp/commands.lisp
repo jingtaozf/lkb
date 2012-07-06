@@ -257,7 +257,7 @@
     (length items)))
 
 (defun tsdb (&optional action argument 
-             &key condition run skeleton load gold host task wait
+             &key condition run skeleton load gold host task wait quantum
                   (file nil filep) (reset nil resetp) count target error)
   
   (unless (and action (keywordp action)
@@ -298,22 +298,22 @@
                    ((and filep resetp)
                     (initialize-cpus
                      :classes argument :count count :wait wait
-                     :host host :task task
+                     :host host :task task :quantum quantum
                      :file file :reset reset :stream *tsdb-io* :prefix "  "))
                    (filep 
                     (initialize-cpus
                      :classes argument :count count :wait wait
-                     :host host :task task
+                     :host host :task task :quantum quantum
                      :file file :stream *tsdb-io* :prefix "  "))
                    (resetp
                     (initialize-cpus
                      :classes argument :count count :wait wait
-                     :host host :task task
+                     :host host :task task :quantum quantum
                      :reset reset :stream *tsdb-io* :prefix "  "))
                    (t
                     (initialize-cpus
                      :classes argument :count count :wait wait
-                     :host host :task task
+                     :host host :task task :quantum quantum
                      :stream *tsdb-io* :prefix "  ")))))
              (when (and (eq error :exit) (< (length clients) (or count 1)))
                #+:allegro

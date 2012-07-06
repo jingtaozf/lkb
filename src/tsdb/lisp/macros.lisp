@@ -47,6 +47,10 @@
 (defmacro get-field+ (field alist &optional default)
   `(or (rest (assoc ,field ,alist)) ,default))
 
+(defmacro get-field- (field alist)
+  `(let ((foo (rest (assoc ,field ,alist))))
+     (unless (and (stringp foo) (string= foo "")) foo)))
+
 (defmacro set-field (field value alist)
   `(loop
        for list = ,alist then tail
@@ -78,8 +82,18 @@
      (namestring data)))
 
 (defmacro divide (numerator denominator)
+  ;;
+  ;; _fix_me_
+  ;; the test for equal numerators and denominators now makes 0/0 come out as 1,
+  ;; which may impact calculations of precision in corner cases.  i could see us
+  ;; come down on either side of this question.                  (28-jan-12; oe)
+  ;;
   `(if (and (numberp ,numerator) (numberp ,denominator))
-     (if (zerop ,denominator) 0 (/ ,numerator ,denominator))
+     (cond
+      ((zerop ,numerator) 0)
+      ((= ,numerator ,denominator) 1)
+      ((zerop ,denominator) 0)
+      (t (/ ,numerator ,denominator)))
      0))
 
 (defmacro average (values)
@@ -105,12 +119,13 @@
            (:efficiency 4))))
   
 (defmacro convert-time (time granularity)
-  `(if (= ,time -1)
-     -1
-     (/ ,time (cond
-               ((zerop ,granularity) 10)
-               ((= ,granularity 199808) 100)
-               ((>= ,granularity 199902) 1000)))))
+  `(when ,time
+     (if (= ,time -1)
+       -1
+       (/ ,time (cond
+                 ((zerop ,granularity) 10)
+                 ((= ,granularity 199808) 100)
+                 ((>= ,granularity 199902) 1000))))))
 
 (defmacro make-meter (start end)
   `(pairlis (list :start :end) (list ,start ,end)))

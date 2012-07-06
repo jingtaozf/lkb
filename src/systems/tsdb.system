@@ -46,7 +46,7 @@
   ;;
   ;; for the on-line WWW demo (LOGON tree, select platforms), use DRAKMA et al.
   ;;
-  #+(and :allegro :linux :logon)
+  #+(and :allegro :linux :logon (version>= 8 0))
   (pushnew :drakma *features*)
 
   ;;
@@ -118,7 +118,8 @@
       :load-only t
       :components
       (#+(and :allegro-version= (version= 8 0)) (:file "drakma80")
-       #+(and :allegro-version= (version= 8 1)) (:file "drakma81")))
+       #+(and :allegro-version= (version= 8 1)) (:file "drakma81")
+       #+(and :allegro-version= (version= 8 2)) (:file "drakma82")))
      
      (:module "tsdb"
       :source-pathname "lisp"
@@ -180,6 +181,7 @@
        (:file "lsp")
        (:file "ptb")
        (:file "conll")
+       (:file "starsem")
        #+:lkb
        (:file "rasp")
        (:file "chasen")
@@ -199,8 +201,12 @@
        (:file "learner")
        #+:lkb
        (:file "experiment")
+       #+:null
+       (:file "tagging")
        #+(and :lkb :drakma)
        (:file "www")
+       #+:onet
+       (:file "onet")
        #+:null
        (:file "tagger")))
      
@@ -239,12 +245,29 @@
        (:file "mt")
        (:file "copyleft")
        (:file "balloon")
-       (:file "balloons" :source-extension ""))))
+       (:file "balloons" :source-extension "")))
+
+     #+:pcfg
+     (:module "pcfg"
+      :source-pathname "pcfg"
+      :binary-pathname "pcfg"
+      :source-extension "lisp"
+      :components
+      ((:file "pcfg-package")
+       (:file "globals.lisp")
+       (:file "symbols.lisp")
+       (:file "grammar.lisp")
+       (:file "serialize.lisp")
+       (:file "approximate.lisp")
+       (:file "bitpar.lisp")
+       (:file "queues.lisp")
+       (:file "parse.lisp")
+       (:file "unpack.lisp"))))
     
-    :depends-on (#+(and :allegro
-			(or :linux (and :sparc :svr4) :alpha :macosx))
+    :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha :macosx))
 		 "pvm"
                  "fad"
+                 #+:logon "registry"
 		 #+:lkb "lkb"
-                 #-:lkb "ppcre"
+                 #-(or :logon :lkb) "ppcre"
 		 #+:page "page"))

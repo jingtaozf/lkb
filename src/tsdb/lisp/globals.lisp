@@ -3,6 +3,7 @@
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
 ;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2006 -- 2012 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -34,7 +35,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (15-aug-11; beta)")
+(defparameter *tsdb-version* "2.0 (28-jan-12; beta)")
 
 (defparameter
   *tsdb-application*
@@ -221,7 +222,13 @@
 
 (defparameter *redwoods-agreement-exact-p* t)
 
+(defparameter *redwoods-score-all-p* nil)
+
 (defparameter *redwoods-score-similarities* nil)
+
+(defparameter *redwoods-score-counts* nil)
+
+(defparameter *redwoods-score-microaverage-p* nil)
 
 (defparameter *redwoods-use-item-sets-p* t)
 

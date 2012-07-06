@@ -75,6 +75,9 @@
          (symbol (when (find-package :lkb)
                    (find-symbol "*TREE-AUTOMATIC-UPDATE-P*" :lkb)))
          (delay (when symbol (symbol-value symbol)))
+         (symbol (when (find-package :lkb)
+                   (find-symbol "*TREE-SKEPTICAL-UPDATE-P*" :lkb)))
+         (rejectp (when symbol (symbol-value symbol)))
          foo)
     #+:allegro
     (when (or (null display) (equal display ""))
@@ -122,8 +125,10 @@
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
       set globals(tree,update,exactp) ~:[0~;1~]~%~
+      set globals(tree,update,rejectp) ~:[0~;1~]~%~
       set globals(tree,update,flagp) ~:[0~;1~]~%~
       set globals(tree,compare,exactp) ~:[0~;1~]~%~
+      set globals(tree,score_all_p) ~:[0~;1~]~%~
       set globals(tree,use_item_sets_p) ~:[0~;1~]~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
@@ -165,8 +170,10 @@
      *derivations-comparison-level*
      delay (if (numberp delay) delay 0)
      *redwoods-update-exact-p*
+     rejectp
      *redwoods-update-flag-p*
      *redwoods-agreement-exact-p*
+     *redwoods-score-all-p*
      *redwoods-use-item-sets-p*
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*

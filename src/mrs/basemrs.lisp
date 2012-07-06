@@ -348,7 +348,7 @@
     (format stream "~%")
     (if (stringp pred)
       (format stream "~VT[ ~s" indentation pred)
-      (format stream "~VT[ ~(~a~)" indentation pred))
+      (format stream "~VT[ ~(~a~)" indentation (or pred "_")))
     (output-lnk lnk :stream stream)))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel 
@@ -771,14 +771,15 @@ higher and lower are handle-variables
       (format string "</table>"))
     (format 
      stream 
-     "<td class=~a>~%  ~
-      <div class=\"mrsVariable~a~:(~a~)\"~%       ~
+     "~@[<td class=~a>~%  ~]~
+      <~:[span~;div~] class=\"mrsVariable~a~:(~a~)\"~%       ~
            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '~a')\"~%       ~
-           onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
-      </td>~%" 
-     class id variable id variable 
+           onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)~
+      </~:[span~;div~]>~
+      ~:[~;~%</td>~%~]" 
+     class class id variable id variable 
      (get-output-stream-string string)
-     id variable variable)))
+     id variable variable class class)))
   
 (defclass html (output-type) 
   ((id :initform 0)
@@ -862,7 +863,7 @@ higher and lower are handle-variables
        "    <td><table class=mrs~:[~*~;~:(~a~)~]Relation>~%      ~
         <tr><td class=mrsPredicate colspan=2>~(~a~)"
        class class pred))
-    (output-lnk lnk :stream stream)
+    (output-lnk lnk :stream stream :format :html)
     (format stream "</td>~%")
     (incf i)))
 
@@ -1037,15 +1038,17 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-rel ((mrs latex) pred firstp class
 				 &optional lnk str)
-  (declare (ignore firstp class lnk str))
+  (declare (ignore firstp class str))
   (with-slots (memory stream context) mrs
     (if (eq (first context) :ep)
       (format stream ",\\\\~%")
       (push :ep context))
     (format stream "  \\sep")
     (let* ((pred (string-downcase pred))
-           (pred (remove-right-sequence *sem-relation-suffix* pred)))
-      (setf memory (latex-escape-string pred)))))
+           (pred (remove-right-sequence *sem-relation-suffix* pred))
+           (lnk (and lnk (output-lnk lnk :stream nil :format :latex))))
+      (setf memory
+        (format nil "~a~@[~a~]" (latex-escape-string pred) lnk)))))
 
 (defmethod mrs-output-rel-handel ((mrs latex) handle 
 				  &optional properties sort id)
@@ -1170,7 +1173,7 @@ higher and lower are handle-variables
                    (if (stringp pred) 
                      (format nil "~s~a" pred (output-lnk lnk :stream nil))
                      (format nil "~(~a~)~a" pred (output-lnk lnk :stream nil)))
-                   "_"))
+                   (format nil "_~a" (output-lnk lnk :stream nil))))
     (format stream " ")))
 
 (defmethod mrs-output-rel-handel ((mrs debug) handle 

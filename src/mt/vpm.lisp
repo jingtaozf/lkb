@@ -39,7 +39,8 @@
   (with-open-file (stream file :direction :input)
     (loop
         with vpm = (make-vpm :id id) with pm
-        for line = (read-line stream nil nil)
+        for line = (let ((foo (read-line stream nil nil)))
+                     (and foo (string-trim '(#\return) foo)))
         while line
         when (or (ppcre::scan "^[ \\t]*;+" line)
                  (ppcre:scan "^[ \\t]*$" line))

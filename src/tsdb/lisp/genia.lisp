@@ -15,12 +15,17 @@
 ;;; License for more details.
 ;;; 
 
+(defparameter *genia-tokenize-p* t)
+
 (defparameter *genia-binary*
   #+:logon
   (let* ((root (system:getenv "LOGONROOT"))
          (root (and root (namestring (parse-namestring root)))))
-    (if root (format nil "~a/bin/geniatagger" root) "geniatagger"))
-  "geniatagger")
+    (if root 
+      (format nil "~a/bin/geniatagger~:[ -nt~;~]" root *genia-tokenize-p*)
+      (format nil "geniatagger~:[ -nt~;~]" *genia-tokenize-p*)))
+  #-:logon
+  (format nil "geniatagger~:[ -nt~;~]" *genia-tokenize-p*))
 
 (defparameter *genia-stream* nil)
 
@@ -37,11 +42,11 @@
       #+:logon
       (let* ((root (system:getenv "LOGONROOT"))
              (root (and root (namestring (parse-namestring root)))))
-        (if root
-          (format nil "~a/bin/geniatagger" root)
-          "geniatagger"))
+        (if root 
+          (format nil "~a/bin/geniatagger~:[ -nt~;~]" root *genia-tokenize-p*)
+          (format nil "geniatagger~:[ -nt~;~]" *genia-tokenize-p*)))
       #-:logon
-      "geniatagger")
+      (format nil "geniatagger~:[ -nt~;~]" *genia-tokenize-p*))
     (let (foo)
       (multiple-value-setq (*genia-stream* foo *genia-pid*)
         (run-process (format nil "exec ~a" *genia-binary*)
@@ -79,35 +84,64 @@
 (let ((scanner (ppcre:create-scanner "\\t")))
   (defun genia (string)
     (genia-initialize)
-    (format *genia-stream* "~a~%" string)
-    ;;
-    ;; GENIA normalizes towards PTB conventions, i.e. disambiguates straight
-    ;; double quotes into LaTeX-style opening or closing quotes.
-    ;;
-    (labels ((match (token string &optional (i 0))
-               (when (and token (numberp i))
-                 (or (search token string :start2 i)
-                     (when (string= token "``") (search "\"" string :start2 i))
-                     (when (string= token "''") (search "\"" string :start2 i))
-                     (when (string= token "`")
-                       (search "'" string :start2 i))))))
+    (if (stringp string)
+      ;;
+      ;; GENIA normalizes towards PTB conventions, i.e. disambiguates straight
+      ;; double quotes into LaTeX-style opening or closing quotes.
+      ;;
+      (labels ((match (token string &optional (i 0))
+                 (when (and token (numberp i))
+                   (or (search token string :start2 i)
+                       (when (string= token "``")
+                         (search "\"" string :start2 i))
+                       (when (string= token "''")
+                         (search "\"" string :start2 i))
+                       (when (string= token "`")
+                         (search "'" string :start2 i))))))
+        (format *genia-stream* "~a~%" string)
+        (loop
+            for i from 0
+            for line = (read-line *genia-stream* nil nil)
+            for fields = (and line (ppcre:split scanner line))
+            for token = (first fields)
+            for start = (match token string) then (match token string end)
+            for end = (when start
+                        (let ((length
+                               (if (char= (schar string start) (schar token 0))
+                                 (length token)
+                                 1)))
+                          (+ start length)))
+            while fields
+            collect 
+            (pairlis '(:id :start :end :form :stem :tag :chunk :ne)
+                     (list i start end (first fields) (second fields)
+                           (third fields) (fourth fields) (fifth fields)))))
       (loop
-          for i from 0
+          initially
+            (loop
+                for token in string
+                for form = (ptb-escape (get-field :form token))
+                do
+                  (format
+                   *genia-stream* "~@[ ~*~]~a"
+                   (not (eq token (first string))) form))
+            (format *genia-stream* "~%")
+            (force-output *genia-stream*)
+            (setf string (copy-list string))
+            
           for line = (read-line *genia-stream* nil nil)
+          for token = (pop string)
+          for tag = (get-field :tag token)
           for fields = (and line (ppcre:split scanner line))
-          for token = (first fields)
-          for start = (match token string) then (match token string end)
-          for end = (when start
-                      (let ((length
-                             (if (char= (schar string start) (schar token 0))
-                               (length token)
-                               1)))
-                        (+ start length)))
+          when (and (null fields) string)
+          do (error "something unexpected happened in genia()")
           while fields
-          collect 
-          (pairlis '(:id :start :end :form :stem :tag :chunk :ne)
-                   (list i start end (first fields) (second fields)
-                         (third fields) (fourth fields) (fifth fields)))))))
+          do
+            (unless (and (stringp tag) (ppcre:scan "^NNP" tag)
+                         (ppcre:scan "^NN" (third fields)))
+              (setf (get-field :stem token) (second fields))
+              (setf (get-field :tag token) (third fields)))
+          collect token))))
 
 (defun genia+tagger-for-pet (string &optional tagger &rest arguments)
   (let* ((format (getf arguments :format :pet))

@@ -227,8 +227,8 @@
                               :initial-element nil 
                               :adjustable nil :fill-pointer nil)))
         (loop
-            for i from 0 to (max 0 (- size 1)) do
-              (setf (svref data i) (funcall constructor)))
+            for i from 0 to (max 0 (- size 1))
+            do (setf (svref data i) (funcall constructor)))
         (setf (pool-data pool) data)
         pool)))
 
@@ -1405,5 +1405,20 @@
           :value (list-to-dag (rest dags)))))
       dag)))
 
+
+(defun dag-to-list (dag &key end key)
+  (labels ((collect (dag &key end)
+             (let* ((dag (deref-dag dag))
+                    (first (existing-dag-at-end-of dag *list-head*))
+                    (rest (existing-dag-at-end-of dag *list-tail*)))
+               (unless (or (null first) (null rest) (eq dag end))
+                 (let ((value (if key (funcall key first) first)))
+                   (cons value (collect rest :end end)))))))
+    (let* ((dag (deref-dag dag))
+           (list (get-dag-value dag *diff-list-list*))
+           (last (get-dag-value dag *diff-list-last*)))
+      (if (and list last)
+        (collect list :end (or end (deref-dag last)))
+        (collect dag :end end)))))
 
 ;;; End of file

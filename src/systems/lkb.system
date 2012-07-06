@@ -499,7 +499,8 @@
       :binary-pathname "mrs"
       :source-extension "lisp"
       :components
-      ((:file "dependencies")))
+      ((:file "dependencies")
+       (:file "edm")))
 
      #+:lsp
      (:module "lsp"

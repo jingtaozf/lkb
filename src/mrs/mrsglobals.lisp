@@ -73,6 +73,10 @@
   `(,(vsym "XARG"))
   "path to get the xarg from an mrs hook fs")
 
+(defparameter *top-hcons* nil
+  "optional handle constraint (e.g. `qeq') to be inserted above the LTOP, when
+   creating an MRS from a TFS, to avoid leaving the TOP handle just dangling")
+
 ;;; following three are retained for backward compatability only
 
 (defparameter *psoa-top-h-path* 

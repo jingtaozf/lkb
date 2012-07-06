@@ -528,6 +528,48 @@
                    (or (null format)
                        (member format '(:simple :indexed :dependencies)))))))))
 
+(defun lui-display-tree (tree
+                         &optional input
+                         &key title (stream %lui-stream%) size (n 0))
+
+  (unless %lui-stream% (return-from lui-display-tree))
+  (when (numberp size)
+    (format
+     stream
+     "parameter tree-detail-bar-font #F[Helvetica ~a roman black]~a~%~
+      parameter tree-detail-node-font #F[Helvetica ~a roman black]~a~%~
+      parameter tree-detail-surface-font #F[Helvetica ~a roman black]~a~%"
+     size %lui-eoc% size %lui-eoc% size %lui-eoc%))
+
+  (labels ((label (tree)
+             (and (null (rest (rest tree)))
+                  (not (consp (first (rest tree))))
+                  (first (rest tree))))
+           (traverse (tree)
+             (if (and (consp (first tree)) (null (rest tree)))
+               ;;
+               ;; accomodate extra level of embedding at the root of PTB trees
+               ;;
+               (traverse (first tree))
+               (loop
+                   initially
+                     (format
+                      stream " #T[~a ~s ~s ~a ? "
+                      n (first tree) (label tree) n (first tree))
+                     (incf n)
+                   for daughter
+                   in (and (consp (first (rest tree))) (rest tree))
+                   do (traverse daughter)
+                   finally (format stream "]")))))
+    (let* ((title (or title (format nil "~@[`~a' ~]Parse Tree" input)))
+           (lspb (make-lspb :input input))
+           (id (lsp-store-object nil lspb)))
+      (setf (lspb-id lspb) id)
+      (format stream "tree ~d " id)
+      (traverse tree)
+      (format stream " ~s~a~%" title %lui-eoc%)
+      (force-output stream))))
+
 (defun copy-array (array)
   (let ((dimensions (array-dimensions array))
         (element-type (array-element-type array))

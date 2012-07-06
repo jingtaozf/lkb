@@ -62,33 +62,51 @@
 
 
 (defun time-a-funcall (timed-function report-function)
-  #+(and :allegro-version>= (not (version>= 6 1)))
-  (excl::time-a-funcall timed-function report-function)
-  #+(and :allegro-version>= (version>= 6 1))
-  (excl::time-a-funcall report-function timed-function)
-  #-:allegro
-  (let* ((treal (get-internal-real-time))
-         (tcpu (get-internal-run-time))
-         #+:mcl (tgc (ccl:gctime))
-         #+:mcl (others (ccl::total-bytes-allocated)))
-    (multiple-value-prog1
-        (funcall timed-function)
-      (let (#+:mcl 
-            (others (- (ccl::total-bytes-allocated) others)))
-        (funcall report-function
-                 ;; tgcu tgcs tu ts tr scons ssym sother
-                 #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
-                               internal-time-units-per-second)
-                 #-:mcl 0
-                 0
-                 (round (* (- (get-internal-run-time) tcpu) 1000)
-                        internal-time-units-per-second)
-                 0
-                 (round (* (- (get-internal-real-time) treal) 1000)
-                        internal-time-units-per-second)
-                 0 0
-                 #+:mcl others #-:mcl -1)))))
-
+  ;;
+  ;; mimicry of an /old/ version of time-a-funcall() in Allegro CL.  the report
+  ;; function takes eight arguments: user and system gc() time, user and system
+  ;; non-gc() time, wall-clock time, and allocation counts for cons() cells,
+  ;; symbols, and other bytes.
+  ;;
+   #+(and :allegro-version>= (not (version>= 6 1)))
+   (excl::time-a-funcall timed-function report-function)
+   #+(and :allegro-version>= (version>= 6 1) (not (version>= 8 2)))
+   (excl::time-a-funcall report-function timed-function)
+   ;;
+   ;; _fix_me_
+   ;; as of Allegro CL 8.2, timing is now in microseconds (surely a good thing,
+   ;; in principle), and arguments to excl::time-a-funcall() have changed.
+   ;;                                                          (17-aug-11; oe)
+   #+(and :allegro-version>= (version>= 8 2))
+   (excl::time-a-funcall 
+    #'(lambda (stream tgcu tgcs tu ts tr scons sother static &rest ignore)
+        (declare (ignore stream ignore))
+        (funcall 
+         report-function 
+         (round tgcu 1000) (round tgcs 1000) (round tu 1000) (round ts 1000)
+         (round tr 1000) scons 0 (+ sother static)))
+    *standard-output*
+    timed-function)
+   #-:allegro
+   (let* ((treal (get-internal-real-time))
+          (tcpu (get-internal-run-time))
+          #+:mcl (tgc (ccl:gctime))
+          #+:mcl (others (ccl::total-bytes-allocated)))
+      (multiple-value-prog1
+         (funcall timed-function)
+         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others)))
+            (funcall report-function
+               #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
+                             internal-time-units-per-second)
+               #-:mcl 0
+               0
+               (round (* (- (get-internal-run-time) tcpu) 1000)
+                      internal-time-units-per-second)
+               0
+               (round (* (- (get-internal-real-time) treal) 1000)
+                      internal-time-units-per-second)
+               0 0
+               #+:mcl others #-:mcl -1)))))
 
 (defun current-time (&key long)
   (decode-time (get-universal-time) :long long))

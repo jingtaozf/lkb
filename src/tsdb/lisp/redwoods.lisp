@@ -67,7 +67,8 @@
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
-                          gold (shift *redwoods-shift*) strip inspect 
+                          gold scores
+                          (shift *redwoods-shift*) strip inspect blindp
                           (bestp *redwoods-thinning-normalize-p*)
                           (exactp *redwoods-update-exact-p*)
                           (cache *tsdb-cache-database-writes-p*)
@@ -89,6 +90,7 @@
   
     (unless (do-import-database (find-tsdb-directory data) strip 
                                 :meter (when meter (make-meter 0 1))
+                                :uncompress t
                                 :except (append
                                          '("tree" "decision" "preference")
                                          (and bestp '("result"))))
@@ -99,6 +101,7 @@
          (condition (if (and condition (not (equal condition "")))
                       (concatenate 'string "(readings >= 1) && " condition)
                       "readings >= 1"))
+         (gold (unless (and (stringp gold) (string= gold "")) gold))
          (items
           (if (stringp data) 
             (analyze data :condition condition :meter meter :message meter)
@@ -124,7 +127,7 @@
              nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
 	 (display (let ((foo (getenv "DISPLAY")))
 		    (and (stringp foo) (not (string= foo "")) foo)))
-         (frame (unless #-:expand strip #+:expand nil
+         (frame (unless strip
                   (if (and runp display)
                     (clim:make-application-frame 'lkb::compare-frame)
                     (clim:make-application-frame 
@@ -169,15 +172,15 @@
                             (excl:tenuring
                              (browse-tree 
                               data i-id frame 
-                              :gold gold :shift shift
-                              :strip strip :bestp bestp 
+                              :gold gold :scores scores :shift shift
+                              :strip strip :bestp bestp :blindp blindp
                               :inspect inspect :exactp exactp
                               :cache cache :title title :display display
                               :verbose verbose :stream stream)))
                           (browse-tree 
                            data i-id frame 
-                           :gold gold :shift shift
-                           :strip strip :bestp bestp 
+                           :gold gold :scores scores :shift shift
+                           :strip strip :bestp bestp :blindp blindp
                            :inspect inspect :exactp exactp
                            :cache cache :title title :display display
                            :verbose verbose :stream stream)))
@@ -234,8 +237,8 @@
     
     (or frame t)))
 
-(defun browse-tree (data i-id frame &key gold shift strip bestp 
-                                         inspect exactp subset
+(defun browse-tree (data i-id frame &key gold scores shift strip bestp 
+                                         inspect exactp subset blindp
                                          title cache verbose 
                                          (runp t) display stream)
   
@@ -260,9 +263,10 @@
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))
            (condition (format nil "i-id = ~a" i-id))
+           (thorough (cons :derivation (unless blindp '(:mrs))))
            (items (let ((*package* (find-package lkb::*lkb-package*)))
                     (analyze 
-                     data :thorough '(:derivation :mrs) 
+                     data :thorough thorough 
                      :commentp t :taggingp t :condition condition)))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
@@ -313,7 +317,7 @@
                          "(~a) ~a on ~a: ~a (~a)"
                          version user date confidence foo)
                         "")))
-           (edges (unless (or #-:expand strip #+:expand (null trees))
+           (edges (unless strip
                     #+:allegro
                     (format
                      excl:*initial-terminal-io*
@@ -371,7 +375,7 @@
                                  "parse-id == ~a && t-version == ~a" 
                                  parse-id version) 
                                 data)))
-           (discriminants (unless #-:expand strip #+:expand nil
+           (discriminants (unless strip
                             #+:allegro
                             (format
                              excl:*initial-terminal-io*
@@ -380,14 +384,23 @@
                              (length decisions) (length decisions))
                             (reconstruct-discriminants decisions)))
            (gi-id (if (functionp shift) (funcall shift i-id) i-id))
-           (greadings (when (and gold (null strip))
+           ;;
+           ;; _fix_me_
+           ;; in the following two s-expressions, the when() used to also test
+           ;; (null strip).  in hacking a thinning update mode that will find
+           ;; the top-ranked result that aligns with the tokenization of the
+           ;; gold-standard parse(s), we want to combine .gold. and .strip.  i
+           ;; cannot quite how this combination would have been invoked before,
+           ;; so hope that relaxing these when()s will not have side effects.
+           ;;                                                   (31-jan-12; oe)
+           (greadings (when gold
                         (let ((items (select 
                                       '("readings") '(:integer) "parse" 
                                       (format nil "i-id == ~a" gi-id)
                                       gold)))
                           (when (= (length items) 1)
                             (get-field :readings (first items))))))
-           (gtrees (when (and gold (null strip))
+           (gtrees (when gold
                      (select '("parse-id" "t-version" 
                                "t-active" "t-author" "t-end")
                              '(:integer :integer 
@@ -402,14 +415,21 @@
                        for tree in gtrees
                        when (eq gversion (get-field :t-version tree))
                        collect tree))
-           (gactive (when (= (length gtrees) 1)
+           (gactive (when (and (consp gtrees) (null (rest gtrees)))
                       (let ((gactive (get-field :t-active (first gtrees))))
                         (unless (minus-one-p gactive) gactive))))
-           (gitem (when (and gactive (or exactp (= readings 1)))
+           ;;
+           ;; _fix_me_
+           ;; i added the final element in the or() to enable the combination
+           ;; of .gold. and .strip. discussed above; however, not quite sure
+           ;; just now why .readings. should always be 1 ordinarily?
+           ;;                                                   (31-jan-12; oe)
+           (gitem (when (and gactive
+                             (or exactp (= readings 1) (and strip bestp)))
                     (first
                      (analyze 
                       gold :thorough '(:derivation) :condition condition))))
-           (gpreferences (when (and gitem (= (length gtrees) 1))
+           (gpreferences (when (and gitem gtrees (null (rest gtrees)))
                            (select '("parse-id" "t-version" "result-id")
                                    '(:integer :integer :integer)
                                    "preference" 
@@ -418,7 +438,7 @@
                                     "i-id == ~a && t-version == ~a" 
                                     gi-id gversion) 
                                    gold)))
-           (gderivation (when (= (length gpreferences) 1)
+           (gderivation (when (and gpreferences (null (rest gpreferences)))
                           (loop
                               with gpreference = (first gpreferences)
                               with key = (get-field :result-id gpreference)
@@ -468,7 +488,6 @@
       (declare (ignore active))
 
       (when strip
-        #-:expand
         (loop
             with preferences = (select '("parse-id" "t-version" "result-id")
                                        '(:integer :integer :integer)
@@ -479,20 +498,35 @@
                                         parse-id version) 
                                        data)
             for preference in preferences
-            do 
-              (write-preference strip preference :cache cache)
+            do (write-preference strip preference :cache cache)
             finally
-              (when (and trees bestp)
+              (when (or (and trees bestp)
+                        (smember bestp '(:top :random :tokenization)))
                 ;;
                 ;; _fix_me_
                 ;; in :random mode, we need to also adjust the preference
-                ;; relation accordingly.                       (26-apr-04; oe)
+                ;; relation accordingly.                        (26-apr-04; oe)
                 ;;
-                (let* ((ids (if (eq bestp :random)
-                              (random-sample 1 readings (length preferences))
-                              (loop
-                                  for preference in preferences
-                                  collect (get-field :result-id preference))))
+                (let* ((ids 
+                        (case bestp
+                          (:random
+                           (random-sample 1 readings (length preferences)))
+                          (:tokenization
+                           (loop
+                               for result in results
+                               for derivation = (get-field :derivation result)
+                               when (derivation-equal
+                                     derivation gderivation :tokenization)
+                               return (list (get-field :result-id result))))
+                          (t
+                           (or
+                            (loop
+                                for preference in preferences
+                                collect (get-field :result-id preference))
+                            (list
+                             (loop
+                                 for result in results
+                                 minimize (get-field :result-id result)))))))
                        (condition (format
                                    nil
                                    "parse-id == ~a~
@@ -539,7 +573,6 @@
         (loop
             for decision in decisions
             do (write-decision strip decision :cache cache))
-        #-:expand
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -631,9 +664,6 @@
         ;; grey out `Save' button in compare frame, when we have a read-only
         ;; cache, i.e. (:protocol . :ro).                     (26-jan-04; oe)
         ;;
-        #+:expand
-        (lkb::record-decision (lkb::make-decision :type :save) frame)
-        #-:expand
         (unless (or (eq status :skip) (null runp))
           (process-add-arrest-reason *current-process* :wait)))
       
@@ -655,7 +685,7 @@
 
           (when (eq status :save)
             (let* ((version (if version 
-                              #-:expand (incf version) #+:expand version
+                              (incf version)
                               1))
                    (edges (lkb::compare-frame-in frame))
                    (active (length edges))
@@ -677,7 +707,6 @@
                             (if end 
                               (decode-time end :long :tsdb)
                               (current-time :long :tsdb)))))
-              #-:expand
               (write-tree data (pairlis '(:parse-id 
                                           :t-version :t-active :t-confidence
                                           :t-author :t-start :t-end :t-comment)
@@ -697,7 +726,6 @@
                                                      version id))
                                       :cache cache)))
 
-            #-:expand
             (when (and (lkb::decision-p recent)
                        (member (lkb::decision-type recent) '(:reject :select)))
               (let* ((version (or version 1))
@@ -717,7 +745,6 @@
                                                state type nil nil 
                                                start end time))
                                 :cache cache)))
-            #-:expand
             (loop
                 with version = (or version 1)
                 for discriminant in (lkb::compare-frame-discriminants frame)
@@ -743,7 +770,6 @@
                                                  state type key value 
                                                  start end time))
                                   :cache cache))
-            #-:expand
             (let* ((update (lkb::compare-frame-update frame))
                    (discriminants (lkb::compare-frame-discriminants frame))
                    (decisions 
@@ -787,6 +813,7 @@
       (:type 2)
       (:constituent 3)
       (:ed 6)
+      (:twig 7)
       (t 0)))
    ((lkb::decision-p discriminant)
     (case (lkb::decision-type discriminant)
@@ -1355,19 +1382,10 @@
                                (compositep *redwoods-composite-export-p*)
                                interrupt meter 
                                (compressor "gzip -c -9") (suffix "gz")
+                               blindp (offset 0)
                                (stream *tsdb-io*))
   
   (loop
-      with offset = (cond
-                     ((search "vm6" data) 60000)
-                     ((search "vm13" data) 130000)
-                     ((search "vm31" data) 310000)
-                     ((search "vm32" data) 320000)
-                     ((search "ecoc" data) 1000000)
-                     ((search "ecos" data) 2000000)
-                     ((search "ecpa" data) 3000000)
-                     ((search "ecpr" data) 4000000)
-                     (t 0))
       with target = (format 
                      nil 
                      "~a~@[/~a~]"
@@ -1377,8 +1395,8 @@
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with *derivations-print-lexical-type-p* = t
       with items = (analyze
-                    data :thorough '(:derivation :mrs)
-                    :condition condition :commentp t)
+                    data :thorough (cons :derivation (unless blindp '(:mrs)))
+                    :condition condition :commentp t :inputp t)
       with increment = (when (and meter items)
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
@@ -1577,6 +1595,28 @@
          out 
          "~c~%[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
          #\page (+ parse-id offset) result-id complementp)
+        ;;
+        ;; first, the actual parser inputs (initial and internal tokens)
+        ;;
+        (when (or (eq *redwoods-export-values* :all)
+                  (smember :input *redwoods-export-values*))
+          (let ((input (get-field :p-input item))
+                (tokens (get-field :p-tokens item)))
+            (format out "<~%")
+            (when (consp input)
+              (loop
+                  for token in input
+                  do
+                    (yy-print-token token :prefix "  " :stream out)
+                    (terpri out)))
+            (format out ">~%~%<~%")
+            (when (consp tokens)
+              (loop
+                  for token in tokens
+                  do
+                    (yy-print-token token :prefix "  " :stream out)
+                    (terpri out)))
+            (format out ">~%~%")))
         (setf lkb::*cached-category-abbs* nil)
         (when index
           (labels ((register (entity start end &optional cache)
@@ -1753,6 +1793,7 @@
                        &key (condition *statistics-select-condition*)
                             spartanp (scorep t) (n 1)  test loosep
                             file append (format :latex)
+                            (trace *redwoods-trace*)
                             meter)
 
   (let* (;;
@@ -1763,6 +1804,11 @@
          ;; effectively disable all of it.               (25-jan-06; oe & erik)
          ;;
          (*redwoods-score-similarities* nil)
+         (*redwoods-trace*
+          (typecase trace
+            (pathname (create-output-stream trace))
+            (string (create-output-stream trace))
+            (stream trace)))
          (stream (create-output-stream file append))
          (aggregates (summarize-scores
                       data gold :condition condition 
@@ -1777,9 +1823,8 @@
                    nil "(generated by ~a at ~a)"
                    *tsdb-name* (current-time :long :pretty)))
          (n (if (and n (> n 1)) (- n 1) 0))
-         (ncolumns (+ n 
-                      (if loosep 8 7) 
-                      (if *redwoods-score-similarities* 1 0)))
+         (ncounts (length *redwoods-score-counts*))
+         (ncolumns (+ (if loosep 8 7) n ncounts))
          (i 2))
 
     ;;
@@ -1793,79 +1838,91 @@
        "~,1f of ~a = ~,2f~%"
        (get-field :random total) (get-field :scores total)
        (* 100 (divide (get-field :random total) (get-field :scores total)))))
-    
-    (case format
-      (:latex
-        (format
-         stream
-         "\\begin{tabular}{@{}|l|c|c|c|c|c|~:[~;c|~]~:[~;c|~]c|@{}}~%  ~
-          \\hline~%  ~
-          \\multicolumn{~d}{|c|}~%    {\\bf `~a' ~a Profile}\\\\~%  ~
-          \\hline\\hline~%  ~
-          & {\\bf  total} & {\\bf total} & {\\bf word} ~
-            & {\\bf parser}~%    ~
-            & {\\bf exact} & {\\bf near}~:[~; & {\\bf loose}~]~
-            ~:[~; & {\\bf simlarity}~]~
-            & {\\bf overall}\\\\~%  ~
-          {\\bf ~a} & {\\bf items} & {\\bf scores} & {\\bf string} ~
-            & {\\bf analyses}~%    ~
-            & {\\bf matches} & {\\bf matches}~:[~; & {\\bf matches}~]~%    ~
-            ~:[~; & {\\bf matches}~]~
-            & {\\bf accuracy}\\\\~%  ~
-          & $\\sharp$ & $\\sharp$ & $\\phi$ & $\\phi$~%    ~
-            & $\\sharp$ & $\\sharp$~:[~; & $\\sharp$~] & $\\%$\\\\~%  ~
-          \\hline~%  ~
-          \\hline~%"
-         loosep *redwoods-score-similarities*
-         ncolumns
-         (if (stringp data) data "Some") "Parse Selection"
-         loosep 
-         alabel loosep *redwoods-score-similarities*
-         loosep *redwoods-score-similarities*))
-      (:tcl
-       (format stream *statistics-tcl-formats*)
-       (format
-        stream
-        "flags 2~%~
-         layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
-         layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
-         layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
-         layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
-         layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
-         layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%"
-        ncolumns)
-       (format
-        stream
-        "cell 1 1 -contents {~a} -format title~%~
-         cell 1 2 -contents \"total\\nitems\\n#\" -format title~%~
-         cell 1 3 -contents \"total\\nscores\\n#\" -format title~%~
-         cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
-         cell 1 5 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
-         cell 1 6 -contents \"exact\\nmatches\\n#\" -format title~%~
-         ~:[~*~;cell 1 ~d -contents \"loose\\nmatches\\n#\" -format title~%~]~
-         ~:[~*~;cell 1 ~d -contents \"similar\\nmatches\\n#\" ~
-                  -format title~%~]~
-         cell 1 ~d -contents \"overall\\naccuracy\\n%\" -format title~%"
-        alabel 
-        loosep (+ 7 n) 
-        *redwoods-score-similarities* (+ 8 n) ncolumns)
-       (unless (zerop n)
+
+    (labels ((name (type)
+               (case type
+                 (:ta "tagging\\naccuracy")
+                 (:parseval "labeled\\nbrackets")
+                 (t (format nil "~a\\nscore" type)))))
+      (case format
+        (:latex
+          (format
+           stream
+           "\\begin{tabular}{@{}|l|c|c|c|c|c|~:[~;c|~]c|@{}}~%  ~
+            \\hline~%  ~
+            \\multicolumn{~d}{|c|}~%    {\\bf `~a' ~a Profile}\\\\~%  ~
+            \\hline\\hline~%  ~
+            & {\\bf  total} & {\\bf total} & {\\bf word} ~
+              & {\\bf parser}~%    ~
+              & {\\bf exact} & {\\bf near}~:[~; & {\\bf loose}~]~
+              & {\\bf overall}\\\\~%  ~
+            {\\bf ~a} & {\\bf items} & {\\bf scores} & {\\bf string} ~
+              & {\\bf analyses}~%    ~
+              & {\\bf matches} & {\\bf matches}~:[~; & {\\bf matches}~]~
+              & {\\bf accuracy}\\\\~%  ~
+            & $\\sharp$ & $\\sharp$ & $\\phi$ & $\\phi$~%    ~
+              & $\\sharp$ & $\\sharp$ & $\\%$\\\\~%  ~
+            \\hline~%  ~
+            \\hline~%"
+           loosep
+           ncolumns
+           (if (stringp data) data "Some") "Parse Accuracy"
+           loosep 
+           alabel loosep
+           loosep))
+        (:tcl
+         (format stream *statistics-tcl-formats*)
+         (format
+          stream
+          "flags 2~%~
+           layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+           layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+           layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+           layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%"
+          ncolumns)
+         (format
+          stream
+          "cell 1 1 -contents {~a} -format title~%~
+           cell 1 2 -contents \"total\\nitems\\n#\" -format title~%~
+           cell 1 3 -contents \"total\\nscores\\n#\" -format title~%~
+           cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
+           cell 1 5 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
+           cell 1 6 -contents \"exact\\nmatches\\n#\" -format title~%~
+           ~:[~*~;cell 1 ~d -contents \"loose\\nmatches\\n#\" -format title~%~]~
+           cell 1 ~d -contents \"overall\\naccuracy\\n%\" -format title~%"
+          alabel 
+          loosep (+ 7 n) 
+          (- ncolumns ncounts))
+         (unless (zerop n)
+           (loop
+               for j from 0 to (- n 2)
+               do
+                 (format
+                  stream
+                  "layout col ~d -m1 5 -r 0 -m2 5 -c black -j right~%"
+                  (+ 7 j)))
+
+           (format
+            stream
+            "~:[~;cell 1 7 -contents \"near\\nmatches\\n#\" -format title~%~]~
+             region 1 7 1 ~d -contents \"near\\nmatches\\n#\" -format title ~
+             -hor_justify center -ver_justify center~%"
+            (= n 1) (+ 7 (- n 1))))
          (loop
-             for j from 0 to (- n 2)
+             for type in *redwoods-score-counts*
+             for j from (+ (- ncolumns ncounts) 1)
              do
                (format
                 stream
-                "layout col ~d -m1 5 -r 0 -m2 5 -c black -j right~%"
-                (+ 7 j)))
-
-         (format
-          stream
-          "~:[~;cell 1 7 -contents \"near\\nmatches\\n#\" -format title~%~]~
-           region 1 7 1 ~d -contents \"near\\nmatches\\n#\" -format title ~
-           -hor_justify center -ver_justify center~%"
-          (= n 1) (+ 7 (- n 1))))
-       (format stream "~%")))
+                "cell 1 ~d -contents \"~a\\n~c\" -format title~%"
+                j (name type)
+                (code-char (if *redwoods-score-microaverage-p* #x03c6 #x03a6))))
+         (format stream "~%"))
+        (:ascii
+         (format stream "`~a' # `~a' Parse Accuracy~%" data gold))))
 
     (loop
         for (id foo . data) in aggregates
@@ -1878,10 +1935,10 @@
         for near = (get-field :near data)
         for successes = (get-field :successes data)
         for loose = (and loosep (get-field :loose data))
-        for similarity = 0
         for accuracy = (if (zerop scores)
                          100
                          (* (divide (+ exact near) scores) 100))
+        for tcounts = (get-field :tcounts data)
         unless (or (smember id '(:all :total)) (zerop scores)) do
           (setf id id)
           (case format
@@ -1902,7 +1959,6 @@
                cell ~d 5 -contents ~,2f -format data~%~
                cell ~d 6 -contents ~,1f -format data~%~
                ~:[~*~*~*~;cell ~d ~d -contents ~d -format data~%~]~
-               ~:[~*~*~*~;cell ~d ~d -contents ~,4f -format data~%~]~
                cell ~d ~d -contents ~,2f -format data~%"
               i name
               i items
@@ -1911,18 +1967,26 @@
               i analyses
               i exact
               loosep i (+ 7 n) loose
-              *redwoods-score-similarities* i (+ 8 n) similarity 
-              i ncolumns accuracy)
+              i (- ncolumns ncounts) accuracy)
              (unless (zerop n)
                (loop
                    for j from 0 to (- n 1)
                    for k = (aref successes (+ j 1))
                    do
                      (format
-                      stream
-                      "cell ~d ~d -contents ~,1f -format data~%"
+                      stream "cell ~d ~d -contents ~,1f -format data~%"
                       i (+ 7 j) k)))
-             (format stream "~%")))
+             (loop
+                 for type in *redwoods-score-counts*
+                 for j from (+ (- ncolumns ncounts) 1)
+                 for record = (rest (assoc type tcounts))
+                 for score = (if *redwoods-score-microaverage-p*
+                               (or (first record) 0)
+                               (apply #'f-one (rest record)))
+                 do
+                   (format
+                    stream "cell ~d ~d -contents ~,1f -format data~%"
+                    i j (* score 100)))))
           (incf i))
     
     (let* ((data (rest (rest (assoc :total aggregates))))
@@ -1935,10 +1999,10 @@
            (near (get-field :near data))
            (successes (get-field :successes data))
            (loose (and loosep (get-field :loose data)))
-           (similarity 0)
            (accuracy (if (zerop scores)
                        100
-                       (* (divide (+ exact near) scores) 100))))
+                       (* (divide (+ exact near) scores) 100)))
+           (tcounts (get-field :tcounts data)))
       (case format
         (:latex
          (format
@@ -1966,7 +2030,6 @@
            cell ~d 5 -contents ~,2f -format total~%~
            cell ~d 6 -contents ~,1f -format total~%~
            ~:[~*~*~*~;cell ~d ~d -contents ~d -format total~%~]~
-           ~:[~*~*~*~;cell ~d ~d -contents ~,4f -format total~%~]~
            cell ~d ~d -contents ~,2f -format total~%"
           (- i 1) i
           i name
@@ -1976,8 +2039,7 @@
           i analyses
           i exact
           loosep i (+ 7 n) loose
-          *redwoods-score-similarities* i (+ 8 n) similarity
-          i ncolumns accuracy)
+          i (- ncolumns ncounts) accuracy)
          (unless (zerop n)
            (loop
                for j from 0 to (- n 1)
@@ -1987,12 +2049,47 @@
                   stream
                   "cell ~d ~d -contents ~,1f -format total~%"
                   i (+ 7 j) k)))
-         (format stream "~%"))))
+         (loop
+             for type in *redwoods-score-counts*
+             for j from (+ (- ncolumns ncounts) 1)
+             for record = (rest (assoc type tcounts))
+             for score = (if *redwoods-score-microaverage-p*
+                           (or (first record) 0)
+                           (apply #'f-one (rest record)))
+             do
+               (format
+                stream "cell ~d ~d -contents ~,1f -format data~%"
+                i j (* score 100))))
+        (:ascii
+         (format
+          stream
+          "  ~a item~p; ~a score~p; ~a robust;~%  ~
+             exact match: ~a (~,2f%);~%"
+          items items scores scores (get-field :robust data)
+          exact (* (/ exact items) 100))
+         (loop
+             for type in *redwoods-score-counts*
+             for record = (rest (assoc type tcounts))
+             for test = (second record)
+             for gold = (third record)
+             for correct = (fourth record)
+             do
+               (format
+                stream
+                "  [~a] ~a test; ~a gold; ~a correct: ~
+                 P=~,1f; R=~,1f; F=~,1f~%"
+                type test gold correct
+                (* (divide correct test) 100) (* (divide correct gold) 100)
+                (* (f-one test gold correct) 100)))))
+      (format stream "~%")
+      (force-output stream))
+    (when (stringp trace) (close *redwoods-trace*))
     (when (or (stringp file) (stringp append)) (close stream))))
  
 (defun summarize-scores (data &optional (gold data)
                          &key (condition *statistics-select-condition*)
                               spartanp (scorep t) (n 1) test loosep analogon
+                              accumulation
                               (trace *redwoods-trace*)
                               (format :latex) meter)
   (declare (ignore meter))
@@ -2004,9 +2101,14 @@
   ;; relation; an orthogonal dimension of variation is (a) scoring by result
   ;; identifier (e.g. within the same profile or against one that is comprised
   ;; of identical results) vs. (b) scoring by derivation equivalence (e.g.
-  ;; when comparing best-first parser output against a gold standard).
+  ;; when comparing best-first parser output against a gold standard).  to make
+  ;; the picture even more complex, scores can be read either (1) from .data.
+  ;; itself or (2) from an `overlay' profile (which we call spartan, seeing it
+  ;; only holds a subset of relations, e.g. `item', `score', and `fold').
   ;;
-  (let* ((thorough (when (eq test :derivation) '(:derivation)))
+  (let* ((thorough (if *redwoods-score-counts*
+                     '(:derivation :mrs)
+                      (when (eq test :derivation) '(:derivation))))
          ;;
          ;; _fix_me_
          ;; ideally, score-item() should not have to look at anything from the
@@ -2014,7 +2116,7 @@
          ;; includes the `surface' field, so we can perform a string similarity
          ;; comparison on generator outputs.                   (28-oct-04; oe)
          ;;
-         (thorough (if (or trace *redwoods-score-similarities*)
+         (thorough (if *redwoods-score-similarities*
                      (cons :surface thorough)
                      thorough))
          (items (if (stringp data)
@@ -2022,35 +2124,40 @@
                            :thorough (or thorough spartanp)
                            :condition condition 
                            :score (if scorep data t) :scorep t
-                           :readerp (eq test :derivation))
+                           :readerp (or (eq test :derivation)
+                                        (not (null *redwoods-score-counts*))))
                   data))
          (gitems (if (stringp gold)
                    (analyze gold
                             :thorough thorough
                             :condition condition :gold gold 
-                            :readerp (eq test :derivation))
+                            :readerp (or (eq test :derivation)
+                                         (not (null *redwoods-score-counts*))))
                    gold))
          (aggregates (if analogon
                        (aggregate-by-analogy items analogon)
                        (aggregate items :format format)))
          (gaggregates (aggregate-by-analogy gitems aggregates :loosep t))
+         #+:lkb
+         (lkb::%failures% nil)
          results)
-
-    #+:debug
-    (setf %items items %aggregates aggregates
-          %gitems gitems %gaggregates gaggregates)
 
     (loop
         with nsimilarities = (length *redwoods-score-similarities*)
-        with tnitems = 0
-        with tnscores = 0
-        with tlength = 0
-        with treadings = 0
-        with texact = 0
-        with tnear = 0
-        with tloose = 0
+        with ncounts = (length *redwoods-score-counts*)
+        with total = (rest (rest (get-field :total accumulation)))
+        with tnitems = (get-field+ :item total 0)
+        with tnscores = (get-field+ :scores total 0)
+        with tlength = (* (get-field+ :i-length total 0) tnscores)
+        with treadings = (* (get-field+ :analyses total 0) tnscores)
+        with texact = (get-field+ :exact total 0)
+        with tnear = (get-field+ :near total 0)
+        with tloose = (get-field+ :loose total 0)
+        with trobust = (get-field+ :robust total 0)
         with ttsimilarities = (make-array nsimilarities :initial-element 0)
         with tnsimilarities = (make-array nsimilarities :initial-element 0)
+        with ttcounts = (make-array ncounts)
+        with tncounts = (make-array ncounts)
         with tsuccesses = (and n (make-array n :initial-element 0))
         with trandom = 0
         for (id name . data) in aggregates
@@ -2066,10 +2173,13 @@
               with aexact = 0
               with anear = 0
               with aloose = 0
-              with atsimilarities = (make-array
-                                     nsimilarities :initial-element 0)
-              with ansimilarities = (make-array
-                                     nsimilarities :initial-element 0)
+              with arobust = 0
+              with atsimilarities
+              = (make-array nsimilarities :initial-element 0)
+              with ansimilarities
+              = (make-array nsimilarities :initial-element 0)
+              with atcounts = (make-array ncounts)
+              with ancounts = (make-array ncounts)
               with asuccesses = (and n (make-array n :initial-element 0))
               with arandom = 0
               for item in data
@@ -2088,19 +2198,44 @@
                                       (pop gdata)))))
                           
               when gitem do
-                (multiple-value-bind (i score loosep similarities)
-                    (score-item item gitem 
-                                :test test :n n :loosep loosep)
-                  (when (and trace (open-stream-p trace) i)
+                #+:lkb
+                (setf lkb::%failures% nil)
+                (multiple-value-bind (i score loosep similarities counts)
+                    ;;
+                    ;; there are four possible outcomes of score-item():
+                    ;;   nil: incomparable items (e.g. missing :ranks)
+                    ;;   (= i 1): exact match at the top-ranked result
+                    ;;   (<= i n): exact match at the .i.th result
+                    ;;   (= i 0): no exact match within beam of size .n. 
+                    ;;
+                    (score-item item gitem :test test :n n :loosep loosep)
+                  
+                  ;;
+                  ;; first, print per-item trace information when requested
+                  ;;
+                  (when (and trace (open-stream-p trace))
+                    (if (numberp i)
+                      (format trace "[~a] <~a ~,1f" i-id i score)
+                      (format trace "[~a] <null" i-id))
                     (format
-                     trace
-                     "[~a] <~,1f~@[ : ~{~,2f~^ ~}~]~@[ @ ~a~]> {~a} |~a|~%"
-                     i-id score 
+                     trace "~@[ : ~{~,2f~^ ~}~]"
                      (loop
                          for similarity in similarities
-                         collect (second similarity))
-                     (and (> i 0) i) (length (get-field :ranks gitem))
+                         collect (second similarity)))
+                    (loop
+                        for count in counts
+                        when (eq count (first counts)) do
+                          (format trace " #")
+                        do
+                          (format
+                           trace " ~(~a~): ~,1f ~{~d~^ ~}"
+                           (first count) (* (first (second count)) 100)
+                           (rest (second count))))
+                    (format
+                     trace "> {~a} |~a|~%"
+                     (length (get-field :ranks gitem))
                      (get-field :i-input gitem))
+                    #+:null
                     (loop
                         with granks = (get-field :ranks gitem)
                         for i from 1 to n
@@ -2111,9 +2246,10 @@
                               do
                                 (format
                                  trace
-                                 "  < [~a] {~a} |~a|~%"
+                                 "  < [~a] {~a}~@[ |~a|~]~%"
                                  (get-field :result-id grank)
-                                 i (get-field :surface grank))))
+                                 i (get-field- :surface grank))))
+                    #+:null
                     (loop
                         for rank in (get-field :ranks item)
                         for score = (let ((foo (get-field :score rank)))
@@ -2123,39 +2259,22 @@
                         do
                           (format
                            trace
-                           "  > [~a] {~a} ~@[<~,6f>~] |~a|~%"
+                           "  > [~a] {~a} ~@[<~,6f>~]~@[ |~a|~]~%"
                            (get-field :result-id rank)
                            (get-field :rank rank)
                            score
-                           (get-field :surface rank)))
+                           (get-field- :surface rank)))
                     (format trace "~%")
                     (force-output trace))
                   
+                  ;;
+                  ;; now accumulate the various scores for this aggregate
+                  ;;
                   (incf anitems)
-                  ;;
-                  ;; _fix_me_
-                  ;; rewrite the cond() below; it would seem most if not all of
-                  ;; its body can go into the when() below.     (18-apr-06; oe)
-                  ;;
-                  (when i (incf arandom (divide 1 areadings)))
-                  (cond
-                   ((null i))
-                   ((zerop i)
-                    (incf anscores) 
-                    (incf alength length) (incf areadings readings)
-                    (loop
-                        for i from 0
-                        for (tag top nbest) in similarities
-                        do
-                          (setf tag tag)
-                          (incf (aref atsimilarities i) top)
-                          (incf (aref ansimilarities i) nbest)))
-                   (t
-                    (incf anscores) 
-                    (incf alength length) (incf areadings readings)
-                    (when (<= i n)
-                      (if (= i 1) (incf aexact score) (incf anear score)))
-                    (when loosep (incf aloose))
+                  #+:lkb 
+                  (when lkb::%failures% (incf arobust))
+                  (when (or (numberp i) *redwoods-score-all-p*)
+                    (incf arandom (divide 1 areadings))
                     (loop
                         for i from 0
                         for (tag top nbest) in similarities
@@ -2163,8 +2282,34 @@
                           (setf tag tag)
                           (incf (aref atsimilarities i) top)
                           (incf (aref ansimilarities i) nbest))
-                    (when asuccesses 
-                      (incf (aref asuccesses (- i 1)) score)))))
+                    (loop
+                        for i from 0
+                        for (tag top nbest) in counts
+                        do
+                          (setf tag tag)
+                          (if (null (aref atcounts i))
+                            (setf (aref atcounts i) (copy-list top))
+                            (let ((foo (aref atcounts i)))
+                              (incf (first foo) (first top))
+                              (incf (second foo) (second top))
+                              (incf (third foo) (third top))
+                              (incf (fourth foo) (fourth top))))
+                          (if (null (aref ancounts i))
+                            (setf (aref ancounts i) (copy-list nbest))
+                            (let ((foo (aref ancounts i)))
+                              (incf (first foo) (first nbest))
+                              (incf (second foo) (second nbest))
+                              (incf (third foo) (third nbest))
+                              (incf (fourth foo) (fourth nbest)))))
+                    (incf anscores)
+                    (incf alength length)
+                    (incf areadings readings)
+                    (unless (or (null i) (zerop i))
+                      (when (<= i n)
+                        (if (= i 1) (incf aexact score) (incf anear score)))
+                      (when loosep (incf aloose))
+                      (when asuccesses 
+                        (incf (aref asuccesses (- i 1)) score)))))
               finally
                 (incf tnitems anitems) (incf tnscores anscores)
                 (incf tlength alength) (incf treadings areadings) 
@@ -2179,31 +2324,54 @@
                     do (incf (aref tnsimilarities i) ansimilarity))
                 (loop
                     for i from 0
+                    for ncount across ancounts
+                    when ncount do
+                      (if (null (aref tncounts i))
+                        (setf (aref tncounts i) (copy-list ncount))
+                        (let ((foo (aref tncounts i)))
+                          (incf (first foo) (first ncount))
+                          (incf (second foo) (second ncount))
+                          (incf (third foo) (third ncount))
+                          (incf (fourth foo) (fourth ncount)))))
+                (loop
+                    for i from 0
+                    for tcount across atcounts
+                    when tcount do
+                      (if (null (aref ttcounts i))
+                        (setf (aref ttcounts i) (copy-list tcount))
+                        (let ((foo (aref ttcounts i)))
+                          (incf (first foo) (first tcount))
+                          (incf (second foo) (second tcount))
+                          (incf (third foo) (third tcount))
+                          (incf (fourth foo) (fourth tcount)))))
+                (loop
+                    for i from 0
                     for j across asuccesses
-                    do
-                      (incf (aref tsuccesses i) j))
+                    do (incf (aref tsuccesses i) j))
                 (incf trandom arandom)
+                (incf trobust arobust)
                 (push (nconc (list id name)
                              (pairlis
                               '(:items :scores 
                                 :i-length 
                                 :analyses
-                                :exact :near :loose 
+                                :exact :near :loose :robust
                                 :successes
                                 :tsimilarities :nsimilarities
+                                :tcounts :ncounts
                                 :random)
                               (list anitems anscores 
                                     (divide alength anscores)
                                     (divide areadings anscores)
-                                    aexact anear aloose 
+                                    aexact anear aloose arobust
                                     asuccesses
                                     (loop
                                         for tag
                                         in *redwoods-score-similarities*
                                         for similarity across atsimilarities
-                                        collect (cons
-                                                 tag
-                                                 (divide similarity anscores)))
+                                        for average
+                                        = (divide similarity anscores)
+                                        collect (cons tag average))
                                     (loop
                                         for tag
                                         in *redwoods-score-similarities*
@@ -2211,6 +2379,22 @@
                                         collect (cons
                                                  tag
                                                  (divide similarity anscores)))
+                                    (loop
+                                        for tag in *redwoods-score-counts*
+                                        for counts across atcounts
+                                        unless counts do
+                                          (setf counts (list 0 0 0 0))
+                                        do (setf (first counts)
+                                             (divide (first counts) anscores))
+                                        collect (cons tag counts))
+                                    (loop
+                                        for tag in *redwoods-score-counts*
+                                        for counts across ancounts
+                                        unless counts do
+                                          (setf counts (list 0 0 0 0))
+                                        do (setf (first counts)
+                                             (divide (first counts) anscores))
+                                        collect (cons tag counts))
                                     arandom)))
                       results))
         finally
@@ -2219,34 +2403,55 @@
                         '(:items :scores 
                           :i-length
                           :analyses
-                          :exact :near :loose 
+                          :exact :near :loose :robust
                           :successes
-                          :tsimilarities :nsimilarities :random)
+                          :tsimilarities :nsimilarities
+                          :tcounts :ncounts
+                          :random)
                         (list tnitems tnscores 
                               (divide tlength tnscores)
                               (divide treadings tnscores)
-                              texact tnear tloose 
+                              texact tnear tloose trobust
                               tsuccesses
                               (loop
-                                  for tag
-                                  in *redwoods-score-similarities*
+                                  for tag in *redwoods-score-similarities*
                                   for similarity across ttsimilarities
                                   collect (cons
                                            tag
                                            (divide similarity tnscores)))
                               (loop
-                                  for tag
-                                  in *redwoods-score-similarities*
+                                  for tag in *redwoods-score-similarities*
                                   for similarity across tnsimilarities
                                   collect (cons
                                            tag
                                            (divide similarity tnscores)))
+                              (loop
+                                  for tag in *redwoods-score-counts*
+                                  for counts across ttcounts
+                                  unless counts do (setf counts (list 0 0 0 0))
+                                  do (setf (first counts)
+                                       (divide (first counts) tnscores))
+                                  collect (cons tag counts))
+                              (loop
+                                  for tag in *redwoods-score-counts*
+                                  for counts across tncounts
+                                  unless counts do (setf counts (list 0 0 0 0))
+                                  do (setf (first counts)
+                                       (divide (first counts) tnscores))
+                                  collect (cons tag counts))
                         trandom)))
                 results))
+    ;;
+    ;; _fix_me_
+    ;; this seems a tad overly defensive, nowadays: with expensive metrics like
+    ;; EDM, it might be good to hold on to these profiles.      (24-jan-12; oe)
+    ;;
     (when (eq test :derivation)
       (purge-profile-cache data :expiryp nil)
       (unless (equal data gold) (purge-profile-cache gold :expiryp nil)))
-
+    #+:null
+    (when *redwoods-score-counts*
+      (lkb::release-temporary-storage :task :reconstruct))
     results))
 
 (defun score-item (item gold &key test (n 1) (loosep t) errorp)
@@ -2267,22 +2472,49 @@
                 #'(lambda (old new)
                     (let ((foo (get-field :derivation old))
                           (bar (get-field :derivation new)))
-                      (and foo bar (derivation-equal foo bar))))))))
+                      (and foo bar (derivation-equal foo bar)))))))
+        (cache (pairlis '(:mrs :edm)
+                        (list (make-hash-table :test #'eq)
+                              (make-hash-table :test #'equal)))))
     ;;
-    ;; check calling context: both the test item and ground truth needs to come
+    ;; check calling context: both the test item and ground truth need to come
     ;; with ranks; all ranks in the ground truth are 1 (since they came from
     ;; annotations in a treebank); and unless .loosep. is on, there must not be
     ;; more than one gold target.
     ;;
     (cond
-     ((or (null ranks) (null granks)) nil)
-     ((loop
-          for grank in granks
-          for rank = (get-field :rank grank)
-          thereis (or (not (integerp rank)) (not (= rank 1))))
+     ((or (null granks)
+          (loop
+              for grank in granks
+              for rank = (get-field :rank grank)
+              thereis (or (not (integerp rank)) (not (= rank 1))))
+          (and (rest granks) (null loosep)))
       nil)
-     ((and (rest granks) (null loosep)) nil)
-     
+     ((null ranks)
+      (values
+       nil 0 nil nil
+       (when *redwoods-score-counts*
+         ;;
+         ;; to include, say, ParsEval or EDM counts in the global statistics,
+         ;; even where an item failed to parse, we still need to obtain counts
+         ;; of 'gold' elements; result-similarity() must be robust to an empty
+         ;; argument, and F1 scores will always be 0 in these cases.  hence, in
+         ;; case there are multiple golds (and following the 'friendly' spirit
+         ;; applied to multi-gold scoring below), look for the counts with the
+         ;; smallest number of gold elements.
+         ;;
+         (loop
+             for tag in *redwoods-score-counts*
+             for best = nil
+             do
+               (loop
+                   for grank in granks
+                   for score
+                   = (result-similarity nil grank :type tag :cache cache)
+                   when (or (null best) (< (third score) (third best)))
+                   do (setf best score))
+             collect (list tag best best)))))
+                        
      ;;
      ;; now do up to three nested searches, aiming to find the best .match. for
      ;; one of the gold targets, i.e. the one with the smallest rank (when
@@ -2328,60 +2560,82 @@
             (setf best match)
             (setf result matches)
           finally
-            (let ((similarity
-                   (when *redwoods-score-similarities*
-                     (loop
-                         with hooks = *redwoods-score-similarities*
-                         with size = (length hooks)
-                         with tscores = (make-array size :initial-element 0)
-                         with nscores = (make-array size :initial-element 0)
-                         with ranks
-                         ;;
-                         ;; _fix_me_
-                         ;; we would like to assume that :ranks entries are
-                         ;; actually full results, but somehow that appears to
-                         ;; not always be true?         (17-feb-06; oe & erik)
-                         ;; --- what we used to do here was plain wrong, in the
-                         ;; sense that we ended up aligning arbitrary ranks and
-                         ;; results.  go back to the original code, and when we
-                         ;; re-discover the problem of missing fields in :ranks
-                         ;; tuples, work out what goes wrong.  (18-apr-06; oe)
-                         ;;
-                         = (loop
-                               for rank in ranks
-                               for i = (get-field :rank rank)
-                               while (<= i n) collect rank)
-                         with granks = (loop
-                                           for rank in granks
-                                           while (= (get-field :rank rank) 1)
-                                           collect rank)
-                         for rank in ranks
-                         do
-                           (loop
-                               for grank in granks
-                               do
-                                 (loop
-                                     for i from 0
-                                     for tag in hooks
-                                     for score
-                                     = (string-similarity
-                                        rank grank :type tag)
-                                     when (numberp score) do
-                                       (setf (aref nscores i)
-                                         (max (aref nscores i) score))
-                                       (when (= (get-field :rank rank) 1)
-                                         (setf (aref tscores i)
-                                           (max (aref tscores i) score)))))
-                         finally 
-                           (return
-                             (loop
-                                 for tag in hooks
-                                 for top across tscores
-                                 for nbest across nscores
-                                 collect (list tag top nbest)))))))
+            (let (similarities counts)
+              ;;
+              ;; from the realization ranking days, we already support a notion
+              ;; of string similarity functions (e.g. BLEU or word accuracy).
+              ;; to make these well-defined where there can both be multiple
+              ;; gold-standard results and multiple (tied) candidate results,
+              ;; we maximize, i.e. look for the highest-scoring test.  one may
+              ;; argue that this approach over-estimates similarities (as it
+              ;; fails to penalize ties), but it has the great advantage that
+              ;; it straightforwardly extends to n-best scoring, i.e. looking
+              ;; for the best result among the top-n candidates.
+              ;;
+              (when (or *redwoods-score-similarities* *redwoods-score-counts*)
+                (loop
+                    with foo = (length *redwoods-score-similarities*)
+                    with tscores = (make-array foo :initial-element 0)
+                    with nscores = (make-array foo :initial-element 0)
+                    with bar = (length *redwoods-score-counts*)
+                    with tcounts = (make-array bar)
+                    with ncounts = (make-array bar)
+                    with ranks
+                    = (loop
+                          for rank in ranks
+                          for i = (get-field :rank rank)
+                          while (<= i n) collect rank)
+                    with granks = (loop
+                                      for rank in granks
+                                      while (= (get-field :rank rank) 1)
+                                      collect rank)
+                    for rank in ranks
+                    do
+                      (loop
+                          for grank in granks
+                          do
+                            (loop
+                                for i from 0
+                                for tag in *redwoods-score-similarities*
+                                for score
+                                = (string-similarity
+                                   rank grank :type tag)
+                                when (numberp score) do
+                                  (setf (aref nscores i)
+                                    (max (aref nscores i) score))
+                                  (when (= (get-field :rank rank) 1)
+                                    (setf (aref tscores i)
+                                      (max (aref tscores i) score))))
+                            (loop
+                                for i from 0
+                                for tag in *redwoods-score-counts*
+                                for score
+                                = (result-similarity
+                                   rank grank :type tag :cache cache)
+                                for key = (first score)
+                                when (and (numberp key)
+                                          (or (null (aref ncounts i))
+                                              (< (first (aref ncounts i)) key)))
+                                do
+                                  (setf (aref ncounts i) score)
+                                  (when (= (get-field :rank rank) 1)
+                                    (setf (aref tcounts i) score))))
+                    finally
+                      (setf similarities
+                        (loop
+                            for tag in *redwoods-score-similarities*
+                            for top across tscores
+                            for nbest across nscores
+                            collect (list tag top nbest)))
+                      (setf counts
+                        (loop
+                            for tag in *redwoods-score-counts*
+                            for top across tcounts
+                            for nbest across ncounts
+                            collect (list tag top nbest)))))
               (return (values (if best (get-field :rank best) 0)
                               (if best (divide 1 (+ (length result) 1)) 0)
-                              (rest granks) similarity
+                              (rest granks) similarities counts
                               errors match (delete match result)))))))))
 
 (defun string-similarity (rank grank &key (type :bleu) scrub)
@@ -2390,6 +2644,82 @@
         (gstring (get-field :surface grank)))
     (first (score-strings
             (list string) (list gstring) :type type :scrub scrub))))
+
+(defun result-similarity (rank grank &key (type :parseval) cache)
+  (labels ((get-mrs (result)
+             (or (and cache (gethash result (get-field :mrs cache)))
+                 (let ((mrs (get-field :mrs result)))
+                   (unless (mrs::psoa-p mrs)
+                     (if (and (stringp mrs) (not (string= mrs "")))
+                       (setf mrs (mrs::read-mrs-from-string mrs))
+                       (let ((edge (get-field :edge result)))
+                         (unless (lkb::edge-p edge)
+                           (let ((derivation (get-field :derivation result)))
+                             (when derivation
+                               (setf edge (reconstruct derivation)))))
+                         (when edge (setf mrs (mrs::extract-mrs edge))))))
+                   (if cache
+                     (setf (gethash result (get-field :mrs cache))
+                       (if (mrs::psoa-p mrs) mrs :fail))
+                     (if (mrs::psoa-p mrs) mrs :fail))))))
+    (cond
+     ((smember type '(:ta :parseval))
+      (let* ((reader (find-attribute-reader :derivation))
+             (derivation (let ((value (get-field :derivation rank)))
+                           (when (and (stringp value) reader)
+                             (setf value
+                               (ignore-errors (funcall reader value)))
+                             (when value (set-field :derivation value rank)))
+                           value))
+             (gderivation (let ((value (get-field :derivation grank)))
+                            (when (and (stringp value) reader)
+                              (setf value
+                                (ignore-errors (funcall reader value)))
+                              (when value (set-field :derivation value grank)))
+                            value))
+             (counts (case type
+                       (:ta (tagging-accuracy derivation gderivation))
+                       (:parseval (parseval derivation gderivation))))
+             (test (get-field :test counts))
+             (gold (get-field :gold counts))
+             (correct (get-field :correct counts)))
+        (list (f-one test gold correct) test gold correct)))
+     ((smember type '(:edm :edmna :edmap :edmn :edma :edmp))
+      (let* ((mrs (let ((foo (get-mrs rank))) (and (mrs::psoa-p foo) foo)))
+             (gmrs (let ((foo (get-mrs grank))) (and (mrs::psoa-p foo) foo)))
+             (edm (when gmrs
+                    (let ((key (cons mrs gmrs)))
+                      (if cache
+                        (or (gethash key (get-field :edm cache))
+                            (setf (gethash key (get-field :edm cache))
+                              (mrs::edm mrs gmrs)))
+                        (mrs::edm mrs gmrs))))))
+        (if (null edm)
+          (list 0 0 0 0)
+          (let* (test gold correct)
+            (case type
+              (:edm
+               (push :tn test) (push :ta test) (push :tp test)
+               (push :gn gold) (push :ga gold) (push :gp gold)
+               (push :cn correct) (push :ca correct) (push :cp correct))
+              (:edmna
+               (push :tn test) (push :ta test)
+               (push :gn gold) (push :ga gold)
+               (push :cn correct) (push :ca correct))
+              (:edmap
+               (push :ta test) (push :tp test)
+               (push :ga gold) (push :gp gold)
+               (push :ca correct) (push :cp correct))
+              (:edmn
+               (push :tn test) (push :gn gold) (push :cn correct))
+              (:edma
+               (push :ta test) (push :ga gold) (push :ca correct))
+              (:edmp
+               (push :tp test) (push :gp gold) (push :cp correct)))
+            (setf test (loop for key in test sum (get-field key edm)))
+            (setf gold (loop for key in gold sum (get-field key edm)))
+            (setf correct (loop for key in correct sum (get-field key edm)))
+            (list (f-one test gold correct) test gold correct))))))))
 
 (defun analyze-errors (data 
                        &optional (gold data)
@@ -2542,9 +2872,9 @@
           (setf result :error)
           (return)
         else do
-          (multiple-value-bind (rank foo bar baz errors match others)
+          (multiple-value-bind (rank foo bar baz fee errors match others)
               (score-item item gitem :test test :n n :loosep loosep :errorp t)
-            (declare (ignore foo bar baz))
+            (declare (ignore foo bar baz fee))
             (when (and rank (or (zerop rank) (> rank n) others))
               (let* ((ranks (when (or errors others)
                               (get-field :ranks item)))
@@ -2975,7 +3305,7 @@
 
 (defun operate-on-profiles
     (profiles
-     &key (condition *statistics-select-condition*)
+     &key (condition *statistics-select-condition*) scores
           (recursep t) internalp (stream *tsdb-io*) (verbose t) (task :fc)
           (model (if (eq task :pcfg) (make-cfg) (make-model))) (purgep t)
           target initialp finalp firstp lastp
@@ -3029,7 +3359,8 @@
         when (find-tsdb-directory active :test t)
         do
           (operate-on-profiles
-           active :condition condition :model model :task task :stream stream
+           active :scores scores
+           :condition condition :model model :task task :stream stream
            :initialp (eq remaining profiles) :finalp (null (rest remaining))
            :target target :internalp t :resolvedp resolvedp)
           (when (and purgep (not virtualp)) (purge-profile-cache active))
@@ -3059,7 +3390,8 @@
         for active = (first remaining)
         do
           (operate-on-profiles
-           active :condition condition :model model :task task :stream stream
+           active :scores scores
+           :condition condition :model model :task task :stream stream
            :initialp (and initialp (eq remaining profiles))
            :finalp (and finalp (null (rest remaining)))
            :target target :internalp t :resolvedp resolvedp)
@@ -3123,7 +3455,8 @@
              "[~a] operate-on-profiles(): running `~a' [~a - ~a|.~%"
              (current-time :long :short) profiles low high))
           (operate-on-profiles
-           profiles :condition foo :model model :task task :stream stream
+           profiles :scores scores
+           :condition foo :model model :task task :stream stream
            :internalp t :recursep nil 
            :initialp initialp :finalp finalp :firstp (= i 1) :lastp (= i n)
            :target target :cache cache :resolvedp resolvedp)
@@ -3140,14 +3473,15 @@
                        (>= *feature-grandparenting* 0)
                        (> *feature-ngram-size* 0))
                '(:derivation))
-             (when *feature-flags*
-               '(:flags))
-             (when (eq *redwoods-task* :rank)
-               '(:surface))))
-            (data (analyze
-                   profiles :thorough thorough :condition condition
-                   :gold (and (eq *redwoods-task* :rank) profiles)
-                   :commentp t :tokensp (eq *redwoods-task* :classify))))
+             (and *feature-flags* '(:flags))
+             (and (eq *redwoods-task* :rank) '(:surface))
+             (when (and (eq task :score) *redwoods-score-counts*)
+               '(:derivation :mrs))))
+           (thorough (remove-duplicates thorough))
+           (data (analyze
+                  profiles :thorough thorough :condition condition
+                  :gold (and (eq *redwoods-task* :rank) profiles)
+                  :commentp t :tokensp (eq *redwoods-task* :classify))))
       (case task
         (:fc
          (loop
@@ -3531,19 +3865,18 @@
                                    (and top (acons :tsimilarities top nil))
                                    (and nbest
                                         (acons :nsimilarities nbest nil)))))
-                               (accuracy (if exact
-                                             (* 100 (divide exact nscores))
-                                           0.0))
-                               (naccuracy (if (and exact near)
-                                              (float
-                                               (* 100 (divide (+ exact near) 
-                                                              nscores)))
-                                            0.0)))
+                               (accuracy
+                                (if exact (* 100 (divide exact nscores)) 0.0))
+                               (naccuracy 
+                                (if (and exact near)
+                                  (float 
+                                   (* 100 (divide (+ exact near) nscores)))
+                                  0.0)))
                           (if (get-field :f-extras fold)
                             (nconc (get-field :f-extras fold) similarities)
                             (nconc fold (acons :f-extras similarities nil)))
                           (nconc (get-field :f-extras fold)
-                                 (acons :naccuracy naccuracy nil))
+                            (acons :naccuracy naccuracy nil))
                           (nconc fold (acons :f-accuracy  accuracy nil)))
                         (push (acons :test test fold) folds))))))
 
@@ -3730,7 +4063,9 @@
 (loop
     with *phenomena* = nil
     with *statistics-aggregate-dimension* = :phenomena
+    with *statistics-all-rejections-p* = t
     with *tsdb-home* = (logon-directory "lingo/terg/tsdb/gold" :string)
+    initially (purge-profile-cache :all)
     for db in (find-tsdb-directories)
     for name = (get-field :database db)
-    do (analyze-trees name :append "/tmp/redwoods.csv" :format :csv))
+    do (analyze-trees name :file "/tmp/redwoods.csv" :format :csv))

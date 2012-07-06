@@ -21,7 +21,7 @@
 
 (defparameter *eds-include-quantifiers-p* t)
 
-(defparameter *eds-include-vacuous-relations-p* nil)
+(defparameter *eds-include-vacuous-relations-p* t)
 
 (defparameter *eds-message-relation* (vsym "message_m_rel"))
 
@@ -29,6 +29,8 @@
 
 (defparameter *eds-bleached-relations*
   (list (vsym "selected_rel") (vsym "deg_rel")))
+
+(defparameter *eds-quantifier-argument* (vsym "BV"))
 
 (defparameter %eds-variable-counter% 0)
 
@@ -77,35 +79,40 @@
     (call-next-method)))
 
 (defstruct ed
-  handle id type variable
+  handle id properties type variable
   predicate arguments carg
   lnk raw status mark abstraction)
 
 (defmethod print-object ((object ed) stream)
   (if *eds-pretty-print-p*
     (loop
+        with carg = (vsym "CARG")
         initially
           (format
            stream 
-           "~(~a~):~(~a~)[" 
-           (ed-id object) (ed-linked-predicate object))
+           "~(~a~):~(~a~)~@[(~s)~][" 
+           (ed-id object) (ed-linked-predicate object) (ed-carg object))
         for (role . value) in (ed-arguments object)
-        do
+        unless (eq role carg) do
           (format 
            stream 
-           "~:[, ~;~]~:@(~a~) ~@[~(~a~)~]:~(~a~)~@[(~(~a)~)~]"
+           "~:[, ~;~]~:@(~a~) ~@[~(~a~)~]~@[:~(~a~)~]~@[(~s)~]"
            (eq role (first (first (ed-arguments object))))
            role (if (ed-p value) (ed-id value) "")
-           (if (ed-p value) (ed-predicate value) value)
-           (when (ed-p value) (ed-carg value)))
+           (unless *eds-include-vacuous-relations-p*
+             (if (ed-p value) (ed-predicate value) value))
+           (unless *eds-include-vacuous-relations-p*
+             (when (ed-p value) (ed-carg value))))
         finally
           (format stream "]"))
     (call-next-method)))
 
 (defun ed-linked-predicate (ed &key (lnkp t))
-  (let ((predicate (ed-predicate ed))
+  (let ((predicate (or (ed-predicate ed) "_"))
         (lnk (ed-lnk ed)))
     (case (and lnkp (first (ed-lnk ed)))
+      (:id
+       (format nil "~a<@~a>" predicate (second lnk)))
       (:characters
        (format nil "~a<~a:~a>" predicate (second lnk) (third lnk)))
       (:vertices
@@ -131,84 +138,180 @@
 
 (defun ed-output-psoa (psoa &key (stream t) (format :ascii) (propertyp t)
                                  cargp markp lnkp collocationp abstractp
-                                 sortp dmrsp)
-  (if (psoa-p psoa)
-    (case format
-      (:ascii
-       (format stream "~a~%" (ed-convert-psoa psoa)))
-      (:triples
-       (let* ((eds (ed-convert-psoa psoa))
-              (triples
-               (if dmrsp
-                 (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
-                 (ed-explode
-                  eds
-                  :lnkp lnkp :cargp cargp :propertyp propertyp
-                  :collocationp collocationp :abstractp abstractp))))
-         (when sortp
-           (setf triples
-             (sort
-              triples
-              #'(lambda (foo bar)
-                  (or (string< (first foo) (first bar))
-                      (and (string= (first foo) (first bar))
-                           (string< (second foo) (second bar))))))))
-         (loop
-             with *package* = (find-package :lkb)
-             initially (unless markp (format stream "{~%"))
-             for triple in triples
-             do
-               (format
-                stream
-                "~:[  ~;<s> ~]~{~a~^ ~}~:[  ~; </s>~]~%"
-                markp triple markp)
-             finally (unless markp (format stream "}~%~%")))
-         (length triples)))
-      (:lui
-       (let ((attic (make-hash-table :test #'equal))
-             (id 0))
-         (labels ((record (object)
-                    (or (gethash object attic)
-                        (let ((n id))
-                          (setf (gethash object attic) n)
-                          (incf id)
-                          n))))
-           (let ((eds (ed-convert-psoa psoa)))
-             (format 
+                                 sortp dmrsp (n 0))
+  (case format
+    (:ascii
+     (if (psoa-p psoa)
+       (format stream "~a~%" (ed-convert-psoa psoa))
+       (format stream "{}~%")))
+    (:triples
+     (let* ((eds (ed-convert-psoa psoa))
+            (triples
+             (if dmrsp
+               (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
+               (ed-explode
+                eds
+                :lnkp lnkp :cargp cargp :propertyp propertyp
+                :collocationp collocationp :abstractp abstractp))))
+       (when sortp
+         (setf triples
+           (sort
+            triples
+            #'(lambda (foo bar)
+                (or (string< (first foo) (first bar))
+                    (and (string= (first foo) (first bar))
+                         (string< (second foo) (second bar))))))))
+       (loop
+           with *package* = (find-package :lkb)
+           initially (unless markp (format stream "{~%"))
+           for triple in triples
+           do
+             (format
               stream
-              "#X[~a \"{~(~a~)\" \":\" newline~%\"    \" #X["
-              (record (eds-top eds)) (eds-top eds))
+              "~:[  ~;<s> ~]~{~a~^ ~}~:[  ~; </s>~]~%"
+              markp triple markp)
+           finally (unless markp (format stream "}~%~%")))
+       (length triples)))
+    (:lui
+     (let ((attic (make-hash-table :test #'equal))
+           (id 0))
+       (labels ((record (object)
+                  (or (gethash object attic)
+                      (let ((n id))
+                        (setf (gethash object attic) n)
+                        (incf id)
+                        n))))
+         (let ((eds (ed-convert-psoa psoa)))
+           (format 
+            stream
+            "#X[~a \"{~(~a~)\" \":\" newline~%\"    \" #X["
+            (record (eds-top eds)) (eds-top eds))
+           (loop
+               with carg = (vsym "CARG")
+               with firstp = t
+               for ed in (eds-relations eds)
+               do
+                 (format
+                  stream
+                  "~@[newline~*~] ~a \"~(~a~)\" \":~(~a~)~@[(~a)~][\" #X["
+                  (not firstp)
+                  (record (ed-id ed)) (ed-id ed)
+                  (ed-linked-predicate ed) (ed-carg ed))
+                 (setf firstp nil)
+                 (loop
+                     with firstp = t
+                     for (role . value) in (ed-arguments ed)
+                     unless (eq role carg) do
+                       (format
+                        stream
+                        "~@[\", \" ~*~]~@[wrap ~*~]\"~a \" ~
+                         ~@[~a ~]~@[\"~(~a~)\" ~]~
+                         ~@[\":~(~a~)\"~]~@[\"(~(~a~))\"~]"
+                        (not firstp)
+                        (and (not firstp)
+                             (null *eds-include-vacuous-relations-p*))
+                        role
+                        (and (ed-p value) (record (ed-id value)))
+                        (and (ed-p value) (ed-id value))
+                        (unless *eds-include-vacuous-relations-p*
+                          (if (ed-p value) (ed-predicate value) value))
+                        (unless *eds-include-vacuous-relations-p*
+                          (and (ed-p value) (ed-carg value))))
+                       (setf firstp nil)
+                     finally (format stream "] \"]\"~%"))
+               finally 
+                 (format 
+                  stream
+                  "] newline \"}\"]~%~
+                   #M[]"))))))
+    (:html
+     (let ((eds (ed-convert-psoa psoa)))
+       (format stream "<table class=mrsEds>~%")
+       (format stream "<tr><td>")
+       (let ((properties (when propertyp
+                           (loop
+                               with top = (eds-top eds)
+                               for ed in (eds-relations eds)
+                               when (equal (ed-id ed) top)
+                               return (ed-properties ed)))))
+         (declare (ignore properties))
+         (mrs-variable-html (eds-top eds) nil n nil stream))
+       (format stream ":</td></tr>~%")
+       (loop
+           for ed in (eds-relations eds)
+           for lnk = (ed-lnk ed)
+           unless (or (ed-bleached-p ed) (ed-vacuous-p ed))
+           do
+             (format 
+              stream 
+              "<tr><td nowrap~:[~*~*~; onMouseOver=\"highlight(~a, ~a)\" ~
+                     onMouseOut=\"highlight()\"~]>&nbsp;"
+              (and lnk (eq (first lnk) :characters)) (second lnk) (third lnk))
+             (mrs-variable-html (ed-id ed) nil n nil stream)
+             (if (and propertyp (ed-properties ed))
+               (let* ((string (make-string-output-stream)))
+                 (format string "<table class=mrsProperties>")
+                 (loop
+                     for property in (ed-properties ed)
+                     do
+                       (format 
+                        string 
+                        "<tr><td class=mrsPropertyFeature>~a~
+                           <td class=mrsPropertyValue>~(~a~)</td></tr>"
+                        (extrapair-feature property)
+                        (extrapair-value property)))
+                 (format string "</table>")
+                 (format
+                  stream 
+                  ":<span onMouseOver=\"writetxt('~a')\" ~
+                      onMouseOut=\"writetxt(0)\">~(~a~)</span>"
+                  (get-output-stream-string string) (ed-predicate ed)))
+               (format stream ":~(~a~)" (ed-predicate ed)))
+             (output-lnk (ed-lnk ed) :stream stream :format :html)
+             (format stream "~@[(~s)~][" (ed-carg ed))
              (loop
                  with firstp = t
-                 for ed in (eds-relations eds)
+                 for (role . value) in (ed-arguments ed)
+                 when (ed-p value)
                  do
+                   (format stream "~:[,&nbsp;~;~]~a&nbsp;" firstp role)
+                   (mrs-variable-html (ed-id value) nil n nil stream)
+                   (setf firstp nil))
+             (format stream "]</td></tr>~%"))
+       (format stream "</table>~%")))
+    (:latex
+     (labels ((variable (id &optional properties)
+                (let ((type (latex-escape-string (subseq id 0 1)))
+                      (index (parse-integer id :start 1 :junk-allowed t)))
+                  (format
+                   nil "\\svar{~a}{~a}{~@[~a~]}"
+                   type index properties)))
+              #+:null
+              (properties (ed)
+                ""))
+       (loop
+           with eds = (ed-convert-psoa psoa)
+           initially
+             (format stream "\\eds{~a}{~%" (variable (eds-top eds)))
+           for relations on (eds-relations eds)
+           for ed = (first relations)
+           for predicate = (latex-escape-string (ed-predicate ed))
+           for carg = (and (ed-carg ed) (latex-escape-string (ed-carg ed)))
+           for lnk = (when (ed-lnk ed)
+                       (output-lnk (ed-lnk ed) :format :latex :stream nil))
+           unless (ed-bleached-p ed) do
+             (format
+              stream "  \\sep{~a}{\\spred{~a~@[~a~]~@[(~a)~]}}{"
+              (variable (ed-id ed)) predicate lnk carg)
+             (loop
+                 for (role . value) in (ed-arguments ed)
+                 for firstp = t then nil 
+                 when (ed-p value) do
                    (format
-                    stream
-                    "~@[newline~*~] ~a \"~(~a~)\" \":~(~a~)[\" #X["
-                    (not firstp)
-                    (record (ed-id ed)) (ed-id ed) (ed-linked-predicate ed))
-                   (setf firstp nil)
-                   (loop
-                       with firstp = t
-                       for (role . value) in (ed-arguments ed)
-                       do
-                         (format
-                          stream
-                          "~@[\", \" wrap ~*~]\"~a \" ~
-                           ~@[~a ~]~@[\"~(~a~)\" ~]\":~(~a~)~@[(~(~a~))~]\""
-                          (not firstp) role
-                          (and (ed-p value) (record (ed-id value)))
-                          (and (ed-p value) (ed-id value))
-                          (if (ed-p value) (ed-predicate value) value)
-                          (and (ed-p value) (ed-carg value)))
-                         (setf firstp nil)
-                       finally (format stream "] \"]\"~%"))
-                 finally 
-                   (format 
-                    stream
-                    "] newline \"}\"]~%~
-                     #M[]")))))))
-    (format stream "{}~%")))
+                    stream "~:[, ~;~%    ~]\\srole{~a}{~a}"
+                    firstp role (variable (ed-id value))))
+             (format stream "}~@[~*\\\\~%~]" (rest relations))
+           finally (format stream "}~%"))))))
 
 #+:lkb
 (defun ed-convert-edge (edge)
@@ -218,38 +321,107 @@
 (defun ed-convert-psoa (psoa)
   (when (psoa-p psoa)
     (loop
-        with index = (psoa-index psoa)
-        with name = (when (var-p index) (var-string index))
-        with hcons = (psoa-h-cons psoa)
-        with eds = (make-eds :top name :hcons hcons :raw psoa)
+        with eds = (make-eds :hcons (psoa-h-cons psoa) :raw psoa)
         initially (ed-reset)
+        ;;
+        ;; in a first pass through the EPs of the input MRS, create EDS graph
+        ;; nodes, one per EP.  these will have their key key properties set
+        ;; (predicate, handle, distinguished variable, CARG, LNK, et al.) but
+        ;; not yet contain any outgoing arcs.
+        ;;
         for relation in (psoa-liszt psoa)
         for ed = (ed-convert-relation relation)
         when ed do (push ed (eds-relations eds))
         finally
-          (setf (eds-relations eds)
-            (nreverse (eds-relations eds)))
+          (setf (eds-relations eds) (nreverse (eds-relations eds)))
+          ;;
+          ;; next, post-process the EDS graph: first, classify `special' EDs,
+          ;; i.e. messages, quantifiers, and so-called fragment EDs (which are
+          ;; pseudo relations, much like underspecified conjunctions, used in
+          ;; the LOGON NoEn MT system, to glue together XLE fragment analyses).
+          ;; in the case of messages, there is optional support to equate the
+          ;; label of the message with its SOA or MARG argument, i.e. `bleach'
+          ;; the message, in the sense of making it gratuitous for the graph.
+          ;;
           (ed-bleach-eds eds)
+          ;;
+          ;; next, actually fill in argument arcs: for each role in each ED,
+          ;; find the ED that is assumed to be the `representative' for the
+          ;; value (i.e. MRS variable) of this role; in doing so, consider =q
+          ;; handle constraints as if the top and bottom handle were equated.
+          ;; in the case of multiple candidate representative EDs, various 
+          ;; disambiguation heuristics apply, see ed-select-representative().
+          ;;
           (ed-augment-eds eds)
+          ;;
+          ;; finally, we need to make sure that all EDs end up with unique
+          ;; identifiers, which from here on only serve to uniquely name the
+          ;; nodes of the EDS dependency graph.  seeing that, in the initial
+          ;; ED creation phase, ED identifiers were locally determined by the
+          ;; distinguished variable, there is no protection against multiple
+          ;; EDs sharing one distinguished variable (even though, with current
+          ;; versions of the ERG at least, that seems likely only in illformed
+          ;; input MRSs). 
+          ;;
+          (ed-uniq-ids eds)
+          ;;
+          ;; finally, determine what should be the root node of the dependency
+          ;; graph: until early 2012, we always used to grab the INDEX, but in
+          ;; a recent moment of clarity, we realized that the root node should
+          ;; be parallel to the structure we create for clause subordination,
+          ;; e.g. pairs like: `[Kim knows that] Abrams probably arrived.'
+          ;;
+          (let* ((ltop (ed-find-representative eds (psoa-top-h psoa)))
+                 (index (ed-find-representative eds (psoa-index psoa))))
+            (setf (eds-top eds)
+              (or (and (ed-p ltop) (ed-id ltop))
+                  (and (ed-p index) (ed-id index))
+                  (and (var-p (psoa-index psoa))
+                       (var-string (psoa-index psoa))))))
           (ed-reset)
           (return eds))))
 
 (defun ed-convert-relation (relation)
-  (let* ((handle (let ((handle (rel-handel relation)))
+  (when (and *eds-quantifier-argument* (is-quant-rel relation))
+    ;;
+    ;; to simplify the downstream treatment of quantifiers, make sure the label
+    ;; of the bound variable is not ARG0.  but avoid destructive changes to our
+    ;; original input structure; this is potentially hazardous, as the hash of
+    ;; relations to variables (%eds-symbol-table%) now uses a local copy; for
+    ;; all i can tell just now, access to the hash table is within the scope
+    ;; of ed-convert-relation(), however.                      (15-jun-12; oe).
+    ;;
+    (setf relation (copy-rel relation))
+    (setf (rel-flist relation)
+      (loop
+          with inherent
+          = (list (vsym "INST") (vsym "ARG0"))
+          for fvpair in (rel-flist relation)
+          when (member (fvpair-feature fvpair) inherent :test #'eq)
+          collect (make-fvpair
+                   :feature *eds-quantifier-argument*
+                   :value (fvpair-value fvpair))
+          else collect fvpair)))
+  (let* ((*package* (find-package :lkb))
+         (handle (let ((handle (rel-handel relation)))
                    (when (ed-handle-p handle) (var-string handle))))
-         (id (ed-find-identifier relation))
-         (predicate (string (rel-pred relation)))
+         (identifier (ed-find-identifier relation))
+         (predicate (when (rel-pred relation)
+                      (string-downcase (string (rel-pred relation)))))
          (abstraction
           #+:ppcre
-          (cond
-           ((ppcre:scan "_[aA](?:_[^_]+)?_[rR][eE][lL]" predicate) :a)
-           ((ppcre:scan "_[nN](?:_[^_]+)?_[rR][eE][lL]" predicate) :n)
-           ((ppcre:scan "_[pP](?:_[^_]+)?_[rR][eE][lL]" predicate) :p)
-           ((ppcre:scan "_[qQ](?:_[^_]+)?_[rR][eE][lL]" predicate) :q)
-           ((ppcre:scan "_[vV](?:_[^_]+)?_[rR][eE][lL]" predicate) :v)
-           (t :x)))
-         (predicate (remove-right-sequence 
-                     *sem-relation-suffix* (string-downcase predicate)))
+          (when predicate
+            (cond
+             ((ppcre:scan "_a(?:_[^_]+)?_rel" predicate) :a)
+             ((ppcre:scan "_n(?:_[^_]+)?_rel" predicate) :n)
+             ((ppcre:scan "_p(?:_[^_]+)?_rel" predicate) :p)
+             ((ppcre:scan "_q(?:_[^_]+)?_rel" predicate) :q)
+             ((ppcre:scan "_v(?:_[^_]+)?_rel" predicate) :v)
+             (t :x))))
+         (predicate (if (and predicate (stringp *sem-relation-suffix*))
+                      (remove-right-sequence 
+                       (string-downcase *sem-relation-suffix*) predicate)
+                      predicate))
          (flist (rel-flist relation))
          (carg (loop
                    with carg = (list (vsym "CARG") 
@@ -264,9 +436,11 @@
                 (or lnk
                     (and (numberp from) (numberp to) (>= from 0) (>= to 0)
                          (list :characters from to))))))
-    (make-ed :handle handle :id id :lnk lnk
-             :predicate predicate :carg carg :abstraction abstraction
-             :raw relation)))
+    (make-ed
+     :handle handle
+     :id (first identifier) :properties (rest identifier)
+     :predicate predicate :lnk lnk :carg carg :abstraction abstraction
+     :raw relation)))
 
 (defun ed-bleach-eds (eds)
   (loop
@@ -304,12 +478,40 @@
             for representative = (when value 
                                    (ed-find-representative eds value))
             when representative do
+              (when (eq key old) (setf key (vsym "CARG")))
               #+:null
               (when (ed-p representative)
                 (setf (ed-variable representative) value))
-              (push (cons (if (eq key old) (vsym "CARG") key) representative)
-                    (ed-arguments ed)))
+              (push (cons key representative) (ed-arguments ed)))
         (setf (ed-arguments ed) (nreverse (ed-arguments ed)))))
+
+(defun ed-uniq-ids (eds)
+  (loop
+      for ed in (eds-relations eds)
+      for id = (ed-id ed)
+      for collisions
+      = (loop
+            for ed in (eds-relations eds)
+            when (equal (ed-id ed) id) collect ed)
+      when (rest collisions) do
+        (let ((representative
+               (loop
+                   for foo being each hash-key in %eds-representatives-table%
+                   when (and (consp foo) (var-p (first foo))
+                             (string= (var-string (first foo)) id)
+                             (rest foo))
+                   return (gethash foo %eds-representatives-table%))))
+          (when representative
+            (setf collisions (delete representative collisions)))
+          (setf collisions
+            (sort
+             collisions #'>
+             :key #'(lambda (ed) (length (ed-arguments ed)))))
+          (loop
+              for ed in (if representative collisions (rest collisions))
+              do
+                (setf (ed-id ed)
+                  (format nil "_~d" (incf %eds-variable-counter%)))))))
 
 (defun ed-find-identifier (relation)
   (or (gethash relation %eds-symbol-table%)
@@ -325,11 +527,13 @@
                      (eq feature (vsym "ARG0"))
                      (eq feature (vsym "C-ARG"))))
           do (setf instance (fvpair-value fvpair)))
-      (let* ((name (or
-                    (and instance (var-p instance) (var-string instance))
-                    (and event (var-p event) (var-string event))
-                    (format nil "_~d" (incf %eds-variable-counter%)))))
-        (setf (gethash relation %eds-symbol-table%) name)))))
+      (let* ((variable (or (and (var-p instance) instance)
+                           (and (var-p event) event)))
+             (name (if variable
+                     (var-string variable)
+                     (format nil "_~d" (incf %eds-variable-counter%))))
+             (properties (and variable (var-extra variable))))
+        (setf (gethash relation %eds-symbol-table%) (cons name properties))))))
 
 (defun ed-find-representative (eds variable &optional (selectp t))
   (or (gethash (cons variable selectp) %eds-representatives-table%)
@@ -353,6 +557,7 @@
                     (if (and candidates (null (rest candidates)))
                       (first candidates)
                       (ed-select-representative
+                       eds
                        (append
                         (when (ed-handle-p qeq)
                           (ed-find-representative qeq nil))
@@ -375,11 +580,11 @@
                   (if selectp
                     (if (and candidates (null (rest candidates)))
                       (first candidates)
-                      (ed-select-representative candidates))
+                      (ed-select-representative eds candidates))
                     candidates))))
          ((stringp variable) variable)))))
 
-(defun ed-select-representative (eds)
+(defun ed-select-representative (eds candidates)
   ;;
   ;; given a set of candidate representatives (typically corresponding to EPs
   ;; within one LF conjunct, i.e. sharing the same handle), heuristically find
@@ -390,38 +595,93 @@
   ;;
   (or 
    (loop
-       for ed in eds
+       for ed in candidates
        unless (or (ed-message-p ed)
                   (char= (char (ed-id ed) 0) #\_)) collect ed into candidates
        finally (when (and candidates (null (rest candidates)))
                  (return (first candidates))))
    (loop
-       for ed in eds
+       for ed in candidates
        unless (char= (char (ed-id ed) 0) #\_) collect ed into candidates
        finally (when (and candidates (null (rest candidates)))
                  (return (first candidates))))
    (loop
-       for ed in eds
+       for ed in candidates
        unless (eq (ed-type ed) :quantifier) collect ed into candidates
        finally (when (and candidates (null (rest candidates)))
                  (return (first candidates))))
-   (loop
-       for ed in eds
-       for id = (ed-id ed)
-       for referrers = (loop
-                           for referrer in eds
-                           for flist = (unless (eq ed referrer)
-                                         (rel-flist (ed-raw referrer)))
-                           when (loop
-                                    for fvpair in flist
-                                    for value = (fvpair-value fvpair)
-                                    thereis (when (var-p value)
-                                              (equal (var-string value) id)))
-                           collect referrer)
-       when referrers collect (cons (length referrers) ed) into candidates
-       finally
-         (return (rest (first (sort candidates #'> :key #'first)))))
-   (first eds)))
+   ;;
+   ;; the most common cause of one-to-many correspondences between a variable
+   ;; and a set of EPs are handles shared with (intersective) modifiers, e.g.
+   ;; in a structure like [believe that] `she arrived very quickly.'  here, the
+   ;; degree specifier is an intersective modifier on the adverb, which in turn
+   ;; is an intersective modifier on the arriving event; thus, all three share
+   ;; one label, and `arrive' is the ARG1 of `quickly', which is the ARG1 of
+   ;; `very'.  to pick out `arrive' in this scenario, count recursive referrals 
+   ;; (aka argumenthood), such that `arrive' receives an incoming count of 2.
+   ;;
+   (labels ((referrers (target candidates)
+              (loop
+                  with id = (ed-id target)
+                  for ed in candidates
+                  for flist = (unless (eq ed target) (rel-flist (ed-raw ed)))
+                  when (loop
+                           for fvpair in flist
+                           for value = (fvpair-value fvpair)
+                           thereis (when (var-p value) 
+                                     (equal (var-string value) id)))
+                  append
+                    (cons ed (referrers ed (remove target candidates)))))
+            (incoming (candidates &optional (eds candidates))
+              (let ((referrers
+                     (loop
+                         for candidate in candidates
+                         for referrers = (referrers candidate eds)
+                         when referrers
+                         collect (cons (length referrers) candidate))))
+                (setf referrers (sort referrers #'> :key #'first))
+                (loop
+                    with n = (first (first referrers))
+                    for referrer in referrers
+                    while (= (first (first referrers)) n)
+                    collect (rest referrer))))
+            (outgoing (candidates)
+              (let ((references
+                     (loop
+                         for candidate in candidates
+                         for n = (length (ed-arguments candidate))
+                         collect (cons n candidate))))
+                (setf references (sort references #'> :key #'first))
+                (loop
+                    with n = (first (first references))
+                    for reference in references
+                    while (= (first reference) n) collect (rest reference)))))
+     (or
+      (let* ((local (incoming candidates))
+             (global (incoming local (eds-relations eds)))
+             (outgoing (outgoing global)))
+        ;;
+        ;; use incoming links among .candidates. as the first criterion; then
+        ;; incoming links against the structure at large (see below); finally,
+        ;; count outgoing links to break ties, if need be.  note that, given a
+        ;; non-empty list, outgoing() always returns a non-empty result, hence
+        ;; we only need two sub-clauses in the or() below.
+        ;;
+        (or (first outgoing) (first local)))
+      ;;
+      ;; from here on, we are grasping at straws (and likely looking at input
+      ;; structures that are not perfectly well-formed).  if there still is a
+      ;; need for disambiguation at this point, give preference to nodes that
+      ;; have more incoming links, i.e. are more connected to the structure at
+      ;; large (as arguments).
+      ;;
+      (let* ((global (incoming candidates (eds-relations eds)))
+             (outgoing (outgoing global)))
+        (or (first outgoing) (first global)))
+      ;;
+      ;; finally, give preferences to nodes that have more outgoing links.
+      ;;
+      (first (outgoing candidates))))))
 
 (defun ed-handle-p (variable)
   (when (var-p variable)
@@ -518,6 +778,10 @@
   ;;
   #+:null
   (declare (notinline ed-walk))
+  ;;
+  ;; _fix_me_
+  ;; why not use the actual ED structures, to protect against cycles?
+  ;;                                                           (25-feb-12; oe)
   (unless (and startp (member (ed-id ed) start))
     (loop
         for (role . value) in (unless (ed-bleached-p ed) (ed-arguments ed))
@@ -564,15 +828,12 @@
         with return = nil
         for ed in (eds-relations eds)
         when (and (not (ed-bleached-p ed)) 
-                  (not (eq (ed-mark ed) mark))
-                  (not (and (ed-quantifier-p ed)
-                            (loop
-                                with id = (ed-id ed)
-                                for ed in (eds-relations eds)
-                                thereis (equal (ed-id ed) id)))))
-        do 
+                  (not (eq (ed-mark ed) mark)))
+        do
           (pushnew :fragmented (ed-status ed))
           (setf return t)
+        else when (eq (ed-mark ed) mark)
+        do (setf (ed-status ed) (delete :fragmented (ed-status ed)))
         finally 
           (loop
               for ed in (eds-relations eds)
@@ -769,6 +1030,94 @@
     (clrhash %eds-representatives-table%)
     (clrhash %eds-equivalences%)))
 
+(defun ed-flag (eds &optional ed 
+                &key (up t) (down t) n top bottom (mark (gensym "")))
+  (loop for ed in (eds-relations eds) do (setf (ed-mark ed) nil))
+  (labels ((prefixp (prefix list &key (test #'eql))
+             (loop
+                 for foo in prefix
+                 for bar in list
+                 always (funcall test foo bar))))
+    (let* ((ed (or ed (find (eds-top eds) (eds-relations eds) :key #'ed-id)))
+           (agenda (and ed (list (list ed)))))
+      ;;
+      ;; put .mark. on all EDs that are `reachable' from the top-level .ed.
+      ;;
+      (loop
+          with *package* = (find-package :lkb)
+          for bucket = (pop agenda)
+          for current = (first bucket)
+          for path = (rest bucket)
+          while bucket
+          unless (or (ed-bleached-p current)
+                     (when (eq (first (ed-mark current)) mark)
+                       (member path (rest (ed-mark current)) :test #'prefixp)))
+          do
+            #+:null
+            (format
+             t "~a [~{~a~^ ~}] <-- ~a~%"
+             (ed-predicate current) (rest (ed-mark current)) path)
+            (if (ed-mark current)
+              (push path (rest (ed-mark current)))
+              (setf (ed-mark current) (list mark path)))
+          when (and down
+                    (or (null n) (<= (length path) n))
+                    (not (and bottom (funcall bottom eds current)))) do
+            ;;
+            ;; put all arguments of current ED on agenda (for future marking)
+            ;;
+            (loop
+                for (role . value) in (ed-arguments current)
+                when (and (ed-p value)
+                          (not (and (consp (first path))
+                                    (eq role (first (first path))))))
+                do (push (cons value (cons role path)) agenda))
+          when (and up
+                    (or (null n) (<= (length path) n))
+                    (not (and top (funcall top eds current)))) do
+            ;;
+            ;; also, add all EDs for which the current one is an argument, i.e.
+            ;; the inverse link.
+            ;;
+            (loop
+                for ed in (eds-relations eds)
+                unless (or (ed-bleached-p ed) (eq (first (ed-mark ed)) mark))
+                do
+                  (loop
+                      for (role . value) in (ed-arguments ed)
+                      when (eq value current)
+                      do (push (cons ed (cons (list role) path)) agenda)))))
+    (loop
+        for ed in (eds-relations eds)
+        when (eq (first (ed-mark ed)) mark)
+        do
+          (setf (rest (ed-mark ed))
+            (loop
+                for path in (rest (ed-mark ed))
+                collect (reverse path))))
+    eds))
+
+(defun ed-heads (eds ed &optional (type :direct))
+  (let ((mark (gensym "")))
+    (ed-flag
+     eds ed
+     :up t :down nil :n (and (eq type :direct) 1) :mark mark)
+    (loop
+        for ed in (eds-relations eds)
+        when (and (consp (ed-mark ed)) (eq (first (ed-mark ed)) mark))
+        collect ed)))
+
+(defun ed-dependents (eds ed &optional (type :direct))
+  (let ((mark (gensym "")))
+    (ed-flag
+     eds ed
+     :up nil :down t :n (and (eq type :direct) 1) :mark mark)
+    (loop
+        for ed in (eds-relations eds)
+        when (and (consp (ed-mark ed))
+                  (eq (first (ed-mark ed)) mark))
+        collect ed)))
+
 (defun dmrs-explode (dmrs)
   (labels ((label (id)
              (loop
@@ -805,4 +1154,3 @@
                      (if (eq role rstr) arg0 role))
         when role
         collect (list from role to))))
-  

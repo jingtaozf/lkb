@@ -935,6 +935,10 @@ proc main {} {
     -label "Automatic Update" \
     -variable globals(tree,updatep) -command {tsdb_set automatic_update_p};
   .menu.trees.menu.switches add checkbutton \
+    -label "Update Trust Reject" \
+    -variable globals(tree,update,rejectp) \
+    -command {tsdb_set update_reject_p};
+  .menu.trees.menu.switches add checkbutton \
     -label "Update Flag Failures" \
     -variable globals(tree,update,flagp) \
     -command {tsdb_set update_flag_p};
@@ -986,6 +990,9 @@ proc main {} {
     -command {tsdb_set derivations_comparison_level} \
     -variable globals(detail,derivations) -value :yield;
   .menu.trees.menu.switches add separator;
+  .menu.trees.menu.switches add checkbutton \
+    -label "Score All Items" \
+    -variable globals(tree,score_all_p);
   .menu.trees.menu.switches add checkbutton \
     -label "Use Ambiguous Trees" \
     -variable globals(tree,loosep);

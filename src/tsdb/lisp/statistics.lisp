@@ -111,6 +111,8 @@
 (defparameter *statistics-aggregate-maximum* 
   (min 20000 array-total-size-limit))
 
+(defparameter *statistics-all-rejections-p* nil)
+
 (defparameter *statistics-result-filter* #'result-filter)
 
 (defparameter *statistics-critical-line-threshold* 500)
@@ -436,13 +438,13 @@
                            when tokensp do
                              ;;
                              ;; _hack_
-                             ;; see whether the comment string looks much like
+                             ;; see whether the tokens string looks much like
                              ;; an association list; if so, parse that list.
                              ;;
                              (let* ((tokens (get-field :i-tokens foo))
                                     (n (when (stringp tokens)
                                          (- (length tokens) 1))))
-                               (when (and n (< 3 n)
+                               (if (and n (< 3 n)
                                           (char= (schar tokens 0) #\()
                                           (char= (schar tokens 1) #\()
                                           (char= (schar tokens (- n 1)) #\))
@@ -450,7 +452,9 @@
                                  (let ((tokens (ignore-errors
                                                  (read-from-string tokens))))
                                    (when tokens
-                                     (set-field :i-tokens tokens foo)))))
+                                     (set-field :i-tokens tokens foo)))
+                                 (when (equal tokens "")
+                                   (set-field :i-tokens nil foo))))
                            when commentp do
                              ;;
                              ;; _hack_
@@ -526,7 +530,7 @@
                         (select '("parse-id" "t-active" "t-version")
                                 nil "tree" condition data
                                 :sort :parse-id)))
-               (all (njoin parse item :i-id :meter ameter))
+               (all (if parse (njoin parse item :i-id :meter ameter) item))
                sorted)
           ;;
           ;; for a subset of top-level fields, call an optional item reader
@@ -1294,7 +1298,9 @@
                 (incf areadings ireadings)
                 (incf aresults)
                 (cond
-                 ((eql active 0) 
+                 ((or (eql active 0)
+                      (and *statistics-all-rejections-p*
+                           (and (numberp active) (= active -1))))
                   (incf arlength ilength)
                   (incf arreadings ireadings)
                   (incf arwords iwords)
@@ -1922,6 +1928,7 @@
          (thorough
           (nreverse (intersection '(:derivation :mrs :tree :surface) compare)))
          (compare (set-difference compare thorough :test #'equal))
+         (decorate (set-difference decorate compare :test #'equal))
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
          (compares (length compare))
@@ -2058,8 +2065,9 @@
         stream
         "~%~acompare-in-detail():~%~
          ~a  `~a' vs. `~a'~%~
-         ~a  on ~({~{`~a'~^ ~}}~) with ~([~{`~a'~^ ~}]~):~%~%"
-        prefix prefix olanguage nlanguage prefix compare decorate)))
+         ~a  on ~({~{`~a'~^ ~}}~) and <~{`~(~a~)'~^ ~}> ~
+         with ~([~{`~a'~^ ~}]~):~%~%"
+        prefix prefix olanguage nlanguage prefix compare thorough decorate)))
     
     ;;
     ;; my first loop() (if bernd knew |:-) (28-jul-98 - oe@csli)
@@ -2122,28 +2130,30 @@
                              #'(lambda (attribute)
                                  (get-field attribute nitem))
                              compare))
-                 (odecoration (loop 
-                                  for field in decorate 
-                                  if (smember field *statistics-time-fields*)
-                                  collect
-                                    (let* ((raw (get-field field oitem))
-                                           (time (convert-time
-                                                  raw ogranularity)))
-                                      (if (or (null time) (minus-one-p time))
-                                            ""
-                                            (format nil "~,2f" time)))
-                                  else collect (get-field field oitem)))
-                 (ndecoration (loop 
-                                  for field in decorate 
-                                  if (smember field *statistics-time-fields*)
-                                  collect 
-                                    (let* ((raw (get-field field nitem))
-                                           (time (convert-time
-                                                  raw ngranularity)))
-                                      (if (or (null time) (minus-one-p time))
-                                        ""
-                                        (format nil "~,2f" time)))
-                                  else collect (get-field field nitem)))
+                 (odecoration (when oitem
+                                (loop 
+                                    for field in decorate 
+                                    if (smember field *statistics-time-fields*)
+                                    collect
+                                      (let* ((raw (get-field field oitem))
+                                             (time (convert-time
+                                                    raw ogranularity)))
+                                        (if (or (null time) (minus-one-p time))
+                                              ""
+                                              (format nil "~,2f" time)))
+                                    else collect (get-field field oitem))))
+                 (ndecoration (when nitem
+                                (loop 
+                                    for field in decorate 
+                                    if (smember field *statistics-time-fields*)
+                                    collect 
+                                      (let* ((raw (get-field field nitem))
+                                             (time (convert-time
+                                                    raw ngranularity)))
+                                        (if (or (null time) (minus-one-p time))
+                                          ""
+                                          (format nil "~,2f" time)))
+                                    else collect (get-field field nitem))))
                  clashes) 
             #+:cdebug
             (format
@@ -2379,7 +2389,7 @@
                            -action browse -tag ~a~%"
                           row j (length oclash) otag)))
                   (:ascii
-                   (format stream "~a[~a]" prefix oi-id)
+                   (format stream "~a  [~a]" prefix oi-id)
                    (loop
                        for value in oshow
                        do (format stream " |~a|" value))
@@ -2458,7 +2468,7 @@
                            -action browse -tag ~a~%"
                           row (+ j 2) (length nclash) ntag)))
                   (:ascii
-                   (format stream "~a[~@[~*:~]~a]" prefix sloppyp ni-id)
+                   (format stream "~a  [~@[~*:~]~a]" prefix sloppyp ni-id)
                    (loop
                        for value in nshow
                        do (format stream " |~a|" value))
