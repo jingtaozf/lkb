@@ -1,10 +1,11 @@
-At revision 10699.
-At revision 10699.
+U    lkb/mrsglobals.lsp
+Updated to revision 11658.
+At revision 11658.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 10700.
+Committed revision 11659.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -307,6 +308,7 @@ chgrp: invalid group `build'
 ./src/mrs/lkb-interface.lisp
 ./src/mrs/lexindex.lisp
 ./src/mrs/time-convert.lisp
+./src/mrs/edm.lisp
 ./src/mrs/mrscorpus.lisp
 ./src/mrs/mrsruleinput.lisp
 ./src/mrs/lexlookup.lisp
@@ -1332,7 +1334,7 @@ Allocated 5242880 bytes for new space
 
 ;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Feb 17, 2012 11:25)
+8.1 [Linux (x86)] (Jul 17, 2012 13:58)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2626,6 +2628,10 @@ Warning: without-interrupts is deprecated; see
 ;;;   /projects/lingo/lkb/src/.l1cl/mrs/dependencies.fasl
 ;;; Fasl write complete
 ;   Fast loading /projects/lingo/lkb/src/.l1cl/mrs/dependencies.fasl
+;;; Compiling file /projects/lingo/lkb/src/mrs/edm.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/mrs/edm.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/mrs/edm.fasl
 ;;; Compiling file /projects/lingo/lkb/src/mrs/lsp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/mrs/lsp.fasl
 ;;; Fasl write complete
@@ -2700,7 +2706,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x487debba> 
+#<EQUAL hash-table with 0 entries @ #x487ded2a> 
  #|
 ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Fast loading from bundle code/who.fasl.
@@ -2713,7 +2719,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-112362944 bytes have been tenured, next gc will be global.
+116769928 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2897,7 +2903,7 @@ CL-USER(10): ; Loading /projects/lingo/lkb/src/systems/tsdb.system
 ; Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
 ;;; Compiling file
 ;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
-8507856 bytes have been tenured, next gc will be global.
+8512848 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
@@ -3136,7 +3142,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/main/dag.fasl
-16818400 bytes have been tenured, next gc will be global.
+16818128 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /projects/lingo/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/yadu.fasl
@@ -3687,6 +3693,10 @@ Warning: without-interrupts is deprecated; see
 ;;;   /projects/lingo/lkb/src/.l1cl/mrs/dependencies.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/mrs/dependencies.fasl
+;;; Compiling file /projects/lingo/lkb/src/mrs/edm.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/mrs/edm.fasl
+;;; Fasl write complete
+; Fast loading /projects/lingo/lkb/src/.l1cl/mrs/edm.fasl
 ;;; Compiling file /projects/lingo/lkb/src/mrs/lsp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/mrs/lsp.fasl
 ;;; Fasl write complete
@@ -3725,7 +3735,7 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/mt/semi.fasl
 ;;; Compiling file /projects/lingo/lkb/src/mt/transfer.lisp
-8712136 bytes have been tenured, next gc will be global.
+8715584 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/mt/transfer.fasl
 ;;; Fasl write complete
@@ -3835,7 +3845,7 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/gc.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/yy.lisp
-[11:27:02] gc-after-hook(): {L#1 N=2.2M O=16 E=88%} [S=100M R=88M].
+[13:59:13] gc-after-hook(): {L#1 N=1.7M O=82K E=87%} [S=101M R=89M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
@@ -3844,14 +3854,15 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/mt.lisp
-[11:27:03] gc-after-hook(): {L#2 N=6.5M O=255K E=82%} [S=100M R=88M].
-[11:27:03] gc-after-hook(): {L#3 N=5.0M O=0 E=81%} [S=100M R=88M].
-[11:27:03] gc-after-hook(): {L#4 N=3.2M O=511K E=84%} [S=100M R=88M].
+[13:59:13] gc-after-hook(): {L#2 N=4.1M O=266K E=87%} [S=101M R=89M].
+[13:59:13] gc-after-hook(): {L#3 N=3.4M O=0 E=84%} [S=101M R=89M].
+[13:59:13] gc-after-hook(): {L#4 N=3.1M O=0 E=85%} [S=102M R=90M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/derivations.lisp
-[11:27:04] gc-after-hook(): {L#5 N=2.1M O=0 E=86%} [S=101M R=89M].
+[13:59:14] gc-after-hook(): {L#5 N=1.9M O=256K E=87%} [S=102M R=90M].
+[13:59:14] gc-after-hook(): {L#6 N=5.2M O=0 E=81%} [S=102M R=90M].
 ;;; Writing fasl file
 ;;;   /projects/lingo/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -3862,16 +3873,19 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/redwoods.lisp
-[11:27:04] gc-after-hook(): {L#6 N=2.4M O=384K E=86%} [S=101M R=89M].
-[11:27:05] gc-after-hook(): {L#7 N=9.8M O=552 E=78%} [S=101M R=89M].
-[11:27:05] gc-after-hook(): {L#8 N=7.3M O=6.6K E=71%} [S=101M R=89M].
-[11:27:05] gc-after-hook(): {L#9 N=11M O=116K E=70%} [S=101M R=89M].
-[11:27:06] gc-after-hook(): {L#10 N=9.2M O=3.9K E=62%} [S=101M R=89M].
-[11:27:06] gc-after-hook(): {L#11 N=9.2M O=0 E=68%} [S=104M R=92M].
+; While compiling BROWSE-TREE:
+Warning: Variable SCORES is never used.
+[13:59:14] gc-after-hook(): {L#7 N=2.8M O=496K E=82%} [S=102M R=90M].
+[13:59:14] gc-after-hook(): {L#8 N=7.1M O=6.6K E=80%} [S=102M R=90M].
+[13:59:15] gc-after-hook(): {L#9 N=8.8M O=219K E=70%} [S=102M R=90M].
+[13:59:15] gc-after-hook(): {L#10 N=14M O=7.9K E=69%} [S=104M R=92M].
+[13:59:15] gc-after-hook(): {L#11 N=60M O=2.3M E=11%} [S=112M R=100M].
+[13:59:15] gc-after-hook(): {L#12 N=8.0M O=741K E=62%} [S=112M R=100M].
+[13:59:16] gc-after-hook(): {L#13 N=8.5M O=0 E=76%} [S=118M R=106M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
-[11:27:06] gc-after-hook(): {L#12 N=5.8M O=2.7M E=63%} [S=104M R=92M].
+[13:59:16] gc-after-hook(): {L#14 N=3.0M O=5.7M E=59%} [S=118M R=106M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -3884,7 +3898,11 @@ Warning: without-interrupts is deprecated; see
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
-[11:27:07] gc-after-hook(): {L#13 N=5.8M O=0 E=67%} [S=110M R=96M].
+;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/starsem.lisp
+[13:59:16] gc-after-hook(): {L#15 N=4.8M O=0 E=72%} [S=121M R=109M].
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/starsem.fasl
+;;; Fasl write complete
+; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/starsem.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/rasp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/rasp.fasl
 ;;; Fasl write complete
@@ -3902,12 +3920,12 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/fsc.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/hunter.lisp
-[11:27:07] gc-after-hook(): {L#14 N=2.6M O=5.1M E=64%} [S=110M R=98M].
-[11:27:08] gc-after-hook(): {L#15 N=3.0M O=43K E=88%} [S=110M R=98M].
+[13:59:16] gc-after-hook(): {L#16 N=3.3M O=2.2M E=77%} [S=121M R=109M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/pcfg.lisp
+[13:59:17] gc-after-hook(): {L#17 N=3.2M O=157K E=85%} [S=121M R=109M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/pcfg.fasl
@@ -3916,16 +3934,15 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/features.lisp
-[11:27:08] gc-after-hook(): {L#16 N=2.4M O=340K E=87%} [S=110M R=98M].
+[13:59:17] gc-after-hook(): {L#18 N=3.7M O=364K E=88%} [S=121M R=109M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
-[11:27:08] gc-after-hook(): {L#17 N=2.4M O=82K E=87%} [S=110M R=98M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/learner.lisp
+[13:59:17] gc-after-hook(): {L#19 N=3.8M O=0 E=86%} [S=121M R=109M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
-[11:27:09] gc-after-hook(): {L#18 N=1.9M O=833K E=85%} [S=110M R=98M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/experiment.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/experiment.fasl
 ;;; Fasl write complete
@@ -3941,13 +3958,13 @@ make[2]: Leaving directory `/projects/lingo/lkb'
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 linux.x86.32/
-linux.x86.32/lkb
-linux.x86.32/files.bu
-linux.x86.32/climxm.so
-linux.x86.32/lkb.lic
 linux.x86.32/acli817.pll
 linux.x86.32/lkb.dxl
+linux.x86.32/lkb
+linux.x86.32/lkb.lic
 linux.x86.32/libacli817.so
+linux.x86.32/climxm.so
+linux.x86.32/files.bu
 bin/linux.x86.32/yzlui
 ( \
 	  cd /projects/lingo/lkb; \
@@ -4616,6 +4633,7 @@ src/.l1cl/tsdb/conll.fasl
 src/.l1cl/tsdb/evolution.fasl
 src/.l1cl/tsdb/commands.fasl
 src/.l1cl/tsdb/podium.fasl
+src/.l1cl/tsdb/starsem.fasl
 src/.l1cl/tsdb/tsql.fasl
 src/.l1cl/tsdb/capi.fasl
 src/.l1cl/tsdb/features.fasl
@@ -5131,6 +5149,7 @@ src/tsdb/lisp/derivations.lisp
 src/tsdb/lisp/utilities.lisp
 src/tsdb/lisp/xle-interface.lisp
 src/tsdb/lisp/tdl-patches.lisp
+src/tsdb/lisp/starsem.lisp
 src/tsdb/lisp/tagger.lisp
 src/tsdb/lisp/tnt-interface.lisp
 src/tsdb/lisp/mt.lisp
