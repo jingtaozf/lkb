@@ -1,37 +1,10 @@
-A    rpp/gml.rpp
-U    rpp/tokenizer.rpp
-U    rpp/setup.lsp
-U    pet/mrs.set
-U    pet/repp.set
-A    pet/gml.set
-A    tsdb/gold/peted
-A    tsdb/gold/peted/parameter
-A    tsdb/gold/peted/update
-A    tsdb/gold/peted/analysis
-A    tsdb/gold/peted/run.gz
-A    tsdb/gold/peted/fold
-A    tsdb/gold/peted/item-set
-A    tsdb/gold/peted/parse.gz
-A    tsdb/gold/peted/set
-A    tsdb/gold/peted/preference.gz
-A    tsdb/gold/peted/result.gz
-A    tsdb/gold/peted/output
-A    tsdb/gold/peted/relations
-A    tsdb/gold/peted/item-phenomenon
-A    tsdb/gold/peted/edge
-A    tsdb/gold/peted/phenomenon
-A    tsdb/gold/peted/rule
-A    tsdb/gold/peted/score
-A    tsdb/gold/peted/decision.gz
-A    tsdb/gold/peted/item.gz
-A    tsdb/gold/peted/tree.gz
-Updated to revision 13177.
-At revision 13177.
+At revision 13179.
+At revision 13179.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 13178.
+Committed revision 13180.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1320,8 +1293,9 @@ make[2]: Entering directory `/projects/lingo/lkb'
               LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
                 cd /projects/lingo/acl-8.1; \
                 /projects/lingo/acl-8.1/alisp -I clim -qq && touch /projects/lingo/.yes; )
+;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Apr 16, 2010 13:21)
+8.1 [Linux (x86)] (Apr 4, 2013 13:18)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1336,15 +1310,14 @@ CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
 ;   Loading /projects/lingo/lkb/src/general/loadup-library.lisp
 T
 CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
-; Autoloading for DELETE-DIRECTORY-AND-FILES:
-;   Fast loading from bundle code/fileutil.fasl.
 ; Autoloading for GENERATE-APPLICATION:
 ;   Fast loading /projects/lingo/acl-8.1/code/genapp.fasl
+;     Fast loading from bundle code/fileutil.fasl.
 ;     Fast loading /projects/lingo/acl-8.1/code/build.001
 ;;; Installing build patch, version 1.
 Bundle is up to date.
 Error: The maintenance and support agreement for this Allegro CL
-       license expired on Wednesday, August 15, 2012 12:00:00 AM .  Any
+       license expired on Sunday, August 15, 2010 12:00:00 AM .  Any
        continued right under this license to distribute or deploy
        Allegro CL based applications is contingent upon such an
        agreement.  Please review the Franz Software License Agreement
