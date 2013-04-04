@@ -1,10 +1,10 @@
-At revision 13179.
-At revision 13179.
+At revision 13181.
+At revision 13182.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 13180.
+Committed revision 13183.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1275,7 +1275,7 @@ etc/lkb
 etc/dot.cshrc
 etc/generate
 rm -f /projects/lingo/.yes;
-( cd /projects/lingo/lkb && make -f Makefile81 lkb_linux@cypriot; )
+( cd /projects/lingo/lkb && make lkb_linux@cypriot; )
 make[2]: Entering directory `/projects/lingo/lkb'
 ( \
 	  echo "(load \"/projects/lingo/lkb/src/general/loadup.lisp\")"; \
@@ -1291,15 +1291,14 @@ make[2]: Entering directory `/projects/lingo/lkb'
 	  echo "(excl:exit)"; \
 	) | ( ACL_LOCALE=en_US.utf8 \
               LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
-                cd /projects/lingo/acl-8.1; \
-                /projects/lingo/acl-8.1/alisp -I clim -qq && touch /projects/lingo/.yes; )
-;;; Installing locale patch, version 1.
+                cd /projects/lingo/acl; \
+                /projects/lingo/acl/alisp -I clim -qq && touch /projects/lingo/.yes; )
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Apr 4, 2013 13:18)
-Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+8.2 [Linux (x86)] (Aug 16, 2011 13:24)
+Copyright (C) 1985-2010, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
-   [TC8776] Radiation Oncology
+   [TC8776] UWMC Radiation Oncology
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the
@@ -1311,13 +1310,12 @@ CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
 T
 CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
 ; Autoloading for GENERATE-APPLICATION:
-;   Fast loading /projects/lingo/acl-8.1/code/genapp.fasl
+;   Fast loading /projects/lingo/acl-8.2/code/genapp.fasl
 ;     Fast loading from bundle code/fileutil.fasl.
-;     Fast loading /projects/lingo/acl-8.1/code/build.001
-;;; Installing build patch, version 1.
+;     Fast loading from bundle code/build.fasl.
 Bundle is up to date.
 Error: The maintenance and support agreement for this Allegro CL
-       license expired on Sunday, August 15, 2010 12:00:00 AM .  Any
+       license expired on Wednesday, August 15, 2012 12:00:00 AM .  Any
        continued right under this license to distribute or deploy
        Allegro CL based applications is contingent upon such an
        agreement.  Please review the Franz Software License Agreement
