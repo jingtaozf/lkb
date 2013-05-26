@@ -19,15 +19,26 @@
 
 (defvar *ptb-use-pos-tags-p* t)
 
-(defun read-items-from-ptb-directory (path &key (base 1) (offset 20000000))
+(defun read-items-from-ptb-directory (path
+                                      &key name type
+                                           (base 1) (offset 20000000))
   (loop
       with id = base
-      for set in (read-ptb-directory path)
+      for set in (read-ptb-directory path :name name :type type)
       append
         (loop
             with current with range
             for (file . item) in set
-            for ptb = (first (read-ptb-from-string item))
+            ;;
+            ;; _fix_me_
+            ;; PTB ‘trees’ are in fact lists of trees at the top level, e.g.
+            ;;  ‘( (S ...) )’.  in the WSJ section, it appears there is never
+            ;; more than one tree element, hence the code used to throw away
+            ;; the embedding list.  in the Brown annotation, however, we see
+            ;; quite a few instances of non-singleton lists, hence now need to
+            ;; insert a ‘dummy’ top level node, to arrive at a proper tree.
+            ;;                                                  (4-dec-12; oe)
+            for ptb = (cons 'START (read-ptb-from-string item))
             for length = (length (extract-ptb-leaves ptb))
             for category = (ignore-errors (first ptb))
             for origin = (format nil "~a" file)
@@ -64,9 +75,10 @@
         (setf prefixp nil)
         (vector-push-extend c result length)))
 
-(defun read-ptb-directory (path)
+(defun read-ptb-directory (path &key name type)
   (let* ((path (if (stringp path) path (namestring path)))
-         (pattern (make-pathname :directory path :name :wild))
+         (pattern (make-pathname
+                   :directory path :name (or name :wild) :type type))
          (files (directory pattern))
          (files (sort files #'string< :key #'namestring))
          (buffer (make-array 4096

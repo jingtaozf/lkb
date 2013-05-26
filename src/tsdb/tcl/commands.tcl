@@ -1312,6 +1312,7 @@ proc tsdb_filters {} {
   if {$globals(filters,unet)} { set code "$code :unet"; }
   if {$globals(filters,uscope)} { set code "$code :uscope"; }
   if {$globals(filters,fragmentation)} { set code "$code :fragmentation"; }
+  if {$globals(filters,cycle)} { set code "$code :cycle"; }
   if {$globals(filters,connectivity)} { set code "$code :connectivity"; }
   set code "$code)";
   tsdb_set "*filter-test*" $code;

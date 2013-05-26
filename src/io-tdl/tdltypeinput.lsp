@@ -58,6 +58,14 @@
 
 (defparameter *tdl-expanded-syntax-function* nil)
 
+(defparameter *tdl-context* nil)
+
+(defparameter *tdl-all-contexts* nil)
+
+(defun clear-tdl-contexts ()
+  (setf *tdl-context* nil)
+  (setf *tdl-all-contexts* nil))
+
 (defun make-tdl-break-table nil 
   (define-break-characters '(#\< #\> #\! #\= #\: #\. #\# #\&
                              #\, #\[ #\] #\; #\$ #\( #\) #\^ #\/)))
@@ -110,11 +118,33 @@
   ;;; in situation where there may be commented out lines
   (loop
     (let ((next-char (peek-char t istream nil 'eof)))
-      (if (eql next-char #\;)
-		 (read-line istream)
+      (if (eql next-char #\;) (read-semicolon-comment istream)
 	(return next-char)))))
 
-	
+(defun read-semicolon-comment (stream)
+  ;;
+  ;; skip over one-line comments, while looking for LTDB tags, i.e. in-line
+  ;; documentation on lexical types.
+  ;;
+  (labels ((scan (tag line)
+             (multiple-value-bind (foo bar start end)
+                 (ppcre:scan (format nil "<~(~a~)> *(.*)$" tag) line)
+               (declare (ignore foo bar))
+               (when (and start end)
+                 (let ((match (subseq line (aref start 0) (aref end 0))))
+                   #+:debug
+                   (format t "‘~a’: ‘~a’~%" tag match)
+                   (push (cons tag match) *tdl-context*))))))
+    (let ((line (read-line stream nil nil)))
+      (multiple-value-bind (foo bar start end)
+          (ppcre:scan "<type val=\"([^\"]+)\">" line)
+        (declare (ignore foo bar))
+        (when (and start end)
+          (let ((type (subseq line (aref start 0) (aref end 0))))
+            (setf *tdl-context* (acons :type type nil)))))
+      (loop
+          for tag in '(:description :ex :nex :todo :native)
+          do (scan tag line)))))
 
 ;;; main functions
 
@@ -123,8 +153,8 @@
       (let ((next-char (peek-char t istream nil 'eof)))
          (when (eql next-char 'eof) (return))
          (cond ((eql next-char #\;) 
-                 (read-line istream))
-               ; one line comments
+                ;; one line comments
+                (read-semicolon-comment istream))
                ((eql next-char #\#) (read-tdl-comment istream))
                (t (catch 'syntax-error
                     (read-tdl-type-entry istream augment)))))))
@@ -472,7 +502,7 @@
           ((eql next-char #\') 
            (read-tdl-symbol istream name path-so-far in-default-p))
 	  ((eql next-char #\;) 
-           (read-line istream))
+           (read-semicolon-comment istream))
           ((eql next-char #\^) 
            (if *tdl-expanded-syntax-function*
                (apply *tdl-expanded-syntax-function*

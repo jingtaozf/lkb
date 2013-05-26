@@ -3,6 +3,7 @@
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
 ;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2006 -- 2013 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -305,7 +306,10 @@
      ((and (find "p-input" (rest parse) :key #'first :test #'string=)
            (not (find "p-tokens" (rest parse) :key #'first :test #'string=)))
       201011)
-     ((find "p-tokens" (rest parse) :key #'first :test #'string=)
+     ((and (find "p-tokens" (rest parse) :key #'first :test #'string=)
+           (not (find "protocol" (rest run) :key #'first :test #'string=)))
+      201108)
+     ((find "protocol" (rest run) :key #'first :test #'string=)
       *tsdb-current-granularity*)
      (t
       (error "profile-granularity(): invalid `~a'" data)))))
@@ -546,8 +550,8 @@
                     for item in all
                     for value = (get-field field item)
                     when value do
-                      (let ((foo (ignore-errors (funcall reader value))))
-                        (when foo (setf (get-field field item) foo)))))
+                      (setf (get-field field item)
+                        (ignore-errors (funcall reader value)))))
           (setf result all)
           (when outputs
             (loop
@@ -653,11 +657,19 @@
                         :sloppyp sloppyp :scorep scorep))
         
           (when filter
+            (format
+             *tsdb-io* "~%[~a] result-filter(): `~a' on <~{`~(~a~)'~^ ~}>:~%"
+             (current-time :long :short) data *filter-test*)
             (setf result 
               (loop
+                  with *tsdb-gc-message-p* = nil
                   for item in result
                   for foo = (funcall *statistics-result-filter* item)
-                  when foo collect foo))))
+                  when foo collect foo))
+            (format
+             *tsdb-io* "~%[~a] result-filter(): ~a item~p.~%~%"
+             (current-time :long :short) (length result) (length result))))
+        
         (setf (gethash key *tsdb-profile-cache*) result)))
     (when (smember purge '(:cache :all))
       (purge-profile-cache data :expiryp (eq purge :all)))
@@ -1875,6 +1887,7 @@
 
 (defun intersect-results (oitem nitem fields subsetp bestp)
   (loop
+      with item = '(:p-input :p-tokens)
       with oresults = (get-field :results oitem)
       with best = (when bestp
                     (let ((ranks (get-field :ranks oitem)))
@@ -1886,14 +1899,18 @@
       with nresults = (get-field :results nitem)
       for field in fields
       for predicate = (find-attribute-predicate field)
-      for ovalues = (loop 
-                        for result in oresults 
-                        when (or (null bestp) 
-                                 (eql (get-field :result-id result) best))
-                        collect (get-field field result))
-      for nvalues = (loop 
-                        for result in nresults 
-                        collect (get-field field result))
+      for ovalues = (if (smember field item)
+                      (get-field field oitem)
+                      (loop 
+                          for result in oresults 
+                          when (or (null bestp) 
+                                   (eql (get-field :result-id result) best))
+                          collect (get-field field result)))
+      for nvalues = (if (smember field item)
+                      (get-field field nitem)
+                      (loop 
+                          for result in nresults 
+                          collect (get-field field result)))
       for common = nil
       for oplus = (loop
                       for ovalue in ovalues
@@ -1927,7 +1944,9 @@
          (compare (if (atom compare) (list compare) compare))
          (thorough
           (nreverse (intersection '(:derivation :mrs :tree :surface) compare)))
+         (input (nreverse (intersection '(:p-input :p-tokens) compare)))
          (compare (set-difference compare thorough :test #'equal))
+         (compare (set-difference compare input :test #'equal))
          (decorate (set-difference decorate compare :test #'equal))
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
@@ -1943,7 +1962,7 @@
             (analyze olanguage 
                      :condition condition :thorough thorough
                      :gold (when bestp olanguage) :sloppyp bestp
-                     :meter ometer :message meter)
+                     :inputp input :meter ometer :message meter)
             olanguage))
          (oitems (sort (copy-seq oitems) 
                        #'< :key #'(lambda (foo) (get-field :i-id foo))))
@@ -1951,11 +1970,13 @@
           (if (stringp nlanguage) 
             (analyze nlanguage 
                      :condition condition :thorough thorough
-                     :meter nmeter :message meter)
+                     :inputp input :meter nmeter :message meter)
             nlanguage))
+         (thorough (append input thorough))
          (stream (create-output-stream file append))
          (nitems (sort (copy-seq nitems) 
-                       #'< :key #'(lambda (foo) (get-field :i-id foo)))))
+                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
+         (*tsdb-gc-message-p* (unless (eq format :ascii) *tsdb-gc-message-p*)))
     
     (case format
       (:tcl
@@ -2063,11 +2084,12 @@
       (:ascii
        (format
         stream
-        "~%~acompare-in-detail():~%~
+        "~%~a[~a] compare-in-detail():~%~
          ~a  `~a' vs. `~a'~%~
          ~a  on ~({~{`~a'~^ ~}}~) and <~{`~(~a~)'~^ ~}> ~
          with ~([~{`~a'~^ ~}]~):~%~%"
-        prefix prefix olanguage nlanguage prefix compare thorough decorate)))
+        prefix (current-time :long :short) prefix
+        olanguage nlanguage prefix compare thorough decorate)))
     
     ;;
     ;; my first loop() (if bernd knew |:-) (28-jul-98 - oe@csli)
@@ -2102,8 +2124,9 @@
             (:ascii
              (let ((n (- row 3)))
                (format 
-                stream "~:[~;~%~]~acompare-in-detail(): ~a difference~p.~%"
-                (> n 0) prefix n n))))
+                stream
+		"~:[~;~%~]~a[~a] compare-in-detail(): ~a difference~p.~%"
+                (> n 0) prefix (current-time :long :short) n n))))
         while (or oitems nitems)
         do 
           (let* ((oitem (first oitems))
@@ -2205,8 +2228,7 @@
               ;; .show. attributes (as they should |:-)
               ;;
               (setf clashes 
-                (intersect-results
-                 oitem nitem thorough subsetp bestp))
+                (intersect-results oitem nitem thorough subsetp bestp))
               (when (or (loop
                             for clash in clashes
                             thereis (or (first clash) (third clash)))
@@ -2401,10 +2423,7 @@
                           stream
                           " <~a|~a|~a>"
                           (length oclash) (length common) (length nclash)))
-                   (format
-                    stream
-                    " [~{~a~^ ~}] [~{~a~^ ~}]"
-                    odecoration ndecoration)
+                   (format stream " [~{~a~^ ~}] []" odecoration)
                    (format stream "~%")))
                 (incf row))
               (pop oitems)
@@ -2481,10 +2500,7 @@
                           stream
                           " <~a|~a|~a>"
                           (length oclash) (length common) (length nclash)))
-                   (format
-                    stream
-                    " [~{~a~^ ~}] [~{~a~^ ~}]"
-                    odecoration ndecoration)
+                   (format stream " [] [~{~a~^ ~}]" ndecoration)
                    (format stream "~%")))
                 (incf row))
               (pop nitems)

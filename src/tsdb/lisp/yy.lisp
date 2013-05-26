@@ -39,6 +39,9 @@
 
 (defparameter *yy-k2y-rts-ra-ratio* nil)
 
+(defparameter *yy-token-compare* 
+  '(:from :to :form :inflection))
+
 (defun yy-read-input (string &key (format :string) (sort :id))
   (let* ((i 0)
          (length (length string))
@@ -94,44 +97,44 @@
              (read-token ()
                (ignore-errors
                 (let (id start end from to form surface inflection tags)
-                  (read-character #\()
-                  (setf id (read-form))
-                  (read-character #\,)
-                  (setf start (read-form))
-                  (read-character #\,)
-                  (setf end (read-form))
-                  (read-character #\,)
-                  (multiple-value-setq (from to) (read-characterization))
-                  ;;
-                  ;; skip over the path(s) this token is a member of; we are
-                  ;; assuming everything is connected with everything.
-                  ;;
-                  (skip-to #\,) (read-character #\,)
-                  (setf form (read-form))
-                  (when (seek-character #\") (setf surface (read-form)))
-                  (read-character #\,)
-                  ;;
-                  ;; skip over the inflection position
-                  ;;
-                  (skip-to #\,) (read-character #\,)
-                  ;;
-                  ;; _fix_me_
-                  ;; i guess inflection information can be a list, separating
-                  ;; elements by whitespact
-                  ;;
-                  (setf inflection (read-form))
-                  (when (seek-character #\,)
+                  (when (read-character #\()
+                    (setf id (read-form))
                     (read-character #\,)
-                    (setf tags
-                      (loop
-                          while (not (seek-character #\)))
-                          collect (read-form))))
-                  (skip-to #\))
-                  (when (read-character #\))
-                    (pairlis '(:id :start :end :from :to 
-                               :form :surface :inflection :tags)
-                             (list id start end from to
-                                   form surface inflection tags)))))))
+                    (setf start (read-form))
+                    (read-character #\,)
+                    (setf end (read-form))
+                    (read-character #\,)
+                    (multiple-value-setq (from to) (read-characterization))
+                    ;;
+                    ;; skip over the path(s) this token is a member of; we are
+                    ;; assuming everything is connected with everything.
+                    ;;
+                    (skip-to #\,) (read-character #\,)
+                    (setf form (read-form))
+                    (when (seek-character #\") (setf surface (read-form)))
+                    (read-character #\,)
+                    ;;
+                    ;; skip over the inflection position
+                    ;;
+                    (skip-to #\,) (read-character #\,)
+                    ;;
+                    ;; _fix_me_
+                    ;; i guess inflection information can be a list, separating
+                    ;; elements by whitespace
+                    ;;
+                    (setf inflection (read-form))
+                    (when (seek-character #\,)
+                      (read-character #\,)
+                      (setf tags
+                        (loop
+                            while (and (< i length) (not (seek-character #\))))
+                            collect (read-form))))
+                    (skip-to #\))
+                    (when (read-character #\))
+                      (pairlis '(:id :start :end :from :to 
+                                 :form :surface :inflection :tags)
+                               (list id start end from to
+                                     form surface inflection tags))))))))
       (let ((tokens (loop for token = (read-token) while token collect token)))
         (setf tokens
           (case sort
@@ -172,6 +175,22 @@
                   (loop for c across word do (vector-push c result))
                   (incf ntokens)
                finally (return (unless (equal result "") result)))))))))
+
+(defun yy-token-equal (foo bar)
+  (and (eql (get-field :start foo) (get-field :start bar))
+       (eql (get-field :end foo) (get-field :end bar))
+       (or (not (smember :from *yy-token-compare*))
+           (eql (get-field :from foo) (get-field :from bar)))
+       (or (not (smember :to *yy-token-compare*))
+           (eql (get-field :to foo) (get-field :to bar)))
+       (or (not (smember :form *yy-token-compare*))
+           (equal (get-field :form foo) (get-field :form bar)))
+       (or (not (smember :surface *yy-token-compare*))
+           (equal (get-field :surface foo) (get-field :surface bar)))
+       (or (not (smember :inflection *yy-token-compare*))
+           (equal (get-field :inflection foo) (get-field :inflection bar)))
+       (or (not (smember :tags *yy-token-compare*))
+           (equal (get-field :tags foo) (get-field :tags bar)))))
 
 (defun yy-print-token (token &key (prefix "") (stream *tsdb-io*))
   (let* ((from (get-field :from token))
@@ -741,8 +760,11 @@
              (let ((*package* (find-package :tsdb)))
                (yy-read-input string :format :raw :sort t)))))
     (setf (gethash :p-input *statistics-readers*) reader)
-    (setf (gethash :p-tokens *statistics-readers*) reader)))
-
+    (setf (gethash :p-input *statistics-predicates*)
+      #'(lambda (gold blue) (not (yy-token-equal gold blue))))
+    (setf (gethash :p-tokens *statistics-readers*) reader)
+    (setf (gethash :p-tokens *statistics-predicates*)
+      #'(lambda (gold blue) (not (yy-token-equal gold blue))))))
 #+:null
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
 	   #-:ansi-eval-when (load eval)

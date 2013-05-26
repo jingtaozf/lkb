@@ -129,6 +129,7 @@
                (format :ascii)
                absolute
                target
+               low high
                (create t)
                (overwrite t)
                (origin (or *import-origin* "unknown"))
@@ -272,6 +273,13 @@
           (declare (ignore foo bar))
           (cond
            (item
+            (when (and (numberp low) (numberp high))
+              (setf item
+                (loop
+                    for i from 0
+                    for foo in item
+                    when (and (<= low i) (< i high))
+                    collect foo)))
             (insert
              path "item" item :absolute t 
              :normalize (and *import-normalize-p*
@@ -407,6 +415,9 @@
                       (if (get-field :header extras)
                         (values input -1)
                         (normalize-item (or oinput input)))
+                    (let ((n (get-field :i-length extras)))
+                      (when (integerp n)
+                        (setf length n)))
                     (unless (or (get-field :paragraph extras)
                                 (zerop length))
                       (let* ((category (get-field+ :category extras category))
@@ -706,10 +717,20 @@
   (let ((result nil)
         (offset 0))
     (unless (string= string "")
+      (multiple-value-bind (start end starts ends) 
+          (ppcre:scan "^ *<([0-9]+)>[^|]*\\|" string)
+        (when (and start end)
+          (let ((n (ignore-errors
+                    (parse-integer
+                     string :start (svref starts 0) :end (svref ends 0)))))
+            (when n (push (cons :i-length n) result))
+            (setf offset (+ (svref ends 0) 1)))))
       (loop
           for stablep = t
-          when (char= (char string offset) #\|)
+          when (char= (char string offset) #\space)
           do (incf offset)
+          when (char= (char string offset) #\|)
+          do (incf offset) (setf stablep t)
           else do
             (loop
                 for (mark . key) in *import-marks*

@@ -48,11 +48,13 @@
 
 (defvar *type-redefinitions* nil)
 
-(defun add-type-from-file (name parents constraint default comment &optional daughters)
+(defun add-type-from-file (name parents constraint default comment 
+                           &optional daughters)
+  (declare (special *tdl-context* *tdl-all-contexts*))
   ;;; YADU --- extra arg needed
   (if *leaf-type-addition*
-      (add-leaf-type name parents constraint default comment daughters)
-  (let ((existing-type (get-type-entry name)))
+    (add-leaf-type name parents constraint default comment daughters)
+    (let ((existing-type (get-type-entry name)))
       (when existing-type
         (format t "~%WARNING: Type `~A' redefined." name)
         (push name *type-redefinitions*))
@@ -71,7 +73,15 @@
                   *toptype* name))
             (setf *toptype* name))
          (set-type-entry name
-            new-type)))))
+            new-type))
+      (when (and *tdl-context*
+                 (string-equal name (rest (assoc :type *tdl-context*))))
+        ;;
+        ;; _fix_me_
+        ;; what to do for annotated re-definition?  maybe merge contexts?
+        ;;                                                      (19-mar-13; oe)
+        (push *tdl-context* *tdl-all-contexts*)
+        (setf *tdl-context* nil)))))
 
 (defun amend-type-from-file (name parents constraint default comment)
   (let ((ok t)

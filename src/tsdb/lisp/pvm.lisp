@@ -500,3 +500,22 @@
     (revaluate
      tid form block
      :verbose verbose :key key :interrupt interrupt)))
+
+(defun enforce-limits (&key time memory edges)
+  (when (numberp edges) (setf *tsdb-maximal-number-of-edges* edges))
+  (loop
+      for cpu in *pvm-cpus*
+      do
+        (when (and (numberp time) (numberp (cpu-quantum cpu))
+                   (<= (cpu-quantum cpu) time))
+          (setf (cpu-quantum cpu) (round (* time 1.1))))
+        (when (and (numberp edges) (cpu-edges cpu))
+          (setf (cpu-edges cpu) edges))
+        (setf (cpu-options cpu)
+          (loop
+              for option in (cpu-options cpu)
+              when (and time (equal (search "-timeout" option) 0))
+              collect (format nil "-timeout=~a" time)
+              else when (and memory (equal (search "-memlimit" option) 0))
+              collect (format nil "-memlimit=~a" memory)
+              else collect option))))

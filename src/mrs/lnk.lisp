@@ -39,36 +39,45 @@
     (:tokens
      (rest lnk))
     (:id
-     (and (second lnk) (null (rest (rest lnk)))))))
+     (let ((id (second lnk)))
+       (and (numberp id) (>= id 0) (null (rest (rest lnk))))))))
 
 (defun output-lnk (lnk &key (stream t) format)
   (if stream
-    (when *show-lnk-p*
-      (cond
-       ((eq format :latex)
+    (when (and *show-lnk-p* (consp lnk))
+      (if (eq format :latex)
         (case (first lnk)
           (:characters
-           (format stream "\\slnkc{~a}{~a}" (second lnk) (third lnk)))))
-       (t
-        (case format
-          (:html (format stream "&lang;"))
-          (t (format stream "<")))
-        (case (first lnk)
-          (:characters
-           (let ((start (second lnk))
-                 (end (third lnk)))
-             (when (and (numberp start) (numberp end)
-                        (>= start 0) (>= end 0))
-               (format stream "~a:~a" (second lnk) (third lnk)))))
-          (:vertices
-           (format stream "~a#~a" (second lnk) (third lnk)))
-          (:tokens
-           (format stream "~{~a~^ ~}" (rest lnk)))
-          (:id
-           (format stream "@~a" (second lnk))))
-        (case format
-          (:html (format stream "&rang;"))
-          (t (format stream ">"))))))
+           (format stream "\\slnkc{~a}{~a}" (second lnk) (third lnk))))
+        (labels ((open-lnk ()
+                   (case format
+                     (:html (format stream "&lang;"))
+                     (t (format stream "<"))))
+                 (close-lnk ()
+                   (case format
+                     (:html (format stream "&rang;"))
+                     (t (format stream ">")))))
+          (case (first lnk)
+            (:characters
+             (let ((start (second lnk))
+                   (end (third lnk)))
+               (when (and (numberp start) (numberp end)
+                          (>= start 0) (>= end 0))
+                 (open-lnk)
+                 (format stream "~a:~a" (second lnk) (third lnk))
+                 (close-lnk))))
+            (:vertices
+             (open-lnk)
+             (format stream "~a#~a" (second lnk) (third lnk))
+             (close-lnk))
+            (:tokens
+             (open-lnk)
+             (format stream "~{~a~^ ~}" (rest lnk))
+             (close-lnk))
+            (:id
+             (open-lnk)
+             (format stream "@~a" (second lnk))
+             (close-lnk))))))
     (with-output-to-string (stream)
       (output-lnk lnk :stream stream :format format))))
 

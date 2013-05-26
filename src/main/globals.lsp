@@ -360,8 +360,10 @@
 ;;;
 ;;; temporary expedient: allow the ERG to not use select rules (currently, ones
 ;;; putting on punctuation recursively) in generation.    (20-may-05; dpf & oe)
-;;;
+;;; temporarily, provide a similar mechanism for parsing.        (2-nov-12; oe)
+;;
 (defparameter *gen-ignore-rules* nil)
+(defparameter *parse-ignore-rules* nil)
 
 ;;; RMRS interactive globals
 

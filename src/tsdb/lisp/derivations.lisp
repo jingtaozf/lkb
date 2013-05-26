@@ -179,6 +179,18 @@
                          nconc (traverse daughter))))))))
     (remove-duplicates (traverse derivation))))
 
+(defun derivation-ids (derivation)
+  (labels ((ids (derivation)
+             (with-derivation (derivation derivation)
+               (unless (null derivation)
+                 (let ((id (derivation-id derivation)))
+                   (when id
+                     (cons id
+                           (loop
+                               for daughter in (derivation-daughters derivation)
+                               append (ids daughter)))))))))
+    (sort (ids derivation) #'<)))
+
 (defun derivation-leafs (derivation)
   (with-derivation (derivation derivation)
     (unless (null derivation)
@@ -258,8 +270,10 @@
     (loop
         for token in (derivation-tokens derivation)
         for dag = (lkb::read-dag token)
-        for id = (lkb::existing-dag-at-end-of
-                  (lkb::tdfs-indef dag) lkb::*token-id-path*)
+        for id = (when dag
+                   (lkb::existing-dag-at-end-of
+                    (lkb::tdfs-indef dag) lkb::*token-id-path*))
+        unless id return nil
         append (lkb::dag-to-list id :key #'extract))))
 
 #+:null

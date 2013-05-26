@@ -1,7 +1,5 @@
-;;; Copyright (c) 1998--2003
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 2001--2012 Stephan Oepen (oe@ifi.uio.no);
 ;;;   see `LICENSE' for conditions.
-
 
 (in-package :mrs)
 
@@ -27,10 +25,12 @@
 
 (defparameter *eds-fragment-relation* (vsym "unknown_rel"))
 
-(defparameter *eds-bleached-relations*
-  (list (vsym "selected_rel") (vsym "deg_rel")))
+(defparameter *eds-bleached-relations* (list (vsym "selected_rel")))
 
 (defparameter *eds-quantifier-argument* (vsym "BV"))
+
+(defparameter *eds-non-representatives*
+  (list (vsym "appos_rel")))
 
 (defparameter %eds-variable-counter% 0)
 
@@ -593,7 +593,14 @@
   ;; or look at the dependency topology among the candidate EPs and choose one
   ;; that occurs as an argument to the other(s).
   ;;
-  (or 
+  (or
+   (when *eds-non-representatives*
+     (let ((candidates (loop
+                           for ed in candidates
+                           unless (ed-non-representative-p ed)
+                           collect ed))
+           (*eds-non-representatives* nil))
+       (ed-select-representative eds candidates)))
    (loop
        for ed in candidates
        unless (or (ed-message-p ed)
@@ -739,11 +746,19 @@
    (and (null *eds-include-quantifiers-p*) (eq (ed-type ed) :quantifier))
    (when *eds-bleached-relations*
      (loop
-         with predicate = (ed-predicate ed)
+         with predicate = (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))
          for foo in *eds-bleached-relations*
          for type = (if (stringp foo) (vsym foo) foo)
          thereis (or (eq predicate type) 
                      (ignore-errors (equal-or-subtype predicate type)))))))
+
+(defun ed-non-representative-p (ed)
+  (when *eds-non-representatives*
+    (loop
+        with pred = (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))
+        for foo in *eds-non-representatives*
+        for type = (if (stringp foo) (vsym foo) foo)
+        thereis (ignore-errors (equal-or-subtype pred type)))))
 
 (defun ed-vacuous-p (ed)
   (unless *eds-include-vacuous-relations-p*

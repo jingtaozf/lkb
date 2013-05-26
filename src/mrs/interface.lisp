@@ -404,8 +404,8 @@ For attempting to learn null semantics
 (defun safe-mrs-unequalp (mrs1 mrs2 &rest options)
   (declare (ignore options))
   (not 
-   (if (and mrs1 mrs2)
-     (apply #'mrs-equalp mrs1 mrs2 '(t nil))
+   (if (and (psoa-p mrs1) (psoa-p mrs2))
+     #+:mt (ignore-errors (mt::mrs= mrs1 mrs2)) #-:mt nil
      (equal mrs1 mrs2))))
 
 (defun display-mrs (edge &optional mrs title (format :simple))

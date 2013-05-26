@@ -645,22 +645,27 @@
                 (see documentation for *chart-limit*)" 
                user-input *chart-limit*))
 
-      (let ((*brackets-list* brackets-list)
-            (*parser-rules* (get-matching-rules nil nil))
-            (*parser-lexical-rules* (get-matching-lex-rules nil))
-            (*lexical-entries-used* nil)
-            (*minimal-vertex* 0)
-            (*maximal-vertex* length-user-input)
-            ;;
-            ;; shadow global variable to allow best-first mode to decrement for
-            ;; each result found; eliminates need for additional result count.
-            ;;                                              (22-jan-00  -  oe)
-            (*first-only-p*
-             (cond
-              ((null first-only-p) nil)
-              ((and (numberp first-only-p) (zerop first-only-p)) nil)
-              ((numberp first-only-p) first-only-p)
-              (t 1))))
+      (let* ((*brackets-list* brackets-list)
+             (*parser-rules* (get-matching-rules nil nil))
+             (*parser-rules*
+              (loop
+                  for rule in *parser-rules*
+                  unless (member (rule-id rule) *parse-ignore-rules*)
+                  collect rule))
+             (*parser-lexical-rules* (get-matching-lex-rules nil))
+             (*lexical-entries-used* nil)
+             (*minimal-vertex* 0)
+             (*maximal-vertex* length-user-input)
+             ;;
+             ;; shadow global variable to allow best-first mode to decrement 
+             ;; for each result found; no need for additional result count.
+             ;;                                              (22-jan-00  -  oe)
+             (*first-only-p*
+              (cond
+               ((null first-only-p) nil)
+               ((and (numberp first-only-p) (zerop first-only-p)) nil)
+               ((numberp first-only-p) first-only-p)
+               (t 1))))
         (declare (special *minimal-vertex* *maximal-vertex*))
         (with-parser-lock ()
           (flush-heap *agenda*)

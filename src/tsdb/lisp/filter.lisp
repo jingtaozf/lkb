@@ -275,7 +275,32 @@
                      "~a vs. ~a solutions"
                      (length scopes) (length uscopes)))
                    (gethash id flags))))
-    
+    #+:mrs
+    (when (smember :connectivity *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (get-field :mrs result)
+          for eds = (mrs::ed-convert-psoa mrs)
+          when (mrs::ed-fragmented-p eds)
+          do 
+            (let* ((fragments
+                    (loop
+                        for ed in (mrs::eds-relations eds)
+                        when (smember :fragmented (mrs::ed-status ed))
+                        collect (mrs::ed-linked-predicate ed :lnkp t)))
+                   (output (format nil "~{~(~a~)~^, ~}" fragments)))
+              (push (list :connectivity output) (gethash id flags)))))
+    #+:mrs
+    (when (smember :cycle *filter-test*)
+      (loop
+          for result in (get-field :results item)
+          for id = (get-field :result-id result)
+          for mrs = (get-field :mrs result)
+          for eds = (mrs::ed-convert-psoa mrs)
+          when (mrs::ed-cyclic-p eds)
+          do 
+            (push (list :cycle "circular EDS") (gethash id flags))))
     #+:mrs
     (when (smember :fragmentation *filter-test*)
       (loop
@@ -287,7 +312,6 @@
           do 
             (let ((output (format nil "~a fragment~p" fragments fragments)))
               (push (list :fragmentation output) (gethash id flags)))))
-
     #+:mrs
     (when (smember :lnk *filter-test*)
       (loop
@@ -304,7 +328,6 @@
           do 
             (let ((output (format nil "~{`~(~a~)'~^, ~}" bogus)))
               (push (list :lnk output) (gethash id flags)))))
-    
     #+:mt
     (when (smember :semi *filter-test*)
       (loop
@@ -324,13 +347,15 @@
                      unknown)))
               (push (list :semi output) (gethash id flags)))))
 
-    (unless (zerop (hash-table-count flags)) 
+    (when (or (and verbose (not (zerop (hash-table-count flags))))
+              (eq verbose :all))
+      (format 
+       t 
+       "~&~%[~a] `~a' (~a)~%~%"
+       (get-field :i-id item) (get-field :i-input item)
+       (get-field :readings item)))
+    (unless (zerop (hash-table-count flags))
       (when verbose
-        (format 
-         t 
-         "~&~%[~a] `~a' (~a)~%~%"
-         (get-field :i-id item) (get-field :i-input item)
-         (get-field :readings item))
         (loop
             for result in (get-field :results item)
             for id = (get-field :result-id result)
@@ -376,6 +401,16 @@
                         t 
                         "    fragmentation: ~a.~%"
                         (second foo)))
+                      (:cycle
+                       (format 
+                        t 
+                        "    cycle: ~a.~%"
+                        (second foo)))
+                      (:connectivity
+                       (format 
+                        t 
+                        "    unattached: ~a.~%"
+                        (second foo)))
                       (:lnk
                        (format 
                         t 
@@ -386,8 +421,11 @@
                         t 
                         "    SEM-I: ~a.~%"
                         (second foo)))))))
-    item)))
+      item)))
 
 (defun safe-mrs-equal-p (mrs1 mrs2)
-  #+:mt
-  (ignore-errors (mt::mrs= mrs1 mrs2)))
+  (and #+:mrs (mrs:psoa-p mrs1) #+:mrs (mrs:psoa-p mrs1)
+       #+:mt (ignore-errors (mt::mrs= mrs1 mrs2))))
+
+(defun safe-mrs-unequal-p (mrs1 mrs2)
+  (not (safe-mrs-equal-p mrs1 mrs2)))

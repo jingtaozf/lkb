@@ -187,6 +187,7 @@
        (:file "chasen")
        #+:lkb
        (:file "genia")
+       #+:xml
        (:file "fsc")
        (:file "hunter")
        #+:lkb

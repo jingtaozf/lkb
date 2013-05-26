@@ -298,7 +298,8 @@
     (clear-grammar)              ;; should clear everything that might not be
     (clear-lex-rules)            ;; overridden, this should do for now
     (clear-idioms)
-    (setf  *check-paths* nil)
+    (setf *check-paths* nil)
+    (clear-tdl-contexts)
     #+:preprocessor
     (preprocessor:clear-preprocessor)
     #+:preprocessor
@@ -397,20 +398,24 @@
       ;;
       ;; in order to protect concurrent processes compiling a file in parallel,
       ;; attempt puttting a mandatory lock on the source file while we compile
-      ;; and load it.
+      ;; and load it.  however, only do this when compilation is requested, to
+      ;; avoid unnecessary attempts to open the file for writing (which could
+      ;; prevent loading a read-only copy of a grammar, for example).
       ;;
       #+:allegro
-      (with-open-file (foo file
-                       :direction :output :if-exists :append)
-        (excl.osi:with-stream-lock (foo)
-          (load
-           (if (and compile (member :compiler *features*))
-             (handler-bind ((excl:compiler-no-in-package-warning
-                             #'(lambda (c)
-                                 (declare (ignore c))
-                                 (muffle-warning))))
-                 (compile-file file :verbose nil :print nil))
-               file))))
+      (if compile
+        (with-open-file (foo file
+                         :direction :output :if-exists :append)
+          (excl.osi:with-stream-lock (foo)
+            (load
+             (if (and compile (member :compiler *features*))
+               (handler-bind ((excl:compiler-no-in-package-warning
+                               #'(lambda (c)
+                                   (declare (ignore c))
+                                   (muffle-warning))))
+                   (compile-file file :verbose nil :print nil))
+                 file))))
+        (load file))
       #+:lispworks
       (load 
        (if compile (compile-file file :load t :print nil :verbose nil) file))

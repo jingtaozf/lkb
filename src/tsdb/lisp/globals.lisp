@@ -35,7 +35,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (28-jan-12; beta)")
+(defparameter *tsdb-version* "2.0 (24-apr-13; beta)")
 
 (defparameter
   *tsdb-application*
@@ -63,7 +63,7 @@
 
 (defparameter *tsdb-protocol-file* nil)
 
-(defparameter *tsdb-current-granularity* 201108)
+(defparameter *tsdb-current-granularity* 201208)
 
 (defparameter *tsdb-server-mode-p* nil)
 

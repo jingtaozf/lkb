@@ -78,14 +78,18 @@
 ;;; Stephan Oepen.
 
 (defun type-of-lexical-entry (instance &optional package)
-  (let* ((instance (if (stringp instance) (intern instance :lkb) instance))
-         (instance (lkb::get-lex-entry-from-id instance))
-	 (tdfs (and instance (lkb::lex-entry-full-fs instance)))
-	 (dag (and tdfs (lkb::tdfs-indef tdfs)))
-	 (type (when dag (lkb::type-of-fs dag))))
+  (if (char= (char (string instance) 0) #\@)
+    (intern (subseq (string instance) 1) (or package :lkb))
+    (let* ((instance (if (stringp instance) (intern instance :lkb) instance))
+           (instance (if (symbolp instance)
+                       (lkb::get-lex-entry-from-id instance)
+                       instance))
+           (tdfs (and instance (lkb::lex-entry-full-fs instance)))
+           (dag (and tdfs (lkb::tdfs-indef tdfs)))
+           (type (when dag (lkb::type-of-fs dag))))
       (if (null type)
-	  (error "Null lexical entry type ~s~%" instance)
-        (if package (intern type package) type))))
+        (error "Null lexical entry type ~s~%" instance)
+        (if package (intern type package) type)))))
 
 
 ;;;;---------------------------------------------------------------------

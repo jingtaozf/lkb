@@ -506,6 +506,9 @@
                 ;; _fix_me_
                 ;; in :random mode, we need to also adjust the preference
                 ;; relation accordingly.                        (26-apr-04; oe)
+                ;; with the additions of other modes that bypass the preferred
+                ;; tree annotation (if any), the same possibly also holds for
+                ;; :tokenization and :top modes now.             (4-dec-12-oe)
                 ;;
                 (let* ((ids 
                         (case bestp
@@ -518,6 +521,11 @@
                                when (derivation-equal
                                      derivation gderivation :tokenization)
                                return (list (get-field :result-id result))))
+                          (:top
+                           (list
+                            (loop
+                                for result in results
+                                minimize (get-field :result-id result))))
                           (t
                            (or
                             (loop
@@ -1620,7 +1628,8 @@
         (setf lkb::*cached-category-abbs* nil)
         (when index
           (labels ((register (entity start end &optional cache)
-                     (let ((stream (and cache (get-field entity index))))
+                     (let ((stream (and cache (get-field entity index)))
+                           (stringp t))
                        (unless stream
                          (let* ((base (get-field :base index))
                                 (file (format nil "~a/~(~a~)" base entity)))
@@ -1630,8 +1639,9 @@
                               :if-exists :append :if-does-not-exist :create))
                            (when cache (set-field entity stream index))))
                        (format
-                        stream "~a ~a ~a ~a ~a ~a~%"
-                        i-id parse-id result-id start end
+                        stream "~a ~a ~a ~a ~a~@[ |~a|~] ~a~%"
+                        i-id parse-id result-id start end 
+                        (and stringp i-input)
                         (if complementp 0 1))
                        (unless cache (close stream)))))
             (let* ((sponsor (derivation-sponsor derivation))
@@ -1685,7 +1695,7 @@
 	   (mrs::output-rmrs1 (mrs::mrs-to-rmrs mrs) 'mrs::compact out)
 	   (format out "~%")))
         (when (or (eq *redwoods-export-values* :all)
-                  (smember :xml *redwoods-export-values*))
+                  (smember :rmrx *redwoods-export-values*))
 	  (ignore-errors
 	   (mrs::output-rmrs1
 	    (mrs::mrs-to-rmrs mrs)
@@ -4065,7 +4075,30 @@
     with *statistics-aggregate-dimension* = :phenomena
     with *statistics-all-rejections-p* = t
     with *tsdb-home* = (logon-directory "lingo/terg/tsdb/gold" :string)
-    initially (purge-profile-cache :all)
+    initially 
+      (purge-profile-cache :all)
+      (when (probe-file "/tmp/redwoods.csv") (delete-file "/tmp/redwoods.csv"))
     for db in (find-tsdb-directories)
     for name = (get-field :database db)
-    do (analyze-trees name :file "/tmp/redwoods.csv" :format :csv))
+    do (analyze-trees name :append "/tmp/redwoods.csv" :format :csv))
+
+#|
+for i in 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21; do
+  mkdir wsj${i}.1; 
+  for j in wsj${i}?.1; do echo '"'$j'"'; done > wsj${i}.1/virtual; 
+done
+|#
+
+#+:null
+(loop
+    with *phenomena* = nil
+    with *statistics-aggregate-dimension* = :phenomena
+    with *statistics-all-rejections-p* = t
+    with *tsdb-home* = (logon-directory "coli/deepbank/tsdb/home" :string)
+    initially
+      (purge-profile-cache :all)
+      (when (probe-file "/tmp/deepbank.csv") (delete-file "/tmp/deepbank.csv"))
+    for name in (loop
+                    for i from 0 to 21
+                    collect (format nil "wsj~2,'0d.1" i))
+    do (analyze-trees name :append "/tmp/deepbank.csv" :format :csv))

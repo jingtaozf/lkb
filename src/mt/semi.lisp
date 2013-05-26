@@ -375,8 +375,11 @@
             (setf (ges-spes ges) (nreverse (ges-spes ges)))
             (setf (gethash id (semi-ges semi)) ges)))))
 
-(defun record-rule (semi id rule)
-  (let* ((tdfs (lkb::rule-full-fs rule))
+(defun record-rule (semi id &optional rule)
+  (let* ((rule (or rule
+                   (gethash id lkb::*rules*)
+                   (gethash id lkb::*lexical-rules*)))
+         (tdfs (lkb::rule-full-fs rule))
          (dag (lkb::tdfs-indef tdfs))
          (type (lkb::type-of-fs dag))
          (mrs

@@ -216,7 +216,8 @@
             (if (and (find-package :mt) (find-symbol "BROWSE-MRSS" :mt))
               "mt::browse-mrss"
               "mrs::browse-mrs")))
-        (setf (gethash :mrs *statistics-predicates*) "mrs::safe-mrs-unequalp"))
+        (setf (gethash :mrs *statistics-predicates*) 
+          "tsdb::safe-mrs-unequal-p"))
       (when (and (or (null action) (member action '(:cache :all))) cache)
         (load-cache :background background :name name :pattern pattern))))
   (unless action (setf *tsdb-initialized-p* t)))
@@ -866,8 +867,10 @@
            (parse-id (get-field+ :parse-id result -1))
            (run-id (get-field+ :run-id result -1))
            (i-id (get-field+ :i-id result -1))
+           (ninputs (get-field+ :ninputs result -1))
            (p-input
             (normalize-string (get-field+ :p-input result "")  :escape rawp))
+           (ntokens (get-field+ :ntokens result -1))
            (p-tokens
             (normalize-string (get-field+ :p-tokens result "")  :escape rawp))
            (readings (get-field+ :readings result -1))
@@ -886,6 +889,11 @@
            (pedges (get-field+ :pedges result -1))
            (raedges (get-field+ :raedges result -1))
            (rpedges (get-field+ :rpedges result -1))
+           (tedges (get-field+ :tedges result -1))
+           (eedges (get-field+ :eedges result -1))
+           (ledges (get-field+ :ledges result -1))
+           (sedges (get-field+ :sedges result -1))
+           (redges (get-field+ :redges result -1))
            (unifications (get-field+ :unifications result -1))
            (copies (get-field+ :copies result -1))
            (conses (get-field+ :conses result -1))
@@ -913,7 +921,9 @@
           (write parse-id :stream stream) (write-char ofs stream)
           (write run-id :stream stream) (write-char ofs stream)
           (write i-id :stream stream) (write-char ofs stream)
+          (write ninputs :stream stream) (write-char ofs stream)
           (write-string p-input stream) (write-char ofs stream)
+          (write ntokens :stream stream) (write-char ofs stream)
           (write-string p-tokens stream) (write-char ofs stream)
           (write readings :stream stream) (write-char ofs stream)
           (write first :stream stream) (write-char ofs stream)
@@ -931,6 +941,11 @@
           (write pedges :stream stream) (write-char ofs stream)
           (write raedges :stream stream) (write-char ofs stream)
           (write rpedges :stream stream) (write-char ofs stream)
+          (write tedges :stream stream) (write-char ofs stream)
+          (write eedges :stream stream) (write-char ofs stream)
+          (write ledges :stream stream) (write-char ofs stream)
+          (write sedges :stream stream) (write-char ofs stream)
+          (write redges :stream stream) (write-char ofs stream)
           (write unifications :stream stream) (write-char ofs stream)
           (write copies :stream stream) (write-char ofs stream)
           (write conses :stream stream) (write-char ofs stream)
@@ -949,21 +964,23 @@
                (query
                 (format
                  nil
-                 "~a ~d ~d ~d ~
-                  ~s ~s ~d ~d ~d ~d ~d ~d ~
+                 "~a ~d ~d ~d ~d ~s ~d ~s ~
+                  ~d ~d ~d ~d ~d ~d ~
                   ~d ~d ~
                   ~d ~d ~d ~d ~
                   ~d ~d ~d ~d ~
+                  ~d ~d ~d ~d ~d ~d
                   ~d ~d ~
                   ~d ~d ~d ~
                   ~d ~d ~d ~
                   ~a ~s ~s"
                  query
-                 parse-id run-id i-id
-                 p-input p-tokens readings first total tcpu tgc treal
+                 parse-id run-id i-id ninputs p-input ntokens p-tokens
+                 readings first total tcpu tgc treal
                  words l-stasks
                  p-ctasks p-ftasks p-etasks p-stasks
                  aedges pedges raedges rpedges
+                 tedges eedges ledges sedges redges
                  unifications copies
                  conses symbols others
                  gcs i-load a-load
@@ -1048,19 +1065,24 @@
         with *print-length* = nil
         with rawp = (and cache (eq (get-field :protocol cache) :raw))
         for edge in edges
-        for e-id = (get-field+ :id edge -1)
+        for e-id = (get-field+ :e-id edge -1)
         for e-label =  (normalize-string 
-                        (get-field+ :label edge "") :escape rawp)
-        for e-score = (get-field+ :score edge "")
-        for e-start = (get-field+ :start edge -1)
-        for e-end = (get-field+ :end edge -1)
-        for e-status = (get-field+ :status edge -1)
+                        (get-field+ :e-label edge "") :escape rawp)
+        for e-type = (get-field+ :e-type edge -1)
+        for e-status = (get-field+ :e-status edge -1)
+        for e-start = (get-field+ :e-start edge -1)
+        for e-end = (get-field+ :e-end edge -1)
+        for e-score = (let ((foo (get-field+ :e-score edge "")))
+                        (typecase foo
+                          (string foo)
+                          (number (format nil "~f" foo))
+                          (t "")))
         for e-daughters = (normalize-string 
-                           (get-field+ :daughters edge "") :escape rawp)
+                           (get-field+ :e-daughters edge "") :escape rawp)
         for e-parents = (normalize-string 
-                         (get-field+ :parents edge "") :escape rawp)
+                         (get-field+ :e-parents edge "") :escape rawp)
         for e-alternates = (normalize-string 
-                         (get-field+ :alternates edge "") :escape rawp)
+                            (get-field+ :e-alternates edge "") :escape rawp)
         do
           (if rawp
             (let ((stream (get-field :edge cache))
@@ -1068,10 +1090,11 @@
               (write e-id :stream stream) (write-char ofs stream)
               (write parse-id :stream stream) (write-char ofs stream)
               (write-string e-label stream) (write-char ofs stream)
-              (write-string e-score stream) (write-char ofs stream)
+              (write e-type :stream stream) (write-char ofs stream)
+              (write e-status :stream stream) (write-char ofs stream)
               (write e-start :stream stream) (write-char ofs stream)
               (write e-end :stream stream) (write-char ofs stream)
-              (write e-status :stream stream) (write-char ofs stream)
+              (write-string e-score stream) (write-char ofs stream)
               (write-string e-daughters stream) (write-char ofs stream)
               (write-string e-parents stream) (write-char ofs stream)
               (write-string e-alternates stream)
@@ -1081,9 +1104,12 @@
             (let* ((query (format
                            nil
                            "insert into edge values ~
-                            ~d ~d ~s ~s ~d ~d ~d ~s"
-                           e-id parse-id e-label e-score 
-                           e-start e-end e-status e-daughters)))
+                            ~d ~d ~s ~
+                            ~d ~d ~d ~d ~s ~
+                            ~s ~s ~s"
+                           e-id parse-id e-label 
+                           e-type e-status e-start e-end e-score 
+                           e-daughters e-daughters e-alternates)))
               (call-tsdb query language :cache cache))))))
 
 (defun write-rules (parse-id statistics

@@ -208,7 +208,7 @@ set compare_in_detail(source) "";
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
   words readings first total aedges pedges rpedges gcs error 
-  derivation mrs tree surface
+  p-input p-tokens derivation mrs tree surface
 }; # compare_in_detail(compare,all)
 foreach attribute $compare_in_detail(compare,all) {
   set compare_in_detail(compare,$attribute) 0;
@@ -1173,9 +1173,12 @@ proc main {} {
   .menu.options.menu.filters add checkbutton -label "MRS Fragmentation" \
     -variable globals(filters,fragmentation) \
     -command tsdb_filters;
-  .menu.options.menu.filters add checkbutton -label "MRS Connectivity" \
+  .menu.options.menu.filters add checkbutton -label "EDS Cycles" \
+    -variable globals(filters,cycle) \
+    -command tsdb_filters;
+  .menu.options.menu.filters add checkbutton -label "EDS Connectivity" \
     -variable globals(filters,connectivity) \
-    -command tsdb_filters -state disabled;
+    -command tsdb_filters;
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \
