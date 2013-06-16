@@ -40,7 +40,7 @@
   (:export
    "*TSDB-HOME*" "*TSDB-DATA*" "*TSDB-IO*" 
    "*TSDB-TREES-HOOK*" "*TSDB-SEMANTIX-HOOK*"
-   "TSDB" "GET-FIELD" "READ-MEM"))                
+   "TSDB" "GET-FIELD" "READ-MEM" "READ-HEADS"))                
 
 #+:page
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)

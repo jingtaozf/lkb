@@ -792,6 +792,7 @@
             (normalize-string (get-field :comment result) :escape rawp))
            (platform 
             (normalize-string (get-field :platform result) :escape rawp))
+           (protocol (get-field+ :protocol result 1))
            (tsdb (normalize-string (get-field :tsdb result) :escape rawp))
            (application 
             (normalize-string (get-field :application result) :escape rawp))
@@ -819,6 +820,7 @@
           (write run-id :stream stream) (write-char ofs stream)
           (write-string comment stream) (write-char ofs stream)
           (write-string platform stream) (write-char ofs stream)
+          (write protocol :stream stream) (write-char ofs stream)
           (write-string tsdb stream) (write-char ofs stream)
           (write-string application stream) (write-char ofs stream)
           (write-string environment stream) (write-char ofs stream)
@@ -844,11 +846,11 @@
                  nil
                  "insert into run values ~
                   ~d ~s ~
-                  ~s ~s ~s ~s ~s ~
+                  ~s ~d ~s ~s ~s ~s ~
                   ~d ~d ~d ~d ~d ~d ~
                   ~s ~s ~s ~a ~a ~d ~s"
                  run-id comment 
-                 platform tsdb application environment grammar
+                 platform protocol tsdb application environment grammar
                  avms sorts templates lexicon lrules rules
                  user host os start end items status)))
           (call-tsdb query language :cache cache))))))

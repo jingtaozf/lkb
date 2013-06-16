@@ -32,6 +32,8 @@
 
 (in-package :tsdb)
 
+(defparameter *derivations-print-head-p* t)
+
 (defparameter *derivations-print-lexical-type-p* nil)
 
 (defparameter *derivations-print-tokens-p* t)
@@ -403,7 +405,7 @@
               for daughter2 in bdaughters
               always (derivation-equal daughter1 daughter2 level))))))))
 
-(defun pprint-derivation (derivation &key (stream t))
+(defun pprint-derivation (derivation &key (stream t) head)
   (let ((sponsor (derivation-sponsor derivation))
         (daughters (derivation-daughters derivation)))
     (cond
@@ -423,26 +425,36 @@
           (when id
             (write id :stream stream)
             (write-char #\space stream))
-          (if (null (derivation-daughters (first daughters)))
+          (cond
+           ((null (derivation-daughters (first daughters)))
             (let ((*print-case* :downcase)
                   (type (when *derivations-print-lexical-type-p*
                           (type-of-lexical-entry root :tsdb))))
               (write root :stream stream)
               (when type
-                (write-char #\/ stream)
-                (write type :stream stream)))
-            (write root :stream stream))
+                (write-char #\@ stream)
+                (write type :stream stream))))
+           (t
+            (when head (write-char #\^ stream))
+            (write root :stream stream)))
           (write-char #\space stream)
           (loop
               for foo in (list score start end)
               when foo do
                 (write foo :stream stream)
-                (write-char #\space stream)))
-        (loop
-            for daughter in (derivation-daughters derivation)
-            do
-              (pprint-newline :fill stream)
-              (pprint-derivation daughter :stream stream))))
+                (write-char #\space stream))
+          (loop
+              with head = (when (and *derivations-print-head-p*
+                                     (rest (derivation-daughters derivation)))
+                            (let ((root (intern root :tsdb)))
+                              (get-field
+                               :head (rest (assoc root *derivation-heads*)))))
+              for i from 0
+              for daughter in (derivation-daughters derivation)
+              do
+                (pprint-newline :fill stream)
+                (pprint-derivation
+                 daughter :stream stream :head (eql i head))))))
      (t
       (if *derivations-print-tokens-p*
         (write derivation :stream stream)
@@ -782,6 +794,10 @@
   (declare (ignore test))
   (setf *derivation-heads*
     (when (probe-file file)
+      (let ((file (pathname file)))
+        (format 
+         stream "read-heads() reading file `~a~@[.~a~]'.~%"
+         (pathname-name file) (pathname-type file)))
       (with-open-file (input file :direction :input)
         (loop
             with *package* = (find-package :tsdb)
