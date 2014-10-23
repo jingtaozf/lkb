@@ -21,8 +21,8 @@
 				      sys-home))
    
    :opt-speed 3
-   :newspace (* 1024 1024 4)
-   :oldspace (* 1024 1024 12)
+   :newspace (* 1024 1024 256)
+   :oldspace (* 1024 1024 128)
    :lisp-heap-size (* 1024 1024 #-:mswindows 768 #+:mswindows 512)
    ;;
    ;; change heap placement to allow immense newspace growth (21-may-00  -  oe)
