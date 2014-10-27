@@ -1,10 +1,10 @@
-At revision 19996.
-At revision 19996.
+At revision 20198.
+At revision 20198.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 19997.
+Committed revision 20199.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1295,33 +1295,1176 @@ make[2]: Entering directory `/projects/lingo/lkb'
                 /projects/lingo/acl-8.1/alisp -I clim -qq && touch /projects/lingo/.yes; )
 ;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Apr 8, 2013 15:15)
+8.1 [Linux (x86)] (Oct 27, 2014 14:26)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
    [TC8776] 
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
-;; For a complete description of all compiler switches given the current optimization settings
-;; evaluate (EXPLAIN-COMPILER-SETTINGS).
+;; For a complete description of all compiler switches given the
+;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
 CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
 ;   Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
 ;     Loading /projects/lingo/lkb/src/general/defsystem.lisp
 ;   Loading /projects/lingo/lkb/src/general/loadup-library.lisp
 T
 CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
-; Autoloading for DELETE-DIRECTORY-AND-FILES:
-;   Fast loading from bundle code/fileutil.fasl.
 ; Autoloading for GENERATE-APPLICATION:
 ;   Fast loading /projects/lingo/acl-8.1/code/genapp.fasl
+;     Fast loading from bundle code/fileutil.fasl.
 ;     Fast loading /projects/lingo/acl-8.1/code/build.001
 ;;; Installing build patch, version 1.
 Bundle is up to date.
-Error: The maintenance and support agreement for this Allegro CL license expired on
-       Thursday, August 15, 2013 12:00:00 AM .  Any continued right under this license to distribute
-       or deploy Allegro CL based applications is contingent upon such an agreement.  Please review
-       the Franz Software License Agreement provided with the Allegro CL distribution for further
-       details.  If you need an updated license file please contact sales@franz.com.
+; Autoloading for EXCL:DISCARD-LOCAL-NAME-INFO:
+;   Fast loading from bundle code/who.fasl.
+Initial generation spread = 1
+Allocated 10485760 bytes for old space
+Allocated 5242880 bytes for new space
+;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/code/eval.001
+; fasl /projects/lingo/acl-8.1/code/hash.002
+;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/sys/environ.003
+;;;;;;;; fasl /projects/lingo/acl-8.1/code/syscall.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/code/toplevel.001
+; fasl /projects/lingo/acl-8.1/code/misc.001
+; fasl /projects/lingo/acl-8.1/code/aclstart.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Fast loading /projects/lingo/acl-8.1/code/locale-base.001
+;;; Installing locale-base patch, version 1
+;;;
+
+
+;;; Installing locale patch, version 1.
+International Allegro CL Enterprise Edition
+8.1 [Linux (x86)] (Oct 27, 2014 14:28)
+Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+
+This development copy of Allegro CL is licensed to:
+   [TC8776] 
+
+
+ #|
+ (SETQ EXCL::*BATCH-MODE* T)
+ |#
+
+T 
+ #|
+ (SETQ EXCL::*BREAK-HOOK* 'EXCL::EXIT-ON-ERROR-HOOK)
+ |#
+
+EXCL::EXIT-ON-ERROR-HOOK 
+ #|
+ (SETQ EXCL::*BATCH-MODE* T)
+ |#
+
+T 
+ #|
+ (SETQ EXCL::*BACKTRACE-ON-ERROR* T)
+ |#
+
+T 
+ #|
+ (SET-CASE-MODE :CASE-INSENSITIVE-UPPER)
+ |#
+
+:CASE-INSENSITIVE-UPPER 
+ #|
+ (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
+       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
+         #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl"
+         #P"sys:;sys;.fasl" (:LIB-BUNDLE #P"sys:;code;.fasl")
+         (:LIB-BUNDLE #P"sys:;private;.fasl")
+         (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
+         (:LIB-BUNDLE #P"sys:;clos;.fasl")
+         (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+ |#
+
+(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl"
+ #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+ (:LIB-BUNDLE #P"sys:;code;.fasl") (:LIB-BUNDLE #P"sys:;private;.fasl")
+ (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
+ (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")) 
+ #|
+ (SETQ EXCL::*APP-RUNTIME-MODE* T)
+ |#
+
+T 
+ #|
+ (PUSHNEW :ALLEGRO-CL-RUNTIME *FEATURES*)
+ |#
+
+(:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC
+ :COMPILER :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX
+ :REDHAT9 :LINUX86 :X86 :VERIFY-STACK :VERIFY-CAR-CDR
+ :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES :MODULE-VERSIONS :IEEE
+ :IEEE-FLOATING-POINT :CONFORMING-IEEE :ICS :COMMON-LISP :ANSI-CL
+ :DRAFT-ANSI-CL-2 :X3J13 :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>=
+ :ALLEGRO-VERSION= :NEW-ENVIRONMENTS :SYMBOL-VALUE-VECTOR :PROCESS7
+ :USE-THREAD-LIBS :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.1 :TLSVALUES :TLSBNP
+ :SSL-SUPPORT) 
+ #|
+ (FORCE-OUTPUT)
+ |#
+
+NIL 
+ #|
+ (PROGN (SETQ *LOAD-DOCUMENTATION* NIL)
+        (SETQ *RECORD-SOURCE-FILE-INFO* NIL)
+        (SETQ *LOAD-LOCAL-NAMES-INFO* NIL)
+        (SETQ *LOAD-SOURCE-FILE-INFO* NIL)
+        (SETQ *RECORD-XREF-INFO* NIL) (SETQ *LOAD-XREF-INFO* NIL))
+ |#
+
+NIL 
+ #|
+ (SETQ *LOAD-VERBOSE* T)
+ |#
+
+T 
+ #|
+ (SETQ *SYSTEM-MESSAGES* T)
+ |#
+
+T 
+ #|
+ (PROCLAIM '(OPTIMIZE (DEBUG 2) (SPEED 3) (SPACE 1) (SAFETY 1)))
+ |#
+
+T 
+ #|
+ (SETQ *DAYLIGHT-SAVING-TIME-OBSERVED* T)
+ |#
+
+T 
+ #|
+ (SETQ SYSTEM::*INSTALL-SERVER-NAME* NIL)
+ |#
+
+NIL 
+ #|
+ (SETQ SYSTEM::*INSTALL-GENERATE-FONTS* NIL)
+ |#
+
+NIL 
+ #|
+ (SETQ SYSTEM::*DEVEL* NIL)
+ |#
+
+NIL 
+ #|
+ (SETF (ARGUMENT-SAVING) NIL)
+ |#
+
+NIL 
+ #|
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\f)
+ |#
+; Autoloading for MATCH-REGEXP:
+; Fast loading from bundle code/regexp.fasl.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa001.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa003.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa004.002.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa005.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa006.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa007.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa008.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa009.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa010.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa011.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa013.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa014.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa015.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa016.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa017.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa018.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa019.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa021.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa022.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa023.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa024.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa025.003.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa026.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa027.001.
+
+ #|
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\f)
+ |#
+Loaded patch file /projects/lingo/acl-8.1/update/pfb001.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb002.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb004.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb005.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb006.001.
+
+ #|
+ (REQUIRE :CLIMXM)
+ |#
+; Fast loading /projects/lingo/acl-8.1/code/climxm.005
+;   Fast loading /projects/lingo/acl-8.1/code/climg.005
+;;; Installing climxm patch, version 5.
+;   Autoloading for class SYNONYM-STREAM:
+;     Fast loading /projects/lingo/acl-8.1/code/streamc.002
+;;; Installing streamc patch, version 2.
+;       Fast loading from bundle code/efft-utf8-base.fasl.
+;       Fast loading from bundle code/efft-void.fasl.
+;       Fast loading from bundle code/efft-latin1-base.fasl.
+;     Fast loading from bundle code/process.fasl.
+;       Fast loading from bundle code/proc2common.fasl.
+;         Fast loading from bundle code/proc2-s.fasl.
+;   Autoloading for FIRST:
+;     Fast loading from bundle code/list2.fasl.
+; Autoloading for FOREIGN-FUNCTIONS:CONVERT-FOREIGN-NAME:
+;   Fast loading from bundle code/foreign.fasl.
+;   Foreign loading clim2:climxm.so.
+; Autoloading for FOREIGN-FUNCTIONS::CSTRUCT-CONSTRUCTOR-GENERATOR-3:
+;   Fast loading from bundle code/defctype.fasl.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj001.002.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj003.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj004.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj005.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj006.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj007.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj008.002.
+Loaded patch file /projects/lingo/acl-8.1/update/pfj010.001.
+
+T 
+ #|
+ (REQUIRE :RUNTIME-STD)
+ |#
+; Fast loading /projects/lingo/acl-8.1/code/runtime-std.fasl
+
+T 
+ #|
+ (SETQ *PRINT-STARTUP-MESSAGE* 'NIL)
+ |#
+
+NIL 
+ #|
+ (SETQ *READ-INIT-FILES* '(".clinit.cl" "clinit.cl"))
+ |#
+
+(".clinit.cl" "clinit.cl") 
+ #|
+ (SETQ *INIT-FILE-NAMES* '(".clinit.cl" "clinit.cl"))
+ |#
+
+(".clinit.cl" "clinit.cl") 
+ #|
+ (PROGN (SETQ *LOAD-DOCUMENTATION* T)
+        (SETQ *RECORD-SOURCE-FILE-INFO* T)
+        (SETQ *LOAD-LOCAL-NAMES-INFO* T)
+        (SETQ *LOAD-SOURCE-FILE-INFO* T) (SETQ *RECORD-XREF-INFO* NIL)
+        (SETQ *LOAD-XREF-INFO* NIL))
+ |#
+
+NIL 
+ #|
+ (WHEN (PROBE-FILE "sys:custom.cl") (LOAD "sys:custom.cl"))
+ |#
+; Loading /projects/lingo/acl-8.1/custom.cl
+; Autoloading for EXCL::PROCESS-FSPECS-IN-FILE:
+;   Fast loading from bundle code/srecord.fasl.
+
+T 
+ #|
+ (LET ((*GLOBAL-GC-BEHAVIOR* NIL))
+   (TENURING (REQUIRE :SRECORD) (REQUIRE :ELI) (REQUIRE :SOCK)
+             (LOAD #P"/projects/lingo/lkb/src/ACL_specific/build.lsp")))
+ |#
+; Fast loading from bundle code/eli.fasl.
+;   Fast loading /projects/lingo/acl-8.1/code/lep.001
+;;; Installing lep patch, version 1.
+;     Fast loading from bundle code/lze.fasl.
+;   Autoloading for package "DEBUGGER":
+;     Fast loading /projects/lingo/acl-8.1/code/debug.001
+;;; Installing debug patch, version 1.
+;   Autoloading for package "ACL-SOCKET":
+;     Fast loading from bundle code/sock-s.fasl.
+; Fast loading /projects/lingo/acl-8.1/code/sock.004
+;;; Installing sock patch, version 4.
+; Autoloading for FOREIGN-FUNCTIONS:GET-FOREIGN-TYPE:
+;   Fast loading from bundle code/defftype.fasl.
+;     Fast loading /projects/lingo/acl-8.1/code/compftype.001
+;;; Installing compftype patch, version 1.
+; Autoloading for FOREIGN-FUNCTIONS::IFOREIGN-TYPE-FWRAPPER:
+;   Fast loading from bundle code/defftype.fasl.
+; Loading /projects/lingo/lkb/src/ACL_specific/build.lsp
+;   Loading /projects/lingo/lkb/src/general/loadup.lisp
+;     Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
+;       Loading /projects/lingo/lkb/src/general/defsystem.lisp
+;     Loading /projects/lingo/lkb/src/general/loadup-library.lisp
+;   Fast loading from bundle code/seq2.fasl.
+;   Fast loading from bundle code/safeseq.fasl.
+;   Fast loading from bundle code/streama.fasl.
+;   Fast loading from bundle code/tpl-debug.fasl.
+;   Fast loading from bundle code/tpl-proc.fasl.
+;   Fast loading from bundle code/sigio.fasl.
+;   Fast loading from bundle code/emacs.fasl.
+;   Fast loading /projects/lingo/acl-8.1/code/scm.002
+;;; Installing scm patch, version 2.
+;   Fast loading from bundle code/walker.fasl.
+;   Fast loading from bundle code/trace.fasl.
+;   Fast loading from bundle code/inspect.fasl.
+;   Fast loading from bundle code/loop.fasl.
+;   Fast loading from bundle clos/constructor.fasl.
+;   Fast loading from bundle clos/mcombin.fasl.
+;   Fast loading /projects/lingo/acl-8.1/code/uri.010
+;;; Installing uri patch, version 10.
+;   Fast loading /projects/lingo/acl-8.1/code/euc.fasl
+;   Fast loading from bundle code/ffcompat.fasl.
+;   Fast loading from bundle code/ef-1250.fasl.
+;   Fast loading from bundle code/efft-1250-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1250-BASE' 
+;   Fast loading from bundle code/ef-1251.fasl.
+;   Fast loading from bundle code/efft-1251-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1251-BASE' 
+;   Fast loading from bundle code/ef-1252.fasl.
+;   Fast loading from bundle code/efft-1252-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1252-BASE' 
+;   Fast loading from bundle code/ef-1253.fasl.
+;   Fast loading from bundle code/efft-1253-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1253-BASE' 
+;   Fast loading from bundle code/ef-1254.fasl.
+;   Fast loading from bundle code/efft-1254-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1254-BASE' 
+;   Fast loading from bundle code/ef-1255.fasl.
+;   Fast loading from bundle code/efft-1255-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1255-BASE' 
+;   Fast loading from bundle code/ef-1256.fasl.
+;   Fast loading from bundle code/efft-1256-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1256-BASE' 
+;   Fast loading from bundle code/ef-1257.fasl.
+;   Fast loading from bundle code/efft-1257-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1257-BASE' 
+;   Fast loading from bundle code/ef-1258.fasl.
+;   Fast loading from bundle code/efft-1258-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':1258-BASE' 
+;   Fast loading from bundle code/ef-874.fasl.
+;   Fast loading from bundle code/efft-874-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':874-BASE' 
+;   Fast loading from bundle code/ef-932.fasl.
+;   Fast loading from bundle code/efft-932-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':932-BASE' 
+;   Fast loading from bundle code/ef-936.fasl.
+;   Fast loading from bundle code/efft-936-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':936-BASE' 
+;   Fast loading from bundle code/ef-949.fasl.
+;   Fast loading from bundle code/efft-949-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':949-BASE' 
+;   Fast loading from bundle code/ef-950.fasl.
+;   Fast loading from bundle code/efft-950-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':950-BASE' 
+;   Fast loading from bundle code/ef-big5.fasl.
+;   Fast loading from bundle code/efft-big5-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':BIG5-BASE' 
+;   Fast loading from bundle code/ef-e-cr.fasl.
+;   Fast loading from bundle code/ef-e-crcrlf.fasl.
+;   Fast loading from bundle code/ef-e-crlf.fasl.
+;   Fast loading from bundle code/ef-emacs-mule.fasl.
+;   Fast loading from bundle code/efft-emacs-mule-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':EMACS-MULE-BASE' 
+;   Fast loading from bundle code/ef-euc.fasl.
+;   Fast loading from bundle code/efft-euc-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':EUC-BASE' 
+;   Fast loading from bundle code/ef-fat.fasl.
+;   Fast loading from bundle code/efft-fat-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':FAT-BASE' 
+;   Fast loading from bundle code/ef-gb2312.fasl.
+;   Fast loading from bundle code/efft-gb2312-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':GB2312-BASE' 
+;   Fast loading from bundle code/ef-iso-2022-jp.fasl.
+;     Fast loading from bundle code/ef-jis.fasl.
+;   Fast loading from bundle code/efft-jis-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':JIS-BASE' 
+;   Fast loading from bundle code/ef-iso8859-14.fasl.
+;   Fast loading from bundle code/efft-iso8859-14-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-14-BASE' 
+;   Fast loading from bundle code/ef-iso8859-15.fasl.
+;   Fast loading from bundle code/efft-iso8859-15-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-15-BASE' 
+;   Fast loading from bundle code/ef-iso8859-2.fasl.
+;   Fast loading from bundle code/efft-iso8859-2-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-2-BASE' 
+;   Fast loading from bundle code/ef-iso8859-3.fasl.
+;   Fast loading from bundle code/efft-iso8859-3-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-3-BASE' 
+;   Fast loading from bundle code/ef-iso8859-4.fasl.
+;   Fast loading from bundle code/efft-iso8859-4-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-4-BASE' 
+;   Fast loading from bundle code/ef-iso8859-5.fasl.
+;   Fast loading from bundle code/efft-iso8859-5-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-5-BASE' 
+;   Fast loading from bundle code/ef-iso8859-6.fasl.
+;   Fast loading from bundle code/efft-iso8859-6-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-6-BASE' 
+;   Fast loading from bundle code/ef-iso8859-7.fasl.
+;   Fast loading from bundle code/efft-iso8859-7-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-7-BASE' 
+;   Fast loading from bundle code/ef-iso8859-8.fasl.
+;   Fast loading from bundle code/efft-iso8859-8-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-8-BASE' 
+;   Fast loading from bundle code/ef-iso8859-9.fasl.
+;   Fast loading from bundle code/efft-iso8859-9-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':ISO8859-9-BASE' 
+;   Fast loading from bundle code/ef-koi8-r.fasl.
+;   Fast loading from bundle code/efft-koi8-r-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':KOI8-R-BASE' 
+;   Fast loading from bundle code/ef-shiftjis.fasl.
+;   Fast loading from bundle code/efft-shiftjis-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':SHIFTJIS-BASE' 
+;   Fast loading from bundle code/ef-unicode.fasl.
+;   Fast loading from bundle code/efft-unicode-base.fasl.
+;; Note: Switching the following external-formats to runtime mode
+;;       since prebuilt filled templates for them were found and loaded:
+;;       ':UNICODE-BASE' 
+;   Loading /projects/lingo/lkb/src/systems/lkb.system
+;   Loading /projects/lingo/lkb/src/systems/psql.system
+;;; Compiling file /projects/lingo/lkb/src/psql/pq-package.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/psql/pq-package.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/psql/pq-package.fasl
+;;; Compiling file /projects/lingo/lkb/src/psql/pq-libpq.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/psql/pq-libpq.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/psql/pq-libpq.fasl
+;   Loading /projects/lingo/lkb/src/systems/ppcre.system
+;;; Compiling file /projects/lingo/lkb/src/ppcre/packages.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/specials.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/util.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/errors.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/lexer.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/parser.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/regex-class.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/convert.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/optimize.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/closures.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
+;;; Compiling file
+;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/scanner.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/api.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/PATCHES.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
+;   Loading /projects/lingo/lkb/src/systems/preprocessor.system
+;;; Compiling file /projects/lingo/lkb/src/ppcre/packages.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/packages.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/specials.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/specials.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/util.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/util.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/errors.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/errors.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/lexer.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/lexer.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/parser.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/parser.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/regex-class.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/regex-class.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/convert.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/convert.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/optimize.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/optimize.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/closures.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
+;;; Compiling file
+;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/scanner.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/scanner.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/api.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/api.fasl
+;;; Compiling file /projects/lingo/lkb/src/ppcre/PATCHES.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/PATCHES.fasl
+;   Loading /projects/lingo/lkb/src/systems/s-xml.system
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/package.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/dom.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/lxml-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/sxml-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml-struct-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/fspp-package.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/fspp-package.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/preprocess/fspp-package.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/smaf-package.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/smaf-package.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/preprocess/smaf-package.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/lxml.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/lxml.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/lxml.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/saf0.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/saf0.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf0.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/saf.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/preprocess/saf.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/saf2xml.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/saf2xml.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf2xml.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/x-preprocess.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/x-preprocess.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/preprocess/x-preprocess.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/saf-conf.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/saf-conf.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/saf-conf.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/fspp-misc.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/fspp-misc.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/fspp-misc.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/package.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/package.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/xml.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/dom.lisp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/lxml-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/lxml-dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/sxml-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/s-xml/src/sxml-dom.fasl
+;;; Compiling file /projects/lingo/lkb/src/s-xml/src/xml-struct-dom.lisp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/s-xml/src/xml-struct-dom.fasl
+;   Fast loading /projects/lingo/acl-8.1/code/pxml.fasl
+;   Loading /projects/lingo/lkb/src/lkb-package.lsp
+;   Loading /projects/lingo/lkb/src/mrs-package.lsp
+;   Loading /projects/lingo/lkb/src/mt-package.lsp
+;;; Compiling file /projects/lingo/lkb/src/version.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/version.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/version.fasl
+;   Loading /projects/lingo/lkb/src/main/initializations.lsp
+;;; Compiling file /projects/lingo/lkb/src/main/globals.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/globals.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/globals.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/statistics.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/statistics.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/statistics.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/ssp.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/ssp.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/ssp.fasl
+;;; Compiling file /projects/lingo/lkb/src/ACL_specific/graphics.lsp
+;   Fast loading /projects/lingo/acl-8.1/code/climps.006
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/graphics.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/ACL_specific/graphics.fasl
+;;; Compiling file /projects/lingo/lkb/src/ACL_specific/misc.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/misc.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/misc.fasl
+;;; Compiling file /projects/lingo/lkb/src/ACL_specific/topmenu.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/topmenu.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/topmenu.fasl
+;;; Compiling file /projects/lingo/lkb/src/ACL_specific/dialog.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/ACL_specific/dialog.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/ACL_specific/dialog.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/types.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/types.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/types.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/dag.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/dag.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/dag.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/yadu.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/yadu.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/yadu.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/gen.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/gen.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/gen.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/structs.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/structs.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/structs.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/user-fns.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/user-fns.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/user-fns.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/marks.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/marks.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/marks.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/checktypes.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/checktypes.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/checktypes.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/cdb.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/cdb.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/cdb.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/leaf.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/leaf.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/leaf.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/lex.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/lex.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/lex.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/clex.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/clex.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/clex.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/rules.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/rules.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/rules.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/parse.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/parse.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/parse.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/active.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/active.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/active.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/unpack.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/unpack.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/unpack.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/brackets.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/brackets.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/brackets.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/morph.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/morph.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/morph.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/check-unif.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/check-unif.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/check-unif.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/discriminants.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/main/discriminants.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/discriminants.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/unfill-dag.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/unfill-dag.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/unfill-dag.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/generics.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/main/generics.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/generics.fasl
+;;; Compiling file /projects/lingo/lkb/src/main/compound-lex.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/main/compound-lex.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/main/compound-lex.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/preprocess.lsp
+; Autoloading for package "EXCL.OSI":
+;   Fast loading /projects/lingo/acl-8.1/code/osi.004
+;;; Installing osi patch, version 4.
+;     Fast loading from bundle code/fileutil.fasl.
+;   Autoloading for package "REGEXP":
+;     Fast loading /projects/lingo/acl-8.1/code/regexp2-s.001
+;;; Installing regexp2-s patch, version 1.
+;   Autoloading for REGEXP::MAKE-VM-CLOSURE:
+;     Fast loading /projects/lingo/acl-8.1/code/regexp2.fasl
+;       Fast loading /projects/lingo/acl-8.1/code/yacc.fasl
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/preprocess.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/preprocess/preprocess.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/graph.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/graph.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/graph.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/external-smaf.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/external-smaf.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/preprocess/external-smaf.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/server.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/server.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/server.fasl
+;;; Compiling file /projects/lingo/lkb/src/preprocess/hook-mrs.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/preprocess/hook-mrs.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/preprocess/hook-mrs.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/headers.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/headers.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/headers.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/lex-database.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/lex-database.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lex-database.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/lex-entry.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/lex-entry.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lex-entry.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-msc.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/psql-msc.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-msc.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/extract.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/extract.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/extract.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/gentdl.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/gentdl.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/gentdl.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psqllex.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/psqllex.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psqllex.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-database.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-database.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-database.fasl
+;;; Compiling file
+;;;   /projects/lingo/lkb/src/lexdb/external-lex-database.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/external-lex-database.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/lexdb/external-lex-database.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database0.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database0.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database0.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-database2.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database2.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-database2.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-lex-entry.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-entry.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-lex-entry.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/command.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/command.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/command.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/psql-emacs.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/lexdb/psql-emacs.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/psql-emacs.fasl
+;;; Compiling file /projects/lingo/lkb/src/lexdb/lexport.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/lexdb/lexport.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/lexdb/lexport.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/menus.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/menus.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/menus.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/async.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/async.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/async.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/outputfs.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputfs.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/outputfs.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/outputtdfs.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputtdfs.fasl
+;;; Fasl write complete
+;   Fast loading
+;      /projects/lingo/lkb/src/.l1cl/io-general/outputtdfs.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/outputsrc.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/outputsrc.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/outputsrc.fasl
+;;; Compiling file /projects/lingo/lkb/src/io-general/toplevel.lsp
+;;; Writing fasl file
+;;;   /projects/lingo/lkb/src/.l1cl/io-general/toplevel.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/io-general/toplevel.fasl
+;;; Compiling file /projects/lingo/lkb/src/glue/dag.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/dag.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/dag.fasl
+;;; Compiling file /projects/lingo/lkb/src/glue/lsp.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/lsp.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/lsp.fasl
+;;; Compiling file /projects/lingo/lkb/src/glue/lui.lsp
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/lui.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/lui.fasl
+;;; Compiling file /projects/lingo/lkb/src/glue/rpc.lsp
+;   Fast loading /projects/lingo/acl-8.1/code/aserve.003
+;;; Installing aserve patch, version 3.
+;     Fast loading /projects/lingo/acl-8.1/code/acldns.002
+;;; Installing acldns patch, version 2.
+;   Autoloading for package "TOP-LEVEL.DEBUG":
+;     Fast loading from bundle code/autozoom.fasl.
+;   Fast loading /projects/lingo/acl-8.1/code/xml-rpc.001
+;;; Installing xml-rpc patch, version 1.
+;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/glue/rpc.fasl
+;;; Fasl write complete
+;   Fast loading /projects/lingo/lkb/src/.l1cl/glue/rpc.fasl
+;;; Compiling file /projects/lingo/lkb/src/glue/repp.lsp
+Error (from DEBUG): Meaningless character name “ [file position =
+                    13168]
+Evaluation stack:
+
+   (EXCL::INTERNAL-INVOKE-DEBUGGER)
+   (ERROR)
+   (EXCL::.READER-ERROR)
+   (EXCL::INTERNAL-READER-ERROR)
+   (EXCL::SHARP-BACKSLASH-1)
+   (EXCL::READ-DISPATCH-CHAR)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ-MAYBE-NOTHING)
+   (EXCL::READ-LIST)
+   (EXCL::READ2)
+   (EXCL::READ1)
+   (EXCL::READ-WITH-POSITION)
+ ->((FLET COMPILE-FILE EXCL::CONTINUATION))
+   (COMPILE-FILE)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (LET)
+   (PROGN)
+   (EXCL::EVAL-AS-PROGN)
+   (LET)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (LET)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (FUNCALL)
+   (EXCL::%INVOKE)
+   (LET)
+   (SETQ)
+   (PROGN)
+   (UNWIND-PROTECT)
+   (EXCL::EVAL-AS-PROGN)
+   (LET)
+   (EXCL::EVAL-AS-PROGN)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (EXCL::%INVOKE)
+   (COND)
+   (EXCL::EVALUATE-A-TAGBODY)
+   (DOLIST)
+   (PROGN)
+   (EXCL::EVAL-AS-PROGN)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (LET)
+   (SETQ)
+   (PROGN)
+   (UNWIND-PROTECT)
+   (EXCL::EVAL-AS-PROGN)
+   (LET)
+   (EXCL::EVAL-AS-PROGN)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (EXCL::%INVOKE)
+   (COND)
+   (EXCL::EVALUATE-A-TAGBODY)
+   (DOLIST)
+   (PROGN)
+   (EXCL::EVAL-AS-PROGN)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (LET)
+   (SETQ)
+   (PROGN)
+   (UNWIND-PROTECT)
+   (EXCL::EVAL-AS-PROGN)
+   (LET)
+   (EXCL::EVAL-AS-PROGN)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (EXCL::%INVOKE)
+   (LET)
+   (MULTIPLE-VALUE-BIND)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (MULTIPLE-VALUE-PROG1)
+   (LET*)
+   (PROGV)
+   (LET)
+   (FLET)
+   (UNWIND-PROTECT)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (BLOCK)
+   (:UNKNOWN)
+   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
+   (EXCL::%INVOKE)
+   (EVAL)
+   (EXCL::SLOLOAD)
+   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
+   (EXCL::LOAD-2)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::EVAL-AS-PROGN)
+   (MULTIPLE-VALUE-PROG1)
+   (UNWIND-PROTECT)
+   (LET)
+   (LET)
+   (EVAL)
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa88151428061")
+   (TPL:START-INTERACTIVE-TOP-LEVEL
+      #<EXCL:TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
+        #x481149da>
+      #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
+   (EXCL::START-LISP-EXECUTION NIL)
+
+(to see any ghost frames, the disassembler must be loaded)
+
+(to start saving call arguments, use the `:args' toplevel command)
+; Auto-exit
+Error: image creation failed
   [condition type: SIMPLE-ERROR]
 
 Restart actions (select using :continue):
@@ -1342,8 +2485,1409 @@ make[2]: Leaving directory `/projects/lingo/lkb'
               --exclude=".nfs*" \
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
-tar: linux.x86.32: Cannot stat: No such file or directory
+linux.x86.32/
+linux.x86.32/files.bu
+linux.x86.32/lkb.lic
+linux.x86.32/lkb
+linux.x86.32/acli817.pll
 bin/linux.x86.32/yzlui
-tar: Error exit delayed from previous errors
-make[1]: *** [lkb_linux_x86_32] Error 2
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_macos.ppc.32.tgz \
+              --exclude=".nfs*" \
+	      bin/macos.ppc.32/yzlui.app; \
+	)
+bin/macos.ppc.32/yzlui.app/
+bin/macos.ppc.32/yzlui.app/.svn/
+bin/macos.ppc.32/yzlui.app/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/.svn/entries
+bin/macos.ppc.32/yzlui.app/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/.svn/props/
+bin/macos.ppc.32/yzlui.app/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/prop-base/yzlui.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/text-base/yzlui.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/MacOS/yzlui
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/YZUITK
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/YZUITK
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/prop-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/text-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/prop-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/text-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Resources/Makefile
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/editline.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/menu.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/scrollbar.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/prop-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/text-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/button.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/A/Headers/uitk.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/YZUITK
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/prop-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/text-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/prop-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/text-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Resources/Makefile
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/editline.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/menu.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/scrollbar.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/prop-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/text-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/button.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Versions/Current/Headers/uitk.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/prop-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/text-base/YZUITK.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/prop-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/text-base/Makefile.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Resources/Makefile
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/editline.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/menu.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/scrollbar.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/prop-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/button.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/scrollbar.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/menu.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/editline.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/text-base/uitk.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/button.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZUITK.framework/Headers/uitk.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/YZ
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/prop-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/text-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/pbdevelopment.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/prop-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/text-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/prop-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/prop-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/prop-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/prop-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/text-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/text-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/text-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/text-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/image.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/window.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/cursor.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/A/Headers/draw.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/YZ
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/prop-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/text-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/pbdevelopment.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/prop-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/text-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/prop-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/prop-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/prop-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/prop-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/text-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/text-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/text-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/text-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/image.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/window.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/cursor.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Versions/Current/Headers/draw.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/YZ
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/prop-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/text-base/YZ.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/pbdevelopment.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/InfoPlist.strings
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/prop-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/text-base/InfoPlist.strings.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/English.lproj/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/prop-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/prop-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/text-base/Info.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/text-base/pbdevelopment.plist.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Resources/Info.plist
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/prop-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/prop-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/prop-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/prop-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/text-base/image.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/text-base/cursor.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/text-base/draw.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/text-base/window.h.svn-base
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/image.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/window.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/cursor.h
+bin/macos.ppc.32/yzlui.app/Contents/Frameworks/YZ.framework/Headers/draw.h
+bin/macos.ppc.32/yzlui.app/Contents/.svn/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/entries
+bin/macos.ppc.32/yzlui.app/Contents/.svn/tmp/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/tmp/prop-base/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/tmp/props/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/tmp/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/props/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/text-base/
+bin/macos.ppc.32/yzlui.app/Contents/.svn/all-wcprops
+bin/macos.ppc.32/yzlui.app/Info.plist
+rm -f /home/www-lingo/html/test;
+ln -s /home/www-lingo/html/builds/`date "+%Y-%m-%d"` /home/www-lingo/html/test;
+( \
+	  cd /projects/lingo; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/erg.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude="tsdb*" --exclude="*.fasl" \
+	      erg; \
+	)
+erg/
+erg/lexdb.fld
+erg/lexdb.dfn
+erg/erg.smi
+erg/inflr.tdl
+erg/lexdb.rev
+erg/redwoods.xls
+erg/README
+erg/www/
+erg/www/setup.lsp
+erg/www/erg.html
+erg/www/erg.js
+erg/ace/
+erg/ace/config.tdl
+erg/ace/ace-erg-qc.txt
+erg/letypes.tdl
+erg/lfr.tdl
+erg/speech/
+erg/speech/lex-speech.tdl
+erg/speech/syntax-speech.tdl
+erg/speech/types-speech.tdl
+erg/speech/inflr-pnct-rbst.tdl
+erg/speech/lex-robot.tdl
+erg/speech/constr-speech.tdl
+erg/syntax.tdl
+erg/english.grm
+erg/lexicon.tdl
+erg/erg.hds
+erg/lexdb.rev_key
+erg/METADATA
+erg/jhpstg.g.mem
+erg/lexdb.meta
+erg/lextypes.tdl
+erg/english.tdl
+erg/sciborg.tdl
+erg/tmt.tdl
+erg/core.smi
+erg/tmr/
+erg/tmr/conll.tdl
+erg/tmr/split.tdl
+erg/tmr/finis.tdl
+erg/tmr/ptb.tdl
+erg/tmr/ne3.tdl
+erg/tmr/transcript.tdl
+erg/tmr/sciborg.tdl
+erg/tmr/pos.tdl
+erg/tmr/spelling.tdl
+erg/tmr/ne1.tdl
+erg/tmr/class.tdl
+erg/tmr/ne2.tdl
+erg/tmr/punctuation.tdl
+erg/paraphraser.mtr
+erg/generation.mtr
+erg/idioms.mtr
+erg/Version.lsp
+erg/rpp/
+erg/rpp/robustness.rpp
+erg/rpp/gml.rpp
+erg/rpp/setup.lsp
+erg/rpp/tokenizer.rpp
+erg/rpp/xml.rpp
+erg/rpp/lkb.rpp
+erg/rpp/wiki.rpp
+erg/rpp/quotes.rpp
+erg/rpp/latex.rpp
+erg/rpp/ascii.rpp
+erg/LICENSE
+erg/gle.tdl
+erg/redwoods.pcfg
+erg/irregs.tab
+erg/mtr.tdl
+erg/speech.grm
+erg/lexrinst.tdl
+erg/educ/
+erg/educ/tmr-educ.tdl
+erg/educ/lexrinst-epgy.tdl
+erg/educ/letypes-epgy.tdl
+erg/educ/lextypes-epgy.tdl
+erg/educ/lexicon-epgy.tdl
+erg/educ/constr-epgy.tdl
+erg/inflr-pnct.tdl
+erg/genia.mem
+erg/lexrules.tdl
+erg/pet/
+erg/pet/global.set
+erg/pet/robot.set
+erg/pet/repp.set
+erg/pet/gml.set
+erg/pet/speech.set
+erg/pet/regression.yy
+erg/pet/repp.txt
+erg/pet/smaf.conf
+erg/pet/flop.set
+erg/pet/english.set
+erg/pet/wiki.set
+erg/pet/sample.yy
+erg/pet/brackets.fsc
+erg/pet/sciborg.set
+erg/pet/regression.txt
+erg/pet/mrs.set
+erg/pet/robust.set
+erg/pet/qc.tdl
+erg/pet/educ.set
+erg/pet/common.set
+erg/pet/brackets.yy
+erg/lkb/
+erg/lkb/mt.lsp
+erg/lkb/checkpaths.lsp
+erg/lkb/nogen-lex.set
+erg/lkb/checkpaths.items
+erg/lkb/sample.mrs
+erg/lkb/user-fns.lsp
+erg/lkb/script
+erg/lkb/mrsglobals.lsp
+erg/lkb/convert-wcn.lsp
+erg/lkb/patches.lsp
+erg/lkb/nogen-rules.set
+erg/lkb/globals.lsp
+erg/semi.vpm
+erg/abstract.vpm
+erg/trigger.mtr
+erg/fundamentals.tdl
+erg/parse-nodes.tdl
+erg/Makefile
+erg/constructions.tdl
+erg/auxverbs.tdl
+erg/educ.tdl
+erg/robot.tdl
+erg/speech.tdl
+erg/redwoods.mem
+erg/wescience.mem
+erg/roots.tdl
+( \
+	  cd /projects/lingo/lkb; \
+	  find src/.l1cl -type f -exec touch {} \; ; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_linux.x86.32.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
+	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
+	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
+	      src/.l1cl/pvm src/.l1cl/tsdb src/.l1cl/fad; \
+	)
+bin/linux.x86.32/tsdb
+bin/linux.x86.32/swish++
+bin/linux.x86.32/pvmd3
+bin/linux.x86.32/pvm
+src/pvm/linux.x86.32/pvm.so
+src/tsdb/linux.x86.32/bdb.so
+src/tsdb/linux.x86.32/capi.so
+src/tsdb/linux.x86.32/gc.so
+src/.l1cl/pvm/
+src/.l1cl/pvm/pvm.fasl
+src/.l1cl/pvm/pvm-package.fasl
+src/.l1cl/tsdb/
+src/.l1cl/tsdb/fsc.fasl
+src/.l1cl/tsdb/process.fasl
+src/.l1cl/tsdb/genia.fasl
+src/.l1cl/tsdb/pcfg.fasl
+src/.l1cl/tsdb/learner.fasl
+src/.l1cl/tsdb/pvm.fasl
+src/.l1cl/tsdb/lsp.fasl
+src/.l1cl/tsdb/lkb-interface.fasl
+src/.l1cl/tsdb/podium.fasl
+src/.l1cl/tsdb/features.fasl
+src/.l1cl/tsdb/globals.fasl
+src/.l1cl/tsdb/commands.fasl
+src/.l1cl/tsdb/allegro.fasl
+src/.l1cl/tsdb/experiment.fasl
+src/.l1cl/tsdb/macros.fasl
+src/.l1cl/tsdb/derivations.fasl
+src/.l1cl/tsdb/tnt-interface.fasl
+src/.l1cl/tsdb/conll.fasl
+src/.l1cl/tsdb/ptb.fasl
+src/.l1cl/tsdb/rasp.fasl
+src/.l1cl/tsdb/evolution.fasl
+src/.l1cl/tsdb/gc.fasl
+src/.l1cl/tsdb/statistics.fasl
+src/.l1cl/tsdb/filter.fasl
+src/.l1cl/tsdb/mt.fasl
+src/.l1cl/tsdb/tsdb.fasl
+src/.l1cl/tsdb/html.fasl
+src/.l1cl/tsdb/import.fasl
+src/.l1cl/tsdb/tsql.fasl
+src/.l1cl/tsdb/tsdb-package.fasl
+src/.l1cl/tsdb/starsem.fasl
+src/.l1cl/tsdb/yy.fasl
+src/.l1cl/tsdb/hunter.fasl
+src/.l1cl/tsdb/bdb.fasl
+src/.l1cl/tsdb/capi.fasl
+src/.l1cl/tsdb/chasen.fasl
+src/.l1cl/tsdb/fake.fasl
+src/.l1cl/tsdb/redwoods.fasl
+src/.l1cl/tsdb/utilities.fasl
+src/.l1cl/fad/
+src/.l1cl/fad/packages.fasl
+src/.l1cl/fad/fad.fasl
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      etc include lib src/general/itsdb.lisp; \
+	)
+etc/
+etc/bclim.lisp
+etc/dot.emacs
+etc/dot.luirc
+etc/dot.clinit.cl
+etc/dot.bashrc
+etc/install
+etc/lkb
+etc/dot.cshrc
+etc/generate
+include/
+include/pvm3.h
+include/itsdb.h
+lib/
+lib/tcl8.4/
+lib/tcl8.4/parray.tcl
+lib/tcl8.4/ldAix
+lib/tcl8.4/safe.tcl
+lib/tcl8.4/encoding/
+lib/tcl8.4/encoding/ebcdic.enc
+lib/tcl8.4/encoding/dingbats.enc
+lib/tcl8.4/encoding/cp860.enc
+lib/tcl8.4/encoding/jis0212.enc
+lib/tcl8.4/encoding/jis0208.enc
+lib/tcl8.4/encoding/macDingbats.enc
+lib/tcl8.4/encoding/macCentEuro.enc
+lib/tcl8.4/encoding/cp864.enc
+lib/tcl8.4/encoding/euc-cn.enc
+lib/tcl8.4/encoding/cp950.enc
+lib/tcl8.4/encoding/iso8859-14.enc
+lib/tcl8.4/encoding/cp855.enc
+lib/tcl8.4/encoding/macRomania.enc
+lib/tcl8.4/encoding/cp850.enc
+lib/tcl8.4/encoding/macIceland.enc
+lib/tcl8.4/encoding/cp1257.enc
+lib/tcl8.4/encoding/cp1253.enc
+lib/tcl8.4/encoding/cp866.enc
+lib/tcl8.4/encoding/cp865.enc
+lib/tcl8.4/encoding/gb2312.enc
+lib/tcl8.4/encoding/cp862.enc
+lib/tcl8.4/encoding/cp1250.enc
+lib/tcl8.4/encoding/cp857.enc
+lib/tcl8.4/encoding/cp861.enc
+lib/tcl8.4/encoding/ksc5601.enc
+lib/tcl8.4/encoding/cp1256.enc
+lib/tcl8.4/encoding/koi8-u.enc
+lib/tcl8.4/encoding/euc-kr.enc
+lib/tcl8.4/encoding/iso8859-5.enc
+lib/tcl8.4/encoding/gb2312-raw.enc
+lib/tcl8.4/encoding/iso8859-2.enc
+lib/tcl8.4/encoding/koi8-r.enc
+lib/tcl8.4/encoding/big5.enc
+lib/tcl8.4/encoding/shiftjis.enc
+lib/tcl8.4/encoding/iso8859-8.enc
+lib/tcl8.4/encoding/iso8859-15.enc
+lib/tcl8.4/encoding/iso2022.enc
+lib/tcl8.4/encoding/iso8859-16.enc
+lib/tcl8.4/encoding/macTurkish.enc
+lib/tcl8.4/encoding/iso2022-jp.enc
+lib/tcl8.4/encoding/cp737.enc
+lib/tcl8.4/encoding/ascii.enc
+lib/tcl8.4/encoding/macRoman.enc
+lib/tcl8.4/encoding/cp852.enc
+lib/tcl8.4/encoding/iso8859-9.enc
+lib/tcl8.4/encoding/cp932.enc
+lib/tcl8.4/encoding/cp1254.enc
+lib/tcl8.4/encoding/cp775.enc
+lib/tcl8.4/encoding/macCyrillic.enc
+lib/tcl8.4/encoding/iso8859-4.enc
+lib/tcl8.4/encoding/macThai.enc
+lib/tcl8.4/encoding/cp863.enc
+lib/tcl8.4/encoding/cp869.enc
+lib/tcl8.4/encoding/iso8859-1.enc
+lib/tcl8.4/encoding/gb1988.enc
+lib/tcl8.4/encoding/iso8859-10.enc
+lib/tcl8.4/encoding/cp1255.enc
+lib/tcl8.4/encoding/macGreek.enc
+lib/tcl8.4/encoding/iso8859-7.enc
+lib/tcl8.4/encoding/gb12345.enc
+lib/tcl8.4/encoding/iso8859-13.enc
+lib/tcl8.4/encoding/cp1251.enc
+lib/tcl8.4/encoding/macJapan.enc
+lib/tcl8.4/encoding/symbol.enc
+lib/tcl8.4/encoding/macUkraine.enc
+lib/tcl8.4/encoding/cp1252.enc
+lib/tcl8.4/encoding/euc-jp.enc
+lib/tcl8.4/encoding/cp874.enc
+lib/tcl8.4/encoding/cp949.enc
+lib/tcl8.4/encoding/macCroatian.enc
+lib/tcl8.4/encoding/cp936.enc
+lib/tcl8.4/encoding/iso8859-6.enc
+lib/tcl8.4/encoding/iso8859-3.enc
+lib/tcl8.4/encoding/jis0201.enc
+lib/tcl8.4/encoding/iso2022-kr.enc
+lib/tcl8.4/encoding/tis-620.enc
+lib/tcl8.4/encoding/cp1258.enc
+lib/tcl8.4/encoding/cp437.enc
+lib/tcl8.4/init.tcl
+lib/tcl8.4/msgcat1.3/
+lib/tcl8.4/msgcat1.3/msgcat.tcl
+lib/tcl8.4/msgcat1.3/pkgIndex.tcl
+lib/tcl8.4/opt0.4/
+lib/tcl8.4/opt0.4/optparse.tcl
+lib/tcl8.4/opt0.4/pkgIndex.tcl
+lib/tcl8.4/tcltest2.2/
+lib/tcl8.4/tcltest2.2/tcltest.tcl
+lib/tcl8.4/tcltest2.2/pkgIndex.tcl
+lib/tcl8.4/tclAppInit.c
+lib/tcl8.4/package.tcl
+lib/tcl8.4/http1.0/
+lib/tcl8.4/http1.0/http.tcl
+lib/tcl8.4/http1.0/pkgIndex.tcl
+lib/tcl8.4/tclIndex
+lib/tcl8.4/history.tcl
+lib/tcl8.4/word.tcl
+lib/tcl8.4/auto.tcl
+lib/tcl8.4/ldAout.tcl
+lib/tcl8.4/http2.5/
+lib/tcl8.4/http2.5/http.tcl
+lib/tcl8.4/http2.5/pkgIndex.tcl
+lib/linux.x86.32/
+lib/linux.x86.32/libitsdb.so
+lib/linux.x86.32/libXm.so.2
+lib/linux.x86.32/libgd.so
+lib/linux.x86.32/libpvm3.a
+lib/linux.x86.32/libgtk-1.2.so.0
+lib/linux.x86.32/libgdk-1.2.so.0
+lib/linux.x86.32/libdb-4.2.so
+lib/linux.x86.32/libitsdb.a
+lib/linux.x86.32/libXp.so.6
+lib/linux.x86.32/libglib-1.2.so.0
+lib/linux.x86.32/libXm.so.3
+lib/linux.x86.32/libgmodule-1.2.so.0
+lib/blt2.4/
+lib/blt2.4/graph.tcl
+lib/blt2.4/bltTabset.tcl
+lib/blt2.4/bltHiertable.tcl
+lib/blt2.4/bltGraph.pro
+lib/blt2.4/treeview_m.xbm
+lib/blt2.4/bltHierbox.tcl
+lib/blt2.4/htresize.xbm
+lib/blt2.4/dd_protocols/
+lib/blt2.4/dd_protocols/dd-file.tcl
+lib/blt2.4/dd_protocols/dd-color.tcl
+lib/blt2.4/dd_protocols/dd-number.tcl
+lib/blt2.4/dd_protocols/tclIndex
+lib/blt2.4/dd_protocols/dd-text.tcl
+lib/blt2.4/hierbox.tcl
+lib/blt2.4/dnd.tcl
+lib/blt2.4/tabset.tcl
+lib/blt2.4/bltDragdrop.tcl
+lib/blt2.4/tabnotebook.tcl
+lib/blt2.4/treeview.xbm
+lib/blt2.4/bltGraph.tcl
+lib/blt2.4/bltTabnotebook.tcl
+lib/blt2.4/bltDnd.tcl
+lib/blt2.4/treeview.tcl
+lib/blt2.4/tclIndex
+lib/blt2.4/bltHier.tcl
+lib/blt2.4/pkgIndex.tcl
+lib/blt2.4/htresize_m.xbm
+lib/blt2.4/dragdrop.tcl
+lib/blt2.4/bltCanvEps.pro
+lib/XKeysymDB
+lib/macos.ppc.32/
+lib/macos.ppc.32/libpvm3.a
+lib/macos.ppc.32/libitsdb.dylib
+lib/macos.ppc.32/libitsdb.a
+lib/macos.ppc.32/libpvm3.dylib
+lib/tk8.4/
+lib/tk8.4/entry.tcl
+lib/tk8.4/images/
+lib/tk8.4/images/logo64.gif
+lib/tk8.4/images/logo100.gif
+lib/tk8.4/images/logoLarge.gif
+lib/tk8.4/images/logo.eps
+lib/tk8.4/images/pwrdLogo100.gif
+lib/tk8.4/images/pwrdLogo200.gif
+lib/tk8.4/images/tai-ku.gif
+lib/tk8.4/images/pwrdLogo75.gif
+lib/tk8.4/images/pwrdLogo175.gif
+lib/tk8.4/images/pwrdLogo.eps
+lib/tk8.4/images/pwrdLogo150.gif
+lib/tk8.4/images/logoMed.gif
+lib/tk8.4/focus.tcl
+lib/tk8.4/unsupported.tcl
+lib/tk8.4/comdlg.tcl
+lib/tk8.4/scrlbar.tcl
+lib/tk8.4/scale.tcl
+lib/tk8.4/obsolete.tcl
+lib/tk8.4/listbox.tcl
+lib/tk8.4/xmfbox.tcl
+lib/tk8.4/tkfbox.tcl
+lib/tk8.4/tearoff.tcl
+lib/tk8.4/console.tcl
+lib/tk8.4/safetk.tcl
+lib/tk8.4/prolog.ps
+lib/tk8.4/text.tcl
+lib/tk8.4/palette.tcl
+lib/tk8.4/button.tcl
+lib/tk8.4/msgs/
+lib/tk8.4/msgs/eo.msg
+lib/tk8.4/msgs/en.msg
+lib/tk8.4/msgs/ru.msg
+lib/tk8.4/msgs/pt.msg
+lib/tk8.4/msgs/nl.msg
+lib/tk8.4/msgs/es.msg
+lib/tk8.4/msgs/pl.msg
+lib/tk8.4/msgs/en_gb.msg
+lib/tk8.4/msgs/de.msg
+lib/tk8.4/msgs/cs.msg
+lib/tk8.4/msgs/el.msg
+lib/tk8.4/msgs/fr.msg
+lib/tk8.4/msgs/hu.msg
+lib/tk8.4/msgs/it.msg
+lib/tk8.4/msgs/es_ES.msg
+lib/tk8.4/tclIndex
+lib/tk8.4/pkgIndex.tcl
+lib/tk8.4/spinbox.tcl
+lib/tk8.4/choosedir.tcl
+lib/tk8.4/optMenu.tcl
+lib/tk8.4/msgbox.tcl
+lib/tk8.4/bgerror.tcl
+lib/tk8.4/menu.tcl
+lib/tk8.4/panedwindow.tcl
+lib/tk8.4/tk.tcl
+lib/tk8.4/clrpick.tcl
+lib/tk8.4/tkAppInit.c
+lib/tk8.4/mkpsenc.tcl
+lib/tk8.4/dialog.tcl
+lib/Tix8.4.3/
+lib/Tix8.4.3/Variable.tcl
+lib/Tix8.4.3/PopMenu.tcl
+lib/Tix8.4.3/DirBox.tcl
+lib/Tix8.4.3/LabEntry.tcl
+lib/Tix8.4.3/DragDrop.tcl
+lib/Tix8.4.3/fs.tcl
+lib/Tix8.4.3/SWidget.tcl
+lib/Tix8.4.3/ListNBk.tcl
+lib/Tix8.4.3/Select.tcl
+lib/Tix8.4.3/TList.tcl
+lib/Tix8.4.3/DirTree.tcl
+lib/Tix8.4.3/DtlList.tcl
+lib/Tix8.4.3/ComboBox.tcl
+lib/Tix8.4.3/VResize.tcl
+lib/Tix8.4.3/DialogS.tcl
+lib/Tix8.4.3/Tree.tcl
+lib/Tix8.4.3/LabFrame.tcl
+lib/Tix8.4.3/license.terms
+lib/Tix8.4.3/StatBar.tcl
+lib/Tix8.4.3/SWindow.tcl
+lib/Tix8.4.3/FileEnt.tcl
+lib/Tix8.4.3/Init.tcl
+lib/Tix8.4.3/Balloon.tcl
+lib/Tix8.4.3/OldUtil.tcl
+lib/Tix8.4.3/HList.tcl
+lib/Tix8.4.3/StdShell.tcl
+lib/Tix8.4.3/PanedWin.tcl
+lib/Tix8.4.3/SHList.tcl
+lib/Tix8.4.3/VTree.tcl
+lib/Tix8.4.3/MultView.tcl
+lib/Tix8.4.3/Console.tcl
+lib/Tix8.4.3/LabWidg.tcl
+lib/Tix8.4.3/Utils.tcl
+lib/Tix8.4.3/CObjView.tcl
+lib/Tix8.4.3/OptMenu.tcl
+lib/Tix8.4.3/EFileDlg.tcl
+lib/Tix8.4.3/HListDD.tcl
+lib/Tix8.4.3/Shell.tcl
+lib/Tix8.4.3/STList.tcl
+lib/Tix8.4.3/SText.tcl
+lib/Tix8.4.3/ChkList.tcl
+lib/Tix8.4.3/Tix.tcl
+lib/Tix8.4.3/Event.tcl
+lib/Tix8.4.3/FileDlg.tcl
+lib/Tix8.4.3/README.txt
+lib/Tix8.4.3/FileCbx.tcl
+lib/Tix8.4.3/IconView.tcl
+lib/Tix8.4.3/pkgIndex.tcl
+lib/Tix8.4.3/DirList.tcl
+lib/Tix8.4.3/bitmaps/
+lib/Tix8.4.3/bitmaps/textfile.xbm
+lib/Tix8.4.3/bitmaps/minus.xpm
+lib/Tix8.4.3/bitmaps/no_entry.gif
+lib/Tix8.4.3/bitmaps/folder.xbm
+lib/Tix8.4.3/bitmaps/openfile.xbm
+lib/Tix8.4.3/bitmaps/cbxarrow.xbm
+lib/Tix8.4.3/bitmaps/file.xpm
+lib/Tix8.4.3/bitmaps/no_entry.xpm
+lib/Tix8.4.3/bitmaps/minimize.xbm
+lib/Tix8.4.3/bitmaps/folder.gif
+lib/Tix8.4.3/bitmaps/mktransgif.tcl
+lib/Tix8.4.3/bitmaps/act_fold.gif
+lib/Tix8.4.3/bitmaps/minusarm.gif
+lib/Tix8.4.3/bitmaps/plusarm.xbm
+lib/Tix8.4.3/bitmaps/ck_off.xbm
+lib/Tix8.4.3/bitmaps/srcfile.gif
+lib/Tix8.4.3/bitmaps/srcfile.xpm
+lib/Tix8.4.3/bitmaps/openfold.xpm
+lib/Tix8.4.3/bitmaps/ck_def.xbm
+lib/Tix8.4.3/bitmaps/minus.xbm
+lib/Tix8.4.3/bitmaps/resize2.xbm
+lib/Tix8.4.3/bitmaps/act_fold.xbm
+lib/Tix8.4.3/bitmaps/hourglas.xbm
+lib/Tix8.4.3/bitmaps/harddisk.xbm
+lib/Tix8.4.3/bitmaps/textfile.gif
+lib/Tix8.4.3/bitmaps/maximize.xbm
+lib/Tix8.4.3/bitmaps/drop.xbm
+lib/Tix8.4.3/bitmaps/incr.xbm
+lib/Tix8.4.3/bitmaps/restore.xbm
+lib/Tix8.4.3/bitmaps/network.xbm
+lib/Tix8.4.3/bitmaps/file.gif
+lib/Tix8.4.3/bitmaps/plusarm.xpm
+lib/Tix8.4.3/bitmaps/ck_on.xbm
+lib/Tix8.4.3/bitmaps/tick.xbm
+lib/Tix8.4.3/bitmaps/warning.gif
+lib/Tix8.4.3/bitmaps/minus.gif
+lib/Tix8.4.3/bitmaps/warning.xpm
+lib/Tix8.4.3/bitmaps/folder.xpm
+lib/Tix8.4.3/bitmaps/plus.xpm
+lib/Tix8.4.3/bitmaps/minusarm.xpm
+lib/Tix8.4.3/bitmaps/info.gif
+lib/Tix8.4.3/bitmaps/balarrow.xbm
+lib/Tix8.4.3/bitmaps/file.xbm
+lib/Tix8.4.3/bitmaps/plus.gif
+lib/Tix8.4.3/bitmaps/plus.xbm
+lib/Tix8.4.3/bitmaps/info.xpm
+lib/Tix8.4.3/bitmaps/cross.xbm
+lib/Tix8.4.3/bitmaps/srcfile.xbm
+lib/Tix8.4.3/bitmaps/textfile.xpm
+lib/Tix8.4.3/bitmaps/system.xbm
+lib/Tix8.4.3/bitmaps/act_fold.xpm
+lib/Tix8.4.3/bitmaps/resize1.xbm
+lib/Tix8.4.3/bitmaps/hourglas.mask
+lib/Tix8.4.3/bitmaps/openfold.gif
+lib/Tix8.4.3/bitmaps/decr.xbm
+lib/Tix8.4.3/bitmaps/minusarm.xbm
+lib/Tix8.4.3/bitmaps/plusarm.gif
+lib/Tix8.4.3/bitmaps/openfold.xbm
+lib/Tix8.4.3/StdBBox.tcl
+lib/Tix8.4.3/Control.tcl
+lib/Tix8.4.3/NoteBook.tcl
+lib/Tix8.4.3/SGrid.tcl
+lib/Tix8.4.3/EFileBox.tcl
+lib/Tix8.4.3/Primitiv.tcl
+lib/Tix8.4.3/StackWin.tcl
+lib/Tix8.4.3/pref/
+lib/Tix8.4.3/pref/TK.fsc
+lib/Tix8.4.3/pref/TkWin.cs
+lib/Tix8.4.3/pref/TK.cs
+lib/Tix8.4.3/pref/Bisque.cs
+lib/Tix8.4.3/pref/10Point.fs
+lib/Tix8.4.3/pref/WmDefault.csc
+lib/Tix8.4.3/pref/WmDefault.cs
+lib/Tix8.4.3/pref/Blue.csc
+lib/Tix8.4.3/pref/Old14Pt.fs
+lib/Tix8.4.3/pref/Blue.cs
+lib/Tix8.4.3/pref/TkWin.fsc
+lib/Tix8.4.3/pref/10Point.fsc
+lib/Tix8.4.3/pref/WmDefault.py
+lib/Tix8.4.3/pref/14Point.fs
+lib/Tix8.4.3/pref/WmDefault.fsc
+lib/Tix8.4.3/pref/WmDefault.txt
+lib/Tix8.4.3/pref/Gray.csc
+lib/Tix8.4.3/pref/TK.csc
+lib/Tix8.4.3/pref/12Point.fsc
+lib/Tix8.4.3/pref/WmDefault.tcl
+lib/Tix8.4.3/pref/pkgIndex.tcl
+lib/Tix8.4.3/pref/Bisque.csc
+lib/Tix8.4.3/pref/Gray.cs
+lib/Tix8.4.3/pref/TixGray.cs
+lib/Tix8.4.3/pref/WmDefault.fs
+lib/Tix8.4.3/pref/12Point.fs
+lib/Tix8.4.3/pref/SGIGray.csc
+lib/Tix8.4.3/pref/Old12Pt.fs
+lib/Tix8.4.3/pref/TixGray.csc
+lib/Tix8.4.3/pref/TK.fs
+lib/Tix8.4.3/pref/SGIGray.cs
+lib/Tix8.4.3/pref/14Point.fsc
+lib/Tix8.4.3/pref/TkWin.fs
+lib/Tix8.4.3/pref/TkWin.csc
+lib/Tix8.4.3/DirDlg.tcl
+lib/Tix8.4.3/SimpDlg.tcl
+lib/Tix8.4.3/FloatEnt.tcl
+lib/Tix8.4.3/WInfo.tcl
+lib/Tix8.4.3/BtnBox.tcl
+lib/Tix8.4.3/VStack.tcl
+lib/Tix8.4.3/DefSchm.tcl
+lib/Tix8.4.3/ResizeH.tcl
+lib/Tix8.4.3/SListBox.tcl
+lib/Tix8.4.3/Compat.tcl
+lib/Tix8.4.3/Meter.tcl
+lib/Tix8.4.3/FileBox.tcl
+lib/Tix8.4.3/Grid.tcl
+lib/solaris/
+lib/solaris/libitsdb.so
+lib/solaris/libpvm3.a
+lib/solaris/libitsdb.a
+lib/Tktable2.10/
+lib/Tktable2.10/license.txt
+lib/Tktable2.10/pkgIndex.tcl
+lib/Tktable2.10/tkTable.tcl
+lib/linux.x86.64/
+lib/linux.x86.64/libitsdb.so
+lib/linux.x86.64/libtermcap.so.2
+lib/linux.x86.64/libpvm3.a
+lib/linux.x86.64/libXm.so.4
+lib/linux.x86.64/libdb-4.2.so
+lib/linux.x86.64/libitsdb.a
+lib/linux.x86.64/libXp.so.6
+lib/linux.x86.64/libXm.so.3
+src/general/itsdb.lisp
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_source.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/systems/tsdb.system src/systems/pvm.system \
+	      src/systems/fad.system  \
+	      src/fad src/pvm/*.lisp \
+	      src/tsdb/lisp src/tsdb/tcl \
+              src/tsdb/ToDo src/tsdb/Registration \
+	      src/tsdb/TeX; \
+	)
+src/systems/tsdb.system
+src/systems/pvm.system
+src/systems/fad.system
+src/fad/
+src/fad/fad.lisp
+src/fad/CHANGELOG
+src/fad/README
+src/fad/doc/
+src/fad/doc/index.html
+src/fad/test.lisp
+src/fad/openmcl.lisp
+src/fad/packages.lisp
+src/fad/corman.lisp
+src/fad/load.lisp
+src/pvm/pvm.lisp
+src/pvm/pvm-package.lisp
+src/tsdb/lisp/
+src/tsdb/lisp/filter.lisp
+src/tsdb/lisp/redwoods.lisp
+src/tsdb/lisp/sltg-interface.lisp
+src/tsdb/lisp/kf.lisp
+src/tsdb/lisp/lkb-interface.lisp
+src/tsdb/lisp/chasen.lisp
+src/tsdb/lisp/anlt-interface.lisp
+src/tsdb/lisp/podium.lisp
+src/tsdb/lisp/xle-interface.lisp
+src/tsdb/lisp/import.lisp
+src/tsdb/lisp/allegro.lisp
+src/tsdb/lisp/tagger.lisp
+src/tsdb/lisp/tsdb.lisp
+src/tsdb/lisp/acache.lisp
+src/tsdb/lisp/tsql.lisp
+src/tsdb/lisp/evolution.lisp
+src/tsdb/lisp/tnt-interface.lisp
+src/tsdb/lisp/utilities.lisp
+src/tsdb/lisp/tdl-patches.lisp
+src/tsdb/lisp/conll.lisp
+src/tsdb/lisp/fsc.lisp
+src/tsdb/lisp/lsp.lisp
+src/tsdb/lisp/hunter.lisp
+src/tsdb/lisp/server.lisp
+src/tsdb/lisp/starsem.lisp
+src/tsdb/lisp/features.lisp
+src/tsdb/lisp/pcfg.lisp
+src/tsdb/lisp/experiment.lisp
+src/tsdb/lisp/commands.lisp
+src/tsdb/lisp/yy.lisp
+src/tsdb/lisp/statistics.lisp
+src/tsdb/lisp/ptb.lisp
+src/tsdb/lisp/chart.lisp
+src/tsdb/lisp/gc.lisp
+src/tsdb/lisp/macros.lisp
+src/tsdb/lisp/capi.lisp
+src/tsdb/lisp/page-interface.lisp
+src/tsdb/lisp/dummy-interface.lisp
+src/tsdb/lisp/html.lisp
+src/tsdb/lisp/globals.lisp
+src/tsdb/lisp/fake.lisp
+src/tsdb/lisp/tsdb-package.lisp
+src/tsdb/lisp/genia.lisp
+src/tsdb/lisp/learner.lisp
+src/tsdb/lisp/derivations.lisp
+src/tsdb/lisp/pvm.lisp
+src/tsdb/lisp/mmt.lisp
+src/tsdb/lisp/process.lisp
+src/tsdb/lisp/bdb.lisp
+src/tsdb/lisp/mt.lisp
+src/tsdb/lisp/rasp.lisp
+src/tsdb/tcl/
+src/tsdb/tcl/icon.xbm
+src/tsdb/tcl/showgraph.tcl
+src/tsdb/tcl/table.tcl
+src/tsdb/tcl/showtable.tcl
+src/tsdb/tcl/balloon.tcl
+src/tsdb/tcl/utilities.tcl
+src/tsdb/tcl/mt.tcl
+src/tsdb/tcl/podium.tcl
+src/tsdb/tcl/nshowtable.tcl
+src/tsdb/tcl/yy.tcl
+src/tsdb/tcl/goodies.tcl
+src/tsdb/tcl/input.tcl
+src/tsdb/tcl/copyleft.tcl
+src/tsdb/tcl/commands.tcl
+src/tsdb/tcl/balloons
+src/tsdb/ToDo
+src/tsdb/Registration
+src/tsdb/TeX/
+src/tsdb/TeX/piclatex.sty
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_capi.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/tsdb/capi; \
+	)
+src/tsdb/capi/
+src/tsdb/capi/5lib/
+src/tsdb/capi/5lib/getloadavg.o
+src/tsdb/capi/mfile.h
+src/tsdb/capi/mfile.c
+src/tsdb/capi/client.c
+src/tsdb/capi/llib/
+src/tsdb/capi/llib/getloadavg.o
+src/tsdb/capi/capi.c
+src/tsdb/capi/acl.c
+src/tsdb/capi/Makefile
+src/tsdb/capi/gc.c
+src/tsdb/capi/olib/
+src/tsdb/capi/olib/getloadavg.o
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_data.tgz \
+	      --exclude=src/tsdb/skeletons/english/vm97 \
+	      --exclude=src/tsdb/skeletons/english/vm97p \
+	      --exclude=src/tsdb/skeletons/english/vm98 \
+	      --exclude=src/tsdb/skeletons/english/wsj00 \
+	      --exclude=src/tsdb/skeletons/english/parc \
+	      --exclude=src/tsdb/skeletons/yy \
+	      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      src/tsdb/skeletons src/tsdb/home; \
+	)
+src/tsdb/skeletons/
+src/tsdb/skeletons/english/
+src/tsdb/skeletons/english/english/
+src/tsdb/skeletons/english/english/item-set
+src/tsdb/skeletons/english/english/parameter
+src/tsdb/skeletons/english/english/item
+src/tsdb/skeletons/english/english/phenomenon
+src/tsdb/skeletons/english/english/item-phenomenon
+src/tsdb/skeletons/english/english/analysis
+src/tsdb/skeletons/english/english/relations
+src/tsdb/skeletons/english/english/set
+src/tsdb/skeletons/english/fracas/
+src/tsdb/skeletons/english/fracas/item
+src/tsdb/skeletons/english/fracas/relations
+src/tsdb/skeletons/english/trec9/
+src/tsdb/skeletons/english/trec9/item
+src/tsdb/skeletons/english/trec9/relations
+src/tsdb/skeletons/english/csli/
+src/tsdb/skeletons/english/csli/item
+src/tsdb/skeletons/english/csli/phenomenon
+src/tsdb/skeletons/english/csli/item-phenomenon
+src/tsdb/skeletons/english/csli/relations
+src/tsdb/skeletons/english/mrs/
+src/tsdb/skeletons/english/mrs/item-set
+src/tsdb/skeletons/english/mrs/item
+src/tsdb/skeletons/english/mrs/relations
+src/tsdb/skeletons/english/Index.lisp
+src/tsdb/skeletons/english/Relations
+src/tsdb/skeletons/english/cb/
+src/tsdb/skeletons/english/cb/item
+src/tsdb/skeletons/english/cb/relations
+src/tsdb/skeletons/deutsch/
+src/tsdb/skeletons/deutsch/german/
+src/tsdb/skeletons/deutsch/german/item-set
+src/tsdb/skeletons/deutsch/german/parameter
+src/tsdb/skeletons/deutsch/german/item
+src/tsdb/skeletons/deutsch/german/phenomenon
+src/tsdb/skeletons/deutsch/german/item-phenomenon
+src/tsdb/skeletons/deutsch/german/analysis
+src/tsdb/skeletons/deutsch/german/relations
+src/tsdb/skeletons/deutsch/german/set
+src/tsdb/skeletons/deutsch/vmt/
+src/tsdb/skeletons/deutsch/vmt/item
+src/tsdb/skeletons/deutsch/vmt/relations
+src/tsdb/skeletons/deutsch/mrs/
+src/tsdb/skeletons/deutsch/mrs/item
+src/tsdb/skeletons/deutsch/mrs/output
+src/tsdb/skeletons/deutsch/mrs/relations
+src/tsdb/skeletons/deutsch/vm/
+src/tsdb/skeletons/deutsch/vm/item
+src/tsdb/skeletons/deutsch/vm/relations
+src/tsdb/skeletons/deutsch/Index.lisp
+src/tsdb/skeletons/deutsch/Relations
+src/tsdb/skeletons/deutsch/vmd/
+src/tsdb/skeletons/deutsch/vmd/item
+src/tsdb/skeletons/deutsch/vmd/relations
+src/tsdb/skeletons/deutsch/babel/
+src/tsdb/skeletons/deutsch/babel/item
+src/tsdb/skeletons/deutsch/babel/relations
+src/tsdb/skeletons/deutsch/tub/
+src/tsdb/skeletons/deutsch/tub/item
+src/tsdb/skeletons/deutsch/tub/relations
+src/tsdb/skeletons/francaise/
+src/tsdb/skeletons/francaise/mrs/
+src/tsdb/skeletons/francaise/mrs/item
+src/tsdb/skeletons/francaise/mrs/relations
+src/tsdb/skeletons/francaise/Index.lisp
+src/tsdb/skeletons/francaise/Relations
+src/tsdb/skeletons/francaise/french/
+src/tsdb/skeletons/francaise/french/item-set
+src/tsdb/skeletons/francaise/french/parameter
+src/tsdb/skeletons/francaise/french/item
+src/tsdb/skeletons/francaise/french/phenomenon
+src/tsdb/skeletons/francaise/french/item-phenomenon
+src/tsdb/skeletons/francaise/french/analysis
+src/tsdb/skeletons/francaise/french/relations
+src/tsdb/skeletons/francaise/french/set
+src/tsdb/skeletons/nihongo/
+src/tsdb/skeletons/nihongo/kihon/
+src/tsdb/skeletons/nihongo/kihon/item
+src/tsdb/skeletons/nihongo/kihon/relations
+src/tsdb/skeletons/nihongo/ginkougyou/
+src/tsdb/skeletons/nihongo/ginkougyou/item
+src/tsdb/skeletons/nihongo/ginkougyou/relations
+src/tsdb/skeletons/nihongo/hizuke/
+src/tsdb/skeletons/nihongo/hizuke/item
+src/tsdb/skeletons/nihongo/hizuke/relations
+src/tsdb/skeletons/nihongo/mrs/
+src/tsdb/skeletons/nihongo/mrs/item
+src/tsdb/skeletons/nihongo/mrs/output
+src/tsdb/skeletons/nihongo/mrs/relations
+src/tsdb/skeletons/nihongo/faqs/
+src/tsdb/skeletons/nihongo/faqs/item
+src/tsdb/skeletons/nihongo/faqs/relations
+src/tsdb/skeletons/nihongo/Index.lisp
+src/tsdb/skeletons/nihongo/Relations
+src/tsdb/skeletons/nihongo/shiken/
+src/tsdb/skeletons/nihongo/shiken/item
+src/tsdb/skeletons/nihongo/shiken/relations
+src/tsdb/skeletons/nihongo/suuji/
+src/tsdb/skeletons/nihongo/suuji/item
+src/tsdb/skeletons/nihongo/suuji/relations
+src/tsdb/skeletons/espanol/
+src/tsdb/skeletons/espanol/banca/
+src/tsdb/skeletons/espanol/banca/item
+src/tsdb/skeletons/espanol/banca/relations
+src/tsdb/skeletons/espanol/Index.lisp
+src/tsdb/skeletons/espanol/Relations
+src/tsdb/skeletons/norsk/
+src/tsdb/skeletons/norsk/harmoni/
+src/tsdb/skeletons/norsk/harmoni/item
+src/tsdb/skeletons/norsk/harmoni/output
+src/tsdb/skeletons/norsk/harmoni/relations
+src/tsdb/skeletons/norsk/tur/
+src/tsdb/skeletons/norsk/tur/item
+src/tsdb/skeletons/norsk/tur/output
+src/tsdb/skeletons/norsk/tur/relations
+src/tsdb/skeletons/norsk/base/
+src/tsdb/skeletons/norsk/base/item
+src/tsdb/skeletons/norsk/base/phenomenon
+src/tsdb/skeletons/norsk/base/item-phenomenon
+src/tsdb/skeletons/norsk/base/relations
+src/tsdb/skeletons/norsk/enkel/
+src/tsdb/skeletons/norsk/enkel/item
+src/tsdb/skeletons/norsk/enkel/relations
+src/tsdb/skeletons/norsk/mrs/
+src/tsdb/skeletons/norsk/mrs/item
+src/tsdb/skeletons/norsk/mrs/output
+src/tsdb/skeletons/norsk/mrs/relations
+src/tsdb/skeletons/norsk/Index.lisp
+src/tsdb/skeletons/norsk/Relations
+src/tsdb/home/
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      ./src/tsdb/doc; \
+	)
+./src/tsdb/doc/
+./src/tsdb/doc/profiling.ps
+./src/tsdb/doc/manual.ps
+./src/tsdb/doc/tsnlp.ps
 make[1]: Leaving directory `/projects/lingo/lkb'
