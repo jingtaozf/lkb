@@ -491,6 +491,7 @@
        (:file "lkb-acl-rmrs")            ; display etc in CLIM
        (:file "testing") ;;; temporary file for testing
        (:file "dmrs") ;;; dependency MRS
+       (:file "dmrsoutput") ;;; DMRS direct from a grammar - experimental
 ;;;       (:file "anaphora") ;;; very simple anaphora code
 ))
 
