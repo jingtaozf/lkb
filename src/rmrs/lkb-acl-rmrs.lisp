@@ -445,15 +445,23 @@
 (defun show-mrs-dmrs-window (edge &key mrs dmrs title)
   (mp:run-function "DMRS"
     #'show-mrs-dmrs-window-really edge :mrs mrs :dmrs dmrs :title title))
-  
+
+(defparameter *dmrs-grammar-p* nil)
+
 (defun show-mrs-dmrs-window-really (edge &key mrs dmrs title)
-  (let ((mframe (clim:make-application-frame 'mrs-dmrs))
-        (mrsstruct (or mrs (when edge (mrs::extract-mrs edge)))))
-    (setf (mrs-dmrs-mrsstruct mframe) 
-      mrsstruct)
+  (let ((mframe (clim:make-application-frame 'mrs-dmrs)))
+    (if *dmrs-grammar-p*
+	(or dmrs
+	    (setf dmrs
+	      (when edge
+		(mrs::extract-dmrs edge))))
+      (let ((mrsstruct (or mrs (when edge 
+				 (mrs::extract-mrs edge)))))
+	(setf (mrs-dmrs-mrsstruct mframe) 
+	  mrsstruct)))
     (setf (mrs-dmrs-dmrs mframe) 
       (or dmrs
-	  (let ((rmrs (mrs::mrs-to-rmrs mrsstruct)))
+	  (let ((rmrs (mrs::mrs-to-rmrs (mrs-dmrs-mrsstruct mframe))))
 	    (if rmrs
 		(mrs::rmrs-to-dmrs rmrs)))))
     (setf (clim:frame-pretty-name mframe) (or title "Dependency MRS"))
