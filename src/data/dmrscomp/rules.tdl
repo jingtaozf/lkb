@@ -1,0 +1,104 @@
+;;; missing a generalisation here - only head-modifiers
+;;; don't necessarily pass LTOP from head
+
+head-complement-rule-0 := unary-head-initial & 
+[ SPR #spr,
+  SPEC #spec,
+  SEM.HOOK #hook,
+  ARGS < word & 
+         [ SEM.HOOK #hook,
+           SPR #spr,
+           SPEC #spec, 
+           COMPS < > ] >  ].
+
+head-complement-rule-1 := binary-head-initial &
+[ SPR #spr,
+  SPEC #spec,
+  SEM.HOOK #hook,
+  ARGS < word & 
+         [ SPR #spr, 
+           SPEC #spec,
+           SEM.HOOK #hook,
+           COMPS < #1 > ],
+         #1 >  ].
+
+
+head-complement-rule-2 := ternary-head-initial &
+[ SPR #spr,
+  SPEC #spec,
+  SEM.HOOK #hook, 
+  ARGS < word & 
+         [ SEM.HOOK #hook,
+           SPR #spr, 
+           SPEC #spec,
+           COMPS < #1, #2> ],  
+         #1, #2 > ].
+
+;;; FIX - comps should be <> ?
+;;; 
+;;; This makes the LTOP of the NP the N's LTOP - we're relying
+;;; on anything that takes an NP setting link to be neq
+;;; bit iffy
+
+specifier-head-rule := binary-head-final-passgap &
+[ SPR < >,
+  COMPS #comps,
+  SEM.HOOK.LTOP #ltop,
+  ARGS < phrase & #1,
+         phrase & 
+         [ SEM.HOOK.LTOP #ltop,
+           SPR < #1 >,
+           COMPS #comps ] > ]. 
+
+;;; LTOP is not set by the types for head-modifier-rule
+;;; we have to have variants for scopla and non-scopal
+
+scopal-head-modifier-rule := head-modifier-rule &
+[ SEM.HOOK.LTOP #ltop,
+  ARGS <  syn-struc, [ HEAD scopal, SEM.HOOK.LTOP #ltop ] > ].
+
+non-scopal-head-modifier-rule := head-modifier-rule &
+[ SEM.HOOK.LTOP #ltop,
+  ARGS <  [ SEM.HOOK.LTOP #ltop ], [ HEAD non-scopal ] > ].
+
+
+scopal-modifier-head-rule := modifier-head-rule &
+[ SEM.HOOK.LTOP #ltop,
+  ARGS <  [ HEAD scopal, SEM.HOOK.LTOP #ltop ], syn-struc > ].
+
+non-scopal-modifier-head-rule := modifier-head-rule &
+[ SEM.HOOK.LTOP #ltop,
+  ARGS <  [ HEAD non-scopal ], [ SEM.HOOK.LTOP #ltop ] > ].
+
+
+
+head-gap-rule-1 := unary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr,
+           COMPS < #1 > ] >  ].
+
+head-gap-rule-2 := binary-head-initial-startgap &
+[ GAP <! #1 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr,
+           COMPS < #1, #2 > ], #2 & [ GAP <! !> ] > ].
+
+head-gap-rule-3 := binary-head-initial-startgap &
+[ GAP <! #2 !>,
+  SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2 > ], #1 & [ GAP <! !> ] > ].
+
+head-filler-rule := binary-head-final &
+[ HEAD verb,
+  SPR < >,
+  GAP <! !>,
+  ARGS < phrase & #1 & [ GAP <! !> ],
+         phrase & 
+         [ SPR < >,
+           GAP <! #1 !> ] > ]. 
+

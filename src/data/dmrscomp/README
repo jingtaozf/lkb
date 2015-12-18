@@ -1,0 +1,163 @@
+A native DMRS grammar - i.e., the semantics is intended to be interpreted 
+directly as a DMRS (without variables).
+
+In order to try this grammar out, load into the LKB in the usual way
+via the script file.  The DMRS option from the menu associated
+with the small parse trees in the LKB interface will show a 
+DMRS structure extracted directly from the
+grammar, rather than via the usual conversion from MRS/RMRS.
+[ You may have to call (lui-shutdown) to get the LKB interface. 
+Note that the mrsglobals file in this grammar sets
+(defparameter lkb::*dmrs-grammar-p* t)
+to redefine the behaviour of the DMRS menu item - you'll need to set it
+back if you are working with a normal grammar without restarting the LKB. ]
+
+This is based on the mrscomp grammar, but with some changes which are
+independent of making this a DMRS grammar:
+
+- added object control (persuade) and object raising (expect)
+
+- added an XARG to verbs to make control cleaner
+
+- changed from a DP analysis to an NP analysis
+
+- make infinitival `to' etc have no semantics rather than give them a 
+dummy relation (actually, this is forced by the DMRS approach, 
+but is anyway cleaner)
+
+DMRS encoding:
+
+The changes are all in the types.tdl and rules.tdl files (lexicon.tdl
+changes are due to the changes above).
+
+HCONS, LBL and all qeqs are gone.
+
+RELS is a dlist of nodes, monotonically accumulated as usual
+HOOK has INDEX, LTOP, XARG - all nodes
+
+node is a type with PRED and NODETYPE features
+(very similar to the old `relation' - not really necessary to create a 
+different type but clearer)
+PRED is as mrscomp grammar (not the proper DMRS pred so look
+like gpred in XML)
+
+NODETYPE is ref-ind etc, as in mrscomp grammar - this could alternatively
+have been done by subtyping node but NODETYPE is probably useful
+for the finer-grained features such as tense etc which are usually 
+associated with INDEX - FIX not done yet 
+(the mrscomp grammar didn't have such features)
+
+node has subtypes introducing the features ARG1, etc and RSTR,
+which point to links
+
+
+link is a type with TARGET feature (which points to the to node) 
+and subtypes corresponding to the post part of a DMRS link:
+eq-link
+neq-link
+h-link
+(could also have heq-link)
+
+RULES:
+
+a phrase always gets its INDEX from the HEAD - note that this is a stronger
+principle in a characteristic variable grammar than in previous approaches.
+It means, for instance, that the INDEX of `probably sleep' is the INDEX of 
+`sleep', which is desirable.
+It means that the only exceptions to the generalisation that the INDEX
+must correspond to the lexical item which is the syntactic head of the phrase
+have to be cases where there is a null semantic item, such as a case-marking 
+preposition, which transfers the INDEX (in favt the entire HOOK) 
+from the non-head argument.  
+This is crucial to understanding how DMRS behaves (relatively) similarly
+to dependency grammars, although the LTOP mechanism allows for the proper
+expression of constituency (e.g., the RSTR of quantifiers).  See detailed 
+notes.
+
+The treatment of LTOP depends on particular rule types.  For head complement
+rules, the entire HOOK always comes from the head.  For the specifier-head
+rule, the LTOP comes from the head - this is not so clearly correct for 
+Det N combination - it relies on NEQ links (see detailed notes).
+
+Modifier rules have to be spilt accoding to whether the modifier is
+scopal (in which case it contributes the LTOP) or non-scopal, in which
+case the LTOP comes from the HEAD.  Application
+of scopal/non-scopal is controlled by a subtype of pos.
+
+Nothing else about semantics happens in the rules in this grammar 
+(there are no construction preds - FIX I probably should add one as an example).
+
+Note that this is, in some ways, more complex than in the old mrscomp
+grammar, where the entire HOOK was passed up to the head, but the need
+for this already arises in an MRS grammar using characteristic variables.  In
+particular, since modifiers no longer share their INDEX with the modifiee,
+we can no longer regard the modifier as the (semantic) head.  
+
+LEXICON:
+
+lexemes, for convenience, have a KEY as in the mrscomp grammar
+but this is not an appropriate feature for words and phrases.
+(As in the mrscomp grammar, there is a strict lexeme/word/phrase split with
+lexeme/word interconversion via inflectional rules or the const-pump rule.)
+
+- ordinary lexemes have a single node in the RELS corresponding to
+the KEY - this is also the INDEX.  For non-quantifiers it is also the LTOP,
+quantifiers leave LTOP unbound (BUT - see detailed notes).
+
+- no-sem-lexems have nothing on the RELS list and no INDEX etc.  Note
+that this is a necessary difference from a non-DMRS grammar where they
+might have an INDEX which is later shared.  It implies that a node without
+semantics that contributes to properties such as tense has to do this
+by accessing the INDEX of a syntactic argument.
+
+- all NP arguments are linked with neq-links which access the INDEX
+- all scopal arguments are h-links (COMPs, SPEC or MOD) which take 
+an LTOP (assumption - an NP is never a scoped over argument - 
+see detailed notes)
+- all intersective mod arguments access the INDEX -
+except in the case of an NP they are eq-links
+
+auxiliary verbs are treated as simply scopal - this is to be FIXed
+
+additional stuff for control and raining cases
+
+- the link between the SPR's INDEX for a normal verb and its XARG is set up
+in a lexical type subj-verb
+- srv verbs do not link their SPR to one of their own ARGS but 
+share their SPR with the COMP's SPR (as usual) - this gives the 
+raising effect without any explicit coindexation of semantic arguments 
+other than the standard scopal argument
+- orv verbs are similar, but a COMP is shared with another COMP's SPR
+
+- scv and ocv verbs link the XARG of a COMP to one of their ARGs in addition
+to the usual linking
+
+
+
+
+TO DO:
+
+- agreement and tense as semantic properties, including changing treatment 
+of auxiliaries and making code in dmrscomp extract features (as MRS)
+
+- simple conjunction
+
+- predicative adjectives - note that these have to have an NEQ link with
+the noun phrase.
+
+- adjective modification
+
+- it seems etc 
+
+- simple example of a construction contributing semantics, maybe compounds
+
+- quantifier modification (maybe ...)
+
+- relative clauses including the cases where we currently have 
+undirected EQ links
+
+- make generation work ...  Note that INSTLOC is absent - it should be
+unnecessary for this grammar.
+
+- figure out what this means for ERG!
+

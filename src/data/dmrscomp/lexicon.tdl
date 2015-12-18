@@ -1,0 +1,273 @@
+
+;;; determiners
+
+the := det-lxm &
+[ ORTH.LIST.FIRST "the",
+  KEY.PRED "the_rel" ].
+
+her_1 := det-lxm &
+[ ORTH.LIST.FIRST "her",
+  KEY.PRED "her_rel" ].
+
+that_1 := sg-det-lxm &
+[ ORTH.LIST.FIRST "that",
+  KEY.PRED "that_rel" ].
+
+those := pl-det-lxm &
+[ ORTH.LIST.FIRST "those",
+  KEY.PRED "those_rel" ].
+
+these := pl-det-lxm &
+[ ORTH.LIST.FIRST "these",
+  KEY.PRED "these_rel" ].
+
+every_1 := sg-det-lxm &
+[ ORTH.LIST.FIRST "every",
+  KEY.PRED "every_rel" ].
+
+some_1 := det-lxm &
+[ ORTH.LIST.FIRST "some",
+  KEY.PRED "some_rel" ].
+
+most_1 := det-lxm &
+[ ORTH.LIST.FIRST "most",
+  KEY.PRED "most_rel" ].
+
+;;; nouns
+
+aardvark := noun-lxm &
+[ ORTH.LIST.FIRST "aardvark",
+  KEY.PRED "aardvark_rel" ].
+
+dog := noun-lxm &
+[ ORTH.LIST.FIRST "dog",
+  KEY.PRED "dog_rel" ].
+
+food := noun-lxm &
+[ ORTH.LIST.FIRST "food",
+  KEY.PRED "food_rel" ].
+
+bowl := noun-lxm &
+[ ORTH.LIST.FIRST "bowl",
+  KEY.PRED "bowl_rel" ].
+
+cat := noun-lxm &
+[ ORTH.LIST.FIRST "cat",
+  KEY.PRED "cat_rel" ].
+
+biscuit := noun-lxm &
+[ ORTH.LIST.FIRST "biscuit",
+  KEY.PRED "biscuit_rel" ].
+
+kennel := noun-lxm &
+[ ORTH.LIST.FIRST "kennel",
+  KEY.PRED "kennel_rel" ].
+
+garden := noun-lxm &
+[ ORTH.LIST.FIRST "garden",
+  KEY.PRED "garden_rel" ].
+
+owner := noun-lxm &
+[ ORTH.LIST.FIRST "owner",
+  KEY.PRED "owner_rel" ].
+
+flap := noun-lxm &
+[ ORTH.LIST.FIRST "flap",
+  KEY.PRED "flap_rel" ].
+
+toy := noun-lxm &
+[ ORTH.LIST.FIRST "toy",
+  KEY.PRED "toy_rel" ].
+
+;;; pronouns / names
+
+it_1 := exp-pronm-lxm &
+[ ORTH.LIST.FIRST "it",
+  HEAD.FORM it ].
+
+it_2 := pronm-lxm &
+[ ORTH.LIST.FIRST "it",
+  KEY.PRED "it_rel" ].
+
+there := exp-pronm-lxm &
+[ ORTH.LIST.FIRST "there",
+  HEAD.FORM there ].
+
+he := pronm-lxm &
+[ ORTH.LIST.FIRST "he",
+  KEY.PRED "he_rel" ].
+
+they := pronm-lxm &
+[ ORTH.LIST.FIRST "they",
+  HEAD.AGR non-3sing,
+  KEY.PRED "they_rel" ].
+
+her_2 := pronm-lxm &
+[ ORTH.LIST.FIRST "her",
+  KEY.PRED "her_rel" ].
+
+kim := pronm-lxm &
+[ ORTH.LIST.FIRST "kim",
+  KEY.PRED "kim_rel" ].
+
+sandy := pronm-lxm &
+[ ORTH.LIST.FIRST "sandy",
+  KEY.PRED "sandy_rel" ].
+
+;;; verbs
+
+rain := no-arg-verb &
+[ ORTH.LIST.FIRST "rain",
+  KEY.PRED "rain_rel" ].
+
+bark := intrans-verb &
+[ ORTH.LIST.FIRST "bark",
+  KEY.PRED "bark_rel" ].
+
+purr := intrans-verb &
+[ ORTH.LIST.FIRST "purr",
+  KEY.PRED "purr_rel" ].
+
+eat_1 := intrans-verb &
+[ ORTH.LIST.FIRST "eat",
+  KEY.PRED "eat_rel" ].
+
+eat_2 := trans-verb &
+[ ORTH.LIST.FIRST "eat",
+  KEY.PRED "eat_rel" ].
+
+chase := trans-verb &
+[ ORTH.LIST.FIRST "chase",
+  KEY.PRED "chase_rel" ].
+
+give := ditransnp-verb &
+[ ORTH.LIST.FIRST "give",
+  KEY.PRED "give_rel" ].
+
+seem := srv-lxm &
+[ ORTH.LIST.FIRST "seem",
+  KEY.PRED "seem_rel" ].
+
+try := scv-lxm &
+[ ORTH.LIST.FIRST "try",
+  KEY.PRED "try_rel" ].
+
+expect := orv-lxm &
+[ ORTH.LIST.FIRST "expect",
+  KEY.PRED "expect_rel" ].
+
+persuade := ocv-lxm &
+[ ORTH.LIST.FIRST "persuade",
+  KEY.PRED "persuade_rel" ].
+
+believe := scomp-lxm &
+[ ORTH.LIST.FIRST "believe",
+  KEY.PRED "believe_rel" ].
+
+be := auxv-lxm &
+[ ORTH.LIST.FIRST "be",
+  COMPS < [HEAD.FORM presp] >,
+  KEY.PRED "be_rel" ].
+
+have := auxv-lxm &
+[ ORTH.LIST.FIRST "have",
+  COMPS < [HEAD.FORM pastp] >,
+  KEY.PRED "have_rel" ].
+
+;;; preps
+
+to_1 := prep-lxm &
+[ ORTH.LIST.FIRST "to",
+  KEY.PRED "to_rel" ].
+
+to_3 := case-marking-prep-lxm &
+[ ORTH.LIST.FIRST "to" ].
+
+
+near := prep-lxm &
+[ ORTH.LIST.FIRST "near",
+  KEY.PRED "near_rel" ].
+
+from := prep-lxm &
+[ ORTH.LIST.FIRST "from",
+  KEY.PRED "from_rel" ].
+
+in := prep-lxm &
+[ ORTH.LIST.FIRST "in",
+  KEY.PRED "in_rel" ].
+
+into := prep-lxm &
+[ ORTH.LIST.FIRST "into",
+  KEY.PRED "into_rel" ].
+
+with := prep-lxm &
+[ ORTH.LIST.FIRST "with",
+  KEY.PRED "with_rel" ].
+
+
+;;; adverbs
+
+slowly := adv-lxm &
+[ ORTH.LIST.FIRST "slowly",
+  KEY.PRED "slow_rel" ].
+
+loudly := adv-lxm &
+[ ORTH.LIST.FIRST "loudly",
+  KEY.PRED "loud_rel" ].
+
+carefully := adv-lxm &
+[ ORTH.LIST.FIRST "carefully",
+  KEY.PRED "careful_rel" ].
+
+
+probably := scopal-adv-lxm &
+[ ORTH.LIST.FIRST "probably",
+  KEY.PRED "probably_rel" ].
+
+
+;;; adjectives
+
+slow := adj-lxm &
+[ ORTH.LIST.FIRST "slow",
+  KEY.PRED "slow_rel" ].
+
+loud := adj-lxm &
+[ ORTH.LIST.FIRST "loud",
+  KEY.PRED "loud_rel" ].
+
+squeaky := adj-lxm &
+[ ORTH.LIST.FIRST "squeaky",
+  KEY.PRED "squeak_rel" ].
+
+white := adj-lxm &
+[ ORTH.LIST.FIRST "white",
+  KEY.PRED "white_rel" ].
+
+;;; degree intensifiers
+
+so := deg-lxm &
+[ ORTH.LIST.FIRST "so",
+  KEY.PRED "so_rel" ].
+
+;;; conjunctions
+
+and := conj-lxm &
+[ ORTH.LIST.FIRST "and",
+  KEY.PRED "and_rel" ].
+
+or := conj-lxm &
+[ ORTH.LIST.FIRST "or",
+  KEY.PRED "or_rel" ].
+
+;;; complementizers
+
+that_2 := comp-lxm &
+[ ORTH.LIST.FIRST "that",
+  HEAD.FORM fin,
+  SPR <> ].
+
+to_2 := comp-lxm &
+[ ORTH.LIST.FIRST "to",
+  HEAD.FORM inf ].
+
+
