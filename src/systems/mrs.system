@@ -131,7 +131,7 @@
        (:file "comparison")
        #+:null
        (:file "translate")
-       #+:clim
+       #+:null
        (:file "clim")
        #+:null
        (:file "semi")

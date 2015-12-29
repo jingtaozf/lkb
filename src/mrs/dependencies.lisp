@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001--2012 Stephan Oepen (oe@ifi.uio.no);
+;;; Copyright (c) 2001--2014 Stephan Oepen (oe@ifi.uio.no);
 ;;;   see `LICENSE' for conditions.
 
 (in-package :mrs)
@@ -29,8 +29,17 @@
 
 (defparameter *eds-quantifier-argument* (vsym "BV"))
 
+(defparameter *eds-untensed* (list (cons (vsym "TENSE") (vsym "untensed"))))
+
 (defparameter *eds-non-representatives*
-  (list (vsym "appos_rel")))
+  (list (vsym "appos_rel") (vsym "focus_d_rel") (vsym "parg_d_rel")))
+
+(defparameter *eds-predicate-modifiers*
+  (list (ppcre:create-scanner "_x_deg_rel$")))
+
+(defparameter *eds-show-properties-p* t)
+
+(defparameter *eds-show-status-p* nil)
 
 (defparameter %eds-variable-counter% 0)
 
@@ -41,10 +50,10 @@
 (defparameter %eds-equivalences% (make-hash-table :test #'equal))
 
 (defparameter %eds-relevant-features% 
-  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA"
-    "CONST_VALUE" "CARG" "TERM1" "TERM2" "FACTOR1" "FACTOR2"
-    "MARG" "L-INDEX" "R-INDEX" "L-HNDL" "R-HNDL"  "L-HANDEL" "R-HANDEL"
-    "MAIN" "SUBORD" "ROLE" "HINST" "NHINST"))
+  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" 
+    "L-INDEX" "R-INDEX" "L-HNDL" "R-HNDL" "CARG"
+    "SOA" "CONST_VALUE" "TERM1" "TERM2" "FACTOR1" "FACTOR2"
+    "MARG" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE" "HINST" "NHINST"))
 
 (defstruct eds
   top relations hcons raw status)
@@ -60,7 +69,7 @@
              "{~@[~(~a~):~]~
               ~:[~3*~; (~@[cyclic~*~]~@[ ~*~]~@[fragmented~*~])~]~@[~%~]" 
              (eds-top object) 
-             (or cyclicp fragmentedp) 
+             (and *eds-show-status-p* (or cyclicp fragmentedp) )
              cyclicp (and cyclicp fragmentedp) fragmentedp
              (eds-relations object))
           for ed in (eds-relations object)
@@ -68,8 +77,9 @@
                       (or (ed-bleached-p ed) (ed-vacuous-p ed))) do
             (format 
              stream 
-             "~c~a~%" 
+             "~c~a~%"
              (cond
+              ((null *eds-show-status-p*) #\Space)
               ((member :cyclic (ed-status ed)) #\|)
               ((member :fragmented (ed-status ed)) #\|)
               (t #\Space))
@@ -90,8 +100,28 @@
         initially
           (format
            stream 
-           "~(~a~):~(~a~)~@[(~s)~][" 
+           "~(~a~):~(~a~)~@[(~s)~]" 
            (ed-id object) (ed-linked-predicate object) (ed-carg object))
+          (when (and *eds-show-properties-p* (ed-properties object))
+            (loop
+                with *package* = (find-package *mrs-package*)
+                with type = (first (ed-properties object))
+                with properties = (if (extrapair-p type)
+                                    (ed-properties object)
+                                    (rest (ed-properties object)))
+                initially
+                  (format 
+                   stream "{~@[~(~a~) ~]"
+                   (unless (extrapair-p type) type))
+                finally (format stream "}")
+                for property in properties
+                do
+                  (format
+                   stream "~:[~;, ~]~a ~(~a~)"
+                   (not (eq property (first properties)))
+                   (extrapair-feature property)
+                   (extrapair-value property))))
+          (format stream "[")
         for (role . value) in (ed-arguments object)
         unless (eq role carg) do
           (format 
@@ -141,11 +171,15 @@
                                  sortp dmrsp (n 0))
   (case format
     (:ascii
-     (if (psoa-p psoa)
-       (format stream "~a~%" (ed-convert-psoa psoa))
-       (format stream "{}~%")))
+     (cond
+      ((eds-p psoa)
+       (format stream "~a~%" psoa))
+      ((psoa-p psoa)
+       (format stream "~a~%" (ed-convert-psoa psoa)))
+      (t
+       (format stream "{}~%"))))
     (:triples
-     (let* ((eds (ed-convert-psoa psoa))
+     (let* ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa)))
             (triples
              (if dmrsp
                (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
@@ -181,7 +215,7 @@
                         (setf (gethash object attic) n)
                         (incf id)
                         n))))
-         (let ((eds (ed-convert-psoa psoa)))
+         (let ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa))))
            (format 
             stream
             "#X[~a \"{~(~a~)\" \":\" newline~%\"    \" #X["
@@ -225,17 +259,10 @@
                   "] newline \"}\"]~%~
                    #M[]"))))))
     (:html
-     (let ((eds (ed-convert-psoa psoa)))
+     (let ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa))))
        (format stream "<table class=mrsEds>~%")
        (format stream "<tr><td>")
-       (let ((properties (when propertyp
-                           (loop
-                               with top = (eds-top eds)
-                               for ed in (eds-relations eds)
-                               when (equal (ed-id ed) top)
-                               return (ed-properties ed)))))
-         (declare (ignore properties))
-         (mrs-variable-html (eds-top eds) nil n nil stream))
+       (mrs-variable-html (eds-top eds) nil n nil stream)
        (format stream ":</td></tr>~%")
        (loop
            for ed in (eds-relations eds)
@@ -252,7 +279,19 @@
                (let* ((string (make-string-output-stream)))
                  (format string "<table class=mrsProperties>")
                  (loop
-                     for property in (ed-properties ed)
+                     with type = (first (ed-properties ed))
+                     with properties
+                     = (if (extrapair-p type) 
+                         (ed-properties ed)
+                         (rest (ed-properties ed)))
+                     initially
+                       (unless (extrapair-p type)
+                         (format
+                          string
+                          "<tr><td class=mrsPropertyFeature>~(~a~)
+                           <td class=mrsPropertyValue>&nbsp;</td></tr>"
+                          type))
+                     for property in properties
                      do
                        (format 
                         string 
@@ -290,7 +329,7 @@
               (properties (ed)
                 ""))
        (loop
-           with eds = (ed-convert-psoa psoa)
+           with eds = (if (eds-p psoa) psoa (ed-convert-psoa psoa))
            initially
              (format stream "\\eds{~a}{~%" (variable (eds-top eds)))
            for relations on (eds-relations eds)
@@ -325,12 +364,12 @@
         initially (ed-reset)
         ;;
         ;; in a first pass through the EPs of the input MRS, create EDS graph
-        ;; nodes, one per EP.  these will have their key key properties set
+        ;; nodes, one per EP.  these will have their key properties set
         ;; (predicate, handle, distinguished variable, CARG, LNK, et al.) but
         ;; not yet contain any outgoing arcs.
         ;;
         for relation in (psoa-liszt psoa)
-        for ed = (ed-convert-relation relation)
+        for ed = (ed-convert-relation relation psoa)
         when ed do (push ed (eds-relations eds))
         finally
           (setf (eds-relations eds) (nreverse (eds-relations eds)))
@@ -381,66 +420,117 @@
           (ed-reset)
           (return eds))))
 
-(defun ed-convert-relation (relation)
-  (when (and *eds-quantifier-argument* (is-quant-rel relation))
+(defun ed-convert-relation (relation mrs)
+  
+  (let (type)
+    (when (and *eds-quantifier-argument* (is-quant-rel relation))
+      ;;
+      ;; to simplify downstream treatment of quantifiers, make sure the role 
+      ;; name label of the bound variable is not ARG0.  but avoid destructive 
+      ;; changes to our original input; this is potentially hazardous, as the
+      ;; hash of relations to variables (%eds-symbol-table%) now uses a local
+      ;; copy; for all i can tell just now, access to the hash table is within
+      ;; the scope of ed-convert-relation(), however.          (15-jun-12; oe)
+      ;;
+      (setf relation (copy-rel relation))
+      (setf (rel-flist relation)
+        (loop
+            with inherent
+            = (list (vsym "INST") (vsym "ARG0"))
+            for fvpair in (rel-flist relation)
+            when (member (fvpair-feature fvpair) inherent :test #'eq)
+            collect (make-fvpair
+                     :feature *eds-quantifier-argument*
+                     :value (fvpair-value fvpair))
+            else collect fvpair))
+      (setf type :quantifier))
     ;;
-    ;; to simplify the downstream treatment of quantifiers, make sure the label
-    ;; of the bound variable is not ARG0.  but avoid destructive changes to our
-    ;; original input structure; this is potentially hazardous, as the hash of
-    ;; relations to variables (%eds-symbol-table%) now uses a local copy; for
-    ;; all i can tell just now, access to the hash table is within the scope
-    ;; of ed-convert-relation(), however.                      (15-jun-12; oe).
+    ;; arguably hacky: in the ERG analysis of degree specifiers on quantifiers,
+    ;; say ‘nearly all’, there is no connection other than label identification
+    ;; between the degree specifier and the quantifier.  this means there is no
+    ;; connection in terms of an argument relation or actual logical variables,
+    ;; and by default degree specifiers come out unconnected to the dependency
+    ;; graph.  our somewhat hand-wavy interpretation of this analysis for some
+    ;; ten years now has been in term of ‘predicate modification’, i.e. roughly
+    ;; like ‘nearly(all)[x, h1, h2]’.  one may think the degree specifier should
+    ;; take the (label of the) quantifier as its ARG1, but that structure cannot
+    ;; be scope-resolved within current assumptions.  hence, mimic that argument
+    ;; relation on the degree specifier in EDS conversion.       (8-feb-14; oe)
     ;;
-    (setf relation (copy-rel relation))
-    (setf (rel-flist relation)
-      (loop
-          with inherent
-          = (list (vsym "INST") (vsym "ARG0"))
-          for fvpair in (rel-flist relation)
-          when (member (fvpair-feature fvpair) inherent :test #'eq)
-          collect (make-fvpair
-                   :feature *eds-quantifier-argument*
-                   :value (fvpair-value fvpair))
-          else collect fvpair)))
-  (let* ((*package* (find-package :lkb))
-         (handle (let ((handle (rel-handel relation)))
-                   (when (ed-handle-p handle) (var-string handle))))
-         (identifier (ed-find-identifier relation))
-         (predicate (when (rel-pred relation)
-                      (string-downcase (string (rel-pred relation)))))
-         (abstraction
-          #+:ppcre
-          (when predicate
-            (cond
-             ((ppcre:scan "_a(?:_[^_]+)?_rel" predicate) :a)
-             ((ppcre:scan "_n(?:_[^_]+)?_rel" predicate) :n)
-             ((ppcre:scan "_p(?:_[^_]+)?_rel" predicate) :p)
-             ((ppcre:scan "_q(?:_[^_]+)?_rel" predicate) :q)
-             ((ppcre:scan "_v(?:_[^_]+)?_rel" predicate) :v)
-             (t :x))))
-         (predicate (if (and predicate (stringp *sem-relation-suffix*))
-                      (remove-right-sequence 
-                       (string-downcase *sem-relation-suffix*) predicate)
-                      predicate))
-         (flist (rel-flist relation))
-         (carg (loop
-                   with carg = (list (vsym "CARG") 
-                                     (vsym "NAMED")
-                                     (vsym "CONST_VALUE"))
-                   for fvpair in flist
-                   when (member (fvpair-feature fvpair) carg :test #'eq)
-                   return (fvpair-value fvpair)))
-         (lnk (let* ((lnk (rel-lnk relation))
-                     (from (rel-cfrom relation))
-                     (to (rel-cto relation)))
-                (or lnk
-                    (and (numberp from) (numberp to) (>= from 0) (>= to 0)
-                         (list :characters from to))))))
-    (make-ed
-     :handle handle
-     :id (first identifier) :properties (rest identifier)
-     :predicate predicate :lnk lnk :carg carg :abstraction abstraction
-     :raw relation)))
+    (when *eds-predicate-modifiers*
+      (let* ((predicate (when (rel-pred relation)
+                          (string-downcase (string (rel-pred relation)))))
+             (arg1 (loop
+                       with arg1 = (vsym "ARG1")
+                       for argument in (rel-flist relation)
+                       when (eq (fvpair-feature argument) arg1)
+                       return argument)))
+        (when (and predicate
+                   (loop
+                       for pattern in *eds-predicate-modifiers*
+                       thereis
+                         (typecase pattern
+                           (function (ppcre:scan pattern predicate))
+                           (string (string-equal pattern predicate))
+                           (symbol (ignore-errors 
+                                    (equal-or-subtype predicate pattern)))))
+                   (and arg1 (var-p (fvpair-value arg1)) 
+                        (string-equal (var-type (fvpair-value arg1)) "u")))
+          (let* ((label (rel-handel relation)))
+            (when (loop
+                      for relation in (psoa-liszt mrs)
+                      thereis (eq (rel-handel relation) label))
+              (setf relation (copy-rel relation))
+              (setf (rel-flist relation)
+                (loop
+                    with arg1 = (vsym "ARG1")
+                    for argument in (rel-flist relation)
+                    when (eq (fvpair-feature argument) arg1)
+                    collect (make-fvpair
+                             :feature (vsym "ARG1")
+                             :value label)
+                    else collect argument))
+              (setf type :specifier))))))
+
+    (let* ((*package* (find-package :lkb))
+           (handle (let ((handle (rel-handel relation)))
+                     (when (ed-handle-p handle) (var-string handle))))
+           (identifier (ed-find-identifier relation))
+           (predicate (when (rel-pred relation)
+                        (string-downcase (string (rel-pred relation)))))
+           (abstraction
+            #+:ppcre
+            (when predicate
+              (cond
+               ((ppcre:scan "_a(?:_[^_]+)?_rel" predicate) :a)
+               ((ppcre:scan "_n(?:_[^_]+)?_rel" predicate) :n)
+               ((ppcre:scan "_p(?:_[^_]+)?_rel" predicate) :p)
+               ((ppcre:scan "_q(?:_[^_]+)?_rel" predicate) :q)
+               ((ppcre:scan "_v(?:_[^_]+)?_rel" predicate) :v)
+               (t :x))))
+           (predicate (if (and predicate (stringp *sem-relation-suffix*))
+                        (remove-right-sequence 
+                         (string-downcase *sem-relation-suffix*) predicate)
+                        predicate))
+           (flist (rel-flist relation))
+           (carg (loop
+                     with carg = (list (vsym "CARG") 
+                                       (vsym "NAMED")
+                                       (vsym "CONST_VALUE"))
+                     for fvpair in flist
+                     when (member (fvpair-feature fvpair) carg :test #'eq)
+                     return (fvpair-value fvpair)))
+           (lnk (let* ((lnk (rel-lnk relation))
+                       (from (rel-cfrom relation))
+                       (to (rel-cto relation)))
+                  (or lnk
+                      (and (numberp from) (numberp to) (>= from 0) (>= to 0)
+                           (list :characters from to))))))
+      (make-ed
+       :handle handle
+       :id (first identifier) :properties (rest identifier)
+       :predicate predicate :lnk lnk :carg carg :abstraction abstraction
+       :type type :raw relation))))
 
 (defun ed-bleach-eds (eds)
   (loop
@@ -532,7 +622,8 @@
              (name (if variable
                      (var-string variable)
                      (format nil "_~d" (incf %eds-variable-counter%))))
-             (properties (and variable (var-extra variable))))
+             (type (and variable (var-type variable)))
+             (properties (and variable (cons type (var-extra variable)))))
         (setf (gethash relation %eds-symbol-table%) (cons name properties))))))
 
 (defun ed-find-representative (eds variable &optional (selectp t))
@@ -549,7 +640,8 @@
               when (and (not (ed-bleached-p ed))
                         (or (equal name handle) 
                             (and (ed-handle-p qeq) 
-                                 (equal (var-string qeq) handle))))
+                                 (equal (var-string qeq) handle)))
+                        (not (eq (ed-type ed) :specifier)))
               collect ed into candidates
               finally 
                 (return
@@ -593,102 +685,131 @@
   ;; or look at the dependency topology among the candidate EPs and choose one
   ;; that occurs as an argument to the other(s).
   ;;
-  (or
-   (when *eds-non-representatives*
-     (let ((candidates (loop
-                           for ed in candidates
-                           unless (ed-non-representative-p ed)
-                           collect ed))
-           (*eds-non-representatives* nil))
-       (ed-select-representative eds candidates)))
-   (loop
-       for ed in candidates
-       unless (or (ed-message-p ed)
-                  (char= (char (ed-id ed) 0) #\_)) collect ed into candidates
-       finally (when (and candidates (null (rest candidates)))
-                 (return (first candidates))))
-   (loop
-       for ed in candidates
-       unless (char= (char (ed-id ed) 0) #\_) collect ed into candidates
-       finally (when (and candidates (null (rest candidates)))
-                 (return (first candidates))))
-   (loop
-       for ed in candidates
-       unless (eq (ed-type ed) :quantifier) collect ed into candidates
-       finally (when (and candidates (null (rest candidates)))
-                 (return (first candidates))))
-   ;;
-   ;; the most common cause of one-to-many correspondences between a variable
-   ;; and a set of EPs are handles shared with (intersective) modifiers, e.g.
-   ;; in a structure like [believe that] `she arrived very quickly.'  here, the
-   ;; degree specifier is an intersective modifier on the adverb, which in turn
-   ;; is an intersective modifier on the arriving event; thus, all three share
-   ;; one label, and `arrive' is the ARG1 of `quickly', which is the ARG1 of
-   ;; `very'.  to pick out `arrive' in this scenario, count recursive referrals 
-   ;; (aka argumenthood), such that `arrive' receives an incoming count of 2.
-   ;;
-   (labels ((referrers (target candidates)
-              (loop
-                  with id = (ed-id target)
-                  for ed in candidates
-                  for flist = (unless (eq ed target) (rel-flist (ed-raw ed)))
-                  when (loop
-                           for fvpair in flist
-                           for value = (fvpair-value fvpair)
-                           thereis (when (var-p value) 
-                                     (equal (var-string value) id)))
-                  append
-                    (cons ed (referrers ed (remove target candidates)))))
-            (incoming (candidates &optional (eds candidates))
-              (let ((referrers
-                     (loop
-                         for candidate in candidates
-                         for referrers = (referrers candidate eds)
-                         when referrers
-                         collect (cons (length referrers) candidate))))
-                (setf referrers (sort referrers #'> :key #'first))
-                (loop
-                    with n = (first (first referrers))
-                    for referrer in referrers
-                    while (= (first (first referrers)) n)
-                    collect (rest referrer))))
-            (outgoing (candidates)
-              (let ((references
-                     (loop
-                         for candidate in candidates
-                         for n = (length (ed-arguments candidate))
-                         collect (cons n candidate))))
-                (setf references (sort references #'> :key #'first))
-                (loop
-                    with n = (first (first references))
-                    for reference in references
-                    while (= (first reference) n) collect (rest reference)))))
-     (or
-      (let* ((local (incoming candidates))
-             (global (incoming local (eds-relations eds)))
-             (outgoing (outgoing global)))
-        ;;
-        ;; use incoming links among .candidates. as the first criterion; then
-        ;; incoming links against the structure at large (see below); finally,
-        ;; count outgoing links to break ties, if need be.  note that, given a
-        ;; non-empty list, outgoing() always returns a non-empty result, hence
-        ;; we only need two sub-clauses in the or() below.
-        ;;
-        (or (first outgoing) (first local)))
-      ;;
-      ;; from here on, we are grasping at straws (and likely looking at input
-      ;; structures that are not perfectly well-formed).  if there still is a
-      ;; need for disambiguation at this point, give preference to nodes that
-      ;; have more incoming links, i.e. are more connected to the structure at
-      ;; large (as arguments).
-      ;;
-      (let* ((global (incoming candidates (eds-relations eds)))
-             (outgoing (outgoing global)))
-        (or (first outgoing) (first global)))
-      ;;
-      ;; finally, give preferences to nodes that have more outgoing links.
-      ;;
-      (first (outgoing candidates))))))
+  (when *eds-non-representatives*
+    (return-from ed-select-representative
+      (let ((candidates (loop
+                            for ed in candidates
+                            unless (ed-non-representative-p ed)
+                            collect ed))
+            (*eds-non-representatives* nil))
+        (ed-select-representative eds candidates))))
+   (when (or (null candidates) (null (rest candidates)))
+     (return-from ed-select-representative (first candidates)))
+   (or
+    ;;
+    ;; the following two disambiguation attempts are only historically relevant,
+    ;; dis-preferring messages and nodes whose identifier was synthesized (i.e.
+    ;; where there was no distinguished variable available, or it was shared
+    ;; with another node, who got to own it).
+    ;;
+    (loop
+        for ed in candidates
+        unless (or (ed-message-p ed)
+                   (char= (char (ed-id ed) 0) #\_)) collect ed into candidates
+        finally (when (and candidates (null (rest candidates)))
+                  (return (first candidates))))
+    (loop
+        for ed in candidates
+        unless (char= (char (ed-id ed) 0) #\_) collect ed into candidates
+        finally (when (and candidates (null (rest candidates)))
+                  (return (first candidates))))
+    (loop
+        for ed in candidates
+        unless (eq (ed-type ed) :quantifier) collect ed into candidates
+        finally (when (and candidates (null (rest candidates)))
+                  (return (first candidates))))
+    ;;
+    ;; the most common cause of one-to-many correspondences between a variable
+    ;; and a set of EPs are handles shared with (intersective) modifiers, e.g.
+    ;; in a structure like [believe that] `she arrived very quickly.'  here, the
+    ;; degree specifier is an intersective modifier on the adverb, which in turn
+    ;; is an intersective modifier on the arriving event; thus, all three share
+    ;; one label, and `arrive' is the ARG1 of `quickly', which is the ARG1 of
+    ;; `very'.  to pick out `arrive' in this scenario, count recursive referrals 
+    ;; (aka argumenthood), such that `arrive' receives an incoming count of 2.
+    ;;
+    (labels ((referrers (target candidates)
+               (loop
+                   with id = (ed-id target)
+                   for ed in candidates
+                   for flist = (unless (eq ed target) (rel-flist (ed-raw ed)))
+                   unless (ed-bleached-p ed)
+                   when (loop
+                            for fvpair in flist
+                            for value = (fvpair-value fvpair)
+                            thereis (when (var-p value) 
+                                      (equal (var-string value) id)))
+                   append
+                     (cons ed (referrers ed (remove target candidates)))))
+             (incoming (candidates &optional (eds candidates))
+               (let ((referrers
+                      (loop
+                          for candidate in candidates
+                          for referrers = (referrers candidate eds)
+                          when referrers
+                          collect (cons (length referrers) candidate))))
+                 (setf referrers (sort referrers #'> :key #'first))
+                 (loop
+                     with n = (first (first referrers))
+                     for referrer in referrers
+                     while (= (first referrer) n)
+                     collect (rest referrer))))
+             (outgoing (candidates)
+               (let ((references
+                      (loop
+                          for candidate in candidates
+                          for n = (length (ed-arguments candidate))
+                          collect (cons n candidate))))
+                 (setf references (sort references #'> :key #'first))
+                 (loop
+                     with n = (first (first references))
+                     for reference in references
+                     while (= (first reference) n) collect (rest reference)))))
+      (or
+       (let* ((local (incoming candidates))
+              (global (incoming local (eds-relations eds)))
+              (outgoing (outgoing global)))
+         ;;
+         ;; use incoming links among .candidates. as the first criterion; then
+         ;; incoming links against the structure at large (see below); finally,
+         ;; count outgoing links to break ties, if need be.  note that, given a
+         ;; non-empty list, outgoing() always returns a non-empty result, hence
+         ;; we only need two sub-clauses in the or() below.  actually, as long
+         ;; as .candidates. is a sub-set of the full list of relations (which in
+         ;; the context of converting one MRS will always be the case), it would
+         ;; seem impossible for .outgoing. to become empty, provided .local. is
+         ;; non-empty.
+         ;;
+         (or (first outgoing) (first local)))
+       ;;
+       ;; in 1214 at least, mrs/991 (‘there were cats in the garden’) has ‘in_p’
+       ;; share its label with the existential be, but the external argument of
+       ;; the preposition actually is the instance variable of ‘cats’.  not sure
+       ;; this really is the intended (or correct) analysis, as it fails to give
+       ;; a parallel structure for ‘in the garden, there were cats’.  but either
+       ;; way, to make sure we pick the existential ‘be’ over the preposition,
+       ;; we need to dis-prefer untensed events.
+       ;;
+       (let ((tensed (loop
+                         for ed in candidates
+                         unless (ed-untensed-p ed) collect ed)))
+         (when tensed
+           (setf candidates tensed)
+           (when (null (rest tensed)) (first tensed))))
+       ;;
+       ;; from here on, we are grasping at straws (and likely looking at input
+       ;; structures that are not perfectly well-formed).  if there still is a
+       ;; need for disambiguation at this point, give preference to nodes that
+       ;; have more incoming links, i.e. are more connected to the structure at
+       ;; large (as arguments).
+       ;;
+       (let* ((global (incoming candidates (eds-relations eds)))
+              (outgoing (outgoing global)))
+         (or (first outgoing) (first global)))
+       ;;
+       ;; finally, give preferences to nodes that have more outgoing links.
+       ;;
+       (first (outgoing candidates))))))
 
 (defun ed-handle-p (variable)
   (when (var-p variable)
@@ -732,6 +853,15 @@
              (when (stringp type) (search "_m_rel" type))
              (ignore-errors
               (equal-or-subtype type *eds-message-relation*))))))))
+
+(defun ed-untensed-p (properties)
+  (if (ed-p properties)
+    (ed-untensed-p (ed-properties properties))
+    (loop
+        for pair in properties
+        for property = (and (extrapair-p pair) (extrapair-feature pair))
+        for test = (and property (rest (assoc property *eds-untensed*)))
+        thereis (and test (eq (extrapair-value pair) test)))))
 
 (defun ed-fragment-p (ed)
   (when *eds-fragment-relation*
@@ -1053,7 +1183,9 @@
                  for foo in prefix
                  for bar in list
                  always (funcall test foo bar))))
-    (let* ((ed (or ed (find (eds-top eds) (eds-relations eds) :key #'ed-id)))
+    (let* ((ed (or ed (find
+                       (eds-top eds) (eds-relations eds)
+                       :key #'ed-id :test #'string=)))
            (agenda (and ed (list (list ed)))))
       ;;
       ;; put .mark. on all EDs that are `reachable' from the top-level .ed.
@@ -1169,3 +1301,226 @@
                      (if (eq role rstr) arg0 role))
         when role
         collect (list from role to))))
+
+#+:lkb
+(defun eds-to-mrs (eds &key semi (errorp t))
+  (declare (special mt:*semis*))
+  (unless (mt:semi-p semi) (setf semi (first mt:*semis*)))
+  (unless (mt:semi-p semi)
+    (mt:construct-semi)
+    (unless (mt:semi-p (setf semi (first mt:*semis*)))
+      (if errorp
+        (error "eds-to-mrs(): unable to locate or construct a SEM-I.")
+        (return-from eds-to-mrs))))
+  (let ((mrs (make-psoa))
+        (variables (make-hash-table :test #'eq))
+        (relations (make-hash-table :test #'eq))
+        (generator (create-variable-generator))
+        (bv (vsym "BV"))
+        (arg0 (vsym "ARG0")))
+    (labels ((quantifierp (ed)
+               (member (vsym "BV") (ed-arguments ed) :key #'first))
+             (canonical-role (label)
+               (cond
+                ((eq label bv) arg0)
+                (t label)))
+             (variable (&optional (type "u") properties)
+               (make-var :type type :id (funcall generator) :extra properties)))
+      (setf (psoa-top-h mrs) (variable "h"))
+      (loop
+          for node in (eds-relations eds)
+          for predicate = (ed-predicate node)
+          for sps
+          = (mt:semi-lookup semi :predicate predicate :alias predicate)
+          for lnk = (ed-lnk node)
+          for properties = (ed-properties node)
+          for arguments = (ed-arguments node)
+          when sps do
+            (let* ((synopses (mt::sps-synopses sps))
+                   (synopsis (first synopses))
+                   (pred (and synopses (mt::ep-pred synopsis)))
+                   (variable
+                    (or (gethash node variables)
+                        (setf (gethash node variables)
+                          (let* ((type (first properties))
+                                 (type (unless (extrapair-p type) type)))
+                            (variable
+                             (or type "i")
+                             (if type (rest properties) properties))))))
+                   (roles
+                    (unless (quantifierp node)
+                      (list
+                       (make-fvpair :feature (vsym "ARG0") :value variable))))
+                   (relation
+                    (make-rel
+                     :handel (variable "h") :pred pred :lnk lnk :flist roles)))
+              (when (ed-carg node)
+                (push
+                 (make-fvpair :feature (vsym "CARG") :value (ed-carg node))
+                 (rel-flist relation)))
+              (loop
+                  for (dependency . value) in arguments
+                  when (ed-p value) 
+                  do
+                    (let* ((variable
+                            (or (gethash value variables)
+                                (setf (gethash value variables)
+                                  (let* ((properties (ed-properties value))
+                                         (type (first properties))
+                                         (type 
+                                          (unless (extrapair-p type) type)))
+                                    (variable
+                                     (or type "i")
+                                     (if type (rest properties) properties))))))
+                           (role
+                            (make-fvpair
+                             :feature (canonical-role dependency)
+                             :value (or variable value))))
+                      (push role (rel-flist relation))))
+              (setf (gethash node relations) relation)
+              (setf (rel-flist relation)
+                (sort
+                 (rel-flist relation)
+                 #'(lambda (foo bar)
+                     (let ((foo (position foo *feat-priority-list*))
+                           (bar (position bar *feat-priority-list*)))
+                       (if foo
+                         (if bar (< foo bar) t)
+                         bar)))
+                 :key #'fvpair-feature))
+              (push relation (psoa-liszt mrs)))
+          else do
+            (if errorp
+              (error "eds-to-mrs(): invalid predicate ‘~a’." predicate)
+              (return-from eds-to-mrs)))
+      (let* ((top (find 
+                   (eds-top eds) (eds-relations eds)
+                   :key #'ed-id :test #'string=))
+             (index (or (gethash top variables) (variable "i"))))
+        (when top
+          (let* ((larg (rel-handel (gethash top relations)))
+                 (qeq (make-hcons
+                       :relation "QEQ" :scarg (psoa-top-h mrs) :outscpd larg)))
+            (push qeq (psoa-h-cons mrs))))
+        (setf (psoa-index mrs) index))
+      mrs)))
+
+(defun eds-read (file)
+  (cond
+   ((streamp file)
+    (labels ((|{|-reader (stream char)
+                 (declare (ignore char))
+                 (read-delimited-list #\} stream t))
+             (|[|-reader (stream char)
+                 (declare (ignore char))
+                 (read-delimited-list #\] stream t))
+             (read-ed (stream)
+               (let ((c (peek-char t stream nil nil)))
+                 (unless (and c (char= c #\}))
+                   (let ((ed (make-ed)))
+                     (setf (ed-id ed) (read stream nil nil))
+                     (setf (ed-predicate ed) (read stream nil nil))
+                     (setf (ed-lnk ed) (read-lnk stream))
+                     (let ((c (peek-char t stream nil nil)))
+                       (when (and c (char= c #\())
+                         (read-char stream nil nil)
+                         (setf (ed-carg ed) (read stream nil nil))
+                         (read-char stream nil nil)))
+                     (let ((c (peek-char t stream nil nil)))
+                       (when (and c (char= c #\{))
+                         (setf (ed-properties ed) (read stream nil nil))))
+                     (let ((c (peek-char t stream nil nil)))
+                       (when (and c (char= c #\[))
+                         (setf (ed-arguments ed) (read stream nil nil))))
+                     (when (and (ed-id ed) (ed-predicate ed))
+                       (setf (ed-id ed) (string (ed-id ed)))
+                       (setf (ed-predicate ed) (string (ed-predicate ed)))
+                       (let ((type (when (oddp (length (ed-properties ed)))
+                                     (first (ed-properties ed)))))
+                         (setf (ed-properties ed)
+                           (loop
+                               with properties
+                               = (if type 
+                                   (rest (ed-properties ed))
+                                   (ed-properties ed))
+                               while (rest properties)
+                               collect
+                                 (let* ((feature (pop properties))
+                                        (value (pop properties))
+                                        (value 
+                                         (if (or (symbolp value) (stringp value))
+                                           value
+                                           (format nil "~a" value))))
+                                   (make-extrapair 
+                                    :feature (vsym feature)
+                                    :value (vsym value)))))
+                         (when type (push type (ed-properties ed))))
+                       (setf (ed-arguments ed)
+                         (loop
+                             with arguments = (ed-arguments ed)
+                             while (rest arguments)
+                             collect (cons 
+                                      (vsym (pop arguments))
+                                      (pop arguments))))
+                       ed))))))
+               
+      (loop
+          with *package* = (find-package *mrs-package*)
+          with *readtable* = (copy-readtable)
+          with eds = (make-eds)
+          initially
+            (setf (readtable-case *readtable*) :preserve)
+            (set-macro-character #\{ #'|{|-reader nil)
+            (set-macro-character #\} (get-macro-character #\) nil))
+            (set-macro-character #\[ #'|[|-reader nil)
+            (set-macro-character #\] (get-macro-character #\) nil))
+            (set-syntax-from-char #\: #\space)
+            (set-syntax-from-char #\< #\")
+            (set-syntax-from-char #\> #\")
+            (set-syntax-from-char #\, #\space)
+            (unless (char=
+                     #\{
+                     (loop
+                         for c = (read-char file nil nil)
+                         while (and c (not (char= c #\{)))
+                         finally (return c)))
+              (error "eds-read(): missing or invalid preamble."))
+            (unless (setf (eds-top eds) (read file nil nil))
+              (error "eds-read(): missing or invalid top node."))
+          for ed = (read-ed file)
+          while ed 
+          do (push ed (eds-relations eds))
+          finally
+            (setf (eds-top eds) (string (eds-top eds)))
+            (setf (eds-relations eds) (nreverse (eds-relations eds)))
+            (loop
+                with nodes = (eds-relations eds)
+                for node in nodes
+                do
+                  (setf (ed-arguments node)
+                    (loop
+                        for (role . id) in (ed-arguments node)
+                        for value = (when id 
+                                      (find 
+                                       (string id) nodes 
+                                       :key #'ed-id :test #'string=))
+                        when value collect (cons role value))))
+            (return eds))))
+   ((and (stringp file)
+         (let ((c (with-input-from-string (stream file)
+                    (peek-char t  stream nil nil))))
+           (and c (char= c #\{))))
+    (with-input-from-string (stream file)
+      (eds-read stream)))
+   ((and (or (stringp file) (pathnamep file)) (probe-file file))
+    (with-open-file (stream file :direction :input)
+      (eds-read stream)))
+   (t
+    (error "eds-read(): invalid input source ‘~a’." file))))
+
+#+:lkb
+(defun eds (edge)
+  (with-output-to-string (stream)
+    (let ((*package* (find-package *mrs-package*))
+          (*eds-show-properties-p* t))
+      (write (ed-convert-edge edge) :stream stream))))

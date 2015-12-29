@@ -27,15 +27,17 @@
 ;;;
 ;;; [                1 --             1,999] --- various test suites
 ;;; [            2,000 --             9,999] --- The Cathedral and the Bazaar
-;;; [           10,000 --            30,000] --- Conan Doyle Corpus (CDC)
+;;; [           10,000 --            29,999] --- Conan Doyle Corpus (CDC)
+;;; [          102,000 --           116,000] --- Le Petit Prince (LPP)
 ;;; [        1,000,000 --         1,999,999] --- VerbMobil
 ;;; [        2,000,000 --         2,999,999] --- ecommerce
 ;;; [        3,000,000 --         3,999,999] --- LOGON
 ;;; [        4,000,000 --         4,999,999] --- SciBorg
 ;;; [        5,000,000 --         5,099,999] --- BioScope
 ;;; [       10,000,000 --        19,999,999] --- WeScience
-;;; [       20,000,000 --        29,999,999] --- PTB
+;;; [       20,000,000 --        29,999,999] --- PTB WSJ
 ;;; [       30,000,000 --        30,999,999] --- Hinoki
+;;; [       40,000,000 --        49,999,999] --- Brown Corpus
 ;;; [      120,000,000 --     1,099,999,999] --- GENIA
 ;;; [  100,000,000,000 --   299,999,999,999] --- WeSearch Data Collection
 ;;; [1,000,010,000,000 -- 1,128,928,700,510] --- WikiWoods
@@ -52,6 +54,7 @@
  ((:path . "handon") (:content . "Tourism Web Sites (HandOn)"))
  ((:path . "wescience") (:content . "Scholarly Literature (WeScience)"))
  ((:path . "wdc") (:content . "WeSearch Data Collection"))
+ ((:path . "brown") (:content . "(Parts of) Brown Corpus"))
  ((:path . "wsj") (:content . "Wall Street Journal"))
  ((:path . "ptb") (:content . "Penn Treebank (WSJ)"))
  ((:path . "semcor") (:content . "SemCor Sampler (via Melbourne)"))
@@ -66,5 +69,8 @@
  ((:path . "trec") (:content . "TREC QA Questions (Ninth Conference)"))
  ((:path . "fracas") (:content . "FraCaS Semantics Test Suite"))
  ((:path . "peted") (:content . "Evaluation By Textual Entailment (Development)"))
+ ((:path . "petet") (:content . "Evaluation By Textual Entailment (Test)"))
+ #+:null
  ((:path . "tanaka") (:content . "Tanaka Corpus (English Translations)"))
+ ((:path . "lpp") (:content . "Le Petit Prince"))
  ((:path . "redwoods") (:content . "Core Redwoods (JHPSTG & WeScience)")))

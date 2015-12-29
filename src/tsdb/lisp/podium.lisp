@@ -65,36 +65,45 @@
 
 (defvar %tsdb-podium-background-process% nil)
 
-(defun init-podium ()
+(defun init-podium (&key debug)
 
-  (declare (special *derivations-comparison-level*))
+  (declare (special *derivations-comparison-level*
+                    *redwoods-treebanker-application*))
   
-  (shutdown-podium)
+  (unless debug (shutdown-podium))
   (let* (#+:allegro
          (display (system:getenv "DISPLAY"))
          (symbol (when (find-package :lkb)
                    (find-symbol "*TREE-AUTOMATIC-UPDATE-P*" :lkb)))
          (delay (when symbol (symbol-value symbol)))
          (symbol (when (find-package :lkb)
+                   (find-symbol "*TREE-DISCRIMINANTS-MODE*" :lkb)))
+         (mode (when symbol (symbol-value symbol)))
+         (symbol (when (find-package :lkb)
+                   (find-symbol "*TREE-DISPLAY-VIEW*" :lkb)))
+         (view (when symbol (symbol-value symbol)))
+         (symbol (when (find-package :lkb)
                    (find-symbol "*TREE-SKEPTICAL-UPDATE-P*" :lkb)))
          (rejectp (when symbol (symbol-value symbol)))
-         foo)
+         stream foo)
     #+:allegro
     (when (or (null display) (equal display ""))
       (return-from init-podium))
-    (setf *tsdb-podium-windows* nil)
-    (setf %tsdb-podium-pending-events% nil)
-    (multiple-value-setq (*tsdb-wish-stream* foo *tsdb-wish-pid*)
-      (run-process *tsdb-wish-application*
-                   :wait nil
-                   :output :stream :input :stream :error-output nil))
+    (unless debug
+      (setf *tsdb-podium-windows* nil)
+      (setf %tsdb-podium-pending-events% nil)
+      (multiple-value-setq (*tsdb-wish-stream* foo *tsdb-wish-pid*)
+        (run-process *tsdb-wish-application*
+                     :wait nil
+                     :output :stream :input :stream :error-output nil)))
+    (setf stream (or debug *tsdb-wish-stream*))
     ;;
     ;; this may seem silly: suppress compiler warning about unused .foo.
     ;;
     (when foo (setf foo foo))
     (when *tsdb-wish-pid* (enable-gc-cursor *tsdb-wish-pid*))
     (format 
-     *tsdb-wish-stream* 
+     stream 
      "set globals(version) {~a}~%~
       set globals(application) \"~a\"~%~
       set globals(podium_home) \"~a\"~%~
@@ -124,6 +133,9 @@
       set globals(detail,derivations) ~(~s~)~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
+      set globals(tree,mode) ~(~s~)~%~
+      set globals(tree,view) ~(~s~)~%~
+      set globals(tree,external) ~s~%~
       set globals(tree,update,exactp) ~:[0~;1~]~%~
       set globals(tree,update,rejectp) ~:[0~;1~]~%~
       set globals(tree,update,flagp) ~:[0~;1~]~%~
@@ -169,6 +181,9 @@
      *tsdb-maximal-number-of-results*
      *derivations-comparison-level*
      delay (if (numberp delay) delay 0)
+     mode
+     view
+     (or *redwoods-treebanker-application* "")
      *redwoods-update-exact-p*
      rejectp
      *redwoods-update-flag-p*
@@ -189,11 +204,11 @@
      *tsdb-gc-p*
      *tsdb-tenure-p*
      (find :mt *features*))
-    (tsdb-do-phenomena :stream *tsdb-wish-stream*)
-    (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
-    (format *tsdb-wish-stream* 
+    (tsdb-do-phenomena :stream stream)
+    (format stream "source \"~a\"~%" *tsdb-podium*)
+    (format stream 
             "set globals(data) \"~a\"~%" (or *tsdb-data* ""))
-    (force-output *tsdb-wish-stream*))
+    (force-output stream))
   (setf *tsdb-wish-process*
     (mp:process-run-function '(:name "tsdb(1) podium")
                              #'podium-loop)))

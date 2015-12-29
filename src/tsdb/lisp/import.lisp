@@ -66,8 +66,10 @@
 
 (defparameter *import-normalize-p* t)
 
+(defparameter *import-ascii-delimiters* nil)
+
 (defun do-import-database (source target
-                                  &key absolute meter except uncompress)
+                                  &key absolute purge meter except uncompress)
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((tpath (if absolute (namestring target) (find-tsdb-directory target)))
@@ -80,7 +82,7 @@
        "import-database(): invalid source database `~a'.~%"
        source)
       -1)
-     (tstatus
+     ((and tstatus (null purge))
       (format
        *tsdb-io*
        "import-database(): target `~a' exists.~%"
@@ -325,6 +327,8 @@
          (author (current-user))
          (date (current-time))
          (index 0)
+         (on (first *import-ascii-delimiters*))
+         (off (first *import-ascii-delimiters*))
          stream pid foo item phenomenon item-phenomenon)
     (setf foo foo)
     (if (ppcre:scan "\\.gz$" (namestring file))
@@ -340,8 +344,15 @@
       #+:allegro
       (when encoding (setf (stream-external-format stream) encoding))
       (decf p-id)
+      ;;
+      ;; _fix_me_
+      ;; i just added the *import-ascii-delimiters* code (in the hope of using
+      ;; it on NANC, which i realized half-way into the experiment would still
+      ;; require sentence segmentation) but have yet to test and debug.
+      ;;                                                       (23-jul-14; oe)
       (loop
           with context = :newline
+          with active = (not (and on off))
           for i from 1
           for line = (read-line stream nil nil)
           while line
@@ -351,7 +362,11 @@
           for length = (if commentp 0 (length string))
           for pseparation = (search pseparator string)
           when increment do (meter-advance increment)
-          when (and pseparation (zerop pseparation)) do
+          when (and on (ppcre:scan on string))
+          do (setf active t) (setf string "") (setf length 0)
+          when (and off (ppcre:scan off string))
+          do (setf active nil) (setf string "") (setf length 0)
+          when (and active pseparation (zerop pseparation)) do
             (let* ((string (subseq string (length pseparator)))
                    (p-name (string-trim '(#\Space #\Tab) string)))
               (unless (zerop (length p-name))

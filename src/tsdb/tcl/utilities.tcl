@@ -108,10 +108,11 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
         $list item create $i 4 -text [lindex $item 3] -style $center;
         set status "";
         set status "$status[expr {[lindex $item 4] ? "r" : "-"}]";
-        set status "$status[expr {[lindex $item 5] ? "r" : "-"}]";
-        set status "$status[expr {[lindex $item 6] ? "t" : "-"}]";
-        set status "$status[expr {[lindex $item 7] ? "s" : "-"}]";
-        set status "$status[expr {[lindex $item 8] ? "f" : "-"}]";
+        set status "$status[expr {[lindex $item 5] ? "e" : "-"}]";
+        set status "$status[expr {[lindex $item 6] ? "r" : "-"}]";
+        set status "$status[expr {[lindex $item 7] ? "t" : "-"}]";
+        set status "$status[expr {[lindex $item 8] ? "s" : "-"}]";
+        set status "$status[expr {[lindex $item 9] ? "f" : "-"}]";
         $list item create $i 5  -text $status -style $center;
         .menu.compare.menu.compare add radiobutton -label "$name" \
           -selectcolor gold \
@@ -956,6 +957,20 @@ proc tsdb_set {variable {value ""}} {
           set value [lispify_truth_value 0];
         }; # else
       }
+      tree_mode {
+        set variable "*tree-discriminants-mode*";
+        set package ":lkb"; 
+        set value $globals(tree,mode);
+      }
+      tree_view {
+        set variable "*tree-display-view*";
+        set package ":lkb"; 
+        set value $globals(tree,view);
+      }
+      tree_external {
+        set variable "*redwoods-treebanker-application*";
+        set value "\"$globals(tree,external)\"";
+      }
       score_all_p {
         set variable "*redwoods-score-all-p*";
         set value [lispify_truth_value $globals(tree,score_all_p)];
@@ -1008,6 +1023,7 @@ proc tsdb_set {variable {value ""}} {
 
   if {$value == "" || $value == "\"\""} {
     switch -exact $variable {
+      *redwoods-treebanker-application* -
       *statistics-select-condition* -
       *statistics-aggregate-size* -
       *statistics-aggregate-threshold* -

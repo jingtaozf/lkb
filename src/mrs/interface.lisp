@@ -313,7 +313,7 @@ For attempting to learn null semantics
     (test-gen-predict-on-parse *parse-record* sentence ostream)))
 
 
-;;; The following are primarily for the TSDB machinery
+;;; The following are primarily for the [incr tsdb()] machinery
 ;;; - they all take an edge and return a string related
 ;;; to the MRS in some way
 ;;; Functions are from mrsfns.lisp
@@ -361,6 +361,22 @@ For attempting to learn null semantics
                 (with-input-from-string (stream string)
                   (read-mrs stream)))))
       (when (psoa-p mrs) mrs))))
+
+(defun read-mrs-or-eds-from-string (string)
+  (cond
+   ((psoa-p string) string)
+   ((eds-p string) string)
+   (t (let* ((*package* (find-package :lkb))
+             (mrs (ignore-errors 
+                   (with-input-from-string (stream string)
+                     (read-mrs stream))))
+             (eds (unless mrs
+                    (ignore-errors 
+                     (with-input-from-string (stream string)
+                       (eds-read stream))))))
+        (if (psoa-p mrs)
+          mrs
+          (and (eds-p eds) eds))))))
 
 (defun read-and-scope-mrs-from-string (string)
   (let ((*package* (find-package :lkb))
@@ -438,12 +454,20 @@ For attempting to learn null semantics
              (:simple (find-symbol "SHOW-MRS-WINDOW" :lkb))
              (:indexed (find-symbol "SHOW-MRS-INDEXED-WINDOW" :lkb))
              (:scoped (find-symbol "SHOW-MRS-SCOPED-WINDOW" :lkb))
-             (:eds (find-symbol "SHOW-MRS-DEPENDENCIES-WINDOW" :lkb))))))
-         
+             ((:eds :dependencies)
+              (find-symbol "SHOW-MRS-DEPENDENCIES-WINDOW" :lkb))))))
+     (when (eds-p mrs) (setf mrs (eds-to-mrs mrs)))
      (if (functionp browser)
-       (apply browser (list nil mrs title))
-       (output-mrs mrs 'simple)))))
+       (funcall browser nil mrs title)
+       (output-mrs1 mrs 'simple *terminal-io*)))))
 
+(defun browse-mrs-or-eds (mrs &optional title)
+  (ignore-errors
+   (if (eds-p mrs)
+     (if #+:lui (lkb::lui-status-p :mrs) #-:lui nil
+       (funcall (symbol-function (find-symbol "LUI-DISPLAY-EDS" :lkb)) mrs title)
+       (format *terminal-io* "~a~%" mrs))
+    (browse-mrs mrs title))))
 
 ;;;
 ;;; initially mostly for HTML output, though maybe of general utility?  LOGON

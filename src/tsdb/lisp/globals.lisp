@@ -35,7 +35,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (16-jun-13; beta)")
+(defparameter *tsdb-version* "2.0 (2-dec-15; beta)")
 
 (defparameter
   *tsdb-application*
@@ -214,7 +214,7 @@
 (defparameter *statistics-select-condition* nil)
 
 (defparameter *redwoods-export-values* 
-  '(:derivation :tree :avm :mrs :indexed :dependencies))
+  '(:derivation :tree :avm :mrs :eds))
 
 (defparameter *redwoods-update-exact-p* nil)
 

@@ -40,7 +40,7 @@
 ;;; items (i.e. where the recorded decisions completely disambiguate the new
 ;;; parses).
 ;;;
-(def-lkb-parameter *tree-automatic-update-p* 0)
+(def-lkb-parameter *tree-automatic-update-p* nil)
 
 (def-lkb-parameter *tree-skeptical-update-p* nil)
 
@@ -375,7 +375,7 @@
   ;;
   ;; in case the preferred tree was selected directly from the tree display,
   ;; we may not have recorded active decisions, i.e. the choice was reflected
-  ;; in the entailed discriminator states only.
+  ;; in entailed discriminant states only.
   ;;
   (when (find :select (compare-frame-preset frame) :key #'discriminant-type)
     (loop
@@ -420,7 +420,7 @@
   (setf (compare-frame-gactive frame) nil)
   (when (and runp display) (frame-cursor frame :default)))
 
-(defun reset-compare-frame (frame)
+(defun reset-or-reconsider-compare-frame (frame &optional mode)
 
   #+:debug
   (setf %frame frame)
@@ -452,9 +452,10 @@
   (unless (compare-frame-exact frame)
     (recompute-in-and-out frame t))
 
-  (when (find :reject (compare-frame-preset frame) :key #'discriminant-type)
-    (setf (compare-frame-in frame) nil)
-    (setf (compare-frame-out frame) (compare-frame-edges frame)))
+  (unless (eq mode :reconsider)  
+    (when (find :reject (compare-frame-preset frame) :key #'discriminant-type)
+      (setf (compare-frame-in frame) nil)
+      (setf (compare-frame-out frame) (compare-frame-edges frame))))
 
   ;;
   ;; always update tree and discriminant state here: this will cause the frame
@@ -690,7 +691,13 @@
     ()
   (clim:with-application-frame (frame)
     (record-decision (make-decision :type :reset) frame)
-    (reset-compare-frame frame)))
+    (reset-or-reconsider-compare-frame frame)))
+
+(define-compare-frame-command (com-reconsider-compare-frame :menu "Reconsider")
+    ()
+  (clim:with-application-frame (frame)
+    (record-decision (make-decision :type :reset) frame)
+    (reset-or-reconsider-compare-frame frame :reconsider)))
 
 (define-compare-frame-command (com-ordered-compare-frame :menu "Ordered")
     ()
@@ -794,7 +801,6 @@
 
   (setf (compare-frame-tstream frame) stream)
   (unless (and (integerp *tree-display-threshold*)
-               (eq (compare-frame-view frame) :classic)
                (> (length (compare-frame-trees frame)) 
                   *tree-display-threshold*))
     (clim:formatting-table (stream :x-spacing "X")
@@ -844,7 +850,11 @@
                                  :move-cursor t
                                  :within-generation-separation 7
                                  :center-nodes nil)
-                                (let ((mrs (edge-mrs (ctree-edge tree))))
+                                (let* ((edge (ctree-edge tree))
+                                       (mrs (or (edge-mrs edge)
+                                                (setf (edge-mrs edge)
+                                                  (ignore-errors
+                                                   (mrs::extract-mrs edge))))))
                                   (when mrs
                                     (mrs::ed-output-psoa
                                      mrs :stream stream))))))))
@@ -1381,6 +1391,12 @@
       ;; always needs tree redraw, unless active set was empty before.
       ;;
       (not (zerop initial)))
+     ((and (decision-p decision) (eq (decision-type decision) :select))
+      (let ((active (decision-value decision)))
+        (setf (compare-frame-in frame) (list active))
+        (setf (compare-frame-out frame)
+          (remove active (compare-frame-edges frame))))
+      t)
      (t
       (let ((donep nil))
         (setf (compare-frame-in frame) (compare-frame-edges frame))

@@ -549,8 +549,7 @@
                     (eql (second (message-content message)) key))
           return (third (message-content message))
           else when (interrupt-p interrupt)
-          do
-            (return-from revaluate :interrupt))
+          do (return-from revaluate :interrupt))
       :ok)))
 
 (defun interrupt-p (interrupt)

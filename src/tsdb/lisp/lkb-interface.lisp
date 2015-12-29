@@ -375,7 +375,7 @@
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
                            filter burst (nresults 0))
-  (declare (ignore exhaustive derivations string id trees-hook)
+  (declare (ignore exhaustive derivations trees-hook)
            (special tsdb::*process-scope-generator-input-p*))
 
   (let* ((*package* *lkb-package*)
@@ -396,6 +396,22 @@
                                unifications copies aedges pedges)
              (tsdb::time-a-funcall
               #'(lambda ()
+                  (when (mrs:eds-p mrs)
+                    (let* ((item (pairlis '(:-id :i-input) (list id string)))
+                           (client 
+                            (tsdb::allocate-client
+                             item :class :eds :task :transfer :wait 1)))
+                      (unless client (error "unable to transfer input EDS"))
+                      (let* ((item
+                              (pvm:revaluate 
+                               (tsdb::client-tid client)
+                               `(tsdb::transfer-item
+                                 ,(format nil "~a" mrs) :trace t)))
+                             (result (first (tsdb:get-field :results item))))
+                        (tsdb::free-client client)
+                        (setf mrs (tsdb:get-field :mrs result))
+                        (when (stringp mrs)
+                          (setf mrs (mrs::read-mrs-from-string mrs))))))
                   (when (or (null mrs) (not (mrs::psoa-p mrs)))
                     (error "null or malformed input MRS"))
                   (unless (or (null tsdb::*process-scope-generator-input-p*)
@@ -609,7 +625,11 @@
          tgc tcpu treal conses symbols others)
 
     (multiple-value-bind (return condition)
-        (ignore-errors
+        (#-:debug ignore-errors #+:debug progn
+         (when (stringp mrs)
+           (setf mrs (mrs:read-mrs-or-eds-from-string mrs)))
+         (when (mrs:eds-p mrs)
+           (setf mrs (mrs:eds-to-mrs mrs)))
          (when (or (null mrs) (not (mrs::psoa-p mrs)))
            (error "null or malformed input MRS"))
          (when (and (null fragmentp) (mt:fragmentp mrs))
@@ -720,7 +740,8 @@
              (:nresults . ,n))))
       (append
        (when condition
-         (let* ((error (tsdb::normalize-string 
+         (let* ((*print-readably* nil)
+                (error (tsdb::normalize-string 
                         (format nil "~a" condition)))
                 (error (pprint-error error)))
            (pairlis '(:readings :condition :error)

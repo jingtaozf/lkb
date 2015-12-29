@@ -510,6 +510,19 @@
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
+(defun lui-display-eds (eds &optional title)
+  (let* ((id (lsp-store-object nil (make-lspb :eds eds)))
+         (title (format 
+                 nil
+                 "~@[~a ~]Elementary Dependencies Display" title))
+         (string (with-output-to-string (stream)
+                   (format stream "text ~a " id)
+                   (mrs::ed-output-psoa
+                    eds :stream stream :format :lui))))
+    (format %lui-stream% string)
+    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
+  (force-output %lui-stream%))
+
 (defun lui-status-p (&optional key format)
   (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
     (if (null key)

@@ -319,7 +319,7 @@
                         ((eq result :error)
                          (let ((client (get-field :client run))
                                (end (current-time :long :tsdb)))
-                           (when client (setf (client-status client) :error))
+                           (when client (free-client client :error))
                            (nconc run `((:end . ,end)))))
                         ((consp result)
                          (setf result 
@@ -612,13 +612,13 @@
                             comment interactive protocol custom))
             when (eq status :ok)
             do
-              (setf (client-status client) :create)
+              (free-client client :create)
               (push (enrich-run (list (cons :client client))) runs)
               (push tid tids)
               (incf %process-run-id%)
             else 
             do
-              (setf (client-status client) :error)
+              (free-client client :error)
               (setf clients (delete client clients))
               (when *pvm-debug-p*
                 (format
@@ -652,7 +652,7 @@
                 (cond
                  ((eql tag %pvm_task_fail%)
                   (when client
-                    (setf (client-status client) :exit)
+                    (free-client client :exit)
                     (setf clients (delete client clients))
                     (when (and (client-p client) (cpu-p (client-cpu client)))
                       (format
@@ -679,7 +679,7 @@
                            (run (third content)))
                       (when (and stub (consp run))
                         (nconc stub run)
-                        (setf (client-status client) :ready)
+                        (free-client client :ready)
                         (setf (client-load client) load)))
                     (when *pvm-debug-p*
                       (format
@@ -937,6 +937,10 @@
         (if (get-field :edges item)
           (setf (get-field :edges item) edges)
           (nconc item (acons :edges edges nil)))))
+    ;;
+    ;; _fix_me_
+    ;; redefine for various scenarios in edge-based mode.       (31-aug-14; oe)
+    ;;
     (let* ((nanalyses (if exhaustive 
                         0 
                         (if (or (and (integerp nanalyses) (>= nanalyses 1))
@@ -972,7 +976,10 @@
                     #+:lkb
                     (mrs::psoa
                      (with-output-to-string (stream)
-                       (mrs::output-mrs1 mrs 'mrs::simple stream))))))
+                       (mrs::output-mrs1 mrs 'mrs::simple stream)))
+                    (mrs::eds
+                     (with-output-to-string (stream)
+                       (write mrs :stream stream))))))
            (custom (rest (assoc type *process-custom*)))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
@@ -993,9 +1000,11 @@
                       nanalyses nresults interactive custom))))
       (case status
         (:ok 
-         (setf (client-status client) (cons (get-universal-time) item))
+         (free-client client (cons (get-universal-time) item))
          :ok)
-        (:error (setf (client-status client) :error) :error))))
+        (:error
+         (free-client client :error)
+         :error))))
   
    ((null client)
     (let* ((trees-hook (if (eq trees-hook :local)
@@ -1317,7 +1326,7 @@
                stream
                "~&[~a] process-queue(): client exit on `~a' <~x>~%"
                (current-time :long :short) (client-host client) remote))
-            (setf (client-status client) :exit)
+            (free-client client :exit)
             (when (and *process-client-retries* client)
               (let* ((cpu (client-cpu client))
                      (clients (initialize-cpus
@@ -1348,8 +1357,7 @@
                       (result (nconc (pairlis '(:host :run-id)
                                               (list host run-id))
                                      (third content))))
-                      
-                 (setf (client-status client) :ready)
+                 (free-client client)
                  ;;
                  ;; _fix_me_
                  ;; PET, for the time being, returns :score but not :flags.
@@ -1373,7 +1381,7 @@
               (:create-run
                (let ((ready (third content)))
                  (when (consp ready)
-                   (setf (client-status client) :ready)
+                   (free-client client)
                    (return-from process-queue
                      (pairlis '(:pending :ready)
                               (list pending (nconc run ready)))))))
@@ -1704,7 +1712,7 @@
                           tid (get-field :run-id run) custom 1 interrupt))))
           (cond
            ((and (consp status) (get-field :end status))
-            (setf (client-status client) :ready)
+            (free-client client)
             status)
            ((eq status :interrupt)
             (format
@@ -1712,10 +1720,10 @@
              "complete-run(): ~
               external interrupt signal.~%")
             (force-output stream)
-            (setf (client-status client) :interrupt)
+            (free-client client :interrupt)
             (acons :end (current-time :long :tsdb) nil))
            (t
-            (setf (client-status client) :error)
+            (free-client client :error)
             (acons :end (current-time :long :tsdb) nil)))))
        (t
         (let ((finalization (finalize-run context :custom custom)))

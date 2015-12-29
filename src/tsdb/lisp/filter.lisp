@@ -65,9 +65,15 @@
     #+:mrs
     (loop
         for result in (get-field :results item)
+	for id = (get-field :result-id result)
         for mrs = (get-field :mrs result)
         for edge = (get-field :edge result)
         for derivation = (get-field :derivation result)
+	when (and derivation (smember :derivation *filter-test*)) do 
+	  (multiple-value-bind (foo failure) (reconstruct derivation)
+	    (if foo
+	      (nconc result (acons :edge (setf edge foo) nil))
+	      (push (list :derivation failure) (gethash id flags))))
         when (and (or (null mrs) (and (stringp mrs) (string= mrs "")))
                   (null edge)) 
         do 
@@ -83,8 +89,7 @@
           (when (mrs::psoa-p mrs) (setf (get-field :mrs result) mrs))
         when (stringp mrs)
         do
-          (setf mrs (mrs::read-mrs-from-string mrs))
-          (when (mrs::psoa-p mrs) (setf (get-field :mrs result) mrs)))
+          (setf (get-field :mrs result) (mrs::read-mrs-from-string mrs)))
     #+:mrs
     (when (and (smember :sparseness *filter-test*)
                (numberp *filter-mrs-relations-ratio*)
@@ -138,7 +143,7 @@
               (push (list :syntax output) (gethash id flags)))))
     #+:mrs
     (when (or (smember :ascope *filter-test*) (smember :cscope *filter-test*)
-              (smember :uscope *filter-test*))
+              (smember :uscope *filter-test*) (smember :unet *filter-test*))
       (loop
           for result in (get-field :results item)
           for id = (get-field :result-id result)
@@ -366,15 +371,19 @@
               (loop
                   for foo in (reverse flag) do
                     (case (first foo)
+                      (:derivation
+		       (let ((failure (second foo)))
+			 (format t "    reconstruct: ")
+                         (derivation-pprint-failure
+                          failure :stream t :break nil :prefix "")
+                         (terpri t)))
                       (:sparseness
                        (format 
-                        t 
-                        "    sparseness: only ~a relation~p.~%"
+                        t "    sparseness: only ~a relation~p.~%"
                         (second foo) (second foo)))
                       (:syntax
                        (format 
-                        t 
-                        "    syntax: ~a.~%"
+                        t "    syntax: ~a.~%"
                         (second foo)))
                       (:ascope
                        (format 

@@ -448,6 +448,14 @@ proc tsdb_option {name} {
         tsdb_set automatic_update_p;
       }; # if
     }
+    treebanker {
+      if {![input \
+              "external treebanking command" \
+              $globals(tree,external)]} {
+        set globals(tree,external) $globals(input);
+        tsdb_set tree_external;
+      }; # if
+    }
     beam {
       if {![integer_input \
               "maximal size of scoring beam" \
@@ -475,7 +483,7 @@ proc tsdb_option {name} {
 
 proc tsdb_update {{name complete}} {
 
-  global globals test_suites;
+  global globals;
 
   set command "";
   if {$name == "selection"} {
@@ -589,7 +597,7 @@ proc tsdb_browse_vocabulary {{load 0}} {
 
 proc tsdb_capture {} {
 
-  global globals test_suites;
+  global globals;
 
   if {[verify_ts_selection "" "write"]} {return 1};
   set data $globals(data);
@@ -651,7 +659,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
       # _fix_me_
       # we used to say `:condition $condition' here and always set $condition
       # to $globals(condition) above; hence, it was not possible for francis to
-      # set creatively set *statistics-select-condition* in Lisp and have that
+      # creatively set *statistics-select-condition* in Lisp, and have that
       # take effect.  the following should preserve the original functionality,
       # we hope.                                                (4-feb-04; oe)
       #
@@ -678,7 +686,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
           }; # if
         }; # for
         if {![info exists index] 
-            || ![lindex $test_suites($index) 6]} {
+            || ![lindex $test_suites($index) 7]} {
           tsdb_beep;
           status [format "no tree data available for '%s' ... |:-\{" $gold] 10;
           return 1;
@@ -748,7 +756,7 @@ proc tsdb_select {} {
 
 proc tsdb_process {code {data ""} {key ""}} {
 
-  global globals test_suites compare_in_detail;
+  global globals compare_in_detail;
 
   if {$data == "" && [verify_ts_selection "" "write"]} {return 1};
 
@@ -908,7 +916,7 @@ proc analyze_trees {{code "trees"}} {
     }; # if
   }; # for
   if {![info exists index] 
-      || ![lindex $test_suites($index) 6]} {
+      || ![lindex $test_suites($index) 7]} {
     tsdb_beep;
     status [format "no tree data available for '%s' ... |:-\{" \
             $globals(data)] 10;
@@ -938,7 +946,7 @@ proc analyze_update {{code ""}} {
     }; # if
   }; # for
   if {![info exists index] 
-      || ![lindex $test_suites($index) 6]} {
+      || ![lindex $test_suites($index) 7]} {
     tsdb_beep;
     status [format "no tree data available for '%s' ... |:-\{" \
             $globals(data)] 10;
@@ -968,7 +976,7 @@ proc analyze_rules {view} {
     }; # if
   }; # for
   if {![info exists index] 
-      || ![lindex $test_suites($index) 5]} {
+      || ![lindex $test_suites($index) 6]} {
     tsdb_beep;
     status [format "no rule data available for '%s' ... |:-\{" \
             $globals(data)] 10;
@@ -993,7 +1001,7 @@ proc analyze_rules {view} {
 
 proc tsdb_graph {{code "graph"}} {
 
-  global globals test_suites;
+  global globals;
 
   if {[verify_ts_selection]} {return 1};
 

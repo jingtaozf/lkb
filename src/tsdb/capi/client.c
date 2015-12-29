@@ -460,7 +460,7 @@ struct MFILE *client_complete_run() {
               "  (:custom . \"%s\")\n",
               run_id, custom);
   if(callbacks[C_COMPLETE_RUN] != NULL) {
-    if(callbacks[C_COMPLETE_RUN](run_id) < 0) {
+    if(callbacks[C_COMPLETE_RUN](run_id, custom) < 0) {
       fprintf(stderr, "complete_run(): erroneous client return value.\n");
     } /* if */
   } /* if */

@@ -124,7 +124,7 @@
 (defun read-semicolon-comment (stream)
   ;;
   ;; skip over one-line comments, while looking for LTDB tags, i.e. in-line
-  ;; documentation on lexical types.
+  ;; documentation on (lexical) types.
   ;;
   (labels ((scan (tag line)
              (multiple-value-bind (foo bar start end)

@@ -2371,7 +2371,7 @@ an unknown word, treat the gap as filled and go on from there.
 		  ;; might be a type
 		  ;; or a root entry
       thereis (when 
-                  (and rtdfs 
+                  (and tdfs rtdfs 
                        (yaduablep rtdfs tdfs)
                        (if *additional-root-condition*
                            (funcall *additional-root-condition* tdfs)

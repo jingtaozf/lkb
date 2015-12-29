@@ -392,13 +392,13 @@
 	  ;; then handels ok
           (let ((fv1 (loop
                          for role in (rel-flist rel1)
-                         unless (lkb::smember
+                         unless (member
                                  (fvpair-feature role) 
                                  *mrs-equalp-ignored-roles*)
                          collect role))
                 (fv2 (loop
                          for role in (rel-flist rel2)
-                         unless (lkb::smember
+                         unless (member
                                  (fvpair-feature role) 
                                  *mrs-equalp-ignored-roles*)
                          collect role)))

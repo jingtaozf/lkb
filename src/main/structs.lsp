@@ -156,7 +156,14 @@
 ;;; unification context (probably macrolet() or so could be used here to reduce
 ;;; code dupliation across the two branches.                     (7-dec-06; oe)
 ;;;
-(defun process-unifications (specific-list &optional (contextp t))
+;;; read-dag() uses process-unifcations() to produce a DAG, but it appears that
+;;; type constraints (i.e. implicit information not explicitly stated) will not
+;;; be applied by default.  i found this surprising, but have no good model of
+;;; where else process-unifications() is used.  hence, to preserve the original
+;;; behavior and add the choice of `expanding' in type constraints, i added a
+;;; second optional argument.                                   (27-jun-13; oe)
+;;;
+(defun process-unifications (specific-list &optional (contextp t) expandp)
   (eval-any-leaf-types specific-list)
   (if specific-list
       (let* ((new-dag (create-dag))
@@ -169,7 +176,8 @@
                               (basic-unification-lhs unification)
                               new-dag
                               (basic-unification-rhs unification)
-                              new-dag))
+                              new-dag
+                              expandp))
                          specific-list)
                     (copy-dag new-dag)))
                 (when (every
@@ -178,7 +186,8 @@
                             (basic-unification-lhs unification)
                             new-dag
                             (basic-unification-rhs unification)
-                            new-dag))
+                            new-dag
+                            expandp))
                        specific-list)
                   (copy-dag new-dag)))))
         (or res
@@ -188,12 +197,12 @@
                "~%Unifications specified are invalid or do not unify")
               nil)))))
 
-(defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)
+(defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag &optional expandp)
    ;; follows paths into dags and unifies the dags at the end
    ;; caller sets up unification context and copies result if it wants it
-    (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag)))
+    (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag expandp)))
        (when dag1
-          (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag)))
+          (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag expandp)))
              (when dag2
                    (unify-dags dag1 dag2))))))
 
@@ -219,7 +228,7 @@
 ;;; null dag is created and recursively embedded into a larger dag structure
 ;;; specified by the path chain.
 
-(defun unify-paths-dag-at-end-of (path-or-value dag-instance)
+(defun unify-paths-dag-at-end-of (path-or-value dag-instance &optional expandp)
    #+:mclprofile (decf ff (ccl::%heap-bytes-allocated))
    (prog1
      (cond 
@@ -236,7 +245,9 @@
                   (format t "~%Invalid type ~A" type)
                   nil)
                (t
-                 (create-typed-dag type)))))
+                (if (and expandp (not (atomic-type-p type)))
+                  (may-copy-constraint-of type)
+                  (create-typed-dag type))))))
       (t (error "~%Invalid path specification ~A"
             path-or-value)))
      #+:mclprofile (incf ff (ccl::%heap-bytes-allocated))))

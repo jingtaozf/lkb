@@ -152,4 +152,6 @@
                     (setf (client-status client)
                       (cons (get-universal-time) item))
                     (return-from allocate-client client))))
-          (sleep 0.5))))
+          (sleep 0.5)))
+  (defun free-client (client &optional (status :ready))
+    (setf (client-status client) status)))

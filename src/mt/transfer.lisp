@@ -92,7 +92,7 @@
   input output defaults
   variables vector
   avoids requires consumes provides
-  flags special rank file)
+  call flags special rank file)
 
 (defmethod print-object ((object mtr) stream)
   (if %transfer-raw-output-p%
@@ -481,6 +481,19 @@
                         :id id :mtrs (nreverse rules)
                         :before before :after after
                         :pre pre :post post :in in :out out)))
+            (loop
+                for mtr in (mtrs-mtrs mtrs)
+                for id = (loop
+                             for (value . key) in (mtr-special mtr)
+                             when (eq key :call) return value)
+                for rule = (and id (find id (mtrs-mtrs mtrs) :key #'mtr-id))
+                when id do
+                  (if rule
+                    (setf (mtr-call mtr) rule)
+                    (error 
+                     "read-transfer-rules(): ~
+                      invalid call to `~(~a~)' in `~(~a~)'.~%"
+                     id (mtr-id mtr))))
             (setf (getf (mtrs-flags mtrs) :recurse) recurse)
             (setf (getf (mtrs-flags mtrs) :filter)
               (if filterp filter t))
@@ -746,6 +759,7 @@
         (subsume (lkb::existing-dag-at-end-of dag *mtr-subsume-path*))
         (block (mrs::path-value dag *mtr-block-path*))
         (warn (mrs::path-value dag *mtr-warn-path*))
+        (call (mrs::path-value dag *mtr-call-path*))
         (trigger (mrs::path-value dag *mtr-trigger-path*))
         special)
     (when (lkb::dag-p equal)
@@ -786,6 +800,10 @@
     (when (mrs::is-valid-fs warn)
       (let ((warn (mrs::fs-type warn)))
         (when (stringp warn) (push (cons warn :warn) special))))
+    (when (and (mrs::is-valid-fs call) 
+               (not (vacuous-constraint-p *mtr-call-path* call)))
+      (let ((id (mrs::vsym (mrs::fs-type call))))
+        (push (cons id :call) special)))
     (when (mrs::is-valid-fs trigger)
       (let ((le (mrs::vsym (mrs::fs-type trigger))))
         (push id (gethash le *transfer-triggers*))
@@ -1009,7 +1027,6 @@
        ;; after hook, if any; ditch intermediate solutions for which there are
        ;; problems in VPM- or post-processing.
        ;;
-       ;;
        ;; _fix_me_
        ;; in the same spirit, do something about the `post' SEM-I test.
        ;;                                                       (17-oct-06; oe)
@@ -1153,13 +1170,26 @@
                        collect (mrs::ep-shorthand ep))))))
       for task = (pop agenda)
       for rule = (and task (edge-rule task))
-      for mtrs = (if (or (eq task edge) (null rule))
-                   ;;
-                   ;; when we advance from one MTRS to another, the top .edge.
-                   ;; may have a non-empty rule, but taken from the other set.
-                   ;;
-                   all
-                   (member rule all))
+      for mtrs 
+      = (cond
+         ;;
+         ;; when we advance from one MTRS to another, the top .edge.
+         ;; may have a non-empty rule, but taken from the other set.
+         ;;
+         ((or (eq task edge) (null rule)) all)
+         ;;
+         ;; branch, within the current rule set, if the rule calls for it
+         ;;
+         ((mtr-call rule)
+          #+:debug
+          (format
+           *transfer-debug-stream* "apply-mtrs(): call `~(~a~)'.~%"
+           (mtr-id (mtr-call rule)))
+          (member (mtr-call rule) all))
+         ;;
+         ;; otherwise, continue rewriting trying the same rule once more
+         ;;
+         (t (member rule all)))
       while task
       when (null (mtr-block (edge-rule task))) do
         #+:debug
@@ -1332,16 +1362,16 @@
          solutions)
     (transfer-trace :component :context)
     (setf solutions (unify-mtr-component mrs context nil :subsumesp subsumesp))
-    (unless solutions
-      ;;
-      ;; trace
-      ;;
-      (return-from unify-mtr))
     #+:debug
     (format 
      t 
      "unify-mtr(): ~a solution~p for CONTEXT component.~%"
      (length solutions) (length solutions))
+    (unless solutions
+      ;;
+      ;; trace
+      ;;
+      (return-from unify-mtr))
     (when input
       (transfer-trace :component :input)
       (setf solutions
@@ -1399,12 +1429,12 @@
         (loop
             for solution in solutions
             unless (unify-mtr-component
-                    mrs filter solution :subsumesp subsumesp)
+                    mrs filter solution :subsumesp subsumesp :hconsp t)
             collect solution))
       #+:debug
       (format 
        t 
-       "unify-mtr(): ~a solution~p for FILTER component HCONS.~%"
+       "unify-mtr(): ~a solution~p for FILTER component.~%"
        (length solutions) (length solutions)))
     #+:null
     solutions
@@ -1413,7 +1443,7 @@
       (and solutions (list (first solutions))))))
 
 (defun unify-mtr-component (mrs1 mrs2 &optional solution 
-                            &key (disjointp t) subsumesp)
+                            &key (disjointp t) hconsp subsumesp)
   (if (null mrs2)
     (list solution)
     (let* ((solution (copy-solution solution))
@@ -1448,22 +1478,22 @@
         ;; re-order computation for better efficiency (and while there is no
         ;; good way of rejecting false results based on a cycle check).
         ;;
-        solutions
-        #+:null
-        (let* ((hcons1 (mrs:psoa-h-cons mrs1))
-               (hcons2 (mrs:psoa-h-cons mrs2))
-               (solutions
-                (loop
-                    for solution in solutions
-                    append (unify-hconss
-                            hcons1 hcons2 solution
-                            :subsumesp subsumesp))))
-          (unless solutions
-            ;;
-            ;; trace
-            ;;
-            (return-from unify-mtr-component))
-          solutions)))))
+        (if (null hconsp)
+          solutions
+          (let* ((hcons1 (mrs:psoa-h-cons mrs1))
+                 (hcons2 (mrs:psoa-h-cons mrs2))
+                 (solutions
+                  (loop
+                      for solution in solutions
+                      append (unify-hconss
+                              hcons1 hcons2 solution
+                              :subsumesp subsumesp))))
+            (unless solutions
+              ;;
+              ;; trace
+              ;;
+              (return-from unify-mtr-component))
+            solutions))))))
 
 (defun unify-epss (eps1 eps2 solution &key (disjointp t) subsumesp)
   ;;
@@ -1866,7 +1896,7 @@
 (defun expand-solution (mrs mtr solution)
   ;;
   ;; go through EPs from .mrs., ditching those that were aligned with one from
-  ;; .mtr. during unification; then, through in EPs from .mtr. OUTPUT part and
+  ;; .mtr. during unification; then, throw in EPs from .mtr. OUTPUT part and
   ;; unify in all applicable information from .solution.  eventually, do more
   ;; or less the same for HCONS.
   ;;
@@ -2037,6 +2067,7 @@
   #+:debug
   (setf %ep ep %default default)
   (unless default (return-from merge-eps ep))
+  (merge-values (mrs:rel-handel ep) (mrs:rel-handel default) solution)
   (when (mrs::rel-pred default)
     (setf (mrs::rel-pred ep) (mrs::rel-pred default)))
   (loop
@@ -2236,6 +2267,7 @@
                              for extra in (mrs:var-extra variable)
                              for feature = (mrs::extrapair-feature extra)
                              unless (or (eq feature *mtr-skolem-property*)
+                                        #-:null
                                         (eq feature *mtr-mark-property*)
                                         (eq feature *mtr-scratch-property*)
                                         (eq feature *mtr-ditch-property*))

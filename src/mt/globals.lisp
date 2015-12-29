@@ -48,6 +48,8 @@
 
 (defparameter *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
 
+(defparameter *mtr-call-path* (list (mrs::vsym "CALL")))
+
 (defparameter *mtr-warn-path* (list (mrs::vsym "WARN")))
 
 (defparameter *mtr-block-path* (list (mrs::vsym "BLOCK")))

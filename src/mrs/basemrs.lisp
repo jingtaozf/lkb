@@ -1179,9 +1179,8 @@ higher and lower are handle-variables
 (defmethod mrs-output-rel-handel ((mrs debug) handle 
 				  &optional properties sort id)
   (declare (ignore properties sort id))
-  (when handle
-    (with-slots (stream memory) mrs
-      (format stream "~a:~a(" handle memory memory))))
+  (with-slots (stream memory) mrs
+    (format stream "~@[~a~]:~a(" handle memory memory)))
 
 (defmethod mrs-output-label-fn  ((mrs debug) label)
   (declare (ignore label)))
@@ -1205,14 +1204,19 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream " }")))
 
-(defmethod mrs-output-start-h-cons ((mrs debug)))
+(defmethod mrs-output-start-h-cons ((mrs debug))
+  (with-slots (stream) mrs
+    (format stream "{ ")))
 
 (defmethod mrs-output-outscopes ((mrs debug) relation higher lower firstp
 				 higher-id higher-sort lower-id lower-sort)
-  (declare (ignore relation higher lower firstp
-		   higher-id higher-sort lower-id lower-sort)))
+  (declare (ignore higher-id higher-sort lower-id lower-sort))
+  (with-slots (stream) mrs
+    (format stream "~:[, ~;~]~a ~(~a~) ~a" firstp higher relation lower)))
 
-(defmethod mrs-output-end-h-cons ((mrs debug)))
+(defmethod mrs-output-end-h-cons ((mrs debug))
+  (with-slots (stream) mrs
+    (format stream " }")))
 
 (defmethod mrs-output-end-psoa ((mrs debug)))
 
@@ -1710,9 +1714,13 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 
 |#
 
-(defun make-mrs-break-table nil 
-  (lkb::define-break-characters '(#\< #\> #\:
-                                      #\[ #\] #\, #\{ #\})))
+(defun make-mrs-break-table nil
+  (let ((temporary-readtable (copy-readtable *readtable*)))
+    (dolist (break-char '(#\< #\> #\: #\[ #\] #\, #\{ #\}))
+      (set-macro-character break-char
+       #'(lambda (stream x) (declare (ignore stream)) x)
+       nil temporary-readtable))
+    temporary-readtable))
 
 (defun mrs-check-for (character istream)
    (let ((next-char (peek-char t istream nil 'eof)))

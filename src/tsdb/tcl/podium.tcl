@@ -953,7 +953,28 @@ proc main {} {
   .menu.trees.menu.switches add checkbutton \
     -label "Compare Exact Match" \
     -variable globals(tree,compare,exactp) \
-     -command {tsdb_set compare_exact_p};
+    -command {tsdb_set compare_exact_p};
+  .menu.trees.menu.switches add separator;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Syntactic Discriminants" \
+    -variable globals(tree,mode) -value :classic \
+    -command {tsdb_set tree_mode};
+  .menu.trees.menu.switches add radiobutton \
+    -label "Semantic Discriminants" \
+    -variable globals(tree,mode) -value :modern \
+    -command {tsdb_set tree_mode};
+  .menu.trees.menu.switches add radiobutton \
+    -label "External Treebanking Tool" \
+    -variable globals(tree,mode) -value :external \
+    -command {tsdb_set tree_mode};
+  .menu.trees.menu.switches add radiobutton \
+    -label "Show Labeled Syntax Trees" \
+    -variable globals(tree,view) -value :classic \
+    -command {tsdb_set tree_view};
+  .menu.trees.menu.switches add radiobutton \
+    -label "Show Elementary Depedencies" \
+    -variable globals(tree,view) -value :modern \
+    -command {tsdb_set tree_view};
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add radiobutton \
     -label "Maximum Entropy" \
@@ -1017,6 +1038,8 @@ proc main {} {
   menu .menu.trees.menu.variables -tearoff 0;
   .menu.trees.menu.variables add command \
     -label "Update Delay" -command {tsdb_option delay};
+  .menu.trees.menu.variables add command \
+    -label "Treebanking Tool" -command {tsdb_option treebanker};
   .menu.trees.menu.variables add separator;
   .menu.trees.menu.variables add command \
     -label "Cross Validation" -command {tsdb_option nfold};

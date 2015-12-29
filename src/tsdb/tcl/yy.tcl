@@ -67,7 +67,7 @@ proc yy_initialize {} {
 
 proc yy_export_results {} {
 
-  global globals test_suites;
+  global globals;
 
   if {[verify_ts_selection]} {return 1};
   set skeleton [lindex [file split $globals(data)] 2];

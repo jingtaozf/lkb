@@ -114,6 +114,10 @@ client.o: client.c
 	rm -f client.o
 	$(CC) -DDEBUG $(SOLARIS_CFLAGS) -c $(CC_SWITCHES) client.c
 
+test: test.c ../../../include/itsdb.h
+	gcc -o test -g -O0 -I../../../include \
+	  -L../../../lib/linux.x86.64 -litsdb -lpvm3 test.c
+
 make debug:
 	make clean; make CFLAGS="-g -DDEBUG"
 

@@ -42,6 +42,12 @@
 
 (defparameter *redwoods-record-void-discriminants-p* nil)
 
+(defparameter *redwoods-treebanker-application*
+  #+:logon
+  "answer --annotate --terg"
+  #-:logon
+  nil)
+
 (defparameter *redwoods-trace* nil)
 
 (defparameter *redwoods-reconstruct-mode* :word)
@@ -62,9 +68,11 @@
 
 (defparameter %redwoods-items-percentile% 20)
 
+(defparameter %redwoods-treebanking-stream% nil)
+
 (defstruct fc
   file db (strikes 0) cache)
-
+
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
                           gold scores
@@ -72,13 +80,17 @@
                           (bestp *redwoods-thinning-normalize-p*)
                           (exactp *redwoods-update-exact-p*)
                           (cache *tsdb-cache-database-writes-p*)
-                          (verbose t) interactive
+                          (verbose t) interactive 
+                          (external *redwoods-treebanker-application*)
                           (stream *tsdb-io*)
                           (runp t) interrupt meter)
 
-  (declare (optimize (speed 3) (safety 0) (space 0)))
+  (declare 
+   #-:logon (ignore external)
+   (optimize (speed 3) (safety 0) (space 0)))
 
   (initialize-tsdb)
+
   (when strip
   
     (when (< (profile-granularity data) 200509)
@@ -116,35 +128,78 @@
                    data))
          (items (sort (copy-list items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
+         ;;
+         ;; on non-normalized profiles, historic annotation records can make
+         ;; conditions involving `versioned' relations (e.g. `t-active') yield
+         ;; duplicate tuples in the join; for our present purposes, all we are
+         ;; using from the .items. list is the sequence of identifiers (and in
+         ;; each individual browse-tree() invocation, only current annotations
+         ;; will be used), hence reduce to a unique list of identifiers here.
+         ;; say an item was unannotated `t-active < 0' in one version, but was
+         ;; annotated in a more recent version (`t-active >= 0'), we may still
+         ;; be left with an incorrect result here, but it can only be a larger
+         ;; list of items than requested, not a smaller one, as effectively the
+         ;; various versions of annotation records are used disjunctively.
+         ;;                                                     (25-mar-14; oe)
+         (items 
+          (remove-duplicates items :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
-         (cache (when cache
-                  (create-cache (or strip data)
-                                :schema schema :verbose verbose 
-                                :protocol cache)))
-         (gc-strategy 
-          (unless (or interactive (null runp))
-            (install-gc-strategy 
-             nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
-	 (display (let ((foo (getenv "DISPLAY")))
+         gc-strategy display frame
+         %client%)
+    
+    (declare (special %client%))
+
+    (when meter
+      (status :text message)
+      (meter :value 0))
+
+    #+:logon
+    (when (and (eq lkb::*tree-discriminants-mode* :external) external)
+      (let* ((file (format
+                    nil "~a/.redwoods.~a.~a.log"
+                    (tmp :redwoods) (current-user) (current-pid)))
+             (gold (and gold (find-tsdb-directory gold)))
+             (ids (loop for item in items collect (get-field :i-id item)))
+             (command (format
+                       nil 
+                       "~a --webdir=~a~
+                        ~@[ --items=~{~a~^,~}~]~@[ --gold=~a~]~:[~; --auto~]~
+                        ~@[ --browser=~a~] ~a"
+                       external (logon-directory "lingo/answer/fftb" :string)
+                       ids gold (and gold lkb::*tree-automatic-update-p*)
+                       (unless (and gold lkb::*tree-automatic-update-p*)
+                         (logon-file "lingo/answer/bin" "browser" :string))
+                       (find-tsdb-directory data))))
+        (format stream "browse-trees(): running `~a'~%" command)
+        (force-output stream)
+        (run-process
+         command :wait t
+         :output file :if-output-exists :supersede))
+      (return-from browse-trees))
+    
+    (setf cache 
+      (when cache
+        (create-cache (or strip data)
+                      :schema schema :verbose verbose 
+                      :protocol cache)))
+    (setf gc-strategy 
+      (unless (or interactive (null runp))
+        (install-gc-strategy 
+         nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
+    (setf display (let ((foo (getenv "DISPLAY")))
 		    (and (stringp foo) (not (string= foo "")) foo)))
-         (frame (unless strip
+    (setf frame (unless strip
                   (if (and runp display)
                     (clim:make-application-frame 'lkb::compare-frame)
                     (clim:make-application-frame 
                      'lkb::compare-frame :frame-manager nil))))
-                    
-         %client%)
-    (declare (special %client%))
-
+    
     #+:debug
     (setf lkb::%frame% frame)
     (when frame 
       (setf (lkb::compare-frame-ids frame) 
         (loop for item in items collect (get-field :i-id item))))
     
-    (when meter
-      (status :text message)
-      (meter :value 0))
     (when runp
       (loop
           with last = nil
@@ -159,6 +214,11 @@
           with annotated = (make-array nitems :initial-element 0)
           with position = 0
           initially
+            #+:allegro
+            (format
+             excl:*initial-terminal-io* 
+             "~&[~a] browse-trees(): ~a active item~p in annotation set.~%"
+             (current-time :long :short) nitems nitems)
             (when frame
               (setf (lkb::compare-frame-chart frame) nil)
               (setf (clim:frame-pretty-name frame) title)
@@ -211,7 +271,7 @@
           when (interrupt-p interrupt) do
             (format 
              stream
-             "browse-trees(): external interrupt signal~%")
+             "browse-trees(): external interrupt signal.~%")
             (force-output stream)
             (return))
 
@@ -242,7 +302,7 @@
                                          title cache verbose 
                                          (runp t) display stream)
   
-  (declare (special %client%))
+  (declare (special %client%) (ignore scores))
   
   #+:debug
   (setf lkb::%frame% frame)
@@ -303,19 +363,16 @@
            (user (get-field :t-author (first trees)))
            (date (get-field :t-end (first trees)))
            (confidence (let* ((foo (get-field :t-confidence (first trees))))
-                         (if (and (integerp foo) (>= foo 0) (<= foo 3))
-                           foo
-                           3)))
-           (history (let* ((foo (get-field :t-confidence (first trees)))
-                           (confidence 
-                            (if (and (integerp foo) (>= foo 0) (<= foo 3))
-                              (aref #("zero" "low" "fair" "high") foo)
-                              "unknown")))
+                         (and (integerp foo) (>= foo 0) (<= foo 3) foo)))
+           (history (let ((foo 
+                           (if confidence
+                             (aref #("zero" "low" "fair" "high") confidence)
+                             "unknown")))
                       (if (and (>= version 0) user date)
                         (format
                          nil
                          "(~a) ~a on ~a: ~a (~a)"
-                         version user date confidence foo)
+                         version user date foo confidence)
                         "")))
            (edges (unless strip
                     #+:allegro
@@ -325,16 +382,18 @@
                      (current-time :long :short) (length trees) (length trees))
                     (loop
                         with edges
-                        with mode = 
-                          (if (eq (lkb::compare-frame-mode frame) :modern)
-                            t *redwoods-reconstruct-mode*)
+                        with mode 
+                        = (if (eq (lkb::compare-frame-mode frame) :modern)
+                              t *redwoods-reconstruct-mode*)
+                        with grammarp 
+                        = (not (zerop (hash-table-count lkb::*rules*)))
                         for result in results
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
                         for mrs = (let ((mrs (get-field :mrs result)))
                                     (and mrs (not (equal mrs "")) mrs))
                         for edge = (when (or (null subset) (member id subset))
-                                     (if (and derivation 
+                                     (if (and grammarp derivation 
                                               (not (equal derivation "")))
                                        (reconstruct derivation mode)
                                        (when mrs
@@ -390,9 +449,10 @@
            ;; (null strip).  in hacking a thinning update mode that will find
            ;; the top-ranked result that aligns with the tokenization of the
            ;; gold-standard parse(s), we want to combine .gold. and .strip.  i
-           ;; cannot quite how this combination would have been invoked before,
-           ;; so hope that relaxing these when()s will not have side effects.
-           ;;                                                   (31-jan-12; oe)
+           ;; cannot quite see how this combination would have been invoked 
+           ;; before, so hope that relaxing these when()s will not have side
+           ;; effects.                                         (31-jan-12; oe)
+           ;;
            (greadings (when gold
                         (let ((items (select 
                                       '("readings") '(:integer) "parse" 
@@ -401,9 +461,9 @@
                           (when (= (length items) 1)
                             (get-field :readings (first items))))))
            (gtrees (when gold
-                     (select '("parse-id" "t-version" 
+                     (select '("parse-id" "t-version" "t-confidence"
                                "t-active" "t-author" "t-end")
-                             '(:integer :integer 
+                             '(:integer :integer  :integer
                                :integer :string :date)
                              "tree" 
                              (format nil "i-id == ~a" gi-id) 
@@ -430,14 +490,15 @@
                      (analyze 
                       gold :thorough '(:derivation) :condition condition))))
            (gpreferences (when (and gitem gtrees (null (rest gtrees)))
-                           (select '("parse-id" "t-version" "result-id")
-                                   '(:integer :integer :integer)
-                                   "preference" 
-                                   (format 
-                                    nil 
-                                    "i-id == ~a && t-version == ~a" 
-                                    gi-id gversion) 
-                                   gold)))
+                           (select 
+                            '("parse-id" "t-version" "result-id")
+                            '(:integer :integer :integer)
+                            "preference" 
+                            (format 
+                             nil 
+                             "i-id == ~a && t-version == ~a" 
+                             gi-id gversion) 
+                            gold)))
            (gderivation (when (and gpreferences (null (rest gpreferences)))
                           (loop
                               with gpreference = (first gpreferences)
@@ -446,22 +507,36 @@
                               for id = (get-field :result-id result)
                               thereis (when (= id key)
                                         (get-field :derivation result)))))
+           (gconfidence (when (and gtrees (null (rest gtrees)))
+                          (get-field :t-confidence (first gtrees))))
+           ;;
+           ;; defer defaulting of .confidence. value now, so we can preserve a
+           ;; saved value during updates
+           ;;
+           (confidence (or confidence gconfidence 3))
+           (gauthor (when (and gtrees (null (rest gtrees)))
+                      (get-field :t-author (first gtrees))))
            (ghistory (when (and (integerp greadings) (integerp gactive))
-                       (let* ((guser (get-field :t-author (first gtrees)))
-                              (gdate (get-field :t-end (first gtrees))))
+                       (let ((gdate (get-field :t-end (first gtrees)))
+                             (confidence
+                              (and (integerp gconfidence) 
+                                   (>= gconfidence 0) (<= gconfidence 3)
+                                   (aref
+                                    #("zero" "low" "fair" "high")
+                                    gconfidence))))
                          (format 
                           nil 
-                          "(~a) ~a on ~a; [~a : ~a] active"
-                          gversion guser gdate 
+                          "(~a) ~a on ~a~@[: ~a~]; [~a : ~a] active"
+                          gversion gauthor gdate confidence
                           gactive (- greadings gactive)))))
-           (gdecisions (when (and gold gversion)
+           (gdecisions (when gold
                          #+:allegro
                          (format
                           excl:*initial-terminal-io*
                           "~&[~a] browse-tree(): retrieved ~a gold tree~p.~%"
                           (current-time :long :short) 
                           (length gtrees) (length gtrees))
-                         (unless exactp
+                         (unless (or exactp (null gversion))
                            (select '("parse-id" "t-version"
                                      "d-state" "d-type" "d-key" "d-value" 
                                      "d-start" "d-end" "d-date")
@@ -510,31 +585,36 @@
                 ;; tree annotation (if any), the same possibly also holds for
                 ;; :tokenization and :top modes now.             (4-dec-12-oe)
                 ;;
-                (let* ((ids 
+                (let* ((first
+                        (loop
+                            for result in results
+                            minimize (get-field :result-id result)))
+                       (ids 
                         (case bestp
                           (:random
                            (random-sample 1 readings (length preferences)))
                           (:tokenization
-                           (loop
-                               for result in results
-                               for derivation = (get-field :derivation result)
-                               when (derivation-equal
-                                     derivation gderivation :tokenization)
-                               return (list (get-field :result-id result))))
-                          (:top
-                           (list
+                           (or
                             (loop
                                 for result in results
-                                minimize (get-field :result-id result))))
+                                for derivation = (get-field :derivation result)
+                                when (derivation-equal
+                                      derivation gderivation :tokenization)
+                                return (list (get-field :result-id result)))
+                            (list first)))
+                          (:top
+                           (list first))
                           (t
                            (or
                             (loop
                                 for preference in preferences
                                 collect (get-field :result-id preference))
-                            (list
-                             (loop
-                                 for result in results
-                                 minimize (get-field :result-id result)))))))
+                            ;;
+                            ;; avoid writing out dis-preferred trees during a
+                            ;; thinning normalize; not sure why this fall-back
+                            ;; was here in the first place.   (13-jul-14 ; oe)
+                            ;;
+                            #+:null (list first)))))
                        (condition (format
                                    nil
                                    "parse-id == ~a~
@@ -653,11 +733,12 @@
                        (push edge (aref chart from to)))
                  (process gderivation))))
             (t
-             (loop
-                 for edge in edges
-                 for derivation = (lkb::edge-bar edge)
-                 when (derivation-equal gderivation derivation) do
-                   (push edge (lkb::compare-frame-exact frame)))))))
+             (when gderivation
+               (loop
+                   for edge in edges
+                   for derivation = (lkb::edge-bar edge)
+                   when (derivation-equal gderivation derivation) do
+                     (push edge (lkb::compare-frame-exact frame))))))))
 
       (when (and runp display (null %client%))
         (setf %client%
@@ -672,6 +753,12 @@
         ;; grey out `Save' button in compare frame, when we have a read-only
         ;; cache, i.e. (:protocol . :ro).                     (26-jan-04; oe)
         ;;
+        ;; _fix_me_
+        ;; in batch mode (no DISPLAY), it would seem there will be no %client%
+        ;; thread, hence i wonder who we can count on to revoke that process
+        ;; arrest reason?  but, from a cursory inspection of SVN history, this
+        ;; has long been the way it is, so i hesitate making the change ...
+        ;;                                                    (10-feb-14; oe)
         (unless (or (eq status :skip) (null runp))
           (process-add-arrest-reason *current-process* :wait)))
       
@@ -702,7 +789,11 @@
                                         (>= foo 0) (<= foo 3))
                                  foo
                                  -1))
-                   (t-author (current-user))
+                   ;;
+                   ;; in batch updates, preserve name of original annotator
+                   ;;
+                   (t-author (or (and lkb::*tree-automatic-update-p* gauthor)
+                                 (current-user)))
                    (t-start (let* ((start (first (last decisions)))
                                    (start (when (lkb::decision-p start)
                                             (lkb::decision-time start))))
@@ -739,6 +830,8 @@
               (let* ((version (or version 1))
                      (state (encode-discriminant-state recent))
                      (type (encode-discriminant-type recent))
+                     (value (when (eq (lkb::decision-type recent) :select)
+                              (lkb::edge-id (lkb::decision-value recent))))
                      (start (lkb::compare-frame-start frame))
                      (end (lkb::compare-frame-end frame))
                      (time (let ((time (lkb::decision-time recent)))
@@ -750,7 +843,7 @@
                                            :d-state :d-type :d-key :d-value 
                                            :d-start :d-end :d-date)
                                          (list parse-id version 
-                                               state type nil nil 
+                                               state type nil value 
                                                start end time))
                                 :cache cache)))
             (loop
@@ -1560,6 +1653,7 @@
                 (smember :avm *redwoods-export-values*))
           nil
           lkb::*deleted-daughter-features*)
+      with lkb::*unify-robust-p* = *derivations-reconstruct-robust-p*
       with i-input = (get-field :i-input item)
       with i-id = (get-field :i-id item)
       with i-comment = (let ((foo (get-field :i-comment item)))
@@ -1579,8 +1673,8 @@
       for tree = (when (and edge
                             (or (eq *redwoods-export-values* :all)
                                 (smember :tree *redwoods-export-values*)))
-                   (let ((tree (ignore-errors
-                                (lkb::parse-tree-structure edge))))
+                   (let ((tree (ignore-errors 
+                                (lkb::extract-syntax-tree edge))))
                      (unless tree
                        (format 
                         stream 
@@ -1669,7 +1763,7 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :tree *redwoods-export-values*))
           (if tree
-            (format out "~a~%~%" tree)
+            (format out "~s~%~%" tree)
             (format out "()~%~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :avm *redwoods-export-values*))
@@ -1742,6 +1836,12 @@
             (mrs::rmrs-to-dmrs (mrs::mrs-to-rmrs mrs))
             'mrs::dxml out)
            (format out "~%")))
+        ;;
+        ;; _fix_me_
+        ;; there should be support for invoking either of the (currently three)
+        ;; scope resolvers and output of resolved formulae.     (12-jan-15; oe)
+        ;;
+        
         ;;
         ;; _fix_me_
         ;; it appears this function is just called for its side effect, as it
@@ -1932,7 +2032,7 @@
                 (code-char (if *redwoods-score-microaverage-p* #x03c6 #x03a6))))
          (format stream "~%"))
         (:ascii
-         (format stream "`~a' # `~a' Parse Accuracy~%" data gold))))
+         (format stream "`~a' # `~a' ~a-Best Parse Accuracy~%" data gold n))))
 
     (loop
         for (id foo . data) in aggregates
@@ -2076,7 +2176,7 @@
           "  ~a item~p; ~a score~p; ~a robust;~%  ~
              exact match: ~a (~,2f%);~%"
           items items scores scores (get-field :robust data)
-          exact (* (/ exact items) 100))
+          exact (* (/ exact scores) 100))
          (loop
              for type in *redwoods-score-counts*
              for record = (rest (assoc type tcounts))
@@ -2468,7 +2568,6 @@
   
   #+:debug
   (setf %item% item %gold% gold)
-  
   (let ((ranks (get-field :ranks item))
         (granks (get-field :ranks gold))
         (test (cond

@@ -220,7 +220,7 @@
           (return result))
     string))
 
-(defun latex-escape-string (string)
+(defun latex-escape-string (string &key escape)
   (if (and string (or (stringp string) (symbolp string)))
     (loop
         with string = (string string)
@@ -230,13 +230,20 @@
                                   :element-type 'character
                                   :adjustable nil :fill-pointer 0)
         for c across string
-        when (member c '(#\_ #\% #\# #\{ #\}) :test #'char=) do
-          (vector-push #\\ result)
-          (vector-push c result)
-          (when (zerop (decf padding))
-            (setf padding 42)
-            (incf length padding)
-            (setf result (adjust-array result length)))
+        when (or (member c '(#\$ #\_ #\% #\# #\{ #\}) :test #'char=)
+                 (member c escape :test #'char=)) do
+          (let* ((output
+                  (case c
+                    (#\\ "\\textbackslash{}")
+                    (t (format nil "\\~c" c))))
+                 (n (- (length output) 1)))
+            (when (< padding n)
+              (setf padding 128)
+              (incf length padding)
+              (setf result (adjust-array result length)))
+            (loop
+                for c across output
+                do (vector-push c result)))
         else do
           (vector-push c result)
         finally
@@ -601,6 +608,12 @@
                        nil 
                        "~a -home='~a' -verify -quiet -pager=null"
                        *tsdb-application* data))
+             #+:null
+             (application (subseq *tsdb-application* 5))
+             #+:null
+             (command (vector 
+                       application "tsdb" (format nil "-home=~a" data)
+                       "-verify" "-quiet" "-pager=null"))
              (status (if skeletonp 0 (run-process command :wait t))))
         (when (zerop status)
           (let* ((status 
@@ -611,28 +624,39 @@
                     :ro)
                    (t :rw)))
                  (result
-                  (or (file-size 
-                       (make-pathname :directory data :name "result"))
-                      (file-size 
-                       (make-pathname :directory data :name "result.gz"))))
+                  (unless skeletonp
+                    (or (file-size 
+                         (make-pathname :directory data :name "result"))
+                        (file-size 
+                         (make-pathname :directory data :name "result.gz")))))
                  (resultp (and (not skeletonp) (numberp result) (> result 0)))
+                 (edge
+                  (unless skeletonp
+                    (or (file-size 
+                         (make-pathname :directory data :name "edge"))
+                        (file-size 
+                         (make-pathname :directory data :name "edge.gz")))))
+                 (edgep (and (not skeletonp) (numberp edge) (> edge 0)))
                  (rule
-                  (or (file-size 
-                       (make-pathname :directory data :name "rule"))
-                      (file-size 
-                       (make-pathname :directory data :name "rule.gz"))))
+                  (unless skeletonp
+                    (or (file-size 
+                         (make-pathname :directory data :name "rule"))
+                        (file-size 
+                         (make-pathname :directory data :name "rule.gz")))))
                  (rulep (and (not skeletonp) (numberp rule) (> rule 0)))
                  (tree
-                  (or (file-size 
-                       (make-pathname :directory data :name "tree"))
-                      (file-size 
-                       (make-pathname :directory data :name "tree.gz"))))
+                  (unless skeletonp
+                    (or (file-size 
+                         (make-pathname :directory data :name "tree"))
+                        (file-size 
+                         (make-pathname :directory data :name "tree.gz")))))
                  (treep (and (not skeletonp) (numberp tree) (> tree 0)))
                  (score
-                  (or (file-size 
-                       (make-pathname :directory data :name "score"))
-                      (file-size 
-                       (make-pathname :directory data :name "score.gz"))))
+                  (unless skeletonp
+                    (or (file-size 
+                         (make-pathname :directory data :name "score"))
+                        (file-size 
+                         (make-pathname :directory data :name "score.gz")))))
                  (scorep (and (not skeletonp) (numberp score) (> score 0)))
                  (fcp (and (not skeletonp)
                            (let ((size (file-size 
@@ -645,10 +669,10 @@
                  (parses (unless skeletonp (tcount data "parse" :absolute t))))
             (pairlis (list :database 
                            :path :status :items :parses 
-                           :resultp :rulep :treep :scorep :fcp)
+                           :resultp :edgep :rulep :treep :scorep :fcp)
                      (list (namestring language) 
                            data status items parses 
-                           resultp rulep treep scorep fcp))))))))
+                           resultp edgep rulep treep scorep fcp))))))))
 
 (defun virtual-profile-p (data &key absolute)
   (let ((data 
@@ -933,4 +957,3 @@
             (with-process-lock (lock)
               (setf processes (delete process processes))))
           (values (getf properties :result) (getf properties :condition)))))))
-

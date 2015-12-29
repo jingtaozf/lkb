@@ -45,11 +45,13 @@
   ;;
   #+:debug
   (setf %mrs1 mrs1 %mrs2 mrs2)
+  #+:lkb
   (incf (lkb::statistics-comparisons lkb::*statistics*))
   (let ((*mrs-comparison-ignore-roles* roles)
         (*mrs-comparison-ignore-properties* properties)
         (*mrs-comparison-equivalent-types* types)
         (*mrs-comparison-equivalent-predicates* predicates)
+        #+:lkb
         (*transfer-debug-p* (cons (and debug :solutions) *transfer-debug-p*))
         (%transfer-solutions% nil)
         (solution (copy-solution))

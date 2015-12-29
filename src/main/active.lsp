@@ -174,7 +174,7 @@
               for survivor in survivors
               do (lexical-task (first survivor) (rest survivor))))))
 
-(defmacro yadu! (tdfs1 tdfs2 path)
+(defmacro yadu! (tdfs1 tdfs2 &optional path)
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
 (defmacro passives-by-start (position)

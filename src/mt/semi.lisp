@@ -28,6 +28,7 @@
   signature
   (roles (make-hash-table))
   (predicates (make-hash-table :test #'equal))
+  (aliases (make-hash-table :test #'equal))
   (properties (make-hash-table))
   (ges (make-hash-table)))
 
@@ -58,6 +59,14 @@
 
 (defmacro lookup-predicate (predicate semi)
   `(gethash ,predicate (semi-predicates ,semi)))
+
+(defmacro lookup-alias (predicate semi)
+  `(gethash (string-downcase ,predicate) (semi-aliases ,semi)))
+
+(defun semi-lookup (semi &key predicate alias)
+  (or
+   (and predicate (lookup-predicate predicate semi))
+   (and alias (lookup-alias alias semi))))
 
 (defun read-synopsis (string &optional (offset 0))
   (let ((stream (make-string-input-stream string offset)))
@@ -109,6 +118,7 @@
                 (pathname-name file) (pathname-type file)))
          (id (subseq name 0 (search ".smi" name)))
          (id (intern (string-upcase id) :keyword))
+         (includep semi)
          (semi (or semi (make-semi :name id))))
     (with-open-file (stream file :direction :input)
       #+:allegro
@@ -154,6 +164,7 @@
                                    (read-from-string line nil nil)))
                             (pred
                              (if (stringp pred) (string-downcase pred) pred))
+                            (alias (predicate-alias pred))
                             (colon (and pred (position #\: line)))
                             (synopsis 
                              (and colon (read-synopsis line (+ colon 1))))
@@ -163,14 +174,15 @@
                          (setf (ep-pred synopsis) pred)
                          (if bucket
                            (push synopsis (sps-synopses bucket))
-                           (setf (lookup-predicate pred semi)
-                             (make-sps :synopses (list synopsis)))))
+                           (let ((sps (make-sps :synopses (list synopsis))))
+                             (setf (lookup-predicate pred semi) sps)
+                             (when alias (setf (lookup-alias alias semi) sps)))))
                         (t
                          (format
                           t
                           "read-semi(): ignoring |~a|." line)))))))))))))
     (when close (close-semi semi))
-    (push semi *semis*)
+    (unless includep (push semi *semis*))
     semi))
 
 (defun close-semi (semi)
@@ -219,7 +231,7 @@
                     for synopsis in (when sps (sps-synopses sps))
                     thereis (or (null test)
                                 (test-synopsis ep synopsis))))))
-             (test-synopsis (ep synopsis)
+           (test-synopsis (ep synopsis)
              #+:debug (pprint (list ep synopsis))
              (loop
                  with matched
@@ -260,7 +272,8 @@
                    (test-ep ep))
         collect ep)))
 
-(defun construct-semi (&key ids semi (rules t))
+(defun construct-semi (&key ids semi (rules t) 
+                            (warn '(:collision)) (stream t))
   (let ((semi (or semi (make-semi)))
         (ids (or ids (lkb::collect-psort-ids lkb::*lexicon*))))
     (loop
@@ -289,6 +302,24 @@
           for rule = (gethash id lkb::*lexical-rules*)
           when rule do (record-rule semi id rule)))
     ;;
+    ;; when requested, provide some sanity tests on the predicate inventory
+    ;;
+    (when (member :collision warn :test #'eq)
+      (let* ((predicates
+              (loop
+                  for predicate being each hash-key in (semi-predicates semi)
+                  collect (string-downcase predicate)))
+             (predicates (remove-duplicates predicates :test #'string=))
+             (predicates (sort predicates #'string<)))
+        (loop
+            for predicate in predicates
+            for variant = (mrs:vsym predicate)
+            when (and (lookup-predicate predicate semi)
+                      (lookup-predicate variant semi))
+            do (format
+                stream "construct-semi(): predicate collision for ‘~(~a~)’.~%"
+                predicate))))
+    ;;
     ;; finally, construct `generalized synopses' (i.e. folding multiple frames
     ;; into one, where possible using optionality and type underspecification).
     ;;
@@ -296,6 +327,12 @@
         for sps being each hash-value in (semi-predicates semi)
         do (generalize-sps sps))
     semi))
+
+(defun predicate-alias (predicate)
+  (let* ((string (string-downcase predicate))
+         (n (search mrs::*sem-relation-suffix* string :from-end t))
+         (alias (subseq string 0 n)))
+    (unless (string= predicate alias) alias)))
 
 (defun record-le (semi id le)
   (let* ((tdfs (lkb::lex-entry-full-fs le))
@@ -345,6 +382,7 @@
           for i from 0
           for ep in (mrs-eps mrs)
           for pred = (ep-pred ep)
+          for alias = (and pred (predicate-alias pred))
           for sps = (or (lookup-predicate pred semi)
                         (setf (lookup-predicate pred semi) (make-sps)))
           for spe = (make-spe
@@ -367,10 +405,12 @@
                     when (and (eq (role-name role) arg1)
                               (variable-p value))
                     do
+                      #+:null
                       (setf (variable-type value) *semi-p-type*)
                       (setf (variable-optionality value) nil))))
             (push spe (sps-spes sps))
             (push spe (ges-spes ges))
+            (when alias (setf (lookup-alias alias semi) sps))
           finally
             (setf (ges-spes ges) (nreverse (ges-spes ges)))
             (setf (gethash id (semi-ges semi)) ges)))))
@@ -420,6 +460,7 @@
           for i from 0
           for ep in (mrs-eps mrs)
           for pred = (ep-pred ep)
+          for alias = (predicate-alias pred)
           for sps = (or (lookup-predicate pred semi)
                         (setf (lookup-predicate pred semi) (make-sps)))
           for spe = (make-spe
@@ -427,6 +468,7 @@
           do
             (push spe (sps-spes sps))
             (push spe (ges-spes ges))
+            (when alias (setf (lookup-alias alias semi) sps))
           finally
             (setf (ges-spes ges) (nreverse (ges-spes ges)))
             (setf (gethash id (semi-ges semi)) ges)))))

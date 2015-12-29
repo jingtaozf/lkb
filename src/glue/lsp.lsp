@@ -63,7 +63,7 @@
   (display #+:clim clim:*default-server-path* #-:clim nil))
 
 (defstruct lspb
-  id context input tchart chart edge dag mrs children)
+  id context input tchart chart edge dag mrs eds children)
 
 #-(or :clisp :sbcl)
 (defun lsp-initialize ()

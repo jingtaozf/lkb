@@ -88,7 +88,7 @@
 
 (defun find-category-abb (fs)
   ;;; Two versions of this - one as in the original LKB and another 
-  ;;; which is for page emulation.
+  ;;; which is for PAGE emulation.
   ;;; The LKB version is simple - it
   ;;; checks to see whether fs is subsumed by any of the
   ;;; special templates which are listed in *category-display-templates*
@@ -537,14 +537,19 @@
 	do 
           (when dtr-fs
 	     (setf rule-dag
-	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))    
+               (if *unify-robust-p*
+                 (debug-yadu! rule-dag dtr-fs path)
+                 (yadu! rule-dag dtr-fs path)))
              (unless rule-dag (error "Unifications failed to reunify when drawing parse tree"))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
 		     (copy-tdfs-completely nu-orth)))
           (mother-fs (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
       (when orth-fs
-	(setf mother-fs (yadu mother-fs orth-fs)))
+	(setf mother-fs
+          (if *unify-robust-p*
+            (debug-yadu! mother-fs orth-fs)
+            (yadu! mother-fs orth-fs))))
       (unless mother-fs (error "Orthography failed to reunify when drawing parse tree"))
       ;; Return the result
       mother-fs)))
@@ -615,6 +620,18 @@
 	  (loop for dtr in daughters
                collect (parse-tree-structure1 dtr complete-p)))))
 
+(defun extract-syntax-tree (edge)
+  (labels ((recurse (node)
+             (let ((label (get-string-for-edge node))
+                   (daughters 
+                    (loop 
+                        for daughter in (get node 'daughters)
+                        collect (recurse daughter))))
+               (if daughters
+                 (cons (intern label) daughters)
+                 label))))
+    (recurse (make-new-parse-tree edge 1))))
+    
 ;; Find the children of a node, respecting various conditional display flags
 
 (defun find-children (node)
@@ -815,8 +832,16 @@
               ((rule-p (edge-rule edge))
                (let ((foo (string (rule-id (edge-rule edge)))))
                  (or (inflectional-rule-p foo) foo)))
+              ;;
+              ;; _fix_me_
+              ;; not sure this case is ever invoked?            (29-sep-13; oe)
+              ;;
               ((and (null (edge-rule edge)) (edge-category edge))
                (string (edge-category edge)))
+              ((null (edge-children edge))
+               (format
+                nil "~(~a@~a~)"
+                (first (edge-lex-ids edge)) (edge-category edge)))
               (t
                (string (first (edge-lex-ids edge)))))))
     (when (null tree)

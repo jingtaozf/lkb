@@ -20,10 +20,14 @@
 (defvar *ptb-use-pos-tags-p* t)
 
 (defun read-items-from-ptb-directory (path
-                                      &key name type
-                                           (base 1) (offset 20000000))
+                                      &key name (type "mrg") (text :wsj)
+                                           (base 1)
+                                           (offset
+                                            (case text
+                                              (:wsj 20000000)
+                                              (:brown 40000000))))
   (loop
-      with id = base
+      with n = base with id
       for set in (read-ptb-directory path :name name :type type)
       append
         (loop
@@ -45,15 +49,23 @@
             unless (string= current file) do 
               (setf range
                 (parse-integer (ppcre:scan-to-strings "[0-9]+" file)))
-              (setf id 1)
+              (setf n 1)
               (setf current file)
             when (and ptb category)
+            do
+              (setf id
+                (case text
+                  (:brown
+                   (let* ((c (char file 1))
+                          (genre (- (char-code c) (char-code #\a))))
+                     (+ offset (* genre 100000) (* range 1000) n)))
+                  (t
+                   (+ offset (* range 1000) n))))
+              (incf n)
             collect (pairlis '(:i-id :i-origin :i-category
                                :i-wf :i-length :i-input)
-                             (list (+ offset (* range 1000) id)
-                                   origin category
-                                   1 length (format nil "(~a)" ptb)))
-            and do (incf id))))
+                             (list id origin category
+                                   1 length (format nil "(~a)" ptb))))))
 
 (defun read-token (stream &optional breaks)
   (loop
@@ -230,3 +242,8 @@
     do (do-import-items
          (format nil "/home/oe/src/conll09/09~2,'0d.txt" i)
          (format nil "test/conll~2,'0d" i) :format :conll :shift shift))
+
+#+:null
+(setf items
+  (read-items-from-ptb-directory 
+   "~/lib/sdp/brown/all" :text :brown :offset 40000000))

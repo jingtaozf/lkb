@@ -10,7 +10,7 @@
 ;;;
 (defparameter *failure-raw-output-p* nil)
 
-(defparameter *unify-robust-p* :default)
+(defparameter *unify-robust-p* nil)
 
 (defparameter %failures% nil)
 
@@ -76,7 +76,8 @@
         (failure-glb object) (failure-glb object)
         (failure-context object) (failure-context object))))))
 
-(defun debug-yadu! (tdfs1 tdfs2 path &key (robustp *unify-robust-p*))
+(defun debug-yadu! (tdfs1 tdfs2 &optional path
+                    &key (robustp *unify-robust-p*))
   #+:debug
   (setf %tdfs1 tdfs1 %tdfs2 tdfs2 %path path)
   (if *within-unification-context-p*
@@ -171,8 +172,8 @@
              ;;
              (let* ((type1 (get-type-entry (unify-get-type dag1)))
                     (type2 (get-type-entry (unify-get-type dag2))))
-               (setf k (length (ltype-descendants type1)))
-               (setf l (length (ltype-descendants type2)))))
+               (setf k (length (and type1 (ltype-descendants type1))))
+               (setf l (length (and type2 (ltype-descendants type2))))))
            (cond
             ((or (< i j) (and k l (> k l)))
              (setf (dag-forward dag1) dag2)
@@ -278,6 +279,10 @@
         (setf (dag-copy dag) (cons path new))
         (setf (dag-arcs new)
           (loop
+              ;;
+              ;; _fix_me_
+              ;; the append() is lazy, wasteful cons()ing.     (24-sep-13; oe)
+              ;;
               for arc in (append (dag-arcs dag) (dag-comp-arcs dag))
               for feature = (dag-arc-attribute arc)
               for copy = (let ((path (cons feature path)))
@@ -345,12 +350,11 @@
                   with lhs = (create-path-from-feature-list (reverse base))
                   for path in (rest paths)
                   for rhs = (create-path-from-feature-list (reverse path))
-                  for unifiation = (make-unification :lhs lhs :rhs rhs)
-                  do (push unifiation unifications))
+                  for unification = (make-unification :lhs lhs :rhs rhs)
+                  do (push unification unifications))
             finally
               (let* ((*standard-output* (make-string-output-stream))
-                     (dag (process-unifications unifications))
+                     (dag (process-unifications unifications t t))
                      (tdfs (and dag (make-tdfs :indef dag))))
                 (return tdfs)))
         unifications))))
-                

@@ -581,6 +581,8 @@
                   with *transfer-edge-limit* = nil
                   for edge in edges
                   when (edge-p edge) collect edge
+                  else when (mrs::eds-p edge)
+                  collect (make-edge :mrs (mrs::eds-to-mrs edge :errorp nil))
                   else collect (make-edge :mrs edge)))))
          (setf (clim:frame-pretty-name frame) 
            (or (transfer-title frame) "Transfer Input"))

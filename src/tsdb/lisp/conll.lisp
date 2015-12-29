@@ -20,27 +20,57 @@
 (defparameter *conll-type* :starsem)
 
 (defun read-items-from-conll-file (file
-                                   &key (base 1) (offset 0) shift
-                                        (type *conll-type*))
+                                   &key (base 1) (offset 0) shift cycle
+                                        (type *conll-type*) fields rawp (log t))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (loop
+          with identifier = nil
           with id = base
           with input = nil
           for line = (read-line stream nil nil)
           while line
-          when (string= line "")
+          when (string= line "#SDP 2015")
+          do (format log "SDP 2015 file format detected.~%")
+          else when (ppcre:scan "^#[0-9]+$" line)
+          do (setf identifier (parse-integer line :start 1))
+          else when (string= line "")
           collect
-            (let* ((i id)
+            (let* ((i (or identifier id))
                    (length (length input))
                    (string (format nil "~{~a~^~%~}" (nreverse input)))
-                   (tokens (conll-preprocess string :type type :format :raw))
+                   (tokens (conll-preprocess
+                            string :type type :fields fields :format :raw))
                    (negations
                     (when (eq type :starsem)
                       (handler-case (starsem-summarize-tokens tokens)
                         (condition (condition)
                           (warn (format nil "~a" condition))
                           nil)))))
+              (when (smember type '(:dtm :sdp :sdp+))
+                (cond
+                 ((null tokens)
+                  (format
+                   log
+                   "read-items-from-conll-file(): empty graph in item #~a.~%"
+                   i))
+                 (t
+                  (setf tokens (ignore-errors (conll-expand-graph tokens)))
+                  (if (null tokens)
+                    (format
+                     log
+                     "read-items-from-conll-file(): graph error in item #~a.~%"
+                     i)
+                    (when cycle
+                      (multiple-value-bind (token path) (conll-cyclic-p tokens)
+                        (when token
+                          (format
+                           log 
+                           "read-items-from-conll-file(): cycle in item #~a ~
+                            (~a: ~{~a~^.~}).~%"
+                           i (get-field :id token) path)
+                          (setf tokens nil))))))))
+              (setf identifier nil)
               (if (eq type :starsem)
                 (labels ((segment (chapter)
                            (cond
@@ -64,21 +94,88 @@
                     (setf i (+ 10000 (* segment 1000) sentence))))
                 (when (functionp shift) (setf i (funcall shift i))))
               (incf id)
-              (when (consp tokens)
+              (when (and (consp tokens) (null rawp))
                 (setf tokens (write-to-string tokens :case :downcase)))
-              (when (consp negations)
+              (when (and (consp negations) (null rawp))
                 (setf negations (write-to-string negations :case :downcase)))
               (setf input nil)
               (pairlis '(:i-id :i-wf :i-length :i-input :i-tokens :i-comment)
                        (list (+ offset i) 1 length string tokens negations)))
           else do (push line input)))))
 
-(defun conll-preprocess (string &key (format :string) gaps (mode :erg) type)
+(defun conll-preprocess (string &key (format :string) fields
+                                     gaps (mode :erg) type)
   (let ((tokens
          (loop
-             for token in (ppcre:split "\\n" string)
-             for conll = (ppcre:split "\\t" token)
-             when (eq type :starsem)
+             with lines = (ppcre:create-scanner "\\n")
+             with columns = (ppcre:create-scanner "\\t")
+             for token in (ppcre:split lines string)
+             for conll = (ppcre:split columns token)
+             when (consp fields)
+             collect
+               ;;
+               ;; a custom format, with a list of column labels provided
+               ;;
+               (loop
+                   for key in fields
+                   for values on conll
+                   for value = (first values)
+                   when (smember key '(:id :head))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else when key collect (cons key value))
+             else when (eq type :dtm)
+             collect
+               ;;
+               ;; DELPH-IN syntactic and semantic bi-lexical dependencies (DTM)
+               ;;
+               (loop
+                   for key in '(:id :form :lemma :pos :let nil nil nil
+                                :head :label :pred :args)
+                   for values on conll
+                   while (or (null fields) (>= (decf fields) 0))
+                   for value = (first values)
+                   when (smember key '(:id :head))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else when (eq key :args)
+                   collect (cons key values)
+                   else when key collect (cons key value))
+             else when (eq type :sdp)
+             collect
+               ;;
+               ;; SemEval 2014 Semantic Depedency Parsing
+               ;;
+               (loop
+                   for key in '(:id :form :lemma :pos :root :pred :args)
+                   for values on conll
+                   while (or (null fields) (>= (decf fields) 0))
+                   for value = (first values)
+                   when (smember key '(:id))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else when (smember key '(:root :pred))
+                   do (setf value (string= value "+"))
+                   and collect (cons key value)
+                   else when (eq key :args)
+                   collect (cons key values)
+                   else when key collect (cons key value))
+             else when (eq type :sdp+)
+             collect
+               ;;
+               ;; SemEval 2015 Semantic Depedency Parsing
+               ;;
+               (loop
+                   for key in '(:id :form :lemma :pos :root :pred :sense :args)
+                   for values on conll
+                   while (or (null fields) (>= (decf fields) 0))
+                   for value = (first values)
+                   when (smember key '(:id))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else when (smember key '(:root :pred))
+                   do (setf value (string= value "+"))
+                   and collect (cons key value)
+                   else when (eq key :args)
+                   collect (cons key values)
+                   else when key collect (cons key value))
+             else when (eq type :starsem)
              collect
                ;;
                ;; the 2012 *SEM pseudo-CoNLL format
@@ -96,16 +193,28 @@
                        (set-field :start (* id 100) token)
                        (set-field :end (+ (* id 100) length) token))
                      (return (acons :starsem conll token)))
+             else when (eq type :tt)
+             collect
+               ;;
+               ;; a house-internal convention: tokens, lemmas, and tags
+               ;;
+               (loop
+                   for key in '(:id :form :lemma :pos)
+                   for value in conll
+                   when (smember key '(:id))
+                   collect (cons key (parse-integer value :junk-allowed t))
+                   else when key collect (cons key value))
              else when (= (length conll) 10)
              collect
                ;;
-               ;; the earlier, CoNLL 2007 format
+               ;; the earlier, CoNLL 2007 format (CoNLL-X)
                ;;
                (loop
                    for key in '(:id :form :stem
                                 :cpos :pos :feat
                                 :head :deprel :phead :pdeprel)
                    for value in conll
+                   while (or (null fields) (>= (decf fields) 0))
                    when (smember key '(:id :head :phead))
                    collect (cons key (parse-integer value :junk-allowed t))
                    else collect (cons key value))
@@ -119,6 +228,7 @@
                                 :head :phead :deprel :pdeprel
                                 :fillpred :pred :apreds)
                    for value in conll
+                   while (or (null fields) (>= (decf fields) 0))
                    when (smember key '(:id :head :phead))
                    collect (cons key (parse-integer value :junk-allowed t))
                    else collect (cons key value)))))
@@ -227,6 +337,219 @@
      ((string-equal pos "{") "(")
      ((string-equal pos "}") ")")
      (t token))))
+
+(defun conll-expand-graph (tokens)
+  (let ((n 0))
+    (loop
+        for token in tokens
+        for pred = (get-field :pred token)
+        when (or (equal pred "_") (null pred))
+        do (set-field :pred nil token)
+        else do (incf n))
+    (let ((predicates (make-array n :initial-element nil)))
+      (loop
+          for token in tokens
+          for pred = (get-field :pred token)
+          for args = (get-field :args token)
+          when (stringp pred) do
+            (set-field :opred pred token)
+            (cond
+             ((and (not (zerop (length pred))) (char= (char pred 0) #\^))
+              (set-field :root t token)
+              (set-field :pred (subseq pred 1) token))
+             (t
+              (set-field :root nil token)))
+          do
+            (loop
+                for i from 0
+                for arg in args
+                unless (string= arg "_")
+                do (push (cons arg token) (aref predicates i))))
+      (loop
+          with i = 0
+          for token in tokens
+          for pred = (get-field :pred token)
+          for args = (and pred (aref predicates i))
+          when args do (set-field :pred pred token)
+          else do (set-field :pred nil token)
+          do
+            (set-field :edges args token)
+            (delete :args token :key #'first)
+            (when pred (incf i)))
+      tokens)))
+
+(defun conll-cyclic-p (tokens)
+  (labels ((walk (token &optional history path)
+             (if (smember token history)
+               (nreverse path)
+               (loop
+                   for (role . value) in (get-field :edges token)
+                   thereis
+                     (walk value (cons token history) (cons role path))))))
+    (loop
+        for token in tokens
+        for path = (walk token)
+        when path return (values token path))))
+
+(defun conll-analyze (tokens)
+  (let ((mark (gensym ""))
+        (edges 0)
+        roots singletons roles)
+    (labels ((walk (token &optional recursep)
+               (let ((edges (get-field :edges token)))
+                 (unless (or (eq (get-field :mark token) mark)
+                             (and (null edges) (null recursep)))
+                   (set-field :mark mark token)
+                   (loop
+                       for (label . token) in edges
+                       do
+                         (pushnew label roles :test #'string-equal)
+                         (walk token t))))))
+      (loop for token in tokens do (walk token))
+      (loop
+          for token in tokens
+          do (incf edges (length (get-field :edges token)))
+          when (get-field :root token)
+          do (push token roots)
+          else unless (eq (get-field :mark token) mark)
+          do (push token singletons))
+      (values
+       (conll-cyclic-p tokens)
+       edges
+       (nreverse roots) (nreverse singletons)
+       (sort roles #'string<)))))
+
+(defun conll-output (item &key (type :sdp) (stream t) header footer sense)
+
+  (unless (smember type '(:sdp :latex))
+    (error "conll-output(): unknown output format `~(~a~)'." type))
+
+  (when header
+    (if (stringp header)
+      (write-string header stream)
+      (case type
+        (:latex
+         (format 
+          stream
+          "\\documentclass[10pt,a1paper,landscape]{article}~%~
+           \\usepackage[T1]{fontenc}~%~
+           \\usepackage[utf8]{inputenc}~%~
+           \\usepackage{tikz-dependency}~%~
+           \\usepackage[a1paper,landscape]{geometry}~%~%~
+           \\begin{document}~%~%")))))
+
+  (let ((n 0)
+        (tokens (get-field :i-tokens item)))
+    ;;
+    ;; _hack_
+    ;; see whether the tokens string looks much like an association list; if
+    ;; so, parse that list.
+    ;;
+    (let* ((n (when (stringp tokens) (- (length tokens) 1))))
+      (when (and n (< 3 n)
+                 (char= (schar tokens 0) #\()
+                 (char= (schar tokens 1) #\()
+                 (char= (schar tokens (- n 1)) #\))
+                 (char= (schar tokens n) #\)))
+        (setf tokens (ignore-errors (read-from-string tokens)))))
+    (loop
+        for token in tokens
+        when (get-field :edges token) do
+          (set-field :rank n token)
+          (incf n))
+    (loop for token in tokens do (set-field :predicates (make-array n) token))
+    (loop
+        for token in tokens
+        for rank = (get-field :rank token)
+        for edges = (get-field :edges token)
+        do
+          (loop
+              for (role . target) in edges
+              do (setf (aref (get-field :predicates target) rank) role)))
+    (case type
+      (:sdp
+       (format stream "#~a~%" (get-field :i-id item)))
+      (:latex
+       (format
+        stream
+        "\\begin{dependency}[edge above, edge slant=0.15ex, ~
+           edge unit distance=2ex]~%  ~
+           \\begin{deptext}[column sep=1ex]~%    ")
+       (loop
+           for token in tokens
+           unless (eq token (first tokens)) do (format stream " \\amp ")
+           do 
+             (format 
+              stream "~a"
+              (latex-escape-string (get-field :form token) :escape '(#\&))))
+       (format stream "\\\\~%")
+       (when sense
+         (loop
+             for token in tokens
+             unless (eq token (first tokens)) do (format stream " \\amp ")
+             do 
+               (format 
+                stream "~a"
+                (latex-escape-string 
+                 (get-field :sense token) :escape '(#\& #\\))))
+         (format stream "\\\\~%"))
+       (format stream "\\end{deptext}~%")))
+    (loop
+        for token in tokens
+        for predicates = (get-field :predicates token)
+        for i from 1
+        do
+          (case type
+            (:sdp
+             (format
+              stream "~a~c~a~c~a~c~a~c~:[-~;+~]~c~:[-~;+~]~c~a"
+              i #\tab (get-field :form token) #\tab
+              (or (get-field :lemma token) (get-field :stem token))
+              #\tab (get-field :pos token) #\tab
+              (get-field :root token) #\tab
+              (get-field :pred token) #\tab
+              (or (get-field :sense token) "_"))
+             (loop
+                 for i from 0 below n
+                 do (format stream "~c~a" #\tab (or (aref predicates i) "_")))
+             (terpri stream))
+            (:latex
+             (when (get-field :root token)
+               (format
+                stream "\\deproot{~a}{top}~%" (get-field :id token)))
+             (loop
+                 for (label . target) in (get-field :edges token)
+                 do
+                   (format
+                    stream "\\depedge{~a}{~a}{~a}~%"
+                    (get-field :id token) (get-field :id target) 
+                    (latex-escape-string label))))))
+    (case type
+      (:sdp
+       (terpri stream))
+      (:latex
+       (format stream "\\end{dependency}~%"))))
+
+  (when footer
+    (if (stringp footer)
+      (write-string footer stream)
+      (case type
+        (:latex
+         (format stream "\\end{document}~%"))))))
+
+(defun tt-output (item &key (type :tt) (stream t))
+  (unless (eq type :tt)
+    (error "tt-output(): unknown output format `~(~a~)'." type))
+  (format stream "#~a~%" (get-field :i-id item))
+  (loop
+      for token in (get-field :i-tokens item)
+      for i from 1
+      do
+        (format
+         stream "~a~c~a~c~a~c~a~%"
+         i #\tab (get-field :form token) #\tab
+         (get-field :lemma token) #\tab (get-field :pos token)))
+  (terpri stream))
 
 (defparameter *conll-parole-a-map*
   '((("postype=ordinal" . "o") ("postype=qualificative" . "q") 0)

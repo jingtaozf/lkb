@@ -369,13 +369,7 @@ base fs plus rule (except the type itself, of course)
                (daughter (existing-dag-at-end-of dag *head-daughter-path*))
                (head (existing-dag-at-end-of dag *head-path*)))
           (setf (rule-head rule)
-            (or (when daughter
-                  (loop
-                      for path in daughters
-                      for i from 0
-                      for foo = (existing-dag-at-end-of dag path)
-                      when (eq foo daughter) return i))
-                (when head
+            (or (when head
                   (loop
                       for path in daughters
                       for i from 0
@@ -383,6 +377,12 @@ base fs plus rule (except the type itself, of course)
                       for bar = (when foo
                                   (existing-dag-at-end-of foo *head-path*))
                       when (eq bar head) return i))
+                (when daughter
+                  (loop
+                      for path in daughters
+                      for i from 0
+                      for foo = (existing-dag-at-end-of dag path)
+                      when (eq foo daughter) return i))
                 0)))
         ;;
         ;; compute list of indices into `order' slot; these are used in

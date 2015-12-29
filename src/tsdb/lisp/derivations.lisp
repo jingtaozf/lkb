@@ -55,6 +55,8 @@
 
 (defparameter *derivations-ignore-spans-p* nil)
 
+(defparameter *derivations-reconstruct-sponsor-p* nil)
+
 (defparameter *derivations-reconstruct-lnk-p* nil)
 
 (defparameter *derivations-reconstruct-robust-p* nil)
@@ -241,20 +243,23 @@
 ;;; of the structure, in which case our naive assumptions about where to find
 ;;; the values (made in derivation-from() and derivation-to()) will break.
 ;;;                                                             (2-jul-11; oe)
-(defun derivation-from (derivation start)
+(defun derivation-from (derivation &optional start)
   (with-derivation (derivation derivation)
-    (if (= (derivation-start derivation) start)
+    (if (or (null start) (= (derivation-start derivation) start))
       (let* ((token (first (derivation-tokens derivation)))
-             (start (and (stringp token) (search "+FROM \"" token))))
-        (and start (parse-integer token :start (+ start 7) :junk-allowed t)))
+             (start (and (stringp token) (search "+FROM " token)))
+             (from (and start (subseq token (+ start 6)))))
+        (when (and from (char= (char from 0) #\#))
+          (setf from (subseq from (+ (position #\= from) 1))))
+        (and from (parse-integer from :start 1 :junk-allowed t)))
       (loop
           for daughter in (derivation-daughters derivation)
           thereis (and (derivation-id daughter)
                        (derivation-from daughter start))))))
 
-(defun derivation-to (derivation end)
+(defun derivation-to (derivation &optional end)
   (with-derivation (derivation derivation)
-    (if (= (derivation-end derivation) end)
+    (if (or (null end) (= (derivation-end derivation) end))
       (let* ((token (first (last (derivation-tokens derivation))))
              (start (and (stringp token) (search "+TO \"" token))))
         (and start (parse-integer token :start (+ start 5) :junk-allowed t)))
@@ -288,6 +293,21 @@
                   (lkb::tdfs-indef dag) '(lkb::+tnt lkb::+main lkb::+tag))
       unless main do 
         (format t "~@[[~a] ~]~a~%" prefix token)))
+
+(defun derivation-head (derivation)
+  ;;
+  ;; _fix_me_
+  ;; experimental, for internal use only.                          (28-aug-14; oe)
+  ;;
+  (with-derivation (derivation derivation)
+    (unless (null derivation)
+      (let ((daughters (derivation-daughters derivation)))
+        (if (null (derivation-daughters (first daughters)))
+          derivation
+          (let* ((bucket
+                  (get-field (derivation-root derivation) *derivation-heads*))
+                 (head (get-field+ :head bucket 0)))
+            (derivation-head (nth head daughters))))))))
 
 (defun derivation-equal (gold blue 
                          &optional (level *derivations-comparison-level*))
@@ -566,33 +586,7 @@
            t
            "~&~%(~d) `~a'~%~%  ~s~%~%"
            i-id i-input (first failure)))
-        (case (third failure)
-          (:noaffix
-           (format t "  no affix ~a.~%" (fourth failure)))
-          (:notoken
-           (format t "  invalid token ~a.~%" (fourth failure)))
-          (:noentry
-           (format t "  no lexical entry ~a.~%" (fourth failure)))
-          (:norule
-           (format t "  no rule ~a.~%" (fourth failure)))
-          (t
-           (format
-            t
-            "  ~(~a~) in daughter # ~d;~%  path: "
-            (first (third failure)) (or (second failure) 0))
-           (if (eq (first (third failure)) :cycle)
-             (format
-              t
-              "`~{~a~^|~}'.~%"
-              (second (third failure)))
-             (let* ((clash (rest (third failure)))
-                    (path (first clash))
-                    (one (second clash))
-                    (two (third clash)))
-               (format
-                t
-                "`~{~a~^|~}'~%  values: `~(~a~)' vs. `~(~a~)'.~%"
-                path one two)))))
+        (derivation-pprint-failure failure :stream t)
         (format t "~%"))
        ((null failure)
         (if (boundp (find-symbol "*RECONSTRUCT-HOOK*" :tsdb))
@@ -604,6 +598,42 @@
            t
            "~&~%(~d) `~a' --- success.~%"))))
       result)))
+
+(defun derivation-pprint-failure (failure
+                                  &key (stream t) (prefix "  ") (break t))
+  (if stream
+    (case (third failure)
+      (:noaffix
+       (format stream "~ano affix ~a.~%" prefix (fourth failure)))
+      (:notoken
+       (format stream "~ainvalid token ~a.~%" prefix (fourth failure)))
+      (:noentry
+       (format stream "~ano lexical entry ~a.~%" prefix (fourth failure)))
+      (:norule
+       (format stream "~ano rule ~a.~%" prefix (fourth failure)))
+      (:sponsor
+       (format stream "~aincompatible sponsor ~a.~%" prefix (fourth failure)))
+      (t
+       (format
+        stream
+        "~a~(~a~) in daughter # ~d;~:[ ~*~;~%~a~]path: "
+        prefix (first (third failure)) (or (second failure) 0)
+        break prefix)
+       (if (eq (first (third failure)) :cycle)
+         (format
+          stream
+          "`~{~a~^|~}'."
+          (second (third failure)))
+         (let* ((clash (rest (third failure)))
+                (path (first clash))
+                (one (second clash))
+                (two (third clash)))
+           (format
+            stream
+            "`~{~a~^|~}';~:[ ~*~;~%~a~]values: `~(~a~)' vs. `~(~a~)'.~%"
+            path break prefix one two)))))
+    (with-output-to-string (stream)
+      (derivation-pprint-failure failure :stream stream))))
 
 (defun reconstruct (derivation
                     &optional (dagp t)
@@ -746,9 +776,18 @@
     (when (and *reconstruct-cache* edge)
       (push edge (gethash id *reconstruct-cache*)))
     #+:lkb
-    (when (and topp (null (lkb::edge-string edge)))
-      (setf (lkb::edge-string edge)
-        (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge))))
+    (when topp
+      (let* ((sponsor (derivation-sponsor derivation))
+             (sponsor (and sponsor (intern sponsor lkb::*lkb-package*))))
+        (when (and *derivations-reconstruct-sponsor-p* sponsor 
+                   (lkb::edge-dag edge)
+                   (null (lkb::filter-root-edges edge (list sponsor))))
+          (throw :fail
+            (values nil (list derivation 0 :sponsor
+                              (format nil "`~a'" sponsor))))))
+      (when (null (lkb::edge-string edge))
+        (setf (lkb::edge-string edge)
+          (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge)))))
     edge))
 
 (defstruct node
@@ -831,7 +870,20 @@
           do
             (format
              stream "~(~a~) ~a ~a~%"
-             id (length (lkb::rule-rhs rule)) (lkb::rule-head rule))))))
+             id (length (lkb::rule-rhs rule)) (lkb::rule-head rule))
+          when (consp test)
+          do
+            (loop
+                for function in test
+                for i = (call-safe-hook function rule)
+                when (numberp i)
+                do (let* ((id (intern id :tsdb))
+                          (match (get-field id *derivation-heads*))
+                          (head (get-field :head match)))
+                     (when (and head (not (= i head)))
+                       (format
+                        stream "~(~a~): ~a mismatch: ~a vs. ~a.~%" 
+                        id function i head))))))))
 
 ;;;
 ;;; interface function for RASP: given a RASP derivation tree, create (LKB)

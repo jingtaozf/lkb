@@ -72,7 +72,7 @@
 
 (defun starsem-output (tokens
                        &optional cues scopes events
-                       &key (stream t) (format :string))
+                       &key id gscopes (stream t) (format :string))
 
   (when (get-field :i-tokens tokens)
     (setf tokens (get-field :i-tokens tokens))
@@ -115,12 +115,15 @@
           ;;
           (loop
               for cue in cues
+              when (or (null id) (= id (get-field :id cue)))
               do (record (get-field :id cue) :cue (get-field :span cue)))
           (loop
               for scope in scopes 
+              when (or (null id) (= id (get-field :id scope)))
               do (record (get-field :id scope) :scope (get-field :span scope)))
           (loop
               for event in events
+              when (or (null id) (= id (get-field :id event)))
               do (record (get-field :id event) :event (get-field :span event)))
           ;;
           ;; for each position, sort elements starting or ending here according
@@ -160,6 +163,25 @@
                                   (eq typea :event)
                                   (eq (second spanb) :scope))))))))
           ;;
+          ;; if gold scopes are available, determine whether there is a match
+          ;;
+          (if gscopes
+            (let ((gold
+                   (if id
+                     (loop
+                         for foo in gscopes
+                         thereis (when (= (get-field :id foo) id) foo))
+                     gscopes))
+                  (system
+                   (if id
+                     (loop
+                         for foo in scopes
+                         thereis (when (= (get-field :id foo) id) foo))
+                     scopes)))
+              (setf gscopes (equal gold system))
+              (format stream "~:[-~;+~]" gscopes))
+            (setf gscopes t))
+          ;;
           ;; finally, write out the annotated string, one token at a time and,
           ;; (in string-based mode) within each token, one character at a time
           ;;
@@ -178,7 +200,8 @@
                       (write-char (schar form i) stream)
                       (loop
                           for span in (gethash (+ (* id 100) i 1) ends)
-                          do (close-span (first span) (second span)))))))
+                          do (close-span (first span) (second span))))))
+        gscopes)
       (labels ((intersect (token spans type)
                  (loop
                      with span
@@ -326,7 +349,7 @@
         when (get-field :ncues item)
         do
           (format stream "[~a] " (get-field :i-id item))
-          (starsem-output
+          (starsem-output 
            (get-field :i-tokens item)
            (get-field :ncues item)
            (get-field :nscopes item)

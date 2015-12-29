@@ -484,6 +484,8 @@
                              (subseq directory prefix)
                              directory)
               when (and suffix
+                        (not (search "/.svn" suffix))
+                        (not (search "/.cvs" suffix))
                         (or (null name) (string= name suffix))
                         (or (null pattern) (ppcre::scan pattern suffix)))
               collect suffix))
@@ -538,21 +540,22 @@
            (format 
             stream 
             "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~
-             ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
+             ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
             (if index (+ index i) i)
             (get-field :database db) (get-field :status db) 
             (get-field :items db) (get-field :parses db)
-            (get-field :resultp db) (get-field :rulep db) 
+            (get-field :resultp db) (get-field :edgep db) (get-field :rulep db) 
             (get-field :treep db) (get-field :scorep db)
             (get-field :fcp db)))
           (:list
            (push (format 
                   nil 
                   "{~s \"~(~a~)\" ~d ~d ~
-                   ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
+                   ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
                   (get-field :database db) (get-field :status db) 
                   (get-field :items db) (get-field :parses db)
-                  (get-field :resultp db) (get-field :rulep db)
+                  (get-field :resultp db) (get-field :edgep db)
+                  (get-field :rulep db)
                   (get-field :treep db) (get-field :scorep db)
                   (get-field :fcp db))
                  result))
@@ -562,7 +565,7 @@
             "~v,0t  <tr>~%~
              ~v,0t    <td><input type=radio name=data value=\"~a\"></td>~%~
              ~v,0t    <td align=left>~a</td><td align=center>~a</td>~
-             <td align=center>~a</td><td align=center>~a~a~a~a~a</td>~%~
+             <td align=center>~a</td><td align=center>~a~a~a~a~a~a</td>~%~
              ~v,0t  </tr>~%"
             indentation 
             indentation (get-field :database db)
@@ -570,6 +573,7 @@
             (get-field :parses db)
             (if (get-field :resultp db) "r" "-")
             (if (get-field :rulep db) "r" "-")
+            (if (get-field :edgep db) "e" "-")
             (if (get-field :treep db) "t" "-")
             (if (get-field :scorep db) "s" "-")
             (if (get-field :fcp db) "f" "-")

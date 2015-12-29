@@ -179,7 +179,7 @@
         ;;
         ;; ... then, wait for them to register (start talking) with us.
         ;;
-        (unless block
+        (unless (or block (null result))
           (wait-for-clients :wait delay :prefix prefix :stream stream))
         ;;
         ;; attempt to shut down clients that we attempted to start but somehow
@@ -448,7 +448,7 @@
                  (append (rest (assoc :result status)) 
                          (when (eq type :parse) item)))))
             (:error 
-             (setf (client-status client) :error)
+             (free-client client :error)
              (pairlis '(:readings :error)
                       (list 
                        -1 (format nil "PVM internal error <~x>" tid))))
@@ -501,7 +501,7 @@
      tid form block
      :verbose verbose :key key :interrupt interrupt)))
 
-(defun enforce-limits (&key time memory edges)
+(defun enforce-limits (&key time memory edges size)
   (when (numberp edges) (setf *tsdb-maximal-number-of-edges* edges))
   (loop
       for cpu in *pvm-cpus*
@@ -512,10 +512,19 @@
         (when (and (numberp edges) (cpu-edges cpu))
           (setf (cpu-edges cpu) edges))
         (setf (cpu-options cpu)
-          (loop
-              for option in (cpu-options cpu)
-              when (and time (equal (search "-timeout" option) 0))
-              collect (format nil "-timeout=~a" time)
-              else when (and memory (equal (search "-memlimit" option) 0))
-              collect (format nil "-memlimit=~a" memory)
-              else collect option))))
+          (append
+           (when size
+             (list "--size" size))
+           (loop
+               for option in (cpu-options cpu)
+               when (and time (equal (search "-timeout" option) 0))
+               collect (format nil "-timeout=~a" time)
+               else when (and memory (equal (search "-memlimit" option) 0))
+               collect (format nil "-memlimit=~a" memory)
+               else when (and memory (equal (search "--max-chart" option) 0))
+               collect (format 
+                        nil "--max-chart-megabytes=~a" 
+                        (round memory 10/9))
+               else when (and memory (equal (search "--max-unpack" option) 0))
+               collect (format nil "--max-unpack-megabytes=~a" memory)
+               else collect option)))))

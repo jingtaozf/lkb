@@ -1165,7 +1165,29 @@
             when data
             do (push (cons this (cons name data)) result))
         (return (nreverse result))))
-                  
+
+(defun intersect-items (left right
+                        &key (key :i-id) (equal #'=) (less #'<) sortp)
+  (declare (ignore equal))
+  
+  ;;
+  ;; _fix_me_
+  ;; incomplete (originally for SDP data); untested.            (25-mar-14; oe)
+  ;;
+  (when sortp
+    (setf left (sort left less :key (lambda (item) (get-field key item))))
+    (setf right (sort right less :key (lambda (item) (get-field key item)))))
+  (labels ((recurse ()
+             (let ((foo (get-field :key left))
+                   (bar (get-field :key right)))
+               (when (or foo bar)
+                 (if (or (null bar) (funcall less foo bar))
+                   (pop left)
+                   (when (or (null foo) (funcall less bar foo))
+                     (pop right)))
+                 (recurse)))))
+    (recurse)
+    (values left right)))
 
 (defun summarize-competence-parameters-by-division (items division
                                                     &key restrictor)
@@ -1457,8 +1479,8 @@
 
 (defun analyze-competence (&optional (language *tsdb-data*)
                            &key (condition *statistics-select-condition*)
-                                (wf 1) division file append (format :latex)
-                                restrictor meter)
+                                (wf 1) division file append
+                                (format :latex) restrictor meter)
   (declare (ignore restrictor))
 
   (let* ((stream (create-output-stream file append))
@@ -1545,7 +1567,12 @@
          cell 1 6 -contents \"distinct\\nanalyses\\n\\330\" -format title~%~
          cell 1 7 -contents \"total\\nresults\\n#\" -format title~%~
          cell 1 8 -contents \"overall\\ncoverage\\n%\" -format title~%~%"
-        alabel (if (= wf 1) "positive" "negative"))))
+        alabel (if (= wf 1) "positive" "negative")))
+      (:ascii
+       (format 
+        stream "`~a' ~a Summary~%" 
+        language (if (= wf 1) "Coverage" "Overgeneration"))))
+
     (loop
         for aggregate in items
         for i from 2
@@ -1587,7 +1614,12 @@
                 i words
                 i analyses
                 i results
-                i coverage)))))
+                i coverage))
+              (:ascii
+               (format
+                stream 
+                "  ~a item~p (~,2f length); ~a result~p; ~,1f coverage~%"
+                name items items length results results coverage)))))
     
     (let* ((data (rest (assoc :total averages)))
            (name "Total")
@@ -1631,7 +1663,12 @@
             (+ naggregates 2) words
             (+ naggregates 2) analyses
             (+ naggregates 2) results
-            (+ naggregates 2) coverage))))
+            (+ naggregates 2) coverage))
+        (:ascii
+         (format
+          stream 
+          "  ~a: ~a item~p (~,2f length); ~a result~p; ~,1f coverage~%~%"
+          name items items length results results coverage))))
     (when (or (stringp file) (stringp append)) (close stream))))
 
 (defun compare-competence (olanguage nlanguage
@@ -3026,7 +3063,10 @@
             cell 1 8 -contents \"aedges\\n#\" -format title~%~
             cell 1 9 -contents \"pedges\\n#\" -format title~%~
             cell 1 10 -contents \"rpedges\\n#\" -format title~%"
-           alabel)))))
+           alabel))))
+      (:ascii
+       (format stream "`~a' Performance Summary~%" language)))
+
     (loop
         for phenomenon in items
         for i from 2
@@ -3119,7 +3159,13 @@
                    i copies
                    i aedges
                    i pedges
-                   i rpedges)))))))
+                   i rpedges))))
+              (:ascii
+               (format
+                stream 
+                "  ~a: ~a item~p; ~,2f seconds (~,2f first; ~,2f tcpu)~%"
+                name items items total first tcpu)))))
+
     (let* ((data (rest (assoc :total averages)))
            (name "Total")
            (items (get-field :items data))
@@ -3258,7 +3304,12 @@
              (+ naggregates 4)  (divide copies bytes)
              (+ naggregates 4)  (divide aedges bytes)
              (+ naggregates 4)  (divide pedges bytes)
-             (+ naggregates 4)  (divide rpedges bytes)))))))
+             (+ naggregates 4)  (divide rpedges bytes)))))
+        (:ascii
+         (format
+          stream 
+          "  ~a: ~a ~item~p; ~,2f seconds (~,2f first; ~,2f tcpu)~%~%"
+          name items items total first tcpu))))
             
     (when (or (stringp file) (stringp append)) (close stream))))
 
