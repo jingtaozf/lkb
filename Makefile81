@@ -8,6 +8,8 @@ DATE = `date "+%Y-%m-%d"`
 TIME = `date "+%Y-%m-%d (%H:%M:%S)"`
 TARGET = /home/www-lingo/html
 
+export LD_LIBRARY_PATH=./lib/linux.x86.32
+
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
