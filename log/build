@@ -1,10 +1,10 @@
-At revision 23300.
-At revision 23300.
+At revision 23303.
+At revision 23303.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 23301.
+Committed revision 23304.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
