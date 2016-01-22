@@ -1,10 +1,10 @@
-At revision 23264.
-At revision 23264.
+At revision 23300.
+At revision 23300.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 23265.
+Committed revision 23301.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1315,6 +1315,7 @@ make[2]: Entering directory `/projects/lingo/lkb'
                 cd /projects/lingo/acl-8.1; \
                 /projects/lingo/acl-8.1/alisp -I clim -qq && touch /projects/lingo/.yes; )
 ;;; Installing locale patch, version 1.
+Warning: Loading clim2:climxm.so failed with error: libXm.so.3: cannot open shared object file: No such file or directory.
 International Allegro CL Enterprise Edition
 8.1 [Linux (x86)] (Jan 19, 2016 16:19)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
@@ -1323,51 +1324,9 @@ This development copy of Allegro CL is licensed to:
    [TC8776] 
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
-;; For a complete description of all compiler switches given the
-;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
-CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
-;   Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
-;     Loading /projects/lingo/lkb/src/general/defsystem.lisp
-;   Loading /projects/lingo/lkb/src/general/loadup-library.lisp
-T
-CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
-; Autoloading for DELETE-DIRECTORY-AND-FILES:
-;   Fast loading from bundle code/fileutil.fasl.
-; Autoloading for GENERATE-APPLICATION:
-;   Fast loading /projects/lingo/acl-8.1/code/genapp.fasl
-;     Fast loading /projects/lingo/acl-8.1/code/build.001
-;;; Installing build patch, version 1.
-Bundle is up to date.
-Error: The maintenance and support agreement for this Allegro CL
-       license expired on Saturday, August 15, 2015 12:00:00 AM .  Any
-       continued right under this license to distribute or deploy
-       Allegro CL based applications is contingent upon such an
-       agreement.  Please review the Franz Software License Agreement
-       provided with the Allegro CL distribution for further details.
-       If you need an updated license file please contact
-       sales@franz.com.
-  [condition type: SIMPLE-ERROR]
-
-Restart actions (select using :continue):
- 0: retry the load of /projects/lingo/lkb/src/ACL_specific/deliver.lsp
- 1: skip loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
- 2: recompile /projects/lingo/lkb/src/ACL_specific/deliver.lsp
- 3: Return to Top Level (an "abort" restart).
- 4: Abort entirely from this (lisp) process.
-[1] CL-USER(3): :pop
-CL-USER(3): EOF
-Really exit lisp [n]? 
-; Exiting
+;; For a complete description of all compiler switches given the current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+An unhandled error occurred during initialization: Attempt to do an array operation on EXCL::REGISTER-FOREIGN-CALLABLE which is not an array.
+make[2]: *** [lkb_linux@cypriot] Error 255
 make[2]: Leaving directory `/projects/lingo/lkb'
-( \
-	  if [ ! -f /projects/lingo/.yes ]; then exit 1; fi; \
-	  cd /projects/lingo/lkb; \
-	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_linux.x86.32.tgz \
-              --exclude=".nfs*" \
-	      linux.x86.32 bin/linux.x86.32/yzlui; \
-	)
-tar: linux.x86.32: Cannot stat: No such file or directory
-bin/linux.x86.32/yzlui
-tar: Exiting with failure status due to previous errors
 make[1]: *** [lkb_linux_x86_32] Error 2
 make[1]: Leaving directory `/projects/lingo/lkb'
