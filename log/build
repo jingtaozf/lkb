@@ -1,10 +1,10 @@
-At revision 23305.
-At revision 23305.
+At revision 23308.
+At revision 23308.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 23306.
+Committed revision 23309.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1311,11 +1311,10 @@ make[2]: Entering directory `/projects/lingo/lkb'
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( ACL_LOCALE=en_US.utf8 \
-              LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
                 cd /projects/lingo/acl-8.1; \
+                LD_LIBRARY_PATH=/projects/lingo/lkb/lib/linux.x86.32 \
                 /projects/lingo/acl-8.1/alisp -I clim -qq && touch /projects/lingo/.yes; )
 ;;; Installing locale patch, version 1.
-Warning: Loading clim2:climxm.so failed with error: libXm.so.3: cannot open shared object file: No such file or directory.
 International Allegro CL Enterprise Edition
 8.1 [Linux (x86)] (Jan 19, 2016 16:19)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
@@ -1325,8 +1324,254 @@ This development copy of Allegro CL is licensed to:
 
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
-An unhandled error occurred during initialization: Attempt to do an array operation on EXCL::REGISTER-FOREIGN-CALLABLE which is not an array.
-make[2]: *** [lkb_linux@cypriot] Error 255
+CL-USER(1): ; Loading /projects/lingo/lkb/src/general/loadup.lisp
+;   Loading /projects/lingo/lkb/src/general/allegro-patches.lisp
+;     Loading /projects/lingo/lkb/src/general/defsystem.lisp
+;   Loading /projects/lingo/lkb/src/general/loadup-library.lisp
+T
+CL-USER(2): ; Loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+; Autoloading for GENERATE-APPLICATION:
+;   Fast loading /projects/lingo/acl-8.1/code/genapp.fasl
+;     Fast loading from bundle code/fileutil.fasl.
+;     Fast loading /projects/lingo/acl-8.1/code/build.001
+;;; Installing build patch, version 1.
+Bundle is up to date.
+; Autoloading for EXCL:DISCARD-LOCAL-NAME-INFO:
+;   Fast loading from bundle code/who.fasl.
+Initial generation spread = 1
+Allocated 10485760 bytes for old space
+Allocated 5242880 bytes for new space
+;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/code/eval.001
+; fasl /projects/lingo/acl-8.1/code/hash.002
+;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/sys/environ.003
+;;;;;;;; fasl /projects/lingo/acl-8.1/code/syscall.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fasl /projects/lingo/acl-8.1/code/toplevel.001
+; fasl /projects/lingo/acl-8.1/code/misc.001
+; fasl /projects/lingo/acl-8.1/code/aclstart.001
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Fast loading /projects/lingo/acl-8.1/code/locale-base.001
+;;; Installing locale-base patch, version 1
+;;;
+
+
+;;; Installing locale patch, version 1.
+International Allegro CL Enterprise Edition
+8.1 [Linux (x86)] (Jan 22, 2016 15:33)
+Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+
+This development copy of Allegro CL is licensed to:
+   [TC8776] 
+
+
+ #|
+ (SETQ EXCL::*BATCH-MODE* T)
+ |#
+
+T 
+ #|
+ (SETQ EXCL::*BREAK-HOOK* 'EXCL::EXIT-ON-ERROR-HOOK)
+ |#
+
+EXCL::EXIT-ON-ERROR-HOOK 
+ #|
+ (SETQ EXCL::*BATCH-MODE* T)
+ |#
+
+T 
+ #|
+ (SETQ EXCL::*BACKTRACE-ON-ERROR* T)
+ |#
+
+T 
+ #|
+ (SET-CASE-MODE :CASE-INSENSITIVE-UPPER)
+ |#
+
+:CASE-INSENSITIVE-UPPER 
+ #|
+ (SETQ SYSTEM:*REQUIRE-SEARCH-LIST*
+       '(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+         (:LIB-BUNDLE #P"sys:;code;.fasl") (:LIB-BUNDLE #P"sys:;private;.fasl") (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
+         (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")))
+ |#
+
+(:FIRST #P"sys:;code;.fasl" #P"sys:;private;.fasl" #P"sys:;private;crypto;.fasl" #P"sys:;clos;.fasl" #P"sys:;sys;.fasl"
+ (:LIB-BUNDLE #P"sys:;code;.fasl") (:LIB-BUNDLE #P"sys:;private;.fasl") (:LIB-BUNDLE #P"sys:;private;crypto;.fasl")
+ (:LIB-BUNDLE #P"sys:;clos;.fasl") (:LIB-BUNDLE #P"sys:;sys;.fasl")) 
+ #|
+ (SETQ EXCL::*APP-RUNTIME-MODE* T)
+ |#
+
+T 
+ #|
+ (PUSHNEW :ALLEGRO-CL-RUNTIME *FEATURES*)
+ |#
+
+(:ALLEGRO-CL-RUNTIME :MULTIPROCESSING :FLAVORS :LITTLE-ENDIAN :GSGC :COMPILER :USE-STRUCTS-IN-COMPILER :CLOS :DYNLOAD :DLFCN :UNIX :LINUX
+ :REDHAT9 :LINUX86 :X86 :VERIFY-STACK :VERIFY-CAR-CDR :ENCAPSULATING-EFS :RELATIVE-PACKAGE-NAMES :MODULE-VERSIONS :IEEE :IEEE-FLOATING-POINT
+ :CONFORMING-IEEE :ICS :COMMON-LISP :ANSI-CL :DRAFT-ANSI-CL-2 :X3J13 :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-VERSION=
+ :NEW-ENVIRONMENTS :SYMBOL-VALUE-VECTOR :PROCESS7 :USE-THREAD-LIBS :DYNLOAD-ACL-LIBRARY :ALLEGRO-V8.1 :TLSVALUES :TLSBNP :SSL-SUPPORT) 
+ #|
+ (FORCE-OUTPUT)
+ |#
+
+NIL 
+ #|
+ (PROGN (SETQ *LOAD-DOCUMENTATION* NIL) (SETQ *RECORD-SOURCE-FILE-INFO* NIL) (SETQ *LOAD-LOCAL-NAMES-INFO* NIL)
+        (SETQ *LOAD-SOURCE-FILE-INFO* NIL) (SETQ *RECORD-XREF-INFO* NIL) (SETQ *LOAD-XREF-INFO* NIL))
+ |#
+
+NIL 
+ #|
+ (SETQ *LOAD-VERBOSE* T)
+ |#
+
+T 
+ #|
+ (SETQ *SYSTEM-MESSAGES* T)
+ |#
+
+T 
+ #|
+ (PROCLAIM '(OPTIMIZE (DEBUG 2) (SPEED 3) (SPACE 1) (SAFETY 1)))
+ |#
+
+T 
+ #|
+ (SETQ *DAYLIGHT-SAVING-TIME-OBSERVED* T)
+ |#
+
+T 
+ #|
+ (SETQ SYSTEM::*INSTALL-SERVER-NAME* NIL)
+ |#
+
+NIL 
+ #|
+ (SETQ SYSTEM::*INSTALL-GENERATE-FONTS* NIL)
+ |#
+
+NIL 
+ #|
+ (SETQ SYSTEM::*DEVEL* NIL)
+ |#
+
+NIL 
+ #|
+ (SETF (ARGUMENT-SAVING) NIL)
+ |#
+
+NIL 
+ #|
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\a :VERSION #\f)
+ |#
+; Autoloading for MATCH-REGEXP:
+; Fast loading from bundle code/regexp.fasl.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa001.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa003.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa004.002.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa005.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa006.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa007.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa008.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa009.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa010.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa011.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa013.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa014.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa015.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa016.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa017.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa018.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa019.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa021.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa022.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa023.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa024.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa025.003.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa026.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfa027.001.
+
+ #|
+ (SYSTEM:LOAD-PATCHES :PRODUCT #\b :VERSION #\f)
+ |#
+Loaded patch file /projects/lingo/acl-8.1/update/pfb001.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb002.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb004.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb005.001.
+Loaded patch file /projects/lingo/acl-8.1/update/pfb006.001.
+
+ #|
+ (REQUIRE :CLIMXM)
+ |#
+; Fast loading /projects/lingo/acl-8.1/code/climxm.005
+;   Fast loading /projects/lingo/acl-8.1/code/climg.005
+;;; Installing climxm patch, version 5.
+Error (from ERROR): Missing or invalid license (/projects/lingo/acl-8.1/devel.lic) for CLIM.
+; Autoloading for TOP-LEVEL::ZOOM-COMMAND:
+;   Fast loading from bundle code/tpl-debug.fasl.
+;   Autoloading for package "DEBUGGER":
+;     Fast loading /projects/lingo/acl-8.1/code/debug.001
+;;; Installing debug patch, version 1.
+Evaluation stack:
+
+ ->(EXCL::INTERNAL-INVOKE-DEBUGGER)
+   (ERROR)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::REQUIRE-LOCATE-MODULE)
+   (REQUIRE)
+   ((:TOP-LEVEL-FORM "load-xm.lisp" 1031))
+   (EXCL::FASLOAD)
+   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
+   (EXCL::LOAD-2)
+   (EXCL::LOAD-1)
+   (LOAD)
+   (EXCL::REQUIRE-LOCATE-MODULE)
+   (REQUIRE)
+   (EVAL)
+   (EXCL::PROCESS-SCRIPT "/tmp/genappa62661533581")
+   (TPL:START-INTERACTIVE-TOP-LEVEL #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @ #x48114bea>
+                                    #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
+   (EXCL::START-LISP-EXECUTION NIL)
+
+(to see any ghost frames, the disassembler must be loaded)
+
+(to start saving call arguments, use the `:args' toplevel command)
+; Auto-exit
+Error: image creation failed
+  [condition type: SIMPLE-ERROR]
+
+Restart actions (select using :continue):
+ 0: retry the load of /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 2: recompile /projects/lingo/lkb/src/ACL_specific/deliver.lsp
+ 3: Return to Top Level (an "abort" restart).
+ 4: Abort entirely from this (lisp) process.
+[1] CL-USER(3): :pop
+CL-USER(3): EOF
+Really exit lisp [n]? 
+; Exiting
 make[2]: Leaving directory `/projects/lingo/lkb'
-make[1]: *** [lkb_linux_x86_32] Error 2
+( \
+	  if [ ! -f /projects/lingo/.yes ]; then exit 1; fi; \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_linux.x86.32.tgz \
+              --exclude=".nfs*" \
+	      linux.x86.32 bin/linux.x86.32/yzlui; \
+	)
+linux.x86.32/
+linux.x86.32/files.bu
+linux.x86.32/lkb.lic
+linux.x86.32/lkb
+linux.x86.32/acli817.pll
+bin/linux.x86.32/yzlui
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_macos.ppc.32.tgz \
+              --exclude=".nfs*" \
+	      bin/macos.ppc.32/yzlui.app; \
+	)
+tar: bin/macos.ppc.32/yzlui.app: Cannot stat: No such file or directory
+tar: Exiting with failure status due to previous errors
+make[1]: *** [lkb_macos_ppc_32] Error 2
 make[1]: Leaving directory `/projects/lingo/lkb'
