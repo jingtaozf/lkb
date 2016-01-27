@@ -1,10 +1,10 @@
-At revision 23318.
-At revision 23318.
+At revision 23321.
+At revision 23321.
 property 'build' set on 'src/version.lsp'
 Sending        .build
 Sending        src/version.lsp
 Transmitting file data .
-Committed revision 23319.
+Committed revision 23322.
 make[1]: Entering directory `/projects/lingo/lkb'
 ( \
 	  cd /projects/lingo/lkb; \
@@ -1357,7 +1357,7 @@ Allocated 5242880 bytes for new space
 
 ;;; Installing locale patch, version 1.
 International Allegro CL Enterprise Edition
-8.1 [Linux (x86)] (Jan 26, 2016 16:29)
+8.1 [Linux (x86)] (Jan 26, 2016 16:52)
 Copyright (C) 1985-2007, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2735,7 +2735,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x487dd98a> 
+#<EQUAL hash-table with 0 entries @ #x487dd992> 
  #|
 ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Fast loading from bundle code/who.fasl.
@@ -2748,7 +2748,7 @@ NIL
  |#
 ; Fast loading from bundle code/nocompiler.fasl.
 ;   Fast loading from bundle sys/defdecl.fasl.
-116079736 bytes have been tenured, next gc will be global.
+115697416 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2933,7 +2933,7 @@ CL-USER(10): ; Loading /projects/lingo/lkb/src/systems/tsdb.system
 ; Fast loading /projects/lingo/lkb/src/.l1cl/ppcre/closures.fasl
 ;;; Compiling file
 ;;;   /projects/lingo/lkb/src/ppcre/repetition-closures.lisp
-8544608 bytes have been tenured, next gc will be global.
+8544600 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /projects/lingo/lkb/src/.l1cl/ppcre/repetition-closures.fasl
@@ -3879,7 +3879,7 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/gc.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/yy.lisp
-[16:30:00] gc-after-hook(): {L#1 N=1.9M O=8 E=87%} [S=102M R=90M].
+[16:52:55] gc-after-hook(): {L#1 N=1.9M O=8 E=86%} [S=102M R=90M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/yy.fasl
@@ -3888,15 +3888,15 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/fake.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/mt.lisp
-[16:30:00] gc-after-hook(): {L#2 N=3.3M O=511K E=83%} [S=102M R=90M].
-[16:30:00] gc-after-hook(): {L#3 N=3.0M O=0 E=89%} [S=102M R=91M].
-[16:30:01] gc-after-hook(): {L#4 N=2.6M O=511K E=85%}.
+[16:52:56] gc-after-hook(): {L#2 N=3.3M O=511K E=83%} [S=102M R=90M].
+[16:52:56] gc-after-hook(): {L#3 N=3.0M O=0 E=89%} [S=102M R=90M].
+[16:52:56] gc-after-hook(): {L#4 N=2.8M O=255K E=85%}.
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/mt.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/derivations.lisp
-[16:30:01] gc-after-hook(): {L#5 N=1.7M O=0 E=92%} [S=103M R=91M].
-[16:30:01] gc-after-hook(): {L#6 N=4.5M O=398K E=80%} [S=103M R=91M].
+[16:52:56] gc-after-hook(): {L#5 N=2.0M O=0 E=88%} [S=103M R=90M].
+[16:52:57] gc-after-hook(): {L#6 N=5.3M O=651K E=77%} [S=103M R=91M].
 ;;; Writing fasl file
 ;;;   /projects/lingo/lkb/src/.l1cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -3907,18 +3907,18 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/redwoods.lisp
-[16:30:01] gc-after-hook(): {L#7 N=2.7M O=552 E=82%} [S=103M R=91M].
-[16:30:01] gc-after-hook(): {L#8 N=10M O=4.3K E=73%} [S=103M R=91M].
-[16:30:02] gc-after-hook(): {L#9 N=8.2M O=103K E=66%} [S=103M R=91M].
-[16:30:02] gc-after-hook(): {L#10 N=12M O=1.3K E=65%} [S=103M R=91M].
-[16:30:02] gc-after-hook(): {L#11 N=29M O=1.5M E=42%} [S=104M R=93M].
-[16:30:02] gc-after-hook(): {L#12 N=17M O=8 E=28%} [S=115M R=103M].
-[16:30:02] gc-after-hook(): {L#13 N=10M O=511K E=56%} [S=115M R=103M].
-[16:30:03] gc-after-hook(): {L#14 N=11M O=0 E=69%} [S=124M R=112M].
+[16:52:57] gc-after-hook(): {L#7 N=2.0M O=552 E=85%} [S=103M R=91M].
+[16:52:57] gc-after-hook(): {L#8 N=9.7M O=4.3K E=75%} [S=103M R=91M].
+[16:52:57] gc-after-hook(): {L#9 N=8.1M O=104K E=62%} [S=103M R=91M].
+[16:52:57] gc-after-hook(): {L#10 N=12M O=1.3K E=65%} [S=103M R=91M].
+[16:52:58] gc-after-hook(): {L#11 N=29M O=1.5M E=45%} [S=104M R=92M].
+[16:52:58] gc-after-hook(): {L#12 N=17M O=0 E=33%} [S=115M R=103M].
+[16:52:58] gc-after-hook(): {L#13 N=10M O=511K E=56%} [S=115M R=103M].
+[16:52:58] gc-after-hook(): {L#14 N=14M O=0 E=64%} [S=124M R=112M].
+[16:52:58] gc-after-hook(): {L#15 N=1.1M O=9.5M E=57%} [S=124M R=112M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/redwoods.fasl
-[16:30:03] gc-after-hook(): {L#15 N=1.7M O=9.5M E=60%} [S=124M R=113M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -3928,10 +3928,10 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/ptb.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/conll.lisp
+[16:52:59] gc-after-hook(): {L#16 N=3.5M O=0 E=84%} [S=125M R=113M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/conll.fasl
-[16:30:03] gc-after-hook(): {L#16 N=1.8M O=0 E=85%} [S=125M R=114M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/starsem.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/starsem.fasl
 ;;; Fasl write complete
@@ -3948,12 +3948,12 @@ Warning: without-interrupts is deprecated; see
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/genia.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/genia.fasl
+[16:52:59] gc-after-hook(): {L#17 N=2.4M O=654K E=81%} [S=125M R=113M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/hunter.lisp
-[16:30:03] gc-after-hook(): {L#17 N=3.5M O=719K E=86%} [S=125M R=114M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
+[16:52:59] gc-after-hook(): {L#18 N=4.2M O=111K E=86%} [S=125M R=113M].
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/hunter.fasl
-[16:30:04] gc-after-hook(): {L#18 N=3.5M O=47K E=90%} [S=125M R=114M].
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/pcfg.lisp
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
@@ -3963,12 +3963,12 @@ Warning: without-interrupts is deprecated; see
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/bdb.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/features.lisp
-[16:30:04] gc-after-hook(): {L#19 N=3.8M O=0 E=88%} [S=125M R=114M].
+[16:52:59] gc-after-hook(): {L#19 N=3.8M O=0 E=86%} [S=125M R=113M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/features.fasl
 ;;; Compiling file /projects/lingo/lkb/src/tsdb/lisp/learner.lisp
-[16:30:04] gc-after-hook(): {L#20 N=4.8M O=0 E=83%} [S=126M R=115M].
+[16:53:00] gc-after-hook(): {L#20 N=4.9M O=8 E=83%} [S=126M R=114M].
 ;;; Writing fasl file /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
 ;;; Fasl write complete
 ; Fast loading /projects/lingo/lkb/src/.l1cl/tsdb/learner.fasl
@@ -3995,13 +3995,898 @@ linux.x86.32/climxm.so
 linux.x86.32/lkb
 linux.x86.32/acli817.pll
 bin/linux.x86.32/yzlui
+rm -f /home/www-lingo/html/test;
+ln -s /home/www-lingo/html/builds/`date "+%Y-%m-%d"` /home/www-lingo/html/test;
+( \
+	  cd /projects/lingo; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/erg.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude="tsdb*" --exclude="*.fasl" \
+	      erg; \
+	)
+erg/
+erg/lexdb.fld
+erg/lexdb.dfn
+erg/erg.smi
+erg/inflr.tdl
+erg/lexdb.rev
+erg/redwoods.xls
+erg/README
+erg/www/
+erg/www/setup.lsp
+erg/www/erg.html
+erg/www/erg.js
+erg/ace/
+erg/ace/config.tdl
+erg/ace/ace-erg-qc.txt
+erg/letypes.tdl
+erg/lfr.tdl
+erg/speech/
+erg/speech/lex-speech.tdl
+erg/speech/syntax-speech.tdl
+erg/speech/types-speech.tdl
+erg/speech/inflr-pnct-rbst.tdl
+erg/speech/lex-robot.tdl
+erg/speech/constr-speech.tdl
+erg/syntax.tdl
+erg/english.grm
+erg/lexicon.tdl
+erg/erg.hds
+erg/lexdb.rev_key
+erg/METADATA
+erg/jhpstg.g.mem
+erg/lexdb.meta
+erg/lextypes.tdl
+erg/english.tdl
+erg/sciborg.tdl
+erg/tmt.tdl
+erg/core.smi
+erg/tmr/
+erg/tmr/conll.tdl
+erg/tmr/split.tdl
+erg/tmr/finis.tdl
+erg/tmr/ptb.tdl
+erg/tmr/ne3.tdl
+erg/tmr/transcript.tdl
+erg/tmr/sciborg.tdl
+erg/tmr/pos.tdl
+erg/tmr/spelling.tdl
+erg/tmr/ne1.tdl
+erg/tmr/class.tdl
+erg/tmr/ne2.tdl
+erg/tmr/punctuation.tdl
+erg/paraphraser.mtr
+erg/generation.mtr
+erg/idioms.mtr
+erg/Version.lsp
+erg/rpp/
+erg/rpp/robustness.rpp
+erg/rpp/gml.rpp
+erg/rpp/setup.lsp
+erg/rpp/tokenizer.rpp
+erg/rpp/xml.rpp
+erg/rpp/lkb.rpp
+erg/rpp/wiki.rpp
+erg/rpp/quotes.rpp
+erg/rpp/latex.rpp
+erg/rpp/ascii.rpp
+erg/LICENSE
+erg/gle.tdl
+erg/redwoods.pcfg
+erg/irregs.tab
+erg/mtr.tdl
+erg/speech.grm
+erg/lexrinst.tdl
+erg/educ/
+erg/educ/tmr-educ.tdl
+erg/educ/lexrinst-epgy.tdl
+erg/educ/letypes-epgy.tdl
+erg/educ/lextypes-epgy.tdl
+erg/educ/lexicon-epgy.tdl
+erg/educ/constr-epgy.tdl
+erg/inflr-pnct.tdl
+erg/genia.mem
+erg/lexrules.tdl
+erg/pet/
+erg/pet/global.set
+erg/pet/robot.set
+erg/pet/repp.set
+erg/pet/gml.set
+erg/pet/speech.set
+erg/pet/regression.yy
+erg/pet/repp.txt
+erg/pet/smaf.conf
+erg/pet/flop.set
+erg/pet/english.set
+erg/pet/wiki.set
+erg/pet/sample.yy
+erg/pet/brackets.fsc
+erg/pet/sciborg.set
+erg/pet/regression.txt
+erg/pet/mrs.set
+erg/pet/robust.set
+erg/pet/qc.tdl
+erg/pet/educ.set
+erg/pet/common.set
+erg/pet/brackets.yy
+erg/lkb/
+erg/lkb/mt.lsp
+erg/lkb/checkpaths.lsp
+erg/lkb/nogen-lex.set
+erg/lkb/checkpaths.items
+erg/lkb/sample.mrs
+erg/lkb/user-fns.lsp
+erg/lkb/script
+erg/lkb/mrsglobals.lsp
+erg/lkb/convert-wcn.lsp
+erg/lkb/patches.lsp
+erg/lkb/nogen-rules.set
+erg/lkb/globals.lsp
+erg/semi.vpm
+erg/abstract.vpm
+erg/trigger.mtr
+erg/fundamentals.tdl
+erg/parse-nodes.tdl
+erg/Makefile
+erg/constructions.tdl
+erg/auxverbs.tdl
+erg/educ.tdl
+erg/robot.tdl
+erg/speech.tdl
+erg/redwoods.mem
+erg/wescience.mem
+erg/roots.tdl
 ( \
 	  cd /projects/lingo/lkb; \
-	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/lkb_macos.ppc.32.tgz \
+	  find src/.l1cl -type f -exec touch {} \; ; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_linux.x86.32.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
               --exclude=".nfs*" \
-	      bin/macos.ppc.32/yzlui.app; \
+	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
+	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
+	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
+	      src/.l1cl/pvm src/.l1cl/tsdb src/.l1cl/fad; \
 	)
-tar: bin/macos.ppc.32/yzlui.app: Cannot stat: No such file or directory
-tar: Exiting with failure status due to previous errors
-make[1]: *** [lkb_macos_ppc_32] Error 2
+bin/linux.x86.32/tsdb
+bin/linux.x86.32/swish++
+bin/linux.x86.32/pvmd3
+bin/linux.x86.32/pvm
+src/pvm/linux.x86.32/pvm.so
+src/tsdb/linux.x86.32/bdb.so
+src/tsdb/linux.x86.32/capi.so
+src/tsdb/linux.x86.32/gc.so
+src/.l1cl/pvm/
+src/.l1cl/pvm/pvm.fasl
+src/.l1cl/pvm/pvm-package.fasl
+src/.l1cl/tsdb/
+src/.l1cl/tsdb/fsc.fasl
+src/.l1cl/tsdb/process.fasl
+src/.l1cl/tsdb/genia.fasl
+src/.l1cl/tsdb/pcfg.fasl
+src/.l1cl/tsdb/learner.fasl
+src/.l1cl/tsdb/pvm.fasl
+src/.l1cl/tsdb/lsp.fasl
+src/.l1cl/tsdb/lkb-interface.fasl
+src/.l1cl/tsdb/podium.fasl
+src/.l1cl/tsdb/features.fasl
+src/.l1cl/tsdb/globals.fasl
+src/.l1cl/tsdb/commands.fasl
+src/.l1cl/tsdb/allegro.fasl
+src/.l1cl/tsdb/experiment.fasl
+src/.l1cl/tsdb/macros.fasl
+src/.l1cl/tsdb/derivations.fasl
+src/.l1cl/tsdb/tnt-interface.fasl
+src/.l1cl/tsdb/conll.fasl
+src/.l1cl/tsdb/ptb.fasl
+src/.l1cl/tsdb/rasp.fasl
+src/.l1cl/tsdb/evolution.fasl
+src/.l1cl/tsdb/gc.fasl
+src/.l1cl/tsdb/statistics.fasl
+src/.l1cl/tsdb/filter.fasl
+src/.l1cl/tsdb/mt.fasl
+src/.l1cl/tsdb/tsdb.fasl
+src/.l1cl/tsdb/html.fasl
+src/.l1cl/tsdb/import.fasl
+src/.l1cl/tsdb/tsql.fasl
+src/.l1cl/tsdb/tsdb-package.fasl
+src/.l1cl/tsdb/starsem.fasl
+src/.l1cl/tsdb/yy.fasl
+src/.l1cl/tsdb/hunter.fasl
+src/.l1cl/tsdb/bdb.fasl
+src/.l1cl/tsdb/capi.fasl
+src/.l1cl/tsdb/chasen.fasl
+src/.l1cl/tsdb/fake.fasl
+src/.l1cl/tsdb/redwoods.fasl
+src/.l1cl/tsdb/utilities.fasl
+src/.l1cl/fad/
+src/.l1cl/fad/packages.fasl
+src/.l1cl/fad/fad.fasl
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      etc include lib src/general/itsdb.lisp; \
+	)
+etc/
+etc/bclim.lisp
+etc/dot.emacs
+etc/dot.luirc
+etc/dot.clinit.cl
+etc/dot.bashrc
+etc/install
+etc/lkb
+etc/dot.cshrc
+etc/generate
+include/
+include/pvm3.h
+include/itsdb.h
+lib/
+lib/tcl8.4/
+lib/tcl8.4/parray.tcl
+lib/tcl8.4/ldAix
+lib/tcl8.4/safe.tcl
+lib/tcl8.4/encoding/
+lib/tcl8.4/encoding/ebcdic.enc
+lib/tcl8.4/encoding/dingbats.enc
+lib/tcl8.4/encoding/cp860.enc
+lib/tcl8.4/encoding/jis0212.enc
+lib/tcl8.4/encoding/jis0208.enc
+lib/tcl8.4/encoding/macDingbats.enc
+lib/tcl8.4/encoding/macCentEuro.enc
+lib/tcl8.4/encoding/cp864.enc
+lib/tcl8.4/encoding/euc-cn.enc
+lib/tcl8.4/encoding/cp950.enc
+lib/tcl8.4/encoding/iso8859-14.enc
+lib/tcl8.4/encoding/cp855.enc
+lib/tcl8.4/encoding/macRomania.enc
+lib/tcl8.4/encoding/cp850.enc
+lib/tcl8.4/encoding/macIceland.enc
+lib/tcl8.4/encoding/cp1257.enc
+lib/tcl8.4/encoding/cp1253.enc
+lib/tcl8.4/encoding/cp866.enc
+lib/tcl8.4/encoding/cp865.enc
+lib/tcl8.4/encoding/gb2312.enc
+lib/tcl8.4/encoding/cp862.enc
+lib/tcl8.4/encoding/cp1250.enc
+lib/tcl8.4/encoding/cp857.enc
+lib/tcl8.4/encoding/cp861.enc
+lib/tcl8.4/encoding/ksc5601.enc
+lib/tcl8.4/encoding/cp1256.enc
+lib/tcl8.4/encoding/koi8-u.enc
+lib/tcl8.4/encoding/euc-kr.enc
+lib/tcl8.4/encoding/iso8859-5.enc
+lib/tcl8.4/encoding/gb2312-raw.enc
+lib/tcl8.4/encoding/iso8859-2.enc
+lib/tcl8.4/encoding/koi8-r.enc
+lib/tcl8.4/encoding/big5.enc
+lib/tcl8.4/encoding/shiftjis.enc
+lib/tcl8.4/encoding/iso8859-8.enc
+lib/tcl8.4/encoding/iso8859-15.enc
+lib/tcl8.4/encoding/iso2022.enc
+lib/tcl8.4/encoding/iso8859-16.enc
+lib/tcl8.4/encoding/macTurkish.enc
+lib/tcl8.4/encoding/iso2022-jp.enc
+lib/tcl8.4/encoding/cp737.enc
+lib/tcl8.4/encoding/ascii.enc
+lib/tcl8.4/encoding/macRoman.enc
+lib/tcl8.4/encoding/cp852.enc
+lib/tcl8.4/encoding/iso8859-9.enc
+lib/tcl8.4/encoding/cp932.enc
+lib/tcl8.4/encoding/cp1254.enc
+lib/tcl8.4/encoding/cp775.enc
+lib/tcl8.4/encoding/macCyrillic.enc
+lib/tcl8.4/encoding/iso8859-4.enc
+lib/tcl8.4/encoding/macThai.enc
+lib/tcl8.4/encoding/cp863.enc
+lib/tcl8.4/encoding/cp869.enc
+lib/tcl8.4/encoding/iso8859-1.enc
+lib/tcl8.4/encoding/gb1988.enc
+lib/tcl8.4/encoding/iso8859-10.enc
+lib/tcl8.4/encoding/cp1255.enc
+lib/tcl8.4/encoding/macGreek.enc
+lib/tcl8.4/encoding/iso8859-7.enc
+lib/tcl8.4/encoding/gb12345.enc
+lib/tcl8.4/encoding/iso8859-13.enc
+lib/tcl8.4/encoding/cp1251.enc
+lib/tcl8.4/encoding/macJapan.enc
+lib/tcl8.4/encoding/symbol.enc
+lib/tcl8.4/encoding/macUkraine.enc
+lib/tcl8.4/encoding/cp1252.enc
+lib/tcl8.4/encoding/euc-jp.enc
+lib/tcl8.4/encoding/cp874.enc
+lib/tcl8.4/encoding/cp949.enc
+lib/tcl8.4/encoding/macCroatian.enc
+lib/tcl8.4/encoding/cp936.enc
+lib/tcl8.4/encoding/iso8859-6.enc
+lib/tcl8.4/encoding/iso8859-3.enc
+lib/tcl8.4/encoding/jis0201.enc
+lib/tcl8.4/encoding/iso2022-kr.enc
+lib/tcl8.4/encoding/tis-620.enc
+lib/tcl8.4/encoding/cp1258.enc
+lib/tcl8.4/encoding/cp437.enc
+lib/tcl8.4/init.tcl
+lib/tcl8.4/msgcat1.3/
+lib/tcl8.4/msgcat1.3/msgcat.tcl
+lib/tcl8.4/msgcat1.3/pkgIndex.tcl
+lib/tcl8.4/opt0.4/
+lib/tcl8.4/opt0.4/optparse.tcl
+lib/tcl8.4/opt0.4/pkgIndex.tcl
+lib/tcl8.4/tcltest2.2/
+lib/tcl8.4/tcltest2.2/tcltest.tcl
+lib/tcl8.4/tcltest2.2/pkgIndex.tcl
+lib/tcl8.4/tclAppInit.c
+lib/tcl8.4/package.tcl
+lib/tcl8.4/http1.0/
+lib/tcl8.4/http1.0/http.tcl
+lib/tcl8.4/http1.0/pkgIndex.tcl
+lib/tcl8.4/tclIndex
+lib/tcl8.4/history.tcl
+lib/tcl8.4/word.tcl
+lib/tcl8.4/auto.tcl
+lib/tcl8.4/ldAout.tcl
+lib/tcl8.4/http2.5/
+lib/tcl8.4/http2.5/http.tcl
+lib/tcl8.4/http2.5/pkgIndex.tcl
+lib/linux.x86.32/
+lib/linux.x86.32/libitsdb.so
+lib/linux.x86.32/libXm.so.2
+lib/linux.x86.32/libgd.so
+lib/linux.x86.32/libpvm3.a
+lib/linux.x86.32/libgtk-1.2.so.0
+lib/linux.x86.32/libgdk-1.2.so.0
+lib/linux.x86.32/libdb-4.2.so
+lib/linux.x86.32/libitsdb.a
+lib/linux.x86.32/libXp.so.6
+lib/linux.x86.32/libglib-1.2.so.0
+lib/linux.x86.32/libXm.so.3
+lib/linux.x86.32/libgmodule-1.2.so.0
+lib/blt2.4/
+lib/blt2.4/graph.tcl
+lib/blt2.4/bltTabset.tcl
+lib/blt2.4/bltHiertable.tcl
+lib/blt2.4/bltGraph.pro
+lib/blt2.4/treeview_m.xbm
+lib/blt2.4/bltHierbox.tcl
+lib/blt2.4/htresize.xbm
+lib/blt2.4/dd_protocols/
+lib/blt2.4/dd_protocols/dd-file.tcl
+lib/blt2.4/dd_protocols/dd-color.tcl
+lib/blt2.4/dd_protocols/dd-number.tcl
+lib/blt2.4/dd_protocols/tclIndex
+lib/blt2.4/dd_protocols/dd-text.tcl
+lib/blt2.4/hierbox.tcl
+lib/blt2.4/dnd.tcl
+lib/blt2.4/tabset.tcl
+lib/blt2.4/bltDragdrop.tcl
+lib/blt2.4/tabnotebook.tcl
+lib/blt2.4/treeview.xbm
+lib/blt2.4/bltGraph.tcl
+lib/blt2.4/bltTabnotebook.tcl
+lib/blt2.4/bltDnd.tcl
+lib/blt2.4/treeview.tcl
+lib/blt2.4/tclIndex
+lib/blt2.4/bltHier.tcl
+lib/blt2.4/pkgIndex.tcl
+lib/blt2.4/htresize_m.xbm
+lib/blt2.4/dragdrop.tcl
+lib/blt2.4/bltCanvEps.pro
+lib/XKeysymDB
+lib/tk8.4/
+lib/tk8.4/entry.tcl
+lib/tk8.4/images/
+lib/tk8.4/images/logo64.gif
+lib/tk8.4/images/logo100.gif
+lib/tk8.4/images/logoLarge.gif
+lib/tk8.4/images/logo.eps
+lib/tk8.4/images/pwrdLogo100.gif
+lib/tk8.4/images/pwrdLogo200.gif
+lib/tk8.4/images/tai-ku.gif
+lib/tk8.4/images/pwrdLogo75.gif
+lib/tk8.4/images/pwrdLogo175.gif
+lib/tk8.4/images/pwrdLogo.eps
+lib/tk8.4/images/pwrdLogo150.gif
+lib/tk8.4/images/logoMed.gif
+lib/tk8.4/focus.tcl
+lib/tk8.4/unsupported.tcl
+lib/tk8.4/comdlg.tcl
+lib/tk8.4/scrlbar.tcl
+lib/tk8.4/scale.tcl
+lib/tk8.4/obsolete.tcl
+lib/tk8.4/listbox.tcl
+lib/tk8.4/xmfbox.tcl
+lib/tk8.4/tkfbox.tcl
+lib/tk8.4/tearoff.tcl
+lib/tk8.4/console.tcl
+lib/tk8.4/safetk.tcl
+lib/tk8.4/prolog.ps
+lib/tk8.4/text.tcl
+lib/tk8.4/palette.tcl
+lib/tk8.4/button.tcl
+lib/tk8.4/msgs/
+lib/tk8.4/msgs/eo.msg
+lib/tk8.4/msgs/en.msg
+lib/tk8.4/msgs/ru.msg
+lib/tk8.4/msgs/pt.msg
+lib/tk8.4/msgs/nl.msg
+lib/tk8.4/msgs/es.msg
+lib/tk8.4/msgs/pl.msg
+lib/tk8.4/msgs/en_gb.msg
+lib/tk8.4/msgs/de.msg
+lib/tk8.4/msgs/cs.msg
+lib/tk8.4/msgs/el.msg
+lib/tk8.4/msgs/fr.msg
+lib/tk8.4/msgs/hu.msg
+lib/tk8.4/msgs/it.msg
+lib/tk8.4/msgs/es_ES.msg
+lib/tk8.4/tclIndex
+lib/tk8.4/pkgIndex.tcl
+lib/tk8.4/spinbox.tcl
+lib/tk8.4/choosedir.tcl
+lib/tk8.4/optMenu.tcl
+lib/tk8.4/msgbox.tcl
+lib/tk8.4/bgerror.tcl
+lib/tk8.4/menu.tcl
+lib/tk8.4/panedwindow.tcl
+lib/tk8.4/tk.tcl
+lib/tk8.4/clrpick.tcl
+lib/tk8.4/tkAppInit.c
+lib/tk8.4/mkpsenc.tcl
+lib/tk8.4/dialog.tcl
+lib/Tix8.4.3/
+lib/Tix8.4.3/Variable.tcl
+lib/Tix8.4.3/PopMenu.tcl
+lib/Tix8.4.3/DirBox.tcl
+lib/Tix8.4.3/LabEntry.tcl
+lib/Tix8.4.3/DragDrop.tcl
+lib/Tix8.4.3/fs.tcl
+lib/Tix8.4.3/SWidget.tcl
+lib/Tix8.4.3/ListNBk.tcl
+lib/Tix8.4.3/Select.tcl
+lib/Tix8.4.3/TList.tcl
+lib/Tix8.4.3/DirTree.tcl
+lib/Tix8.4.3/DtlList.tcl
+lib/Tix8.4.3/ComboBox.tcl
+lib/Tix8.4.3/VResize.tcl
+lib/Tix8.4.3/DialogS.tcl
+lib/Tix8.4.3/Tree.tcl
+lib/Tix8.4.3/LabFrame.tcl
+lib/Tix8.4.3/license.terms
+lib/Tix8.4.3/StatBar.tcl
+lib/Tix8.4.3/SWindow.tcl
+lib/Tix8.4.3/FileEnt.tcl
+lib/Tix8.4.3/Init.tcl
+lib/Tix8.4.3/Balloon.tcl
+lib/Tix8.4.3/OldUtil.tcl
+lib/Tix8.4.3/HList.tcl
+lib/Tix8.4.3/StdShell.tcl
+lib/Tix8.4.3/PanedWin.tcl
+lib/Tix8.4.3/SHList.tcl
+lib/Tix8.4.3/VTree.tcl
+lib/Tix8.4.3/MultView.tcl
+lib/Tix8.4.3/Console.tcl
+lib/Tix8.4.3/LabWidg.tcl
+lib/Tix8.4.3/Utils.tcl
+lib/Tix8.4.3/CObjView.tcl
+lib/Tix8.4.3/OptMenu.tcl
+lib/Tix8.4.3/EFileDlg.tcl
+lib/Tix8.4.3/HListDD.tcl
+lib/Tix8.4.3/Shell.tcl
+lib/Tix8.4.3/STList.tcl
+lib/Tix8.4.3/SText.tcl
+lib/Tix8.4.3/ChkList.tcl
+lib/Tix8.4.3/Tix.tcl
+lib/Tix8.4.3/Event.tcl
+lib/Tix8.4.3/FileDlg.tcl
+lib/Tix8.4.3/README.txt
+lib/Tix8.4.3/FileCbx.tcl
+lib/Tix8.4.3/IconView.tcl
+lib/Tix8.4.3/pkgIndex.tcl
+lib/Tix8.4.3/DirList.tcl
+lib/Tix8.4.3/bitmaps/
+lib/Tix8.4.3/bitmaps/textfile.xbm
+lib/Tix8.4.3/bitmaps/minus.xpm
+lib/Tix8.4.3/bitmaps/no_entry.gif
+lib/Tix8.4.3/bitmaps/folder.xbm
+lib/Tix8.4.3/bitmaps/openfile.xbm
+lib/Tix8.4.3/bitmaps/cbxarrow.xbm
+lib/Tix8.4.3/bitmaps/file.xpm
+lib/Tix8.4.3/bitmaps/no_entry.xpm
+lib/Tix8.4.3/bitmaps/minimize.xbm
+lib/Tix8.4.3/bitmaps/folder.gif
+lib/Tix8.4.3/bitmaps/mktransgif.tcl
+lib/Tix8.4.3/bitmaps/act_fold.gif
+lib/Tix8.4.3/bitmaps/minusarm.gif
+lib/Tix8.4.3/bitmaps/plusarm.xbm
+lib/Tix8.4.3/bitmaps/ck_off.xbm
+lib/Tix8.4.3/bitmaps/srcfile.gif
+lib/Tix8.4.3/bitmaps/srcfile.xpm
+lib/Tix8.4.3/bitmaps/openfold.xpm
+lib/Tix8.4.3/bitmaps/ck_def.xbm
+lib/Tix8.4.3/bitmaps/minus.xbm
+lib/Tix8.4.3/bitmaps/resize2.xbm
+lib/Tix8.4.3/bitmaps/act_fold.xbm
+lib/Tix8.4.3/bitmaps/hourglas.xbm
+lib/Tix8.4.3/bitmaps/harddisk.xbm
+lib/Tix8.4.3/bitmaps/textfile.gif
+lib/Tix8.4.3/bitmaps/maximize.xbm
+lib/Tix8.4.3/bitmaps/drop.xbm
+lib/Tix8.4.3/bitmaps/incr.xbm
+lib/Tix8.4.3/bitmaps/restore.xbm
+lib/Tix8.4.3/bitmaps/network.xbm
+lib/Tix8.4.3/bitmaps/file.gif
+lib/Tix8.4.3/bitmaps/plusarm.xpm
+lib/Tix8.4.3/bitmaps/ck_on.xbm
+lib/Tix8.4.3/bitmaps/tick.xbm
+lib/Tix8.4.3/bitmaps/warning.gif
+lib/Tix8.4.3/bitmaps/minus.gif
+lib/Tix8.4.3/bitmaps/warning.xpm
+lib/Tix8.4.3/bitmaps/folder.xpm
+lib/Tix8.4.3/bitmaps/plus.xpm
+lib/Tix8.4.3/bitmaps/minusarm.xpm
+lib/Tix8.4.3/bitmaps/info.gif
+lib/Tix8.4.3/bitmaps/balarrow.xbm
+lib/Tix8.4.3/bitmaps/file.xbm
+lib/Tix8.4.3/bitmaps/plus.gif
+lib/Tix8.4.3/bitmaps/plus.xbm
+lib/Tix8.4.3/bitmaps/info.xpm
+lib/Tix8.4.3/bitmaps/cross.xbm
+lib/Tix8.4.3/bitmaps/srcfile.xbm
+lib/Tix8.4.3/bitmaps/textfile.xpm
+lib/Tix8.4.3/bitmaps/system.xbm
+lib/Tix8.4.3/bitmaps/act_fold.xpm
+lib/Tix8.4.3/bitmaps/resize1.xbm
+lib/Tix8.4.3/bitmaps/hourglas.mask
+lib/Tix8.4.3/bitmaps/openfold.gif
+lib/Tix8.4.3/bitmaps/decr.xbm
+lib/Tix8.4.3/bitmaps/minusarm.xbm
+lib/Tix8.4.3/bitmaps/plusarm.gif
+lib/Tix8.4.3/bitmaps/openfold.xbm
+lib/Tix8.4.3/StdBBox.tcl
+lib/Tix8.4.3/Control.tcl
+lib/Tix8.4.3/NoteBook.tcl
+lib/Tix8.4.3/SGrid.tcl
+lib/Tix8.4.3/EFileBox.tcl
+lib/Tix8.4.3/Primitiv.tcl
+lib/Tix8.4.3/StackWin.tcl
+lib/Tix8.4.3/pref/
+lib/Tix8.4.3/pref/TK.fsc
+lib/Tix8.4.3/pref/TkWin.cs
+lib/Tix8.4.3/pref/TK.cs
+lib/Tix8.4.3/pref/Bisque.cs
+lib/Tix8.4.3/pref/10Point.fs
+lib/Tix8.4.3/pref/WmDefault.csc
+lib/Tix8.4.3/pref/WmDefault.cs
+lib/Tix8.4.3/pref/Blue.csc
+lib/Tix8.4.3/pref/Old14Pt.fs
+lib/Tix8.4.3/pref/Blue.cs
+lib/Tix8.4.3/pref/TkWin.fsc
+lib/Tix8.4.3/pref/10Point.fsc
+lib/Tix8.4.3/pref/WmDefault.py
+lib/Tix8.4.3/pref/14Point.fs
+lib/Tix8.4.3/pref/WmDefault.fsc
+lib/Tix8.4.3/pref/WmDefault.txt
+lib/Tix8.4.3/pref/Gray.csc
+lib/Tix8.4.3/pref/TK.csc
+lib/Tix8.4.3/pref/12Point.fsc
+lib/Tix8.4.3/pref/WmDefault.tcl
+lib/Tix8.4.3/pref/pkgIndex.tcl
+lib/Tix8.4.3/pref/Bisque.csc
+lib/Tix8.4.3/pref/Gray.cs
+lib/Tix8.4.3/pref/TixGray.cs
+lib/Tix8.4.3/pref/WmDefault.fs
+lib/Tix8.4.3/pref/12Point.fs
+lib/Tix8.4.3/pref/SGIGray.csc
+lib/Tix8.4.3/pref/Old12Pt.fs
+lib/Tix8.4.3/pref/TixGray.csc
+lib/Tix8.4.3/pref/TK.fs
+lib/Tix8.4.3/pref/SGIGray.cs
+lib/Tix8.4.3/pref/14Point.fsc
+lib/Tix8.4.3/pref/TkWin.fs
+lib/Tix8.4.3/pref/TkWin.csc
+lib/Tix8.4.3/DirDlg.tcl
+lib/Tix8.4.3/SimpDlg.tcl
+lib/Tix8.4.3/FloatEnt.tcl
+lib/Tix8.4.3/WInfo.tcl
+lib/Tix8.4.3/BtnBox.tcl
+lib/Tix8.4.3/VStack.tcl
+lib/Tix8.4.3/DefSchm.tcl
+lib/Tix8.4.3/ResizeH.tcl
+lib/Tix8.4.3/SListBox.tcl
+lib/Tix8.4.3/Compat.tcl
+lib/Tix8.4.3/Meter.tcl
+lib/Tix8.4.3/FileBox.tcl
+lib/Tix8.4.3/Grid.tcl
+lib/Tktable2.10/
+lib/Tktable2.10/license.txt
+lib/Tktable2.10/pkgIndex.tcl
+lib/Tktable2.10/tkTable.tcl
+lib/linux.x86.64/
+lib/linux.x86.64/libitsdb.so
+lib/linux.x86.64/libtermcap.so.2
+lib/linux.x86.64/libpvm3.a
+lib/linux.x86.64/libXm.so.4
+lib/linux.x86.64/libdb-4.2.so
+lib/linux.x86.64/libitsdb.a
+lib/linux.x86.64/libXp.so.6
+lib/linux.x86.64/libXm.so.3
+src/general/itsdb.lisp
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_source.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/systems/tsdb.system src/systems/pvm.system \
+	      src/systems/fad.system  \
+	      src/fad src/pvm/*.lisp \
+	      src/tsdb/lisp src/tsdb/tcl \
+              src/tsdb/ToDo src/tsdb/Registration \
+	      src/tsdb/TeX; \
+	)
+src/systems/tsdb.system
+src/systems/pvm.system
+src/systems/fad.system
+src/fad/
+src/fad/fad.lisp
+src/fad/CHANGELOG
+src/fad/README
+src/fad/doc/
+src/fad/doc/index.html
+src/fad/test.lisp
+src/fad/openmcl.lisp
+src/fad/packages.lisp
+src/fad/corman.lisp
+src/fad/load.lisp
+src/pvm/pvm.lisp
+src/pvm/pvm-package.lisp
+src/tsdb/lisp/
+src/tsdb/lisp/filter.lisp
+src/tsdb/lisp/redwoods.lisp
+src/tsdb/lisp/sltg-interface.lisp
+src/tsdb/lisp/kf.lisp
+src/tsdb/lisp/lkb-interface.lisp
+src/tsdb/lisp/chasen.lisp
+src/tsdb/lisp/anlt-interface.lisp
+src/tsdb/lisp/podium.lisp
+src/tsdb/lisp/xle-interface.lisp
+src/tsdb/lisp/import.lisp
+src/tsdb/lisp/allegro.lisp
+src/tsdb/lisp/tagger.lisp
+src/tsdb/lisp/tsdb.lisp
+src/tsdb/lisp/acache.lisp
+src/tsdb/lisp/tsql.lisp
+src/tsdb/lisp/evolution.lisp
+src/tsdb/lisp/tnt-interface.lisp
+src/tsdb/lisp/utilities.lisp
+src/tsdb/lisp/tdl-patches.lisp
+src/tsdb/lisp/conll.lisp
+src/tsdb/lisp/fsc.lisp
+src/tsdb/lisp/lsp.lisp
+src/tsdb/lisp/hunter.lisp
+src/tsdb/lisp/server.lisp
+src/tsdb/lisp/starsem.lisp
+src/tsdb/lisp/features.lisp
+src/tsdb/lisp/pcfg.lisp
+src/tsdb/lisp/experiment.lisp
+src/tsdb/lisp/commands.lisp
+src/tsdb/lisp/yy.lisp
+src/tsdb/lisp/statistics.lisp
+src/tsdb/lisp/ptb.lisp
+src/tsdb/lisp/gc.lisp
+src/tsdb/lisp/macros.lisp
+src/tsdb/lisp/capi.lisp
+src/tsdb/lisp/page-interface.lisp
+src/tsdb/lisp/dummy-interface.lisp
+src/tsdb/lisp/html.lisp
+src/tsdb/lisp/globals.lisp
+src/tsdb/lisp/fake.lisp
+src/tsdb/lisp/tsdb-package.lisp
+src/tsdb/lisp/genia.lisp
+src/tsdb/lisp/learner.lisp
+src/tsdb/lisp/derivations.lisp
+src/tsdb/lisp/pvm.lisp
+src/tsdb/lisp/mmt.lisp
+src/tsdb/lisp/process.lisp
+src/tsdb/lisp/bdb.lisp
+src/tsdb/lisp/mt.lisp
+src/tsdb/lisp/rasp.lisp
+src/tsdb/tcl/
+src/tsdb/tcl/icon.xbm
+src/tsdb/tcl/showgraph.tcl
+src/tsdb/tcl/table.tcl
+src/tsdb/tcl/showtable.tcl
+src/tsdb/tcl/balloon.tcl
+src/tsdb/tcl/utilities.tcl
+src/tsdb/tcl/mt.tcl
+src/tsdb/tcl/podium.tcl
+src/tsdb/tcl/nshowtable.tcl
+src/tsdb/tcl/yy.tcl
+src/tsdb/tcl/goodies.tcl
+src/tsdb/tcl/input.tcl
+src/tsdb/tcl/copyleft.tcl
+src/tsdb/tcl/commands.tcl
+src/tsdb/tcl/balloons
+src/tsdb/ToDo
+src/tsdb/Registration
+src/tsdb/TeX/
+src/tsdb/TeX/piclatex.sty
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_capi.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/tsdb/capi; \
+	)
+src/tsdb/capi/
+src/tsdb/capi/5lib/
+src/tsdb/capi/5lib/getloadavg.o
+src/tsdb/capi/mfile.h
+src/tsdb/capi/mfile.c
+src/tsdb/capi/client.c
+src/tsdb/capi/llib/
+src/tsdb/capi/llib/getloadavg.o
+src/tsdb/capi/capi.c
+src/tsdb/capi/acl.c
+src/tsdb/capi/Makefile
+src/tsdb/capi/gc.c
+src/tsdb/capi/olib/
+src/tsdb/capi/olib/getloadavg.o
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_data.tgz \
+	      --exclude=src/tsdb/skeletons/english/vm97 \
+	      --exclude=src/tsdb/skeletons/english/vm97p \
+	      --exclude=src/tsdb/skeletons/english/vm98 \
+	      --exclude=src/tsdb/skeletons/english/wsj00 \
+	      --exclude=src/tsdb/skeletons/english/parc \
+	      --exclude=src/tsdb/skeletons/yy \
+	      --exclude=src/tsdb/home/redwoods --exclude=src/tsdb/home/log \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      src/tsdb/skeletons src/tsdb/home; \
+	)
+src/tsdb/skeletons/
+src/tsdb/skeletons/english/
+src/tsdb/skeletons/english/english/
+src/tsdb/skeletons/english/english/item-set
+src/tsdb/skeletons/english/english/parameter
+src/tsdb/skeletons/english/english/item
+src/tsdb/skeletons/english/english/phenomenon
+src/tsdb/skeletons/english/english/item-phenomenon
+src/tsdb/skeletons/english/english/analysis
+src/tsdb/skeletons/english/english/relations
+src/tsdb/skeletons/english/english/set
+src/tsdb/skeletons/english/fracas/
+src/tsdb/skeletons/english/fracas/item
+src/tsdb/skeletons/english/fracas/relations
+src/tsdb/skeletons/english/trec9/
+src/tsdb/skeletons/english/trec9/item
+src/tsdb/skeletons/english/trec9/relations
+src/tsdb/skeletons/english/csli/
+src/tsdb/skeletons/english/csli/item
+src/tsdb/skeletons/english/csli/phenomenon
+src/tsdb/skeletons/english/csli/item-phenomenon
+src/tsdb/skeletons/english/csli/relations
+src/tsdb/skeletons/english/mrs/
+src/tsdb/skeletons/english/mrs/item-set
+src/tsdb/skeletons/english/mrs/item
+src/tsdb/skeletons/english/mrs/relations
+src/tsdb/skeletons/english/Index.lisp
+src/tsdb/skeletons/english/Relations
+src/tsdb/skeletons/english/cb/
+src/tsdb/skeletons/english/cb/item
+src/tsdb/skeletons/english/cb/relations
+src/tsdb/skeletons/deutsch/
+src/tsdb/skeletons/deutsch/german/
+src/tsdb/skeletons/deutsch/german/item-set
+src/tsdb/skeletons/deutsch/german/parameter
+src/tsdb/skeletons/deutsch/german/item
+src/tsdb/skeletons/deutsch/german/phenomenon
+src/tsdb/skeletons/deutsch/german/item-phenomenon
+src/tsdb/skeletons/deutsch/german/analysis
+src/tsdb/skeletons/deutsch/german/relations
+src/tsdb/skeletons/deutsch/german/set
+src/tsdb/skeletons/deutsch/vmt/
+src/tsdb/skeletons/deutsch/vmt/item
+src/tsdb/skeletons/deutsch/vmt/relations
+src/tsdb/skeletons/deutsch/mrs/
+src/tsdb/skeletons/deutsch/mrs/item
+src/tsdb/skeletons/deutsch/mrs/output
+src/tsdb/skeletons/deutsch/mrs/relations
+src/tsdb/skeletons/deutsch/vm/
+src/tsdb/skeletons/deutsch/vm/item
+src/tsdb/skeletons/deutsch/vm/relations
+src/tsdb/skeletons/deutsch/Index.lisp
+src/tsdb/skeletons/deutsch/Relations
+src/tsdb/skeletons/deutsch/vmd/
+src/tsdb/skeletons/deutsch/vmd/item
+src/tsdb/skeletons/deutsch/vmd/relations
+src/tsdb/skeletons/deutsch/babel/
+src/tsdb/skeletons/deutsch/babel/item
+src/tsdb/skeletons/deutsch/babel/relations
+src/tsdb/skeletons/deutsch/tub/
+src/tsdb/skeletons/deutsch/tub/item
+src/tsdb/skeletons/deutsch/tub/relations
+src/tsdb/skeletons/francaise/
+src/tsdb/skeletons/francaise/mrs/
+src/tsdb/skeletons/francaise/mrs/item
+src/tsdb/skeletons/francaise/mrs/relations
+src/tsdb/skeletons/francaise/Index.lisp
+src/tsdb/skeletons/francaise/Relations
+src/tsdb/skeletons/francaise/french/
+src/tsdb/skeletons/francaise/french/item-set
+src/tsdb/skeletons/francaise/french/parameter
+src/tsdb/skeletons/francaise/french/item
+src/tsdb/skeletons/francaise/french/phenomenon
+src/tsdb/skeletons/francaise/french/item-phenomenon
+src/tsdb/skeletons/francaise/french/analysis
+src/tsdb/skeletons/francaise/french/relations
+src/tsdb/skeletons/francaise/french/set
+src/tsdb/skeletons/nihongo/
+src/tsdb/skeletons/nihongo/kihon/
+src/tsdb/skeletons/nihongo/kihon/item
+src/tsdb/skeletons/nihongo/kihon/relations
+src/tsdb/skeletons/nihongo/ginkougyou/
+src/tsdb/skeletons/nihongo/ginkougyou/item
+src/tsdb/skeletons/nihongo/ginkougyou/relations
+src/tsdb/skeletons/nihongo/hizuke/
+src/tsdb/skeletons/nihongo/hizuke/item
+src/tsdb/skeletons/nihongo/hizuke/relations
+src/tsdb/skeletons/nihongo/mrs/
+src/tsdb/skeletons/nihongo/mrs/item
+src/tsdb/skeletons/nihongo/mrs/output
+src/tsdb/skeletons/nihongo/mrs/relations
+src/tsdb/skeletons/nihongo/faqs/
+src/tsdb/skeletons/nihongo/faqs/item
+src/tsdb/skeletons/nihongo/faqs/relations
+src/tsdb/skeletons/nihongo/Index.lisp
+src/tsdb/skeletons/nihongo/Relations
+src/tsdb/skeletons/nihongo/shiken/
+src/tsdb/skeletons/nihongo/shiken/item
+src/tsdb/skeletons/nihongo/shiken/relations
+src/tsdb/skeletons/nihongo/suuji/
+src/tsdb/skeletons/nihongo/suuji/item
+src/tsdb/skeletons/nihongo/suuji/relations
+src/tsdb/skeletons/espanol/
+src/tsdb/skeletons/espanol/banca/
+src/tsdb/skeletons/espanol/banca/item
+src/tsdb/skeletons/espanol/banca/relations
+src/tsdb/skeletons/espanol/Index.lisp
+src/tsdb/skeletons/espanol/Relations
+src/tsdb/skeletons/norsk/
+src/tsdb/skeletons/norsk/harmoni/
+src/tsdb/skeletons/norsk/harmoni/item
+src/tsdb/skeletons/norsk/harmoni/output
+src/tsdb/skeletons/norsk/harmoni/relations
+src/tsdb/skeletons/norsk/tur/
+src/tsdb/skeletons/norsk/tur/item
+src/tsdb/skeletons/norsk/tur/output
+src/tsdb/skeletons/norsk/tur/relations
+src/tsdb/skeletons/norsk/base/
+src/tsdb/skeletons/norsk/base/item
+src/tsdb/skeletons/norsk/base/phenomenon
+src/tsdb/skeletons/norsk/base/item-phenomenon
+src/tsdb/skeletons/norsk/base/relations
+src/tsdb/skeletons/norsk/enkel/
+src/tsdb/skeletons/norsk/enkel/item
+src/tsdb/skeletons/norsk/enkel/relations
+src/tsdb/skeletons/norsk/mrs/
+src/tsdb/skeletons/norsk/mrs/item
+src/tsdb/skeletons/norsk/mrs/output
+src/tsdb/skeletons/norsk/mrs/relations
+src/tsdb/skeletons/norsk/Index.lisp
+src/tsdb/skeletons/norsk/Relations
+src/tsdb/home/
+( \
+	  cd /projects/lingo/lkb; \
+	  tar Svczf /home/www-lingo/html/builds/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
+	      --exclude="*~" --exclude=".svn*" --exclude="*/.svn*" \
+              --exclude=".nfs*" \
+	      ./src/tsdb/doc; \
+	)
+./src/tsdb/doc/
+./src/tsdb/doc/profiling.ps
+./src/tsdb/doc/manual.ps
+./src/tsdb/doc/tsnlp.ps
 make[1]: Leaving directory `/projects/lingo/lkb'
