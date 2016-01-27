@@ -120,7 +120,7 @@ lkb_data:
 	      src/data src/*.el lexdb etc; \
 	)
 
-lkb_binaries: lkb_linux lkb_macos # lkb_solaris
+lkb_binaries: lkb_linux # lkb_macos lkb_solaris
 
 lkb_linux: lkb_linux_x86_32
 
