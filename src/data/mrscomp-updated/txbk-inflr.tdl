@@ -1,0 +1,161 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+
+; <<>> NOMINAL INFLECTIONAL RULES
+
+3rd-sing-noun_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 3rd-sing-noun ]]].
+
+plur-noun_infl_rule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun ]]].
+
+singandplur-noun_infl_rule :=
+%suffix (zzz foobar)
+singandplur-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX singandplur-noun ]]].
+
+
+
+; <<>> VERBAL INFLECTIONAL RULES
+
+past-verb_infl_rule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+past-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-verb]]].
+
+;; Should these next three rules use something else other than the 
+;; lrule-general?  What about their semantics?
+past-part-verb_infl_rule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-part-verb]]].
+
+pres-part-verb_infl_rule :=
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX pres-part-verb]]].
+
+inf-verb_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX inf-verb ]]].
+
+1st-sing-verb_infl_rule :=
+%suffix (zzz foobar)
+present-verb-lexical-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+2orplural-verb_infl_rule :=
+%suffix (zzz foobar)
+present-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2orplural-verb ]]].
+
+;; This was added to allow for sentences with "annoy_2"
+comp-sing-verb_infl_rule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+present-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX comp-sing-verb ]]].
+
+3rd-sing-verb_infl_rule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+present-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+non-3rd-sing-verb_infl_rule := 
+present-verb-lexical-rule &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX non-3rd-sing-verb ]]].
+
+1or3-sing-past-verb_infl_rule :=
+%suffix (zzz foobar)
+past-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1or3-sing-past-verb ]]].
+
+2orplural-past-verb_infl_rule :=
+%suffix (zzz foobar)
+past-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2orplural-verb ]]].
+
+
+
+; <<>>  RULES TO RECYCLE OR TRASH
+
+#|
+sing-noun_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX sing-noun ]]].
+;  This rule has been replaced by the three below. See Changes File #1
+
+; We could clean up this file a lot if we could list a disjuntion
+; of affix types which fire each of the different kind of lexical rules.
+1st-sing-noun_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 1st-sing-noun ]]].
+
+2nd-sing-noun_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 2nd-sing-noun ]]].
+
+;; Is this only useful for "all furniture"?  
+;; If so, it probably isn't worth having.
+count-false-noun_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ARGS [ FIRST [ AFFIX count-false-noun ]]].
+
+; Are these two rules below currently working?
+plur-noun-nom_infl_rule :=
+%suffix (zzz foobar)
+plur-noun-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun-nom]]].
+
+plur-noun-acc_infl_rule :=
+%suffix (zzz foobar)
+plur-noun-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun-acc]]].
+
+modal-verb_infl_rule := 
+%suffix (zzz foobar)
+modal-verb-lexical-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX modal-verb ]]].
+|#
+
+
+
+; <<>> CONSTANT INFLECTIONAL RULES
+
+constant-lexeme_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX no-affix ]]].

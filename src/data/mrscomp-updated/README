@@ -1,0 +1,6 @@
+This is an updated version of the mrscomp grammar, which is in line
+with the dmrscomp grammar, so the treatments can be compared directly.
+The two grammars are identical apart from types.tdl, which contains
+the different encodings of the semantics.  Please see the dmrscomp README for further information.
+
+*** Please keep this grammar in line with dmrscomp if you make any modifications to it! ***

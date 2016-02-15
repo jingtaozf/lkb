@@ -1,0 +1,32 @@
+1 it rains 1 19
+2 every dog barks 1 19
+3 every cat chased some dog 1 37
+4 that dog every cat chased 1 38
+5 these dogs barked 1 24
+6 the cat gave that dog some food 1 50
+7 the cat gave some food to the dog 1 90
+8 Kim seems to bark 1 34
+9 it seems to rain 1 40
+10 Kim tried to bark 1 43
+11 Kim believed it rained 1 42
+12 Kim believed that Sandy barked 1 53
+13 Kim has barked 1 21
+14 Kim is barking 1 17
+15 the dog barked near the kennel 1 43
+16 the dog near the kennel barked 2 47
+17 the dog barked loudly 2 33
+18 the cat chased the dog to the kennel 4 81
+19 the slow dog barked 1 28
+20 the slow dog barked loudly 2 39
+21 Kim probably barked 1 23
+22 Kim expected Sandy to bark 1 45
+23 Kim persuaded Sandy to bark 1 53
+24 the dog is white 0 21
+25 it seems that Kim barks 0 40
+26 the very slow dog barked 0 26
+
+;;; Total CPU time: 160 msecs
+
+;;; Mean edges: 38.69
+
+;;; Mean parses: 1.12
