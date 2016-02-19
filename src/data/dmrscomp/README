@@ -1,6 +1,8 @@
 A native DMRS grammar - i.e., the semantics is intended to be interpreted 
 directly as a DMRS (without variables).
 
+*** Please keep this grammar in line with mrscomp-updated if you make any modifications to it! ***
+
 In order to try this grammar out, load into the LKB in the usual way
 via the script file.  The DMRS option from the menu associated
 with the small parse trees in the LKB interface will show a 
@@ -24,6 +26,8 @@ independent of making this a DMRS grammar:
 - make infinitival `to' etc have no semantics rather than give them a 
 dummy relation (actually, this is forced by the DMRS approach, 
 but is anyway cleaner)
+
+Feb 15 2016 - all these changes are now in the mrscomp-updated grammar, so please see this for a detailed MRS/DMRS comparison
 
 DMRS encoding:
 
