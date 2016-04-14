@@ -166,17 +166,29 @@
 
 #-:tty
 (defun really-generate-from-edge (parser-edge)    
-  (let* ((input-sem (mrs::extract-mrs parser-edge)))
+  (let* ((input-sem (if *dmrs-grammar-p*
+			(mrs::extract-dmrs parser-edge)
+			(mrs::extract-mrs parser-edge))))
     (with-output-to-top ()
-      (if (and input-sem (mrs::psoa-p input-sem)
-               (mrs::psoa-liszt input-sem))
-	  (progn
-	    (close-existing-chart-windows)
-	    (generate-from-mrs input-sem)
-	    (show-gen-result))
+      (cond 
+       (*dmrs-grammar-p* 
 	(show-message-window
-           (format nil "Could not extract valid MRS from edge ~A"
-	      (edge-id parser-edge)))))))
+	 (format nil "Generation from native DMRS not implemented yet")))
+	#|
+	     (when (and input-sem 
+		     (mrs::dmrs-nodes input-sem))
+	       (close-existing-chart-windows)
+	     (generate-from-dmrs input-sem)
+	     (show-gen-result)))
+	     |#
+	    ((and input-sem (mrs::psoa-p input-sem)
+               (mrs::psoa-liszt input-sem))
+	     (close-existing-chart-windows)
+	     (generate-from-mrs input-sem)
+	     (show-gen-result))
+	    (t (show-message-window
+		(format nil "Could not extract valid *MRS from edge ~A"
+			(edge-id parser-edge))))))))
 
 #-:tty
 (defun toggle-mrs-base nil

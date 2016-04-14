@@ -113,6 +113,19 @@
 (defparameter *qeq-type* (vsym "qeq")
   "the fs type associated with a qeq relation")
 
+;;; additions for ICONS, parallel HCONS
+
+(defparameter *psoa-icons-path*
+    `(,(vsym "ICONS") ,(vsym "LIST"))
+  "path to get a list of icons from an mrs fs")
+
+(defparameter *iarg1-feature* (vsym "IARG1")
+  "the feature in an icons that leads to the first argument")
+
+(defparameter *iarg2-feature* (vsym "IARG2")
+  "the feature in an icons that leads to the second argument")
+
+;;; no constraint on relation
 
 (defparameter *psoa-a-cons-path*
     `(,(vsym "ACONS") ,(vsym "LIST"))

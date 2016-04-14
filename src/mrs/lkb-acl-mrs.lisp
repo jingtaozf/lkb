@@ -105,6 +105,35 @@
        mrsstruct
        'mrs::mrs-xml file-name))))
 
+;;; LaTeX output 
+
+(define-mrs-simple-command (com-output-mrs-latex :menu "Save as LaTeX") 
+    ()
+  (save-mrs-as-latex (mrs-simple-mrsstruct clim:*application-frame*)))
+
+(define-mrs-indexed-command (com-output-mrs-indexed-latex :menu "Save as LaTeX") 
+    ()
+  (save-mrs-as-latex (mrs-indexed-mrsstruct clim:*application-frame*)))
+
+(defparameter *mrs-latex-output-file* nil)
+
+(defun save-mrs-as-latex (mrsstruct)
+  (let ((file-name (if *mrs-latex-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Append to ~A?"
+						    *mrs-latex-output-file*))))
+			 (if use-existing-p
+			     *mrs-latex-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for MRS LaTeX dumps")))
+		       (ask-user-for-new-pathname "File for MRS LaTeX dumps"))))
+    (setf *mrs-latex-output-file* file-name)
+    (when file-name
+      (mrs::output-mrs
+       mrsstruct
+       'mrs::latex file-name))))
+
+
 ;;; generate
 
 (define-mrs-ordinary-command (com-generate-mrs-ordinary-xml :menu "Generate") 

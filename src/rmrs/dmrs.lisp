@@ -60,6 +60,101 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;; Utilities for manipulation
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun get-node-target-id (node structure arg-value &optional post-slash)
+  (unless (and (dmrs-node-p node) (dmrs-p structure) (stringp arg-value))
+    (error "Wrong types"))
+  (let ((id (dmrs-node-id node)))
+    (dolist (link (dmrs-links structure))
+      (when (and (eql (dmrs-link-from link) id)
+		 (equal (dmrs-link-pre link) arg-value)
+		 (or (not post-slash)
+		     (eql (dmrs-link-post link) post-slash)))
+	;; assume only one - checking DMRS structure is
+	;; valid should be done elsewhere
+	(return (dmrs-link-to link))))))
+
+(defun get-id-target-id (id structure arg-value &optional post-slash)
+  (unless (and (dmrs-p structure) (stringp arg-value))
+    (error "Wrong types"))
+  (dolist (link (dmrs-links structure))
+    (when (and (eql (dmrs-link-from link) id)
+	       (equal (dmrs-link-pre link) arg-value)
+	       (or (not post-slash)
+		   (eql (dmrs-link-post link) post-slash)))
+      ;; assume only one - checking DMRS structure is
+      ;; valid should be done elsewhere
+      (return (dmrs-link-to link)))))
+
+(defun get-id-target-link (id structure arg-value &optional post-slash)
+  (unless (and (dmrs-p structure) (stringp arg-value))
+    (error "Wrong types"))
+  (dolist (link (dmrs-links structure))
+    (when (and (eql (dmrs-link-from link) id)
+	       (equal (dmrs-link-pre link) arg-value)
+	       (or (not post-slash)
+		   (eql (dmrs-link-post link) post-slash)))
+      ;; assume only one - checking DMRS structure is
+      ;; valid should be done elsewhere
+      (return link))))
+
+(defun get-node-all-target-ids (node structure)
+  (unless (and (dmrs-node-p node) (dmrs-p structure))
+    (error "Wrong types"))
+  (let ((id (dmrs-node-id node)))
+    (loop for link in (dmrs-links structure)
+	when (eql (dmrs-link-from link) id)
+	collect (dmrs-link-to link))))
+
+(defun get-node-all-from-links (node structure)
+  (unless (and (dmrs-node-p node) (dmrs-p structure))
+    (error "Wrong types"))
+  (let ((id (dmrs-node-id node)))
+    (loop for link in (dmrs-links structure)
+	when (eql (dmrs-link-from link) id)
+	collect link)))
+
+(defun get-node-all-links (node structure)
+  (unless (and (dmrs-node-p node) (dmrs-p structure))
+    (error "Wrong types"))
+  (let ((id (dmrs-node-id node)))
+    (loop for link in (dmrs-links structure)
+	when (or (eql (dmrs-link-from link) id)
+		 (eql (dmrs-link-to link) id))
+	collect link)))
+
+(defun get-id-all-target-ids (id structure)
+  (loop for link in (dmrs-links structure)
+      when (eql (dmrs-link-from link) id)
+      collect (dmrs-link-to link)))
+
+(defun get-node-with-id (id structure)
+  (dolist (node (dmrs-nodes structure))
+      (when (eql (dmrs-node-id node) id)
+	(return node))))
+
+(defun delete-nodes-from-dmrs (dmrs-struct delete-nodes)
+  ;;; DESTRUCTIVE
+  (setf (dmrs-nodes dmrs-struct)
+    (delete-if #'(lambda (node) (member (dmrs-node-id node) delete-nodes))
+	       (dmrs-nodes dmrs-struct)))
+  dmrs-struct)
+
+(defun delete-links-from-dmrs (dmrs-struct delete-links)
+  ;;; DESTRUCTIVE
+  ;;; test is eq because we assume the links come from the structure
+  (setf (dmrs-links dmrs-struct)
+    (delete-if #'(lambda (link) (member link delete-links))
+	       (dmrs-links dmrs-struct)))
+  dmrs-struct)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;; Utilities for conversion
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -286,10 +381,98 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 						 :if-does-not-exist :create)
 				  (mrs::layout-dmrs dmrs 
 						    :svg ostream)))))))))))))))
+#|
+
+(loop for ifile in '("/local/scratch/aac10/wescience/ws01.gold/result"
+		     "/local/scratch/aac10/wescience/ws02.gold/result"
+		     "/local/scratch/aac10/wescience/ws03.gold/result"
+		     "/local/scratch/aac10/wescience/ws04.gold/result"
+		     "/local/scratch/aac10/wescience/ws05.gold/result"
+		     "/local/scratch/aac10/wescience/ws06.gold/result"
+		     "/local/scratch/aac10/wescience/ws07.gold/result"
+		     "/local/scratch/aac10/wescience/ws08.gold/result"
+		     "/local/scratch/aac10/wescience/ws09.gold/result"
+		     "/local/scratch/aac10/wescience/ws10.gold/result"
+		     "/local/scratch/aac10/wescience/ws11.gold/result"
+		     "/local/scratch/aac10/wescience/ws12.gold/result"
+		     "/local/scratch/aac10/wescience/ws13.gold/result"
+		     )
+      and
+      ofile in '("/local/scratch/aac10/wescience/ws01.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws02.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws03.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws04.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws05.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws06.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws07.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws08.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws09.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws10.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws11.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws12.gold.dmrs"
+		 "/local/scratch/aac10/wescience/ws13.gold.dmrs"
+		 )
+      do
+      (convert-fine-system-mrs-dmrs ifile ofile))
 
 
-  
-  
+
+(convert-fine-system-mrs-dmrs "/local/scratch/aac10/wescience/ws13.gold/result" "/local/scratch/aac10/wescience/ws13.gold.dmrs")
+
+(with-input-from-string (mstream "[ LTOP: h1 INDEX: e2 [ e SF: PROP ] RELS: < [ implicit_conj_rel<1:28> LBL: h3 ARG0: e2 L-HNDL: h4 L-INDEX: e7 [ e SF: PROP TENSE: PRES MOOD: INDICATIVE PROG: - PERF: - ] R-HNDL: h5 R-INDEX: e6 [ e SF: PROP TENSE: TENSED MOOD: INDICATIVE PROG: - PERF: - ] ] [ pron_rel<1:4> LBL: h8 ARG0: x9 [ x PERS: 2 PRONTYPE: STD_PRON ] ] [ pronoun_q_rel<1:4> LBL: h10 ARG0: x9 RSTR: h11 BODY: h12 ] [ \"_welcome_a_1_rel\"<8:16> LBL: h13 ARG0: e7 ARG1: x9 ] [ _colon_v_id_rel<16:17> LBL: h14 ARG0: e6 ARG1: i15 ARG2: i16 [ i PERS: 3 NUM: SG ] ] [ udef_q_rel<16:17> LBL: h17 ARG0: i18 RSTR: h19 BODY: h20 ] [ \"_go_v_1_rel\"<18:28> LBL: h21 ARG0: e22 [ e SF: PROP TENSE: UNTENSED MOOD: INDICATIVE PROG: - PERF: - ] ARG1: i23 ] [ \"_pre-_a_ante_rel\"<18:28> LBL: h21 ARG0: i24 ARG1: e22 ] [ fw_seq_rel<> LBL: h21 ARG0: i16 L-INDEX: e22 R-INDEX: i25 ] > HCONS: < h4 qeq h13 h5 qeq h14 h11 qeq h8 h19 qeq h26 > ]")
+		    (let* ((mrs (read-mrs mstream))))
+|#
+
+(defun convert-fine-system-mrs-dmrs (ifile ofile)
+  ;;; obtaining a file of DMRSs (in XML) from treebanked data 
+  ;;; containing MRSs
+  ;;; uses functions defined in qa2008.lisp
+  ;;; copies below
+  (with-open-file (istream ifile :direction :input)
+    (with-open-file (ostream ofile :direction :output :if-exists :supersede)
+      (loop (let ((fsout (read-line istream nil nil)))
+	      (unless fsout (return))
+	      (let ((scount (extract-fine-system-number fsout))
+		    (mrs-string (extract-fine-system-mrs fsout))
+		    (surface (lkb::extract-fine-system-sentence fsout)))
+		(when (and (integerp scount)
+			   (stringp mrs-string)
+			   (not (equal mrs-string "")))
+		  (with-input-from-string (mstream mrs-string)
+		    (let* ((mrs (read-mrs mstream))
+			   (rmrs (mrs-to-rmrs mrs))
+			   (dmrs (rmrs-to-dmrs rmrs)))
+		      (when dmrs
+			(setf (dmrs-surface dmrs) surface)
+			(setf (dmrs-ident dmrs) (format nil "~A" scount))
+			(output-dmrs1 dmrs 'dxml ostream)
+			(finish-output ostream)))))))))))  
+
+(defun extract-fine-system-mrs (str)
+  ;;; compare extract-fine-system-sentence
+  (if (find #\@ str)
+      (let ((ampcount 0)
+	    (sstart nil) 
+	    (send nil))
+	(dotimes (n (length str)) 
+	  (let ((char (elt str n))) 
+	    (when (eql char #\@) 
+	      (setf ampcount (+ 1 ampcount))
+	      (when (eql ampcount 13)
+		(setf sstart (+ 1 n)))))
+	  (when (eql ampcount 14)
+	    (setf send n)
+	    (return)))
+	(if (and sstart send)
+	    (subseq str sstart send)
+	  str))
+    str))
+
+(defun extract-fine-system-number (str)
+  ;;; compare extract-fine-system-sentence
+  (let ((apos (position #\@ str)))
+	(if apos
+	    (parse-integer (subseq str 0 apos) :junk-allowed t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -300,16 +483,23 @@ RMRS inventory of arguments.  There may also be undirected /= arcs.
 
 #|
 (let ((*package* (find-package :mrs)))
-  (with-open-file (istream "~/lingo/erg/data/cross.rmrs" 
-		   :direction :input)
-      (let ((rmrs (parse-xml-removing-junk istream)))
-	(when (and rmrs (not (xml-whitespace-string-p rmrs)))
-	  (let* ((dmrs (rmrs-to-dmrs (read-rmrs rmrs nil)))
-		(crossing-links
-		 (dmrs-crossing-links dmrs)))
-	       (simple-output-dmrs dmrs)
-	       (when crossing-links
-		 (format t "~%Crossing links ~A" crossing-links)))))))
+  (with-open-file (istream "~/cross-test.dmrs" 
+			   :direction :input)
+    (let ((dmrs-xml (parse-xml-removing-junk istream)))
+      (when (and dmrs-xml 
+		 (not (xml-whitespace-string-p dmrs-xml)))
+	(let ((dmrs-list (read-dmrs-list dmrs-xml)))
+	  (when dmrs-list
+	    (let ((count 0))
+	      (dolist (dmrs dmrs-list)
+		(when dmrs
+		  (let
+		      ((crossing-links
+			(dmrs-crossing-links dmrs)))
+		    (when crossing-links
+		      (simple-output-dmrs dmrs)
+		      (format t "~%~A" (dmrs-surface dmrs))
+		      (format t "~%Crossing links ~A" crossing-links))))))))))))
 |#
 
 (defun dmrs-crossing-links (dmrs)
@@ -1677,14 +1867,18 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
   ;;; for now, ignores the meta data and just returns a list
   ;;; of DMRSs.  FIX
   (let ((dmrss nil) (tag (car content)))
-    (unless (and (listp tag) (eql (car tag) '|dmrs-list|))
+    (unless (or (eql tag '|dmrs-list|)
+		(and (listp tag) (eql (car tag) '|dmrs-list|)))
       (error "~A is not an dmrs list" content))
     (setf content (cdr content))
     (when content
       (loop for next-el in content
 	  do
 	    (unless (xml-whitespace-string-p next-el)
-	      (push (read-dmrs next-el) dmrss))))
+	      (let ((dmrs (read-dmrs next-el)))
+		(when dmrs
+		  ;;; empty or messed-up DMRSs are ignored
+		     (push dmrs dmrss))))))
     (nreverse dmrss)))
 
 
@@ -1695,26 +1889,28 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 ;;;          cto   CDATA #REQUIRED 
 ;;;          surface   CDATA #IMPLIED 
 ;;;          ident     CDATA #IMPLIED >
-  (let ((nodes nil) (links nil)
+  (let ((nodes nil) (links nil) 
 	(tag (car content)))
-    (unless (and (listp tag) (eql (car tag) '|dmrs|))
-      (error "~A is not an dmrs" content))
-    (setf content (cdr content))
-    (when content
-      (loop for next-el in content
-	  do
-	    (unless (xml-whitespace-string-p next-el)
-		(cond 
-		 ((eql (caar next-el) '|node|)
-		  (push (read-dmrs-node next-el)
-			nodes))
-		 ((eql (caar next-el) '|link|)
-		  (push (read-dmrs-link next-el)
-			links))
-		 (t (error "Unexpected element ~A" next-el)))))
+    (if (and (listp tag) (eql (car tag) '|dmrs|))
+	(progn
+	  (setf content (cdr content))
+	  (when content
+	    (loop for next-el in content
+		do
+		  (unless (xml-whitespace-string-p next-el)
+		    (cond 
+		     ((eql (caar next-el) '|node|)
+		      (push (read-dmrs-node next-el)
+			    nodes))
+		     ((eql (caar next-el) '|link|)
+		      (push (read-dmrs-link next-el)
+			    links))
+		     (t (error "Unexpected element ~A" next-el))))))
 ;;;      (pprint nodes)
 ;;;      (pprint links)
-      (make-dmrs :nodes nodes :links links))))
+	(make-dmrs :cfrom (third tag) :cto (fifth tag) :surface (seventh tag)
+		   :ident (ninth tag)
+		   :nodes nodes :links links)))))
 
 (defun read-dmrs-node (content)
 ;;;  <!ELEMENT node ((realpred|gpred), sortinfo)>
@@ -1751,7 +1947,7 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 				    '(|cvarsort|)
 				    '(|num| |pers| |gend| |sf| 
 				      |tense| |mood| |prontype|
-				      |prog| |perf| |ind|)
+				      |prog| |perf| |ind| |pt|)
 				    nil))))
 	(make-dmrs-node
 	 :id (parse-integer (cdr (assoc '|nodeid| attlist)))
@@ -1769,7 +1965,7 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
   (let ((cvextra nil))
     (loop for feat in '(|num| |pers| |gend| |sf| 
 			|tense| |mood| |prontype|
-			|prog| |perf| |ind|)
+			|prog| |perf| |ind| |pt|)
 	do
 	  (let ((featval (assoc feat sort-info-list)))
 	    (when featval
@@ -1829,6 +2025,8 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 ;;;;;;    Testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter *dmrs-test-egs* nil)
+
 #+:lkb
 (defun batch-output-dmrs nil  
   (let ((sentence lkb::*sentence*)
@@ -1849,6 +2047,7 @@ x text-y label (if (dmrs-layout-node-ltop node) "*" ""))))
 ;;		 (crossing-links
 ;;		  (dmrs-crossing-links dmrs-struct)))
             (output-dmrs1 dmrs-struct 'dxml ostream)
+	    (push dmrs-struct *dmrs-test-egs*)
 ;;	    (when crossing-links
 	    ;;		(format t "~%Crossing links ~A" crossing-links))))
 	    ))

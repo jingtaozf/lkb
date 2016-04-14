@@ -66,6 +66,11 @@
 ;;;    type of the list element - two arguments, represented
 ;;;    by *sc-arg-feature* and *outscpd-feature*
 ;;;
+;;; 9. icons
+;;;    icons is a list - relationship is represented by the
+;;;    type of the list element - two arguments, represented
+;;;    by *iarg1-feature* and *iarg2-feature*
+
 ;;;    also allow for isect case: where there's a modifier anchor
 ;;;    consisting of a handle.index pair and a list of target pairs
 ;;;    interpreted as a disjunction.
@@ -140,6 +145,8 @@ duplicate variables")
          (liszt-fs (path-value fs *psoa-liszt-path*))
          (h-cons-fs (when *psoa-rh-cons-path*
                       (path-value fs *psoa-rh-cons-path*)))
+	 (icons-fs (when *psoa-icons-path*
+                      (path-value fs *psoa-icons-path*)))
 	 (a-cons-fs (when *psoa-a-cons-path*
                       (path-value fs *psoa-a-cons-path*)))
 	 (ing-fs (path-value fs (list (vsym "ING") (vsym "LIST"))))
@@ -168,7 +175,10 @@ duplicate variables")
                     (and hcons (list hcons))
                     (nreverse
                      (construct-h-cons h-cons-fs nil *variable-generator*)))
-           :a-cons (nreverse (construct-a-cons
+	   :icons (if icons-fs
+			(construct-icons icons-fs nil 
+					  *variable-generator*))
+           :a-cons (reverse (construct-a-cons
                               a-cons-fs nil *variable-generator*))))
 	 (psoa (if ing (convert-ing-to-ing-rels psoa ing nil)
 		 psoa))
@@ -178,7 +188,9 @@ duplicate variables")
          ;; variable types (as of late 2008, when activated through a non-nil
          ;; *variable-type-mapping*), property names, and value names.
          ;;
-         (psoa (mt:map-mrs psoa :semi :forward)))
+         (psoa (mt:map-mrs psoa :semi :forward))
+;;; this copies the MRS after mapping the variables ...
+	 )
     (when *mrs-record-all-nodes-p* (push (cons fs psoa) *all-nodes*))
     psoa))
 
@@ -536,6 +548,50 @@ duplicate variables")
 (defun create-hcons-relation (type)
   (cond ((eql type *qeq-type*) "qeq")
         (t (error "Unknown relation type ~A" type))))
+
+;;; *******************************************************
+;;;
+;;; ICONS
+;;;
+;;; *******************************************************
+
+(defun construct-icons (fs constr-list variable-generator)
+  (if (is-valid-fs fs)
+      (let ((label-list (fs-arcs fs)))
+        (if label-list
+            (let ((first-part (assoc (car *first-path*)
+                                     label-list))
+                  (rest-part (assoc (car *rest-path*)
+                                    label-list)))
+              (if (and first-part rest-part)
+                  (progn
+                    (push (create-iconstr-struct
+                           (cdr first-part)
+                           variable-generator)
+                          constr-list)
+                    (construct-icons
+                     (cdr rest-part)
+                     constr-list variable-generator))
+                constr-list))
+          constr-list))))
+
+
+(defun create-iconstr-struct (fs variable-generator)
+  (if (is-valid-fs fs)
+      (let* ((label-list (fs-arcs fs))
+	     (rel (create-icons-relation (fs-type fs)))
+	     (iarg1 (assoc  *iarg1-feature* label-list))
+	     (iarg2 (assoc *iarg2-feature* label-list)))
+	(make-icons 
+	 :relation rel
+	 :iarg1 (when iarg1
+		  (create-variable (cdr iarg1) variable-generator))
+	 :iarg2 (when iarg2
+		    (create-variable (cdr iarg2) 
+				     variable-generator))))))
+
+(defun create-icons-relation (type)
+  (string type))
 
 
 

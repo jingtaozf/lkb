@@ -768,6 +768,8 @@
 	 (pred-symbol (mrs::vsym (string-upcase pred))))
     (if
 	(or
+;;;	 (eql pred-symbol 'lkb::def_or_a_or_udef_q_rel)
+;;; we get errors if we let through a symbol which isn't in the SEM-I
 	 (member pred-symbol *semi-fragment-relations* :test #'eq)
 	 (member
 	  pred-symbol

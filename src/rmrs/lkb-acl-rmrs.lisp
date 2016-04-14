@@ -95,6 +95,12 @@
         ()
   (save-dmrs-as-svg (mrs-dmrs-dmrs clim:*application-frame*)))
 
+(define-mrs-dmrs-command (com-output-dmrs-simplify :menu "Simplify") 
+    ()
+  (show-dmrs-ordinary-window
+   (mrs::dmrs-simplify-complex-names (mrs-dmrs-dmrs clim:*application-frame*))
+   "Simplified DMRS"))
+
 (defparameter *rmrs-xml-output-file* nil)
 
 (defun save-rmrs-as-xml (rmrsstruct)

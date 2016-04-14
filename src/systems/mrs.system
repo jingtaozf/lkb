@@ -104,6 +104,7 @@
        (:file "compare") ;;; RMRS comparison
        (:file "testing") ;;; temporary file for testing
        (:file "dmrs") ;;; dependency MRS
+       (:file "simplify") ;;; simplification of DMRS
        (:file "dmrsoutput") ;;; DMRS direct from a grammar - experimental
        ))      
 

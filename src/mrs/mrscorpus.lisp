@@ -272,6 +272,10 @@
 	 (format stream "~%Hcons differ")
 	 (dolist (h real-args)
 	   (print-mrs-hcons h nil display)))
+	(:icons
+	 (format stream "~%Icons differ")
+	 (dolist (i real-args)
+	   (print-mrs-icons i nil display)))
 	(:index
 	 (format stream "~%Indices differ")
 	 (dolist (h real-args)
@@ -312,7 +316,8 @@
 ;;;                                                            (25-nov-04; oe)
 (defparameter *mrs-equalp-ignored-roles* nil)
 
-(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p (propertyp t))
+(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p (propertyp t)
+				       (icons-p nil))
   #+:debug
   (setf %mrs1 mrs1 %mrs2 mrs2)
   (let* ((*mrs-comparison-output-control* (if noisy-p :noisy-p nil))
@@ -330,8 +335,15 @@
                (if 
                    (or (not syntactic-p)
                        (setf bindings (hcons-equal-p (psoa-h-cons mrs1)
-                                      (psoa-h-cons mrs2) bindings)))
-                   bindings
+						     (psoa-h-cons mrs2) bindings)))
+		   (if (or (not icons-p)
+			   (setf bindings (icons-equal-p 
+					   (psoa-icons mrs1)
+					   (psoa-icons mrs2) bindings)))   
+                       bindings
+		     (mrs-comparison-output :icons
+					(psoa-icons mrs1)
+					(psoa-icons mrs2)))
 		 (mrs-comparison-output :hcons
 					(psoa-h-cons mrs1)
 					(psoa-h-cons mrs2)))
@@ -570,6 +582,22 @@
                         (hcons-scarg hc2) t bindings)
        (variables-equal (hcons-outscpd hc1)
                         (hcons-outscpd hc2) t bindings)))
+
+(defun icons-equal-p (ic-list1 ic-list2 bindings)
+  (and (eql (length ic-list1) (length ic-list2))
+       (every #'(lambda (ic1)
+                  (some 
+                   #'(lambda (ic2) 
+                       (icons-el-equal ic1 ic2 bindings))
+                   ic-list2))
+              ic-list1)))
+
+(defun icons-el-equal (ic1 ic2 bindings)
+  (and (equal (icons-relation ic1) (icons-relation ic2))
+       (variables-equal (icons-iarg1 ic1)
+                        (icons-iarg1 ic2) t bindings)
+       (variables-equal (icons-iarg2 ic1)
+                        (icons-iarg2 ic2) t bindings)))
 
 (defun variable-set-equal (l1 l2 bindings)
   (or (and (null l1) (null l2))

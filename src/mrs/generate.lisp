@@ -2,6 +2,10 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
+;;; FIX - checked in although ICONS generation is not finished
+;;; because I don't think anything should actually be broken by the 
+;;; changes so far!
+
 (in-package :lkb)
 
 
@@ -286,6 +290,9 @@
           (error condition)
           (warn (format nil "~a" condition)))))))
 
+(defparameter *mrs-icons-strict-check-p* nil)
+;;; current rather hacky control - FIX
+
 (defun generate-from-mrs-internal (input-sem &key nanalyses)
 
   ;; (ERB 2003-10-08) For aligned generation -- if we're in first only
@@ -323,12 +330,14 @@
   (when (and mrs::*rel-handel-path* (null (mrs:psoa-top-h input-sem)))
     (setf (mrs:psoa-top-h input-sem)
       (mrs::make-var :id (funcall mrs::*variable-generator*) :type "h")))
-  (let ((fixup (mt::transfer-mrs input-sem :filter nil :task :fixup)))
-    (when (rest fixup)
-      (error 'generation/fixup-ambiguity :mrss fixup))
-    (when fixup
-      (setf input-sem (mt::edge-mrs (first fixup)))))
-  
+  (unless *mrs-icons-strict-check-p* 
+    ;;; this fixup isn't currently ICONS compatible, so bypass it for the
+    ;;; strict condition
+    (let ((fixup (mt::transfer-mrs input-sem :filter nil :task :fixup)))
+      (when (rest fixup)
+	(error 'generation/fixup-ambiguity :mrss fixup))
+      (when fixup
+	(setf input-sem (mt::edge-mrs (first fixup))))))  
   (setf *generator-internal-mrs* input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
@@ -753,7 +762,6 @@
       input-rels
       (g-edge-rels-covered edge)))
 
-
 (defun gen-chart-check-compatible (edge)
   ;; construct the MRS for edge
   ;; We test for 'compatibility' rather than equality - in
@@ -792,6 +800,14 @@
                #+:logon
                (types '(("i" "u")))
                (solution (mt::compare-mrss imrs input :type :subsumption))
+	       
+	       (solution (if solution
+			     (if *mrs-icons-strict-check-p*
+				 (if
+				     (mrs::mrs-equalp imrs input nil nil t t)
+				     solution)
+			       solution)))
+	       
                (distance
                 ;;
                 ;; _fix_me_

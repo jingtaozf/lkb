@@ -205,7 +205,16 @@
               (mrs::make-hcons 
                :relation (mrs:hcons-relation hcons) 
                :scarg (map-variable (mrs:hcons-scarg hcons))
-               :outscpd (map-variable (mrs:hcons-outscpd hcons))))))
+               :outscpd (map-variable (mrs:hcons-outscpd hcons)))))
+      (setf (mrs::psoa-icons copy)
+        (loop
+            for icons in (mrs::psoa-icons mrs)
+            collect
+              (mrs::make-icons 
+               :relation (mrs::icons-relation icons) 
+               :iarg1 (map-variable (mrs::icons-iarg1 icons))
+               :iarg2 (map-variable (mrs::icons-iarg2 icons)))))
+      )
     copy))
 
 ;;;

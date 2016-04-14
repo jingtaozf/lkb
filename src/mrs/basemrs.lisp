@@ -18,9 +18,12 @@
   liszt
   h-cons
   a-cons
+  icons
   vcs)
 
 ;;; a-cons added to allow for constraints on attachment
+
+;;; i-cons - information structure and anaphora
 
 ;;; rmrs is a substructure of this (see basermrs.lisp)
 
@@ -105,6 +108,14 @@
 ;;; relation is one of "qeq", "lheq" or "outscopes" as in the rmrs.dtd
 ;;; the code for grammar read in must convert the type to one
 ;;; of these.  although at the moment, only qeqs are supported.
+
+(defstruct (icons)
+  relation
+  iarg1
+  iarg2)
+
+;;; iargs must be `normal' variables
+
 
 ;;; The following structures are for attachment constraints as used
 ;;; by Berthold.
@@ -267,7 +278,22 @@
   nil)
 
 (defmethod mrs-output-end-fvpair-fn ((mrsout output-type))
-    nil)
+  nil)
+
+;;; generic null method here so no crashes because some
+;;; outputs don't allow for icons yet
+
+(defmethod mrs-output-start-icons ((mrsout output-type))
+  nil)
+
+(defmethod mrs-output-icons ((mrsout output-type) reln higher lower first-p
+			     higher-id higher-sort lower-id lower-sort)
+  (declare (ignore reln higher lower first-p
+		   higher-id higher-sort lower-id lower-sort))
+  nil)
+  
+(defmethod mrs-output-end-icons ((mrsout output-type))
+  nil)
 
 (defmethod mrs-output-start-a-cons ((mrsout output-type))
   nil)
@@ -400,6 +426,20 @@
     (format stream " ~(~a~) ~A ~(~a~)" higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout simple))
+  (with-slots (stream) mrsout
+    (format stream " >")))
+
+(defmethod mrs-output-start-icons ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream "~%~VT  ICONS: <" indentation)))
+
+(defmethod mrs-output-icons ((mrsout simple) reln higher lower first-p
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore first-p higher-id higher-sort lower-id lower-sort))
+  (with-slots (stream indentation) mrsout
+    (format stream " ~(~a~) ~A ~(~a~)" higher reln lower)))
+
+(defmethod mrs-output-end-icons ((mrsout simple))
   (with-slots (stream) mrsout
     (format stream " >")))
 
@@ -593,6 +633,26 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 (defmethod mrs-output-end-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream "}")))
+
+(defmethod mrs-output-start-icons ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "~%{")))
+
+;;; ???
+(defmethod mrs-output-icons ((mrsout indexed) reln higher lower first-p
+				 higher-id higher-sort lower-id lower-sort)
+  (declare (ignore  higher-id higher-sort lower-id lower-sort))
+  (with-slots (stream) mrsout
+    (unless first-p
+      (format stream ",~%"))
+    (format stream "~(~a~) ~A ~(~a~)" 
+            higher reln lower)))
+
+(defmethod mrs-output-end-icons ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "}")))
+
+
 
 (defmethod mrs-output-end-psoa ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -1003,11 +1063,16 @@ higher and lower are handle-variables
   (with-slots (stream context) mrs
     (push :mute context)
     (when (and handle *rel-handel-path*)
-      (format stream "\\sh{~a}" id))))
+      (format stream "\\sh{~a}}" id))))
 
 (defmethod mrs-output-index ((mrs latex) index 
 			     &optional properties type id)
-  (declare (ignore index properties type id)))
+  (declare (ignore properties))
+  (with-slots (stream) mrs
+    ;;; :mute will still be in effect so no properties
+    ;;; will be output
+    (when index
+      (format stream "{\\svar{~a}{~a}{}}" type id))))
 
 (defmethod mrs-output-start-liszt ((mrs latex))
   (declare (special *already-seen-vars*))
@@ -1016,9 +1081,14 @@ higher and lower are handle-variables
   ;; least not by default), we need to reset the set of seen variables at this
   ;; point.
   ;;
+  ;; AAC - included index now, as with other MRS output, following decision
+  ;; 3017625 at the DELPH-IN Summit, but left the reset here
+  ;; because better not to display the properties on the index in this
+  ;; format
   (setf *already-seen-vars* nil)
   (with-slots (stream context) mrs
-    (format stream "}{%~%")
+;;;    (format stream "}{%~%")
+    (format stream "{%~%")
     (setf context nil)))
 
 (defmethod mrs-output-var-fn ((mrs latex) variable 
@@ -1541,6 +1611,8 @@ higher and lower are handle-variables
   (mrs-output-end-liszt *mrs-display-structure*)
   (when *rel-handel-path*
     (print-mrs-hcons (psoa-h-cons psoa) connected-p *mrs-display-structure*))
+  (when (psoa-icons psoa)
+    (print-mrs-icons (psoa-icons psoa) connected-p *mrs-display-structure*))
   (when (psoa-a-cons psoa)
     (print-mrs-acons (psoa-a-cons psoa) connected-p *mrs-display-structure*))
   (when (psoa-vcs psoa)
@@ -1611,6 +1683,27 @@ higher and lower are handle-variables
     ;; extra info can be ignored here because all handels
     ;; will have appeared elsewhere
     (mrs-output-end-h-cons display))
+
+(defun print-mrs-icons (icons-list connected-p display)
+    (mrs-output-start-icons display)
+    (let ((first-icons t))
+      (loop
+          for icons in icons-list
+          for iarg1 = (icons-iarg1 icons)
+          for iarg2 = (icons-iarg2 icons)
+          do
+            (mrs-output-icons 
+             display
+             (icons-relation icons)
+             (find-var-name iarg1 connected-p) 
+             (find-var-name iarg2 connected-p)
+             first-icons
+	     (and iarg1 (var-id iarg1)) (and iarg1 (var-type iarg1))
+	     (and iarg2 (var-id iarg2)) (and iarg2 (var-type iarg2)))
+            (setf first-icons nil)))
+    ;; extra info can be ignored here because all variables
+    ;; should have appeared elsewhere
+    (mrs-output-end-icons display))
 
 (defun print-mrs-acons (acons-list connected-p display)
   (mrs-output-start-a-cons display)
@@ -2206,8 +2299,9 @@ VAR -> VARNAME[:CONSTNAME]*
   (let ((*package* (find-package :mrs)))
     (with-open-file (istream file-name :direction :input)
       (let ((mrs (parse-xml-removing-junk istream)))
-	(xml-whitespace-string-p mrs)
-	(read-mrs-xml mrs)))))
+	(unless
+	    (xml-whitespace-string-p mrs)
+	  (read-mrs-xml mrs))))))
 
 #|
 to test
@@ -2228,37 +2322,33 @@ to test
 (defun read-mrs-xml (content)
 ;;; <!ELEMENT mrs (label, var, (ep|hcons)*)>
   (setf *already-read-vars* nil)
+  (setf content (remove-xml-whitespace-elements content))
   (let ((top-h nil) (index nil) (eps nil) 
         (h-cons nil)
 	(tag (car content)))
     (unless (eql tag '|mrs|)
       (error "~A is not an mrs" content))
     (setf content (cdr content))
-    (loop (let ((next-el (car content)))
-	    (if (xml-whitespace-string-p next-el)
-		(pop content)
-	      (return))))
     (when content
       (setf top-h (read-mrs-xml-label (first content)))
       (setf index (read-mrs-xml-var (second content)))
       (loop for next-el in (cddr content)
 	  do
-	    (unless (xml-whitespace-string-p next-el)
-	      (let
-		  ((next-tag (car next-el)))
-		(cond 
-		 ((atom next-tag)
-		  (cond ((eql next-tag '|ep|)
-			 (push (read-mrs-xml-ep next-el)
-			       eps))
-			(t (error "Unexpected element ~A" next-el))))
-		 ((eql (car next-tag) '|ep|)
-		  (push (read-mrs-xml-ep next-el)
-			eps))
-		 ((eql (car next-tag) '|hcons|)
-		  (push (read-mrs-xml-hcons next-el)
-			h-cons))
-		 (t (error "Unexpected element ~A" next-el))))))
+	    (let
+		((next-tag (car next-el)))
+	      (cond 
+	       ((atom next-tag)
+		(cond ((eql next-tag '|ep|)
+		       (push (read-mrs-xml-ep next-el)
+			     eps))
+		      (t (error "Unexpected element ~A" next-el))))
+	       ((eql (car next-tag) '|ep|)
+		(push (read-mrs-xml-ep next-el)
+		      eps))
+	       ((eql (car next-tag) '|hcons|)
+		(push (read-mrs-xml-hcons next-el)
+		      h-cons))
+	       (t (error "Unexpected element ~A" next-el)))))
       (make-psoa :top-h top-h
 		 :index index
 		 :liszt (nreverse eps)
@@ -2279,9 +2369,6 @@ to test
 		 (listp tag)
 		 (eql (first tag) '|ep|)))
       (error "Malformed ep ~A" content))
-    (setf body (loop for x in body
-		   unless (xml-whitespace-string-p x)
-		   collect x))
     (let* ((pred (read-mrs-xml-pred (first body)))
 	   (label (read-mrs-xml-label (second body)))
 	   (flist (read-mrs-xml-rargs (cddr body)))
@@ -2355,7 +2442,6 @@ to test
 
 (defun read-mrs-xml-extras (extras)
   (loop for content in extras
-      unless (xml-whitespace-string-p content)
       collect
 ;;; <!ELEMENT extrapair (path,value)>
 ;;; <!ELEMENT path (#PCDATA)>
@@ -2377,7 +2463,6 @@ to test
   
 (defun read-mrs-xml-rargs (rargs)
   (loop for content in rargs
-        unless (xml-whitespace-string-p content)
 	collect
   ;;; <!ELEMENT fvpair (rargname, (var|constant))>
 	(let ((name nil) (arg nil))
@@ -2564,13 +2649,22 @@ to test
 
 (defun copy-psoa-liszt-completely (psoa no-var-copy-p)
   ;;; Note - this takes a full mrs and just copies the liszt
+  ;;; and the ICONS (because this is used in generation)
   ;;; existing fns in mrsresolve don't want copied qeqs
   ;;; or copied variables
   (let ((copy-mrsstruct (copy-psoa psoa)))
     (setf (psoa-liszt copy-mrsstruct)
       (copy-liszt-completely (psoa-liszt copy-mrsstruct) 
 			     no-var-copy-p))
+    (setf (psoa-icons copy-mrsstruct)
+      (copy-icons-completely (psoa-icons copy-mrsstruct) 
+			     no-var-copy-p))
     copy-mrsstruct))
+
+(defun copy-icons-completely (icons no-var-copy-p)
+  (loop for icons-el in icons
+      collect
+	(copy-icons-element icons-el no-var-copy-p)))
 
 (defun copy-liszt-completely (liszt no-var-copy-p)
   (loop for rel in liszt
@@ -2596,6 +2690,16 @@ to test
     (setf (hcons-outscpd copied-hcons)
       (copy-var (hcons-outscpd copied-hcons)))
     copied-hcons))
+
+(defun copy-icons-element (icons-el no-var-copy-p)
+  (let ((copied-icons
+	 (copy-icons icons-el)))
+    (unless no-var-copy-p
+      (setf (icons-iarg1 copied-icons)
+	(copy-var (icons-iarg1 copied-icons)))
+      (setf (icons-iarg2 copied-icons)
+	(copy-var (icons-iarg2 copied-icons))))
+    copied-icons))
 
 (defun copy-fvpair-completely (fvp)
   (let ((copy-fvp (copy-fvpair fvp)))
