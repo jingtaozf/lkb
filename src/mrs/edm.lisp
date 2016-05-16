@@ -46,7 +46,7 @@
                (list tn ta tp gn ga gp cn ca cp)))))
 
 (defun edm-explode-mrs (mrs
-                        &key (cargp t) (eds (ed-convert-psoa mrs)))
+                        &key (cargp t) (eds (eds-convert-psoa mrs)))
   
   ;;
   ;; make sure the distinguished variable slot is available when it should be

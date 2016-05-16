@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2008 Stephan Oepen (oe@ifi.uio.no)
+;;; Copyright (c) 2004 -- 2016 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
                   (predicates *mrs-comparison-equivalent-predicates*)
                   hcons debug)
   (compare-mrss
-   mrs1 mrs2 :type :equal :roles roles :properties properties
+   mrs1 mrs2 :type :equality :roles roles :properties properties
    :types types :predicates predicates :hcons hcons :debug debug))
 
 (defun compare-mrss (mrs1 mrs2
@@ -45,13 +45,11 @@
   ;;
   #+:debug
   (setf %mrs1 mrs1 %mrs2 mrs2)
-  #+:lkb
   (incf (lkb::statistics-comparisons lkb::*statistics*))
   (let ((*mrs-comparison-ignore-roles* roles)
         (*mrs-comparison-ignore-properties* properties)
         (*mrs-comparison-equivalent-types* types)
         (*mrs-comparison-equivalent-predicates* predicates)
-        #+:lkb
         (*transfer-debug-p* (cons (and debug :solutions) *transfer-debug-p*))
         (%transfer-solutions% nil)
         (solution (copy-solution))
@@ -183,14 +181,15 @@
 
 (defun compare-preds (pred1 pred2 &key type)
   (or
-   (compare-types pred1 pred2 :type type)
+   (if mrs::*normalize-predicates-p*
+     (semi-compare-predicates pred1 pred2 :type type)
+     (compare-types pred1 pred2 :type type))
    (loop
        for (new . old) in *mrs-comparison-equivalent-predicates*
-       when (and (loop
-                     for foo in old
-                     thereis (compare-types pred1 foo :type type))
-                 (compare-preds new pred2 :type type))
-       return t)))
+       thereis (and (loop
+                        for foo in old
+                        thereis (compare-types pred1 foo :type type))
+                    (compare-preds new pred2 :type type)))))
 
 (defun compare-values (value1 value2 solution &key type)
   (if (mrs::var-p value1)
@@ -278,7 +277,6 @@
      (t (compare-types constant1 constant2 :type type))))
 
 (defun compare-types (type1 type2 &key internp type)
-
   (or (eq type1 type2)
       (and (stringp type1) (stringp type2) (string-equal type1 type2))
       (ignore-errors

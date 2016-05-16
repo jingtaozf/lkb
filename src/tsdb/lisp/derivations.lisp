@@ -34,6 +34,8 @@
 
 (defparameter *derivations-print-head-p* t)
 
+(defparameter *derivations-print-rule-type-p* nil)
+
 (defparameter *derivations-print-lexical-type-p* nil)
 
 (defparameter *derivations-print-tokens-p* t)
@@ -243,10 +245,10 @@
 ;;; of the structure, in which case our naive assumptions about where to find
 ;;; the values (made in derivation-from() and derivation-to()) will break.
 ;;;                                                             (2-jul-11; oe)
-(defun derivation-from (derivation &optional start)
+(defun derivation-from (derivation &optional start token)
   (with-derivation (derivation derivation)
-    (if (or (null start) (= (derivation-start derivation) start))
-      (let* ((token (first (derivation-tokens derivation)))
+    (if (or token (null start) (= (derivation-start derivation) start))
+      (let* ((token (or token (first (derivation-tokens derivation))))
              (start (and (stringp token) (search "+FROM " token)))
              (from (and start (subseq token (+ start 6)))))
         (when (and from (char= (char from 0) #\#))
@@ -257,12 +259,15 @@
           thereis (and (derivation-id daughter)
                        (derivation-from daughter start))))))
 
-(defun derivation-to (derivation &optional end)
+(defun derivation-to (derivation &optional end token)
   (with-derivation (derivation derivation)
-    (if (or (null end) (= (derivation-end derivation) end))
-      (let* ((token (first (last (derivation-tokens derivation))))
-             (start (and (stringp token) (search "+TO \"" token))))
-        (and start (parse-integer token :start (+ start 5) :junk-allowed t)))
+    (if (or token (null end) (= (derivation-end derivation) end))
+      (let* ((token (or token (first (last (derivation-tokens derivation)))))
+             (start (and (stringp token) (search "+TO \"" token)))
+             (to (and start (subseq token (+ start 4)))))
+        (when (and to (char= (char to 0) #\#))
+          (setf to (subseq to (+ (position #\= to) 1))))
+        (and to (parse-integer to :start 1 :junk-allowed t)))
       (loop
           for daughter in (derivation-daughters derivation)
           thereis (and (derivation-id daughter)
@@ -297,7 +302,7 @@
 (defun derivation-head (derivation)
   ;;
   ;; _fix_me_
-  ;; experimental, for internal use only.                          (28-aug-14; oe)
+  ;; experimental, for internal use only.                         (28-aug-14; oe)
   ;;
   (with-derivation (derivation derivation)
     (unless (null derivation)
@@ -425,63 +430,187 @@
               for daughter2 in bdaughters
               always (derivation-equal daughter1 daughter2 level))))))))
 
-(defun pprint-derivation (derivation &key (stream t) head)
-  (let ((sponsor (derivation-sponsor derivation))
-        (daughters (derivation-daughters derivation)))
+(defun pprint-derivation (derivation
+                          &key (format :udf) (stream t) head
+                               labels
+                               (rulep *derivations-print-rule-type-p*)
+                               (lexicalp *derivations-print-lexical-type-p*))
+  (when (null stream)
+    (return-from pprint-derivation
+      (with-output-to-string (stream)
+        (pprint-derivation
+         derivation :format format :stream stream :head head
+         :labels labels :rulep rulep lexicalp lexicalp))))
+  (when (and labels (not (hash-table-p labels)))
+    #+:lkb
+    (labels ((recurse (edge)
+               (let ((label (lkb::edge-label edge))
+                     (derivation (lkb::edge-foo edge)))
+                 (when (and label derivation)
+                   (setf (gethash derivation labels) label))
+                 (loop
+                     for edge in (lkb::edge-children edge)
+                     do (recurse edge)))))
+      (setf labels (make-hash-table :test #'eq))
+      (let ((edge (reconstruct derivation :word)))
+        (label-edge edge)
+        (when edge (recurse edge))))
+    #-:lkb
+    (setf labels nil))
+  (let ((*derivations-print-rule-type-p* rulep)
+        (*derivations-print-lexical-type-p* lexicalp)
+        (sponsor (derivation-sponsor derivation))
+        (daughters (derivation-daughters derivation))
+        (prefix (case format (:udf "(") (:json "{")))
+        (suffix (case format (:udf ")") (:json "}")))
+        (*package* (find-package :tsdb))
+        (*print-length* nil)
+        (*print-level* nil))
     (cond
-     (sponsor
-      (pprint-logical-block (stream derivation :prefix "(" :suffix ")")
-        (write sponsor :stream stream)
-        (write-char #\space stream)
-        (pprint-newline :fill stream)
-        (pprint-derivation (first (rest derivation)) :stream stream)))
+     ((and sponsor (not (eq format :json)))
+      (case format
+        (:udf
+         (pprint-logical-block (stream derivation :prefix prefix :suffix suffix)
+           (write sponsor :stream stream)
+           (write-char #\space stream)
+           (pprint-newline :fill stream)
+           (pprint-derivation 
+            (first (rest derivation))
+            :format format :stream stream :labels labels)))))
      (daughters
-      (pprint-logical-block (stream derivation :prefix "(" :suffix ")")
+      (pprint-logical-block (stream derivation :prefix prefix :suffix suffix)
         (let ((id (derivation-id derivation))
               (root (derivation-root derivation))
               (score (derivation-score derivation))
               (start (derivation-start derivation))
-              (end (derivation-end derivation)))
+              (end (derivation-end derivation))
+              (label (and labels (gethash derivation labels))))
           (when id
+            (when (eq format :json) (write-string "\"id\": " stream))
             (write id :stream stream)
+            (when (eq format :json) (write-char #\, stream))
             (write-char #\space stream))
           (cond
            ((null (derivation-daughters (first daughters)))
             (let ((*print-case* :downcase)
                   (type (when *derivations-print-lexical-type-p*
                           (type-of-lexical-entry root :tsdb))))
-              (write root :stream stream)
+              (case format
+                (:udf
+                 (write root :stream stream))
+                (:json
+                 (write-string "\"entity\": " stream)
+                 (write (string-downcase root) :stream stream)))
               (when type
-                (write-char #\@ stream)
-                (write type :stream stream))))
+                (case format
+                  (:udf
+                   (write-char #\@ stream)
+                   (write type :stream stream))
+                  (:json
+                   (write-string ", \"type\": " stream)
+                   (write (string-downcase type) :stream stream))))
+              (when label
+                (write-string ", \"label\": " stream)
+                (write label :stream stream))))
            (t
-            (when head (write-char #\^ stream))
-            (write root :stream stream)))
+            (case format
+              (:udf
+               (when head (write-char #\^ stream))
+               (write root :stream stream))
+              (:json
+               (write-string "\"entity\": " stream)
+               (write (string-downcase root) :stream stream)
+               (let ((type (and rulep (type-of-rule root))))
+                 (when type
+                   (write-string ", \"type\": " stream)
+                   (write (string-downcase type) :stream stream)))
+               (when label
+                 (write-string ", \"label\": " stream)
+                 (write label :stream stream))))))
+          (when (eq format :json) (write-char #\, stream))
           (write-char #\space stream)
-          (loop
-              for foo in (list score start end)
-              when foo do
-                (write foo :stream stream)
-                (write-char #\space stream))
+          (case format
+            (:udf
+             (loop
+                 for foo in (list score start end)
+                 when foo do
+                   (write foo :stream stream)
+                   (write-char #\space stream)))
+            (:json
+             (when score
+               (write-string "\"score\": " stream)
+               (write score :stream stream)
+               (write-char #\, stream)
+               (write-char #\space stream))))
+          (when (and (eq format :json)
+                     (not (null (derivation-daughters (first daughters)))))
+            (write-string "\"daughters\": [" stream))
           (loop
               with head = (when (and *derivations-print-head-p*
-                                     (rest (derivation-daughters derivation)))
+                                     (rest daughters))
                             (let ((root (intern root :tsdb)))
                               (get-field
                                :head (rest (assoc root *derivation-heads*)))))
+              with last = (first (last daughters))
               for i from 0
-              for daughter in (derivation-daughters derivation)
+              for daughter in daughters
               do
                 (pprint-newline :fill stream)
                 (pprint-derivation
-                 daughter :stream stream :head (eql i head))))))
+                 daughter :format format
+                 :stream stream :head (eql i head) :labels labels)
+                (when (and (eq format :json) (not (eq daughter last)))
+                  (write-char #\, stream)))
+          (when (and (eq format :json)
+                     (not (null (derivation-daughters (first daughters)))))
+            (write-char #\] stream)))))
      (t
       (if *derivations-print-tokens-p*
-        (write derivation :stream stream)
-        (let ((form (first derivation)))
-          (write-char #\( stream)
-          (write form :stream stream)
-          (write-char #\) stream)))))))
+        (case format
+          (:udf
+           (write derivation :stream stream))
+          (:json
+           (write-string "\"form\": " stream)
+           (write (first derivation) :stream stream)
+           (let ((from (derivation-from derivation))
+                 (to (derivation-to derivation)))
+             (when (and from to)
+               (write-string ", \"from\": " stream)
+               (write from :stream stream)
+               (write-string ", \"to\": " stream)
+               (write to :stream stream)))
+           (write-string ", \"tokens\": [" stream)
+           (pprint-newline :fill stream)
+           (loop
+               with tokens = (rest derivation)
+               with last = (first (last tokens))
+               for id = (pop tokens)
+               for tfs = (pop tokens)
+               for from = (derivation-from nil nil tfs)
+               for to = (derivation-to nil nil tfs)
+               while (and id (stringp tfs))
+               do
+                 (pprint-logical-block (stream derivation 
+                                        :prefix prefix :suffix suffix)
+                   (write-string "\"id\": " stream)
+                   (write id :stream stream)
+                   (when (and from to)
+                     (write-string ", \"from\": " stream)
+                     (write from :stream stream)
+                     (write-string ", \"to\": " stream)
+                     (write to :stream stream))
+                   (write-string ", \"tfs\": " stream)
+                   (write tfs :stream stream))
+                 (unless (eq tfs last)
+                   (write-string ", ")
+                   (pprint-newline :fill stream)))
+           (write-char #\] stream)))
+        (case format
+          (:udf
+           (let ((form (first derivation)))
+             (write-char #\( stream)
+             (write form :stream stream)
+             (write-char #\) stream)))))))))
 
 (defun parseval (derivation gderivation &key log)
   (declare (ignore log))
@@ -773,21 +902,24 @@
                         (throw :fail 
                                (values
                                 nil (list derivation result failure))))))))))))
-    (when (and *reconstruct-cache* edge)
-      (push edge (gethash id *reconstruct-cache*)))
-    #+:lkb
-    (when topp
-      (let* ((sponsor (derivation-sponsor derivation))
-             (sponsor (and sponsor (intern sponsor lkb::*lkb-package*))))
-        (when (and *derivations-reconstruct-sponsor-p* sponsor 
-                   (lkb::edge-dag edge)
-                   (null (lkb::filter-root-edges edge (list sponsor))))
-          (throw :fail
-            (values nil (list derivation 0 :sponsor
-                              (format nil "`~a'" sponsor))))))
-      (when (null (lkb::edge-string edge))
-        (setf (lkb::edge-string edge)
-          (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge)))))
+    (when edge
+      (when *reconstruct-cache*
+        (push edge (gethash id *reconstruct-cache*)))
+      #+:lkb
+      (setf (lkb::edge-foo edge) derivation)
+      #+:lkb
+      (when topp
+        (let* ((sponsor (derivation-sponsor derivation))
+               (sponsor (and sponsor (intern sponsor lkb::*lkb-package*))))
+          (when (and *derivations-reconstruct-sponsor-p* sponsor 
+                     (lkb::edge-dag edge)
+                     (null (lkb::filter-root-edges edge (list sponsor))))
+            (throw :fail
+              (values nil (list derivation 0 :sponsor
+                                (format nil "`~a'" sponsor))))))
+        (when (null (lkb::edge-string edge))
+          (setf (lkb::edge-string edge)
+            (format nil "~{~(~a~)~^ ~}" (lkb::edge-leaves edge))))))
     edge))
 
 (defstruct node

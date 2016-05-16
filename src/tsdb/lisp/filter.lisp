@@ -82,11 +82,11 @@
         when (and (null mrs) edge)
         do
           (setf mrs (mrs::extract-mrs edge))
-          (when (mrs::psoa-p mrs) (nconc result (acons :mrs mrs nil)))
+          (when (mrs:psoa-p mrs) (nconc result (acons :mrs mrs nil)))
         when (and (stringp mrs) (string= mrs "") edge)
         do
           (setf mrs (mrs::extract-mrs edge))
-          (when (mrs::psoa-p mrs) (setf (get-field :mrs result) mrs))
+          (when (mrs:psoa-p mrs) (setf (get-field :mrs result) mrs))
         when (stringp mrs)
         do
           (setf (get-field :mrs result) (mrs::read-mrs-from-string mrs)))
@@ -119,10 +119,10 @@
                       for role in (mrs:rel-flist ep)
                       for value = (mrs:fvpair-value role)
                       when (or (null value) 
-                               (and (mrs::var-p value) 
+                               (and (mrs:var-p value) 
                                     (null (mrs:var-type value))))
                       do (pushnew ep nulls)
-                      else when (mrs::var-p value) do
+                      else when (mrs:var-p value) do
                         (loop
                             for extra in (mrs:var-extra value)
                             when (null (mrs::extrapair-value extra))
@@ -135,7 +135,7 @@
                              "dubious ~{`~(~a~)'~^, ~}"
                              (loop
                                  for null in nulls
-                                 when (mrs::var-p null)
+                                 when (mrs:var-p null)
                                  collect (mrs::var-string null)
                                  else when (mrs::rel-p null)
                                  collect (mrs:rel-pred null)))
@@ -166,7 +166,7 @@
                                 (push
                                  (list :cscope output)
                                  (gethash id flags)))))
-                          (unless (mrs::psoa-p result)
+                          (unless (mrs:psoa-p result)
                             (push
                              (list :cscope "no cheap scope") 
                              (gethash id flags)))
@@ -286,8 +286,8 @@
           for result in (get-field :results item)
           for id = (get-field :result-id result)
           for mrs = (get-field :mrs result)
-          for eds = (mrs::ed-convert-psoa mrs)
-          when (mrs::ed-fragmented-p eds)
+          for eds = (mrs:eds-convert-psoa mrs)
+          when (mrs:eds-fragmented-p eds)
           do 
             (let* ((fragments
                     (loop
@@ -302,8 +302,8 @@
           for result in (get-field :results item)
           for id = (get-field :result-id result)
           for mrs = (get-field :mrs result)
-          for eds = (mrs::ed-convert-psoa mrs)
-          when (mrs::ed-cyclic-p eds)
+          for eds = (mrs:eds-convert-psoa mrs)
+          when (mrs:eds-cyclic-p eds)
           do 
             (push (list :cycle "circular EDS") (gethash id flags))))
     #+:mrs
@@ -346,10 +346,15 @@
                    (unknown
                     (loop for foo in invalid collect (mrs::rel-pred foo)))
                    (output
-                    (format
-                     nil
-                     "~@[invalid SEM-I predicates: ~{|~(~s~)|~^, ~}~]"
-                     unknown)))
+                    (if mrs:*normalize-predicates-p*
+                      (format
+                       nil
+                       "~@[invalid SEM-I predicates: ~{|~(~a~)|~^, ~}~]"
+                       unknown)
+                      (format
+                       nil
+                       "~@[invalid SEM-I predicates: ~{|~(~s~)|~^, ~}~]"
+                       unknown))))
               (push (list :semi output) (gethash id flags)))))
 
     (when (or (and verbose (not (zerop (hash-table-count flags))))

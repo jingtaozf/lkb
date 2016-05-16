@@ -504,7 +504,7 @@
                       (mrs::lui-indexed-mrs mrs :stream stream))
                      (:dependencies
                       (format stream "text 42 ")
-                      (mrs::ed-output-psoa
+                      (mrs:eds-output-psoa
                        mrs :stream stream :format :lui))))))
     (format %lui-stream% string)
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
@@ -517,7 +517,7 @@
                  "~@[~a ~]Elementary Dependencies Display" title))
          (string (with-output-to-string (stream)
                    (format stream "text ~a " id)
-                   (mrs::ed-output-psoa
+                   (mrs:eds-output-psoa
                     eds :stream stream :format :lui))))
     (format %lui-stream% string)
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))

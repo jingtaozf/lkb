@@ -431,12 +431,20 @@ duplicate variables")
            (pred (rest (assoc (car *rel-name-path*) label-list)))
            (pred-type (if pred (fs-type pred))))
       (when rawp (return-from extract-pred-from-rel-fs pred))
-      (if (and pred-type
-               (not (is-top-type pred-type))
-               #+:logon
-               (not (is-top-semantics-type pred-type)))
-        pred-type
-        (unless *rel-name-path* (fs-type rel-fs)))))
+      (let ((type 
+             (if (and pred-type
+                      (not (is-top-type pred-type))
+                      #+:logon
+                      (not (is-top-semantics-type pred-type)))
+               pred-type
+               (unless *rel-name-path* (fs-type rel-fs)))))
+        (if (and *normalize-predicates-p* type)
+          (normalize-predicate type)
+          type))))
+             
+(defun normalize-predicate (predicate)
+  (when (and predicate (or (symbolp predicate) (stringp predicate)))
+    (remove-right-sequence *sem-relation-suffix* (string-downcase predicate))))
 
 (defun extract-type-from-rel-fs (rel-fs)
   (fs-type rel-fs))

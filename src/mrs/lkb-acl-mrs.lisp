@@ -170,13 +170,13 @@
     ((mrs-type-thing 'mrs-type-thing :gesture :select))
   (mrs-type-thing-command mrs-type-thing))
 
-(defun add-mrs-pred-region (stream val)
+(defun add-mrs-pred-region (stream val &optional normalizep)
   (let ((pred-rec
          (make-mrs-type-thing :value val)))
     (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
 	  (stream pred-rec 'mrs-type-thing)
-        (if (stringp val)
+        (if (and (stringp val) (null normalizep))
           (format stream "~s" val)
           (format stream "~(~a~)" val))))))
 
@@ -497,12 +497,12 @@
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let* ((mrsstruct (mrs-dependencies-mrsstruct mframe))
-         (eds (mrs::ed-convert-psoa mrsstruct)))
+         (eds (mrs:eds-convert-psoa mrsstruct)))
     (if eds
       (let ((record (clim:with-new-output-record (stream)
                       (clim:with-text-style (stream (lkb-parse-tree-font))
                         (format stream "~a~%" eds))))
-            (status (mrs::ed-suspicious-p eds))
+            (status (mrs:eds-suspicious-p eds))
             (orange (or (clim:find-named-color
                          "orange" (clim:frame-palette mframe) :errorp nil)
                         clim:+yellow+)))

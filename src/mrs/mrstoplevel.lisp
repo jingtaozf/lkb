@@ -166,6 +166,7 @@
 
 #-:tty
 (defun really-generate-from-edge (parser-edge)    
+  (declare (special *dmrs-grammar-p*))
   (let* ((input-sem (if *dmrs-grammar-p*
 			(mrs::extract-dmrs parser-edge)
 			(mrs::extract-mrs parser-edge))))

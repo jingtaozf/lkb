@@ -192,18 +192,62 @@
        (or (not (smember :tags *yy-token-compare*))
            (equal (get-field :tags foo) (get-field :tags bar)))))
 
-(defun yy-print-token (token &key (prefix "") (stream *tsdb-io*))
+(defun yy-print-token (token 
+                       &key (prefix "") (stream *tsdb-io*) (format :ascii))
   (let* ((from (get-field :from token))
          (to (get-field :to token))
          (characterization 
           (and (numberp from) (numberp to) (<= 0 from to)
-               (format nil "<~a:~a>" from to))))
-    (format
-     stream "~a(~a, ~a, ~a~@[, ~a~], 1, ~s~@[ ~s~], 0, ~s~@[,~{ ~s~}~])"
-     prefix (get-field :id token)
-     (get-field :start token) (get-field :end token)
-     characterization (get-field :form token) (get-field :surface token)
-     (get-field :inflection token) (get-field :tags token))))
+               (case format
+                 (:ascii (format nil "<~a:~a>" from to))
+                 (:json (format nil "\"from\": ~a, \"to\": ~a" from to))))))
+    (case format
+      (:ascii
+       (format
+        stream "~a(~a, ~a, ~a~@[, ~a~], 1, ~s~@[ ~s~], 0, ~s~@[,~{ ~s~}~])"
+        prefix (get-field :id token)
+        (get-field :start token) (get-field :end token)
+        characterization (get-field :form token) (get-field :surface token)
+        (get-field :inflection token) (get-field :tags token)))
+      (:json
+       (write-string prefix stream)
+       (pprint-logical-block (stream token :prefix "{" :suffix "}")
+         (write-string "\"id\": " stream)
+         (write (get-field :id token) :stream stream)
+         (write-string ", \"form\": " stream)
+         (write (get-field :form token) :stream stream)
+         (write-string ", \"start\": " stream)
+         (write (get-field :start token) :stream stream)
+         (write-string ", \"end\": " stream)
+         (write (get-field :end token) :stream stream)
+         (write-string ", " stream)
+         (write-string characterization stream)
+         (let (tags probabilities)
+           (loop
+               for i from 0 
+               for field in (get-field :tags token)
+               when (evenp i) do (push field tags)
+               when (oddp i) do (push field probabilities))
+           (when (and tags probabilities)
+             (write-string ", " stream)
+             (pprint-newline :fill stream)
+             (write-string "\"tags\": [" stream)
+             (loop
+                 with last = (first (last tags))
+                 for tag in tags
+                 do
+                   (write tag :stream stream)
+                   (unless (eq tag last) (write-string ", " stream)))
+             (write-string "], " stream)
+             (pprint-newline :fill stream)
+             (write-string "\"probabilities\": [" stream)
+             (loop
+                 with last = (first (last probabilities))
+                 for probability in probabilities
+                 do
+                   (write probability :stream stream)
+                   (unless (eq probability last) (write-string ", " stream)))
+             (write-string "]" stream))))))))
 
 (labels ((|[|-reader (stream char)
            (declare (ignore char))

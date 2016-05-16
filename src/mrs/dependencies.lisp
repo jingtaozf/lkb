@@ -24,8 +24,10 @@
 (defparameter *eds-message-relation* (vsym "message_m_rel"))
 
 (defparameter *eds-fragment-relation* (vsym "unknown_rel"))
-
+ 
 (defparameter *eds-bleached-relations* (list (vsym "selected_rel")))
+
+(defparameter *eds-predicate-filter* nil)
 
 (defparameter *eds-quantifier-argument* (vsym "BV"))
 
@@ -36,6 +38,8 @@
 
 (defparameter *eds-predicate-modifiers*
   (list (ppcre:create-scanner "_x_deg_rel$")))
+
+(defparameter *eds-show-lnk-p* t)
 
 (defparameter *eds-show-properties-p* t)
 
@@ -49,6 +53,8 @@
 
 (defparameter %eds-equivalences% (make-hash-table :test #'equal))
 
+(defparameter %eds-filter% nil)
+
 (defparameter %eds-relevant-features% 
   '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" 
     "L-INDEX" "R-INDEX" "L-HNDL" "R-HNDL" "CARG"
@@ -60,8 +66,8 @@
 
 (defmethod print-object ((object eds) stream)
   (if *eds-pretty-print-p*
-    (let ((cyclicp (ed-cyclic-p object))
-          (fragmentedp (ed-fragmented-p object)))
+    (let ((cyclicp (eds-cyclic-p object))
+          (fragmentedp (eds-fragmented-p object)))
       (loop
           initially
             (format 
@@ -73,8 +79,10 @@
              cyclicp (and cyclicp fragmentedp) fragmentedp
              (eds-relations object))
           for ed in (eds-relations object)
-          unless (and (null (ed-status ed))
-                      (or (ed-bleached-p ed) (ed-vacuous-p ed))) do
+          unless (or (and (null (ed-status ed))
+                          (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+                     (member ed %eds-filter% :test #'eq))
+          do
             (format 
              stream 
              "~c~a~%"
@@ -91,7 +99,7 @@
 (defstruct ed
   handle id properties type variable
   predicate arguments carg
-  lnk raw status mark abstraction)
+  lnk inverse raw status mark abstraction)
 
 (defmethod print-object ((object ed) stream)
   (if *eds-pretty-print-p*
@@ -111,8 +119,8 @@
                                     (rest (ed-properties object)))
                 initially
                   (format 
-                   stream "{~@[~(~a~) ~]"
-                   (unless (extrapair-p type) type))
+                   stream "{~@[~(~a~)~]~@[ ~]"
+                   (unless (extrapair-p type) type) properties)
                 finally (format stream "}")
                 for property in properties
                 do
@@ -137,9 +145,13 @@
           (format stream "]"))
     (call-next-method)))
 
-(defun ed-linked-predicate (ed &key (lnkp t))
+(defun ed-linked-predicate (ed &key (lnkp *eds-show-lnk-p*))
   (let ((predicate (or (ed-predicate ed) "_"))
         (lnk (ed-lnk ed)))
+    ;;
+    ;; _fix_me_
+    ;; why not use output-lnk(), to avoid code duplication?    (27-feb-16; oe)
+    ;;
     (case (and lnkp (first (ed-lnk ed)))
       (:id
        (format nil "~a<@~a>" predicate (second lnk)))
@@ -166,56 +178,82 @@
         (t 
          (format nil "_~(~a~)_" abstraction))))))
 
-(defun ed-output-psoa (psoa &key (stream t) (format :ascii) (propertyp t)
-                                 cargp markp lnkp collocationp abstractp
-                                 sortp dmrsp (n 0))
-  (case format
-    (:ascii
-     (cond
-      ((eds-p psoa)
-       (format stream "~a~%" psoa))
-      ((psoa-p psoa)
-       (format stream "~a~%" (ed-convert-psoa psoa)))
-      (t
-       (format stream "{}~%"))))
-    (:triples
-     (let* ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa)))
-            (triples
-             (if dmrsp
-               (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
-               (ed-explode
-                eds
-                :lnkp lnkp :cargp cargp :propertyp propertyp
-                :collocationp collocationp :abstractp abstractp))))
-       (when sortp
-         (setf triples
-           (sort
-            triples
-            #'(lambda (foo bar)
-                (or (string< (first foo) (first bar))
-                    (and (string= (first foo) (first bar))
-                         (string< (second foo) (second bar))))))))
-       (loop
-           with *package* = (find-package :lkb)
-           initially (unless markp (format stream "{~%"))
-           for triple in triples
-           do
-             (format
-              stream
-              "~:[  ~;<s> ~]~{~a~^ ~}~:[  ~; </s>~]~%"
-              markp triple markp)
-           finally (unless markp (format stream "}~%~%")))
-       (length triples)))
-    (:lui
-     (let ((attic (make-hash-table :test #'equal))
-           (id 0))
-       (labels ((record (object)
-                  (or (gethash object attic)
-                      (let ((n id))
-                        (setf (gethash object attic) n)
-                        (incf id)
-                        n))))
-         (let ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa))))
+(defun eds-output-psoa (psoa &key (stream t) (format :ascii)
+                                  (lnkp *eds-show-lnk-p*)
+                                  (propertiesp *eds-show-properties-p*)
+                                  cargp collocationp abstractp sentinelp
+                                  sortp dmrsp (n 0) 
+                                  (filter *eds-predicate-filter*)
+                                  input id debug
+                                  (prefix "") (columns *print-right-margin*))
+
+  (when (null stream)
+    (return-from eds-output-psoa
+      (with-output-to-string (stream)
+        (eds-output-psoa
+         psoa :stream stream :format format :lnkp lnkp :propertiesp propertiesp
+         :cargp cargp :collocationp collocationp :abstractp abstractp
+         :sentinelp sentinelp :sortp sortp :dmrsp dmrsp :n n :filter filter
+         :input input :id id :debug debug :prefix prefix :columns columns))))
+  
+  (let ((eds (if (eds-p psoa) psoa (eds-convert-psoa psoa)))
+        (%eds-filter% nil)
+        (*eds-show-lnk-p* lnkp)
+        (*eds-show-properties-p* propertiesp))
+    (when filter
+      (when (stringp filter) (setf filter (ppcre::create-scanner filter)))
+      (loop
+          for ed in (eds-relations eds)
+          when (and (ppcre:scan filter (ed-predicate ed))
+                    (null (ed-inverse ed))
+                    (not (string= (ed-id ed) (eds-top eds))))
+          do (push ed %eds-filter%)))
+
+    (case format
+      ((:ascii :native)
+       (cond
+        ((eds-p psoa)
+         (format stream "~a~%" psoa))
+        ((eds-p eds)
+         (format stream "~a~%" eds))
+        (t
+         (format stream "{}~%"))))
+      (:triples
+       (let* ((triples
+               (if dmrsp
+                 (dmrs-explode (rmrs-to-dmrs (mrs-to-rmrs psoa)))
+                 (eds-explode
+                  eds
+                  :cargp cargp
+                  :collocationp collocationp :abstractp abstractp))))
+         (when sortp
+           (setf triples
+             (sort
+              triples
+              #'(lambda (foo bar)
+                  (or (string< (first foo) (first bar))
+                      (and (string= (first foo) (first bar))
+                           (string< (second foo) (second bar))))))))
+         (loop
+             with *package* = (find-package :lkb)
+             initially (unless sentinelp (format stream "{~%"))
+             for triple in triples
+             do
+               (format
+                stream
+                "~:[  ~;<s> ~]~{~a~^ ~}~:[  ~; </s>~]~%"
+                sentinelp triple sentinelp)
+             finally (unless sentinelp (format stream "}~%~%")))
+         (length triples)))
+      (:lui
+       (let ((attic (make-hash-table :test #'equal))
+             (id 0))
+         (labels ((record (object)
+                    (or (gethash object attic)
+                        (let ((n id))
+                          (setf (gethash object attic) n)
+                          (incf id)
+                          n))))
            (format 
             stream
             "#X[~a \"{~(~a~)\" \":\" newline~%\"    \" #X["
@@ -257,9 +295,8 @@
                  (format 
                   stream
                   "] newline \"}\"]~%~
-                   #M[]"))))))
-    (:html
-     (let ((eds (if (eds-p psoa) psoa (ed-convert-psoa psoa))))
+                     #M[]")))))
+      (:html
        (format stream "<table class=mrsEds>~%")
        (format stream "<tr><td>")
        (mrs-variable-html (eds-top eds) nil n nil stream)
@@ -275,7 +312,7 @@
                      onMouseOut=\"highlight()\"~]>&nbsp;"
               (and lnk (eq (first lnk) :characters)) (second lnk) (third lnk))
              (mrs-variable-html (ed-id ed) nil n nil stream)
-             (if (and propertyp (ed-properties ed))
+             (if (and propertiesp (ed-properties ed))
                (let* ((string (make-string-output-stream)))
                  (format string "<table class=mrsProperties>")
                  (loop
@@ -317,47 +354,163 @@
                    (mrs-variable-html (ed-id value) nil n nil stream)
                    (setf firstp nil))
              (format stream "]</td></tr>~%"))
-       (format stream "</table>~%")))
-    (:latex
-     (labels ((variable (id &optional properties)
-                (let ((type (latex-escape-string (subseq id 0 1)))
-                      (index (parse-integer id :start 1 :junk-allowed t)))
-                  (format
-                   nil "\\svar{~a}{~a}{~@[~a~]}"
-                   type index properties)))
-              #+:null
-              (properties (ed)
-                ""))
-       (loop
-           with eds = (if (eds-p psoa) psoa (ed-convert-psoa psoa))
-           initially
-             (format stream "\\eds{~a}{~%" (variable (eds-top eds)))
-           for relations on (eds-relations eds)
-           for ed = (first relations)
-           for predicate = (latex-escape-string (ed-predicate ed))
-           for carg = (and (ed-carg ed) (latex-escape-string (ed-carg ed)))
-           for lnk = (when (ed-lnk ed)
-                       (output-lnk (ed-lnk ed) :format :latex :stream nil))
-           unless (ed-bleached-p ed) do
-             (format
-              stream "  \\sep{~a}{\\spred{~a~@[~a~]~@[(~a)~]}}{"
-              (variable (ed-id ed)) predicate lnk carg)
+       (format stream "</table>~%"))
+      (:latex
+       (labels ((variable (id &optional properties)
+                  (let ((type (latex-escape-string (subseq id 0 1)))
+                        (index (parse-integer id :start 1 :junk-allowed t)))
+                    (format
+                     nil "\\svar{~a}{~a}{~@[~a~]}"
+                     type index properties))))
+         (loop
+             initially
+               (format stream "\\eds{~a}{~%" (variable (eds-top eds)))
+             for relations on (eds-relations eds)
+             for ed = (first relations)
+             for predicate = (latex-escape-string (ed-predicate ed))
+             for carg = (and (ed-carg ed) (latex-escape-string (ed-carg ed)))
+             for lnk = (when (ed-lnk ed)
+                         (output-lnk (ed-lnk ed) :format :latex :stream nil))
+             unless (ed-bleached-p ed) do
+               (format
+                stream "  \\sep{~a}{\\spred{~a~@[~a~]~@[(~a)~]}}{"
+                (variable (ed-id ed)) predicate lnk carg)
+               (loop
+                   for (role . value) in (ed-arguments ed)
+                   for firstp = t then nil 
+                   when (ed-p value) do
+                     (format
+                      stream "~:[, ~;~%    ~]\\srole{~a}{~a}"
+                      firstp role (variable (ed-id value))))
+               (format stream "}~@[~*\\\\~%~]" (rest relations))
+             finally (format stream "}~%"))))
+      (:amr
+       (when id (format stream "~&# ::id ~a~%" id))
+       (when input (format stream "~&# ::snt ~a~%" input))
+       (let ((attic (make-hash-table :test #'eq))
+             (*package* (find-package :lkb))
+             (*print-right-margin* columns)
+             (*standard-output* stream))
+         (labels ((output (ed &optional ignore)
+                    (let ((match (gethash ed attic)))
+                      (if match
+                        (write-string match)
+                        (let* ((id (ed-id ed)))
+                          (setf (gethash ed attic) id)
+                          (write-char #\()
+                          (pprint-logical-block (nil nil)
+                            (write-string id)
+                            (write-string " / ")
+                            (if (position #\/ (ed-predicate ed))
+                              (write (ed-predicate ed))
+                              (write-string (ed-predicate ed)))
+                            (when (and lnkp (ed-lnk ed))
+                              (write-string " :lnk ")
+                              (write (output-lnk (ed-lnk ed) :stream nil)))
+                            (when (ed-carg ed)
+                              (write-string " :carg ")
+                              (write (ed-carg ed)))
+                            (loop
+                                for (role . value) in (ed-arguments ed)
+                                for match = (find role ignore :key #'first)
+                                unless (or (not (ed-p value))
+                                           (member value %eds-filter%)
+                                           (eq value (rest match)))
+                                do 
+                                  (write-char #\space)
+                                  (pprint-newline :linear)
+                                  (write-char #\:)
+                                  (write role)
+                                  (write-char #\space)
+                                  (output value (cons (cons role ed) ignore)))
+                            (loop
+                                for (role . value) in (ed-inverse ed)
+                                for match = (find role ignore :key #'first)
+                                unless (or (not (ed-p value))
+                                           (member value %eds-filter%)
+                                           (eq value (rest match)))
+                                do 
+                                  (write-char #\space)
+                                  (pprint-newline :linear)
+                                  (write-char #\:)
+                                  (write role)
+                                  (write-string "-of ")
+                                  (output value (cons (cons role ed) ignore)))
+                            (write-char #\))))))))
+           (let* ((top (find 
+                        (eds-top eds) (eds-relations eds)
+                        :key #'ed-id :test #'string=)))
+             (when top (output top) (terpri stream) (terpri stream)))
+           (when (and debug
+                      (< (hash-table-count attic) (length (eds-relations eds))))
+             (format 
+              debug "eds-output-psoa(): lost in AMR syntax ~@[[~a]~]~%" 
+              id))
              (loop
+                 for ed in (eds-relations eds)
+                 unless (gethash ed attic)
+                 do (format debug "  ~a~%" ed)))))
+      (:json
+       (loop
+           initially (format 
+                      stream 
+                      "~a{~:[~2*~;\"id\": ~a,~%~a~]~
+                       ~:[~3*~;~:[~; ~]\"input\": ~s,~%~a~]~
+                       ~:[~; ~]\"top\": ~s,~%~a \"nodes\": {~%"
+                      prefix (numberp id) id prefix
+                      (stringp input) (numberp id) input prefix
+                      (or (numberp id) (stringp input)) (eds-top eds) prefix)
+           with last = (first (last (eds-relations eds)))
+           for ed in (eds-relations eds)
+           for predicate = (ed-predicate ed)
+           for carg = (ed-carg ed)
+           for lnk = (when (ed-lnk ed) 
+                       (output-lnk (ed-lnk ed) :format :json :stream nil))
+           unless (or (ed-bleached-p ed)
+                      (member ed %eds-filter%))
+           do
+             (format 
+              stream 
+              "~a   ~s: {\"label\": ~s~@[, \"lnk\": ~a~]~@[, \"carg\": ~s~]"
+              prefix (ed-id ed) predicate lnk carg)
+             (when (and *eds-show-properties-p* (ed-properties ed))
+               (loop
+                   with type = (first (ed-properties ed))
+                   with properties = (if (extrapair-p type)
+                                       (ed-properties ed)
+                                       (rest (ed-properties ed)))
+                   initially
+                     (format
+                      stream ", \"properties\": {~@[\"type\": ~s~]"
+                      (unless (extrapair-p type) type))
+                   finally (format stream "}")
+                   for property in properties
+                   do
+                     (format
+                      stream "~:[, ~;~]\"~a\": \"~(~a~)\""
+                      (and (extrapair-p type) (eq property (first properties)))
+                      (extrapair-feature property)
+                      (extrapair-value property))))
+             (loop
+                 initially (format stream ", \"edges\": {")
                  for (role . value) in (ed-arguments ed)
                  for firstp = t then nil 
-                 when (ed-p value) do
+                 when (and (ed-p value)
+                           (not (member value %eds-filter% :test #'eq)))
+                 do
                    (format
-                    stream "~:[, ~;~%    ~]\\srole{~a}{~a}"
-                    firstp role (variable (ed-id value))))
-             (format stream "}~@[~*\\\\~%~]" (rest relations))
-           finally (format stream "}~%"))))))
+                    stream "~:[, ~;~]~s: ~s"
+                    firstp (string-upcase role) (ed-id value))
+                 finally (format stream "}}"))
+             (unless (eq ed last) (format stream ",~%"))
+           finally (format stream "}}"))))))
 
 #+:lkb
-(defun ed-convert-edge (edge)
+(defun eds-convert-edge (edge)
   (when (lkb::edge-p edge)
-    (ed-convert-psoa (or (lkb::edge-mrs edge) (extract-mrs edge)))))
+    (eds-convert-psoa (or (lkb::edge-mrs edge) (extract-mrs edge)))))
 
-(defun ed-convert-psoa (psoa)
+(defun eds-convert-psoa (psoa)
   (when (psoa-p psoa)
     (loop
         with eds = (make-eds :hcons (psoa-h-cons psoa) :raw psoa)
@@ -382,7 +535,7 @@
           ;; label of the message with its SOA or MARG argument, i.e. `bleach'
           ;; the message, in the sense of making it gratuitous for the graph.
           ;;
-          (ed-bleach-eds eds)
+          (eds-bleach-eds eds)
           ;;
           ;; next, actually fill in argument arcs: for each role in each ED,
           ;; find the ED that is assumed to be the `representative' for the
@@ -391,7 +544,12 @@
           ;; in the case of multiple candidate representative EDs, various 
           ;; disambiguation heuristics apply, see ed-select-representative().
           ;;
-          (ed-augment-eds eds)
+          (eds-augment-eds eds)
+          ;;
+          ;; as a matter of convenience, for example to output in AMR syntax,
+          ;; cache inverse argument relations in each node.
+          ;;
+          (eds-inverse eds)
           ;;
           ;; finally, we need to make sure that all EDs end up with unique
           ;; identifiers, which from here on only serve to uniquely name the
@@ -402,7 +560,7 @@
           ;; versions of the ERG at least, that seems likely only in illformed
           ;; input MRSs). 
           ;;
-          (ed-uniq-ids eds)
+          (eds-uniq-ids eds)
           ;;
           ;; finally, determine what should be the root node of the dependency
           ;; graph: until early 2012, we always used to grab the INDEX, but in
@@ -469,11 +627,10 @@
                    (loop
                        for pattern in *eds-predicate-modifiers*
                        thereis
-                         (typecase pattern
-                           (function (ppcre:scan pattern predicate))
-                           (string (string-equal pattern predicate))
-                           (symbol (ignore-errors 
-                                    (equal-or-subtype predicate pattern)))))
+                         (if (functionp pattern)
+                           (ppcre:scan pattern predicate)
+                           (ed-compare-predicates
+                            predicate pattern :type :subsumption)))
                    (and arg1 (var-p (fvpair-value arg1)) 
                         (string-equal (var-type (fvpair-value arg1)) "u")))
           (let* ((label (rel-handel relation)))
@@ -532,7 +689,7 @@
        :predicate predicate :lnk lnk :carg carg :abstraction abstraction
        :type type :raw relation))))
 
-(defun ed-bleach-eds (eds)
+(defun eds-bleach-eds (eds)
   (loop
       for ed in (eds-relations eds)
       when (ed-message-p ed) do
@@ -550,7 +707,7 @@
       when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)
       when (ed-fragment-p ed) do (setf (ed-type ed) :fragment)))
 
-(defun ed-augment-eds (eds)
+(defun eds-augment-eds (eds)
   (loop
       for ed in (eds-relations eds)
       unless (ed-bleached-p ed) do
@@ -575,7 +732,16 @@
               (push (cons key representative) (ed-arguments ed)))
         (setf (ed-arguments ed) (nreverse (ed-arguments ed)))))
 
-(defun ed-uniq-ids (eds)
+(defun eds-inverse (eds)
+  (loop
+      for ed in (eds-relations eds)
+      do
+        (loop
+            for (role . value) in (ed-arguments ed)
+            when (ed-p value)
+            do (push (cons role ed) (ed-inverse value)))))
+
+(defun eds-uniq-ids (eds)
   (loop
       for ed in (eds-relations eds)
       for id = (ed-id ed)
@@ -838,21 +1004,39 @@
    (let ((pred (ed-predicate ed)))
      (and (stringp pred) (string= (subseq pred (- (length pred) 2)) "_q")))))
 
+(defun ed-compare-predicates (predicate1 predicate2 &key (type :equivalence))
+  (if *normalize-predicates-p*
+    (let ((predicate1 (normalize-predicate predicate1))
+          (predicate2 (normalize-predicate predicate2)))
+      (or (string= predicate1 predicate2)
+          (when (eq type :subsumption)
+            (mt:semi-compare-predicates predicate1 predicate2 :type type))))
+     (or (eq predicate1 predicate2)
+         (when (and (stringp predicate1) (stringp predicate2))
+           (string-equal predicate1 predicate2))
+         (when (eq type :subsumption)
+           (let ((type1 (vsym predicate1))
+                 (type2 (vsym predicate2)))
+             (or (eq type1 type2)
+                 (when (and (is-valid-type type1) (is-valid-type type2))
+                   (ignore-errors (mrs:equal-or-subtype type1 type2)))))))))
+
 (defun ed-message-p (thing)
   (when *eds-message-relation*
     (typecase thing
       (ed
-       (let ((type (ed-predicate thing)))
+       (let ((predicate (ed-predicate thing)))
          (or (eq (ed-type thing) :message)
+             (ed-compare-predicates
+              predicate *eds-message-relation* :type :subsumption)
              (and (ed-raw thing) (ed-message-p (ed-raw thing)))
-             (and (stringp type)
-                  (string= (subseq type (- (length type) 2)) "_m")))))
+             (string= (subseq predicate (- (length predicate) 2)) "_m"))))
       (rel
-       (let ((type (rel-pred thing)))
-         (or (eq type *eds-message-relation*)
-             (when (stringp type) (search "_m_rel" type))
+       (let ((predicate (rel-pred thing)))
+         (or (eq predicate *eds-message-relation*)
+             (when (stringp predicate) (search "_m_rel" predicate))
              (ignore-errors
-              (equal-or-subtype type *eds-message-relation*))))))))
+              (equal-or-subtype predicate *eds-message-relation*))))))))
 
 (defun ed-untensed-p (properties)
   (if (ed-p properties)
@@ -861,14 +1045,21 @@
         for pair in properties
         for property = (and (extrapair-p pair) (extrapair-feature pair))
         for test = (and property (rest (assoc property *eds-untensed*)))
-        thereis (and test (eq (extrapair-value pair) test)))))
+        when test return (eq (extrapair-value pair) test)
+        ;;
+        ;; also, consider variables untensed when there is no TENSE property
+        ;;
+        finally (return t))))
 
 (defun ed-fragment-p (ed)
   (when *eds-fragment-relation*
-    (let ((pred (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))))
-      (or (eq (ed-type ed) :fragment)
-          (eq pred *eds-fragment-relation*)
-          (ignore-errors (equal-or-subtype pred *eds-fragment-relation*))))))
+    (or (eq (ed-type ed) :fragment)
+        (ed-compare-predicates
+         (ed-predicate ed) *eds-fragment-relation* :type :subsumption)
+        (let ((pred (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))))
+          (when pred
+            (ignore-errors 
+             (equal-or-subtype pred (vsym *eds-fragment-relation*))))))))
 
 (defun ed-bleached-p (ed)
   (or 
@@ -876,19 +1067,24 @@
    (and (null *eds-include-quantifiers-p*) (eq (ed-type ed) :quantifier))
    (when *eds-bleached-relations*
      (loop
-         with predicate = (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))
-         for foo in *eds-bleached-relations*
-         for type = (if (stringp foo) (vsym foo) foo)
-         thereis (or (eq predicate type) 
-                     (ignore-errors (equal-or-subtype predicate type)))))))
+         with predicate = (ed-predicate ed)
+         with pred = (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))
+         for relation in *eds-bleached-relations*
+         thereis (or (ed-compare-predicates
+                      predicate relation :type :subsumption)
+                     (ignore-errors
+                      (equal-or-subtype pred (vsym relation))))))))
 
 (defun ed-non-representative-p (ed)
   (when *eds-non-representatives*
     (loop
+        with predicate = (ed-predicate ed)
         with pred = (and (rel-p (ed-raw ed)) (rel-pred (ed-raw ed)))
-        for foo in *eds-non-representatives*
-        for type = (if (stringp foo) (vsym foo) foo)
-        thereis (ignore-errors (equal-or-subtype pred type)))))
+        for relation in *eds-non-representatives*
+        thereis (or (ed-compare-predicates
+                     predicate relation :type :subsumption)
+                    (ignore-errors 
+                     (equal-or-subtype pred (vsym relation)))))))
 
 (defun ed-vacuous-p (ed)
   (unless *eds-include-vacuous-relations-p*
@@ -897,11 +1093,11 @@
           (and (null (rest (ed-arguments ed)))
                (eq (first (first (ed-arguments ed))) (vsym "CARG")))))))
 
-(defun ed-suspicious-p (eds)
-  (append (when (ed-cyclic-p eds) '(:cyclic))
-          (when (ed-fragmented-p eds) '(:fragmented))))
+(defun eds-suspicious-p (eds)
+  (append (when (eds-cyclic-p eds) '(:cyclic))
+          (when (eds-fragmented-p eds) '(:fragmented))))
 
-(defun ed-cyclic-p (eds)
+(defun eds-cyclic-p (eds)
   (loop
       with return = nil
       for ed in (eds-relations eds)
@@ -935,12 +1131,12 @@
           (unless (ed-walk value (adjoin (ed-id ed) start)) (return nil))
         finally (return t))))
 
-(defun ed-fragmented-p (eds)
+(defun eds-fragmented-p (eds)
   (let ((mark (gensym))
         (agenda (loop
                     with top = (eds-top eds)
                     for ed in (eds-relations eds)
-                    when (equal (ed-id ed) top) collect ed)))
+                    when (string= (ed-id ed) top) collect ed)))
     ;;
     ;; put .mark. on all EDs that are `reachable' from the top variable
     ;;
@@ -986,8 +1182,10 @@
           (when return (pushnew :fragmented (eds-status eds)))
           (return return))))
 
-(defun ed-explode (eds &key (lnkp t) (cargp t) (propertyp t) collocationp
-                            tagp abstractp)
+(defun eds-explode (eds &key (lnkp *eds-show-lnk-p*)
+                             (propertiesp *eds-show-properties-p*)
+                             (cargp t) collocationp
+                             tagp abstractp)
   
   ;;
   ;; _fix_me_
@@ -1000,7 +1198,7 @@
   ;;
   ;; _fix_me_
   ;; not sure what the `variable' slot was intended for, but it appears to be
-  ;; exclusively used in ed-explode(); make sure all EDs have a correct value.
+  ;; exclusively used in eds-explode(); make sure all EDs have a correct value.
   ;;                                                           (26-nov-04; oe)
   (loop
       with key = (vsym "ARG0")
@@ -1100,7 +1298,7 @@
                            abstractions))))))
                          
    
-   (when propertyp
+   (when propertiesp
      (loop
          for ed in (eds-relations eds)
          unless (or (and (null (ed-status ed)) (ed-bleached-p ed))
@@ -1200,7 +1398,7 @@
                      (when (eq (first (ed-mark current)) mark)
                        (member path (rest (ed-mark current)) :test #'prefixp)))
           do
-            #+:null
+            #-:null
             (format
              t "~a [~{~a~^ ~}] <-- ~a~%"
              (ed-predicate current) (rest (ed-mark current)) path)
@@ -1302,7 +1500,6 @@
         when role
         collect (list from role to))))
 
-#+:lkb
 (defun eds-to-mrs (eds &key semi (errorp t))
   (declare (special mt:*semis*))
   (unless (mt:semi-p semi) (setf semi (first mt:*semis*)))
@@ -1331,7 +1528,7 @@
           for node in (eds-relations eds)
           for predicate = (ed-predicate node)
           for sps
-          = (mt:semi-lookup semi :predicate predicate :alias predicate)
+          = (mt:semi-lookup :semi semi :predicate predicate :alias predicate)
           for lnk = (ed-lnk node)
           for properties = (ed-properties node)
           for arguments = (ed-arguments node)
@@ -1405,8 +1602,19 @@
         (setf (psoa-index mrs) index))
       mrs)))
 
-(defun eds-read (file)
+(defun eds-read (file &key decoder)
   (cond
+   (decoder
+    (multiple-value-bind (stream foo pid)
+        (run-process 
+         decoder :wait nil 
+         :input file :output :stream :error-output nil)
+      (declare (ignore foo))
+      (let ((eds (eds-read stream)))
+        (close stream)
+        #+:allegro
+        (sys:os-wait nil pid)
+        eds)))
    ((streamp file)
     (labels ((|{|-reader (stream char)
                  (declare (ignore char))
@@ -1448,7 +1656,8 @@
                                  (let* ((feature (pop properties))
                                         (value (pop properties))
                                         (value 
-                                         (if (or (symbolp value) (stringp value))
+                                         (if (or (symbolp value)
+                                                 (stringp value))
                                            value
                                            (format nil "~a" value))))
                                    (make-extrapair 
@@ -1505,6 +1714,7 @@
                                        (string id) nodes 
                                        :key #'ed-id :test #'string=))
                         when value collect (cons role value))))
+            (eds-inverse eds)
             (return eds))))
    ((and (stringp file)
          (let ((c (with-input-from-string (stream file)
@@ -1518,9 +1728,139 @@
    (t
     (error "eds-read(): invalid input source ‘~a’." file))))
 
-#+:lkb
 (defun eds (edge)
   (with-output-to-string (stream)
     (let ((*package* (find-package *mrs-package*))
           (*eds-show-properties-p* t))
-      (write (ed-convert-edge edge) :stream stream))))
+      (write (eds-convert-edge edge) :stream stream))))
+
+#+:null
+(labels ((iid (item)
+           (tsdb:get-field :i-id item))
+         (output (profile stream
+                  &optional (format :amr) active)
+           (loop
+               with items 
+               = (tsdb::analyze
+                  profile :condition "readings > 0 && t-active > 0"
+                  :thorough '(:mrs))
+               for item in items
+               for id = (tsdb:get-field :i-id item)
+               for results = (tsdb:get-field :results item)
+               for mrs = (tsdb:get-field :mrs (first results))
+               when (and (mrs::psoa-p mrs)
+                         (or (null active)
+                             (member id active :key #'iid)))
+               do
+                 (if (eq format :ascii)
+                   (let ((file
+                          (format
+                           nil "~~/lib/sdp/release/2015/eds/~a.eds" id)))
+                     (with-open-file (stream file :direction :output
+                                      :if-exists :supersede)
+                       (mrs:eds-output-psoa
+                        mrs :format format :stream stream
+                        :lnkp t :propertiesp nil
+                        :filter "^[^_].*_q$|^focus_d$|^parg_d$"
+                        :id id :input (tsdb:get-field :i-input item))))
+                   (mrs:eds-output-psoa
+                    mrs :format format :stream stream
+                    :lnkp t :propertiesp nil
+                    :filter "^[^_].*_q$|^focus_d$|^parg_d$"
+                    :id id :input (tsdb:get-field :i-input item))))
+           (tsdb::purge-profile-cache profile)))
+  (let* ((format :ascii)
+         (dm (when (eq format :ascii)
+               (tsdb::read-items-from-conll-file
+                "~/lib/sdp/train/en.dm.sdp" :type :sdp+ :cycle t :rawp t))))
+    (with-open-file (stream "/tmp/train.amr" :direction :output
+                     :if-exists :supersede)
+      (loop
+          with dm
+          = (tsdb::read-items-from-conll-file
+             "~/lib/sdp/train/en.dm.sdp" :type :sdp+ :cycle t :rawp t)
+          for segment
+          in '("wsj00a" "wsj00b" "wsj00c" "wsj00d" 
+               "wsj01a" "wsj01b" "wsj01c" "wsj01d"
+               "wsj02a" "wsj02b" "wsj02c" "wsj02d" 
+               "wsj03a" "wsj03b" "wsj03c" 
+               "wsj04a" "wsj04b" "wsj04c" "wsj04d" "wsj04e" 
+               "wsj05a" "wsj05b" "wsj05c" "wsj05d" "wsj05e" 
+               "wsj06a" "wsj06b" "wsj06c" "wsj06d"
+               "wsj07a" "wsj07b" "wsj07c" "wsj07d" "wsj07e"
+               "wsj08a" 
+               "wsj09a" "wsj09b" "wsj09c" "wsj09d"
+               "wsj10a" "wsj10b" "wsj10c" "wsj10d"
+               "wsj11a" "wsj11b" "wsj11c" "wsj11d" "wsj11e"
+               "wsj12a" "wsj12b" "wsj12c" "wsj12d"
+               "wsj13a" "wsj13b" "wsj13c" "wsj13d" "wsj13e"
+               "wsj14a" "wsj14b" "wsj14c" "wsj14d" "wsj14e"
+               "wsj15a" "wsj15b" "wsj15c" "wsj15d" "wsj15e"
+               "wsj16a" "wsj16b" "wsj16c" "wsj16d" "wsj16e" "wsj16f"
+               "wsj17a" "wsj17b" "wsj17c" "wsj17d"
+               "wsj18a" "wsj18b" "wsj18c" "wsj18d" "wsj18e"
+               "wsj19a" "wsj19b" "wsj19c" "wsj19d"
+               "wsj20a" "wsj20b" "wsj20c" "wsj20d")
+          do
+            (output (format nil "gold/erg/~a" segment) stream format dm)))
+    (with-open-file (stream "/tmp/test.amr" :direction :output
+                     :if-exists :supersede)
+      (loop
+          for segment in '("wsj21a" "wsj21b" "wsj21c" "wsj21d")
+          do
+            (output (format nil "gold/erg/~a" segment) stream format dm)))))
+#+:null
+(let ((train (tsdb::read-items-from-conll-file
+              "~/lib/sdp/train/en.dm.sdp" :type :sdp+ :cycle t :rawp t))
+      (test (tsdb::read-items-from-conll-file
+             "~/lib/sdp/test/en.id.dm.sdp" :type :sdp+ :cycle t :rawp t))
+      (path "~/lib/sdp/release/2015/eds/")
+      (decoder "gzip -d -c"))
+  (labels ((output (items stream format)
+             (loop
+                 for item in items
+                 for id = (tsdb:get-field :i-id item)
+                 for input 
+                 = (let ((file (format nil "~a~a.txt.gz" path id)))
+                     (multiple-value-bind (stream foo pid)
+                         (run-process 
+                          decoder :wait nil
+                          :input file :output :stream :error-output nil)
+                       (declare (ignore foo))
+                       (let ((line (read-line stream nil nil)))
+                         (close stream)
+                         #+:allegro
+                         (sys:os-wait nil pid)
+                         line)))
+                 for mrs 
+                 = (let ((file (format nil "~a~a.mrs.gz" path id)))
+                     (read-mrs-from-file file :decoder decoder))
+                 when stream do 
+                   (eds-output-psoa
+                    mrs :format format :stream stream
+                    :lnkp t :propertiesp (eq format :json)
+                    :filter "^[^_].*_q$|^focus_d$|^parg_d$"
+                    :id id :input input :columns 79)
+                   (when (eq format :json) (terpri stream))
+                 else do
+                   (with-open-file (stream (format nil "~a~a.eds" path id)
+                                    :direction :output :if-exists :supersede)
+                     (eds-output-psoa
+                      mrs :format format :stream stream
+                      :lnkp t :propertiesp t
+                      :filter "^[^_].*_q$|^focus_d$|^parg_d$"
+                      :id id :input input)))))
+    (output train nil :ascii)
+    (output test nil :ascii)
+    (with-open-file (stream "~/lib/sdp/release/2015/eds/train.amr"
+                     :direction :output :if-exists :supersede)
+      (output train stream :amr))
+    (with-open-file (stream "~/lib/sdp/release/2015/eds/test.amr"
+                     :direction :output :if-exists :supersede)
+      (output test stream :amr))
+    (with-open-file (stream "~/lib/sdp/release/2015/eds/train.json"
+                     :direction :output :if-exists :supersede)
+      (output train stream :json))
+    (with-open-file (stream "~/lib/sdp/release/2015/eds/test.json"
+                     :direction :output :if-exists :supersede)
+      (output test stream :json))))

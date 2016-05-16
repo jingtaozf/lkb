@@ -571,7 +571,8 @@ Errors won't be devastating anyway ...
   (let* ((problems nil)
 	 (rmrs-pred (rel-pred ep))
 	 (mrs-pred (convert-rmrs-pred-to-mrs rmrs-pred))
-	 (semi-pred (mt::find-semi-entries mrs-pred)))
+	 (semi-pred (or (mt:semi-lookup :predicate mrs-pred)
+                        (mt:semi-lookup :predicate (vsym mrs-pred)))))
     (if semi-pred
 	(let ((new-ep
 	      (make-rel

@@ -572,10 +572,12 @@
             (loop
                 for tuple in result
                 for comment = (get-field :comment tuple)
-                for stream = (and comment (make-string-input-stream comment))
+                for stream = (when (and (stringp comment) (> (length comment) 0)
+                                        (char= (char comment 0) #\())
+                               (make-string-input-stream comment))
                 for extra = (when stream
                               (loop
-                                  for field = (read stream nil nil)
+                                  for field = (ignore-errors (read stream nil nil))
                                   while field
                                   collect field
                                   finally (close stream)))

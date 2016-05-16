@@ -358,9 +358,9 @@
               (with-open-file (stream file
                                :direction :output :if-exists :supersede)
                 (push
-                 (mrs::ed-output-psoa
+                 (mrs:eds-output-psoa
                   mrs :format :triples :cargp nil :lnkp nil
-                  :collocationp t :abstractp t :markp t :stream stream)
+                  :collocationp t :abstractp t :sentinelp t :stream stream)
                  lengths))
               (format 
                *tm-input*

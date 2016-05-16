@@ -56,7 +56,7 @@
                (format stream "~s" string)))
             ((eq format 'dependencies)
              (let ((string (with-output-to-string (stream)
-                             (ed-output-psoa psoa :stream stream))))
+                             (eds-output-psoa psoa :stream stream))))
                (format stream "~s" string)))
             (t
              (setf return lkb::%lsp-invalid-format%))))

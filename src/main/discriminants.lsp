@@ -199,12 +199,12 @@
           for child in (edge-children edge)
           do (extract-discriminants-from-edge child top :mode mode)))
     #+:mrs
-    (let* ((eds (mrs::ed-convert-edge edge))
-           (mrs::*eds-include-quantifiers-p* t)
-           (mrs::*eds-include-vacuous-relations-p* t)
-           (triples (mrs::ed-explode eds)))
-      (declare (special mrs::*eds-include-quantifiers-p*
-                        mrs::*eds-include-vacuous-relations-p*))
+    (let* ((eds (mrs:eds-convert-edge edge))
+           (mrs:*eds-include-quantifiers-p* t)
+           (mrs:*eds-include-vacuous-relations-p* t)
+           (triples (mrs:eds-explode eds)))
+      (declare (special mrs:*eds-include-quantifiers-p*
+                        mrs:*eds-include-vacuous-relations-p*))
       (loop
           for triple in triples
           for key = (format nil "~{~a~^ ~}" triple)

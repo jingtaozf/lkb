@@ -178,13 +178,42 @@
     (subseq string (length prefix))
     string))
 
+(defun prefix-string (string prefix &key (firstp t) escapep)
+  (loop
+      with padding = 128
+      with n = (length prefix)
+      with length = (+ (length string) padding)
+      with result = (make-array 
+                     (+ length n)
+                     :element-type 'character :adjustable nil :fill-pointer 0)
+      initially (when firstp
+                  (loop for c across prefix do (vector-push c result)))
+      for c across string
+      when (char= c #\Newline)
+      do
+        (cond
+         (escapep
+          (vector-push #\\ result)
+          (vector-push #\n result)
+          (decf padding))
+          (t
+           (vector-push c result)))
+        (when (< padding n)
+          (setf padding 128)
+          (incf length padding)
+          (setf result (adjust-array result length)))
+        (loop for c across prefix do (vector-push c result))
+        (decf padding n)
+      else do (vector-push c result)
+      finally (return result)))
+
 (defun shell-escape-quotes (string)
   (if (and (stringp string) (>= (length string) 1))
     (let ((prefix (elt string 0)))
       (if (equal prefix #\')
         (concatenate 'string "'\\''" (shell-escape-quotes (subseq string 1)))
         (concatenate 
-            'string (string prefix) (shell-escape-quotes (subseq string 1)))))
+         'string (string prefix) (shell-escape-quotes (subseq string 1)))))
     string))
 
 (defun tsdb-escape-quotes (string)

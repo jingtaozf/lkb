@@ -856,7 +856,7 @@
                                                   (ignore-errors
                                                    (mrs::extract-mrs edge))))))
                                   (when mrs
-                                    (mrs::ed-output-psoa
+                                    (mrs:eds-output-psoa
                                      mrs :stream stream))))))))
                       (terpri stream)))))))
       (when (and (compare-frame-trees frame)
@@ -970,7 +970,7 @@
          (edge (ctree-edge tree))
          (mrs (or (edge-mrs edge)
                   (ignore-errors (mrs::extract-mrs edge))))
-         (eds (when mrs (ignore-errors (mrs::ed-convert-psoa mrs)))))
+         (eds (when mrs (ignore-errors (mrs:eds-convert-psoa mrs)))))
     
     (multiple-value-bind (result condition) 
         (when (functionp hook) (ignore-errors (funcall hook edge mrs)))
@@ -1032,7 +1032,7 @@
                              (format stream "~a" eds)))))))))
             (recolor-record 
              record
-             (let ((status (mrs::ed-suspicious-p eds))
+             (let ((status (mrs:eds-suspicious-p eds))
                    (orange (or (clim:find-named-color
                                 "orange" (clim:frame-palette frame) 
                                 :errorp nil)

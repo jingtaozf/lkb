@@ -204,7 +204,7 @@
       (setf (gethash :flags *statistics-readers*) "read-from-string")
       (when (find-package :lkb)
         (when (null *tsdb-trees-hook*)
-          (setf *tsdb-trees-hook* "lkb::parse-tree-structure")))
+          (setf *tsdb-trees-hook* "lkb::extract-syntax-tree")))
       (when (find-package :mrs)
         (when (null *tsdb-semantix-hook*)
           (setf *tsdb-semantix-hook* "mrs::get-mrs-string"))

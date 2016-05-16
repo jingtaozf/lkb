@@ -186,6 +186,9 @@
       (setf (mrs:psoa-liszt copy)
         (loop
             for ep in (mrs:psoa-liszt mrs)
+            for pred = (if mrs::*normalize-predicates-p*
+                         (mrs::normalize-predicate (mrs:rel-pred ep))
+                         (mrs:rel-pred ep))
             collect
               (let ((handel (map-variable (mrs:rel-handel ep)))
                     (flist (loop
@@ -195,7 +198,7 @@
                                         :feature (mrs:fvpair-feature role) 
                                         :value (map-variable value)))))
                 (mrs::make-rel
-                 :handel handel :pred (mrs:rel-pred ep) :flist flist
+                 :handel handel :pred pred :flist flist
                  :lnk (mrs::rel-lnk ep)
                  :cfrom (mrs::rel-cfrom ep) :cto (mrs::rel-cto ep)))))
       (setf (mrs:psoa-h-cons copy)
@@ -213,8 +216,7 @@
               (mrs::make-icons 
                :relation (mrs::icons-relation icons) 
                :iarg1 (map-variable (mrs::icons-iarg1 icons))
-               :iarg2 (map-variable (mrs::icons-iarg2 icons)))))
-      )
+               :iarg2 (map-variable (mrs::icons-iarg2 icons))))))
     copy))
 
 ;;;

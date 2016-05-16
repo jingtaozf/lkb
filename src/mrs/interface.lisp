@@ -342,7 +342,7 @@ For attempting to learn null semantics
        (ecase info-type
          (:simple (output-mrs1 mrs-struct 'simple stream))
          (:indexed (output-mrs1 mrs-struct 'indexed stream))
-         (:eds (ed-output-psoa mrs-struct :stream stream))
+         (:eds (eds-output-psoa mrs-struct :stream stream))
          (:first-scoped 
           (let ((binding-sets (make-scoped-mrs mrs-struct)))
             (when binding-sets
@@ -389,14 +389,28 @@ For attempting to learn null semantics
 (defun read-mrs-from-file (file
                            &key #+:allegro
                                 (external-format
-                                 (excl:locale-external-format excl:*locale*)))
+                                 (excl:locale-external-format excl:*locale*))
+                                decoder)
   ;;; called by oe
   (when (probe-file file)
-    (#+:debug progn #-:debug ignore-errors 
-     (with-open-file (istream file :direction :input
-                      #+:allegro :external-format #+:allegro external-format)
-       (let ((*package* (find-package :lkb)))
-         (read-mrs istream))))))
+    (if decoder
+      (multiple-value-bind (stream foo pid)
+          (run-process 
+           decoder :wait nil 
+           :input file :output :stream :error-output nil)
+        (declare (ignore foo))
+        #+:allegro
+        (setf (stream-external-format stream) external-format)
+        (let ((mrs (read-mrs stream)))
+          (close stream)
+          #+:allegro
+          (sys:os-wait nil pid)
+          mrs))
+      (#+:debug progn #-:debug ignore-errors 
+       (with-open-file (stream file :direction :input
+                        #+:allegro :external-format #+:allegro external-format)
+         (let ((*package* (find-package :lkb)))
+           (read-mrs stream)))))))
 
 (defun read-mrss-from-file (file)
   (when (probe-file file)

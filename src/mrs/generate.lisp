@@ -283,6 +283,9 @@
   
   (if (mt:fragmentp mrs)
     (mt:generate-from-fragmented-mrs mrs :signal signal)
+    #+:debug
+    (generate-from-mrs-internal mrs :nanalyses nanalyses)
+    #-:debug
     (handler-case (generate-from-mrs-internal mrs :nanalyses nanalyses)
       (condition (condition)
         (setf %generator-condition% condition)
@@ -761,6 +764,7 @@
    (gen-chart-subset-p
       input-rels
       (g-edge-rels-covered edge)))
+
 
 (defun gen-chart-check-compatible (edge)
   ;; construct the MRS for edge

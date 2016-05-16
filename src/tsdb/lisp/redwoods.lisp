@@ -85,9 +85,7 @@
                           (stream *tsdb-io*)
                           (runp t) interrupt meter)
 
-  (declare 
-   #-:logon (ignore external)
-   (optimize (speed 3) (safety 0) (space 0)))
+  (declare (optimize (speed 3) (safety 0) (space 0)))
 
   (initialize-tsdb)
 
@@ -153,7 +151,6 @@
       (status :text message)
       (meter :value 0))
 
-    #+:logon
     (when (and (eq lkb::*tree-discriminants-mode* :external) external)
       (let* ((file (format
                     nil "~a/.redwoods.~a.~a.log"
@@ -1798,39 +1795,38 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :eds *redwoods-export-values*)
                   (smember :dependencies *redwoods-export-values*))
-          (ignore-errors (mrs::ed-output-psoa mrs :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :triples *redwoods-export-values*))
+          (ignore-errors (mrs::eds-output-psoa mrs :stream out)))
+        (when (smember :amr *redwoods-export-values*)
+          (ignore-errors 
+           (mrs::eds-output-psoa mrs :format :amr :stream out)))
+        (when (smember :triples *redwoods-export-values*)
           (ignore-errors
-           (mrs::ed-output-psoa
-            mrs :format :triples :cargp nil :markp nil :lnkp nil
+           (mrs::eds-output-psoa
+            mrs :format :triples :cargp nil :sentinelp nil :lnkp nil
             :collocationp t :abstractp t :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :mtriples *redwoods-export-values*))
+        (when (smember :mtriples *redwoods-export-values*)
           (ignore-errors
-           (mrs::ed-output-psoa
-            mrs :format :triples :cargp nil :markp t :lnkp nil
+           (mrs::eds-output-psoa
+            mrs :format :triples :cargp nil :sentinelp t :lnkp nil
             :collocationp t :abstractp t :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :ltriples *redwoods-export-values*))
+        (when (smember :ltriples *redwoods-export-values*)
           (ignore-errors
-           (mrs::ed-output-psoa
-            mrs :format :triples  :cargp t :markp nil :lnkp t
+           (mrs::eds-output-psoa
+            mrs :format :triples  :cargp t :sentinelp nil :lnkp t
             :collocationp nil :abstractp nil :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :striples *redwoods-export-values*))
+        (when (smember :striples *redwoods-export-values*)
           (ignore-errors
-           (mrs::ed-output-psoa
-            mrs :format :triples  :cargp t :markp nil :lnkp t :propertyp nil
+           (mrs::eds-output-psoa
+            mrs :format :triples  :cargp t 
+            :sentinelp nil :lnkp t :propertiesp nil
             :collocationp nil :abstractp nil :sortp t :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :dtriples *redwoods-export-values*))
+        (when (smember :dtriples *redwoods-export-values*)
           (ignore-errors
-           (mrs::ed-output-psoa
-            mrs :format :triples  :cargp t :markp nil :lnkp t :propertyp nil
+           (mrs::eds-output-psoa
+            mrs :format :triples  :cargp t 
+            :sentinelp nil :lnkp t :propertiesp nil
             :collocationp nil :abstractp nil :sortp t :dmrsp t :stream out)))
-        (when (or (eq *redwoods-export-values* :all)
-                  (smember :dmrx *redwoods-export-values*))
+        (when (smember :dmrx *redwoods-export-values*)
           (ignore-errors
            (mrs::output-dmrs1
             (mrs::rmrs-to-dmrs (mrs::mrs-to-rmrs mrs))
@@ -4173,7 +4169,7 @@
     with *phenomena* = nil
     with *statistics-aggregate-dimension* = :phenomena
     with *statistics-all-rejections-p* = t
-    with *tsdb-home* = (logon-directory "lingo/terg/tsdb/gold" :string)
+    with *tsdb-home* = (logon-directory "lingo/erg/tsdb/gold" :string)
     initially 
       (purge-profile-cache :all)
       (when (probe-file "/tmp/redwoods.csv") (delete-file "/tmp/redwoods.csv"))
@@ -4183,8 +4179,8 @@
 
 #|
 for i in 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21; do
-  mkdir wsj${i}.1; 
-  for j in wsj${i}?.1; do echo '"'$j'"'; done > wsj${i}.1/virtual; 
+  mkdir wsj${i}; 
+  for j in wsj${i}?; do echo '"'$j'"'; done > wsj${i}/virtual; 
 done
 |#
 
@@ -4193,11 +4189,11 @@ done
     with *phenomena* = nil
     with *statistics-aggregate-dimension* = :phenomena
     with *statistics-all-rejections-p* = t
-    with *tsdb-home* = (logon-directory "coli/deepbank/tsdb/home" :string)
+    with *tsdb-home* = (logon-directory "lingo/erg/tsdb/gold" :string)
     initially
       (purge-profile-cache :all)
       (when (probe-file "/tmp/deepbank.csv") (delete-file "/tmp/deepbank.csv"))
     for name in (loop
                     for i from 0 to 21
-                    collect (format nil "wsj~2,'0d.1" i))
+                    collect (format nil "wsj~2,'0d" i))
     do (analyze-trees name :append "/tmp/deepbank.csv" :format :csv))

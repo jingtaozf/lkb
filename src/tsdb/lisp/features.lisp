@@ -963,29 +963,43 @@
       finally (return features)))
 
 (defun mrs-to-dependencies (mrs)
-  (let* ((eds (mrs::ed-convert-psoa mrs))
+  (let* ((eds (mrs:eds-convert-psoa mrs))
 	 (relations (and eds (mrs::eds-relations eds))))
     (loop for rel in relations
 	for pred = (intern (mrs::ed-predicate rel) 'lkb)
 	for args = (mrs::ed-arguments rel)
-	for arg-list = (loop for arg in args
-			   collect (list (intern (car arg) 'lkb)
-					 (intern (if (stringp (cdr arg))
-						     (cdr arg)
-						   (mrs::ed-predicate (cdr arg))) 'lkb)))
-	collect (make-feature :tid 20 :parameters (list 0)
-			      :symbol `(0 ,pred
-					  ,@(loop for arg in arg-list
-						append (list (first arg) (second arg)))))
-	append (loop for arg in arg-list
-		   collect (make-feature :tid 21 :parameters (list 0)
-					 :symbol `(0 ,pred ,(first arg) ,(second arg))))
-	collect (make-feature :tid 22 :parameters (list 0)
-			      :symbol `(0 ,pred ,@(loop for arg in arg-list
-						      collect (second arg))))
-	append (loop for arg in arg-list
-		   collect (make-feature :tid 23 :parameters (list 0)
-					 :symbol `(0 ,pred ,(second arg)))))))
+	for arg-list 
+        = (loop for arg in args
+              collect (list (intern (car arg) 'lkb)
+                            (intern (if (stringp (cdr arg))
+                                      (cdr arg)
+                                      (mrs::ed-predicate (cdr arg))) 'lkb)))
+	collect 
+          (make-feature 
+           :tid 20 :parameters (list 0)
+           :symbol `(0 ,pred
+                       ,@(loop 
+                             for arg in arg-list
+                             append (list (first arg) (second arg)))))
+	append 
+          (loop 
+              for arg in arg-list
+              collect 
+                (make-feature
+                 :tid 21 :parameters (list 0)
+                 :symbol `(0 ,pred ,(first arg) ,(second arg))))
+	collect 
+          (make-feature
+           :tid 22 :parameters (list 0)
+           :symbol `(0 ,pred ,@(loop 
+                                   for arg in arg-list
+                                   collect (second arg))))
+	append 
+          (loop 
+              for arg in arg-list
+              collect (make-feature 
+                       :tid 23 :parameters (list 0)
+                       :symbol `(0 ,pred ,(second arg)))))))
 
 (defun result-to-flags (result)
   (loop

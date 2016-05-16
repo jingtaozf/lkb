@@ -1184,7 +1184,7 @@
 
 (defun tsdb::find-rule (instance)
   (let* ((name (intern (if (stringp instance)
-                           (string-upcase instance)
+                         (string-upcase instance)
                          instance)
                        *lkb-package*))
          (rule (or (get-lex-rule-entry name)
@@ -1242,6 +1242,22 @@
                   :to (edge-to (first (last edges))))
        nil)
       (values status %failure%))))
+
+(defun tsdb::type-of-rule (name &optional (package *lkb-package*))
+  (let* ((rule (tsdb::find-rule name))
+         (type (and rule (indef-type-of-tdfs (rule-full-fs rule)))))
+    (when type
+      (intern type package))))
+
+(defun tsdb::label-edge (edge)
+  (labels ((recurse (edge node)
+             (when (and edge node)
+               (setf (edge-label edge) (get-string-for-edge node))
+               (loop
+                   for edge in (edge-children edge)
+                   for node in (get node 'daughters)
+                   do (recurse edge node)))))
+    (recurse edge (make-new-parse-tree edge 1 t))))
 
 ;;;
 ;;; RMRS comparison

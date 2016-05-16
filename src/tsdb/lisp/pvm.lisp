@@ -375,6 +375,10 @@
                          result-id
                          (wait 5))
 
+  (when (or (null item) (and (stringp item) (string= item "")))
+    (return-from pvm-process
+      (pairlis '(:i-id :parse-id :i-input :readings)
+               (list i-id parse-id "" -1))))
   ;;
   ;; zero out :edge or :tree fields, if any, since they are not remote readable
   ;;
@@ -384,7 +388,11 @@
         for edge = (assoc :edge result)
         for tree = (assoc :tree result)
         when edge do (setf (rest edge) nil)
-        when (and nil tree) do (setf (rest tree) nil)))
+        when (and nil tree) do (setf (rest tree) nil))
+    (let ((input (get-field :i-input item)))
+      (when (or (null input) (and (stringp input) (string= input "")))
+        (return-from pvm-process
+          (acons  :readings -1 item)))))
 
   (let* ((item (if (stringp item)
                  (pairlis '(:i-id :parse-id :i-input) 

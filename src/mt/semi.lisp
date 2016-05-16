@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2004 -- 2016 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,8 @@
 
 (defparameter *semi-generalize-ignore-properties* nil)
 
+(defparameter %semi-patches% nil)
+
 (defstruct semi
   name
   signature
@@ -30,7 +32,8 @@
   (predicates (make-hash-table :test #'equal))
   (aliases (make-hash-table :test #'equal))
   (properties (make-hash-table))
-  (ges (make-hash-table)))
+  (ges (make-hash-table))
+  (types (make-hash-table :test #'eq)))
 
 (defmethod print-object ((object semi) stream)
   (declare (special %transfer-raw-output-p%))
@@ -46,7 +49,32 @@
        ges ges roles roles predicates predicates properties properties))))
 
 (defstruct sps
-  i synopses forms spes active type context parents children)
+  predicate synopses forms spes active type flags context 
+  parents children ancestors descendants compatible)
+
+(defmethod print-object ((object sps) stream)
+  (declare (special %transfer-raw-output-p%))
+  (if %transfer-raw-output-p%
+    (call-next-method)
+    (let ((*print-circle* nil)
+          (*print-readably* nil))
+      (format
+       stream 
+       "#[SPS ~a~@[ < ~{~a~^ ~}~]~@[ > ~{~a~^ ~}~]~
+        ~@[ << ~{~a~^ ~}~]~@[ >> ~{~a~^ ~}~]]"
+       (sps-predicate object)
+       (loop 
+           for parent in (sps-parents object)
+           collect (if (sps-p parent) (sps-predicate parent) parent))
+       (loop for child in (sps-children object) collect (sps-predicate child))
+       (loop 
+           for ancestor in (sps-ancestors object)
+           unless (member ancestor (sps-parents object) :test #'eq)
+           collect (sps-predicate ancestor))
+       (loop 
+           for descendant in (sps-descendants object)
+           unless (member descendant (sps-children object) :test #'eq)
+           collect (sps-predicate descendant))))))
 
 (defstruct spe
   id stem forms type ep index mrs)
@@ -57,19 +85,60 @@
 (defmacro ignored-role-p (role)
   `(member ,role *semi-ignore-roles* :test #'eq))
 
+(defmacro glbp (predicate)
+  `(ppcre:scan "^glbtype[0-9]+$" (string-downcase ,predicate)))
+
 (defmacro lookup-predicate (predicate semi)
   `(gethash ,predicate (semi-predicates ,semi)))
 
 (defmacro lookup-alias (predicate semi)
   `(gethash (string-downcase ,predicate) (semi-aliases ,semi)))
 
-(defun semi-lookup (semi &key predicate alias)
+(defun semi-lookup (&key (semi (first *semis*)) predicate alias)
   (or
    (and predicate (lookup-predicate predicate semi))
    (and alias (lookup-alias alias semi))))
 
-(defun read-synopsis (string &optional (offset 0))
-  (let ((stream (make-string-input-stream string offset)))
+(defmacro patches-blocked-p (predicate)
+  `(when (stringp ,predicate)
+     (loop
+         for (key . rest) in %semi-patches%
+         thereis (and (eq key :block) (string= ,predicate (first rest))))))
+
+(defmacro patches-alias (predicate)
+  `(when (stringp ,predicate)
+     (loop
+         for (key . rest) in %semi-patches%
+         when (and (eq key :alias) (string= ,predicate (first rest)))
+         return (second rest))))
+
+(defmacro patches-parents ()
+  `(loop
+       for (key . rest) in %semi-patches%
+       when (eq key :parent) collect rest))
+
+(defmacro patches-links (name)
+  `(loop
+       for (key . rest) in %semi-patches%
+       when (and (eq key :link)
+                 (eq (first rest) ,name))
+       collect (second rest)))
+  
+
+(defun read-predicate (line &optional n)
+  (let* ((pred (if n (subseq line 0 n) line))
+         (pred (and pred (string-trim '(#\space #\tab) pred))))
+    (if mrs::*normalize-predicates-p*
+      (mrs::normalize-predicate pred)
+      (let ((i (length pred)))
+        (if (and (> i 2)
+                 (char= (schar pred 0) #\")
+                 (char= (schar pred (- i 1)) #\"))
+          (string-downcase (read-from-string pred nil nil))
+          pred)))))
+
+(defun read-synopsis (line &optional (offset 0))
+  (let ((stream (make-string-input-stream line offset)))
     (labels ((read-role ()
                (let ((c (peek-char t stream nil nil)))
                  (when (char= c #\.) (return-from read-role))
@@ -110,7 +179,9 @@
                       :name name :value variable :optionality optionality))))))
       (make-ep :roles (loop for role = (read-role) while role collect role)))))
 
-(defun read-semi (file &key semi (encoding :utf-8) close)
+(defun read-semi (file &key semi (encoding :utf-8) 
+                            resetp (recordp t) (includep t) (finalizep t))
+  (when resetp (setf *semis* nil))
   (let* ((file (pathname file))
          (name (format
                 nil
@@ -118,7 +189,7 @@
                 (pathname-name file) (pathname-type file)))
          (id (subseq name 0 (search ".smi" name)))
          (id (intern (string-upcase id) :keyword))
-         (includep semi)
+         (inclusionp semi)
          (semi (or semi (make-semi :name id))))
     (with-open-file (stream file :direction :input)
       #+:allegro
@@ -126,9 +197,15 @@
         (excl:find-external-format encoding))
       (format t "read-semi(): reading file `~a'.~%" name)
       (loop
-          with *readtable* = (lkb::make-tdl-break-table)
+          with *readtable* = (copy-readtable)
           with *package* = (find-package :lkb)
           with context = :top
+          initially
+            (set-syntax-from-char #\: #\space)
+            (set-syntax-from-char #\, #\space)
+            (set-syntax-from-char #\. #\space)
+            (set-syntax-from-char #\[ #\space)
+            (set-syntax-from-char #\] #\space)
           for c = (peek-char t stream nil nil)
           while c do
             (cond
@@ -155,51 +232,233 @@
                                   (make-pathname
                                    :directory (pathname-directory file))))))
                     (if (and path (probe-file path))
-                      (read-semi path :semi semi :encoding encoding)
+                      (when includep
+                        (read-semi path :semi semi :encoding encoding))
                       (format t "read-semi(): invalid `~a'.~%" line))))
                  (t
                   (case context
                     (:predicates
-                     (let* ((pred (ignore-errors
-                                   (read-from-string line nil nil)))
-                            (pred
-                             (if (stringp pred) (string-downcase pred) pred))
-                            (alias (predicate-alias pred))
-                            (colon (and pred (position #\: line)))
+                     (let* ((n (length line))
+                            (i (search " <" line))
+                            (j (search " :" line :start2 (if i (+ i 1) 0)))
+                            (parents
+                             (when i
+                               (let ((strings 
+                                      (ppcre:split 
+                                       " ?& ?" line
+                                       :start (+ i 2) :end (or j n))))
+                                 (loop
+                                     for string in strings
+                                     for foo = (read-from-string string nil nil)
+                                     for pred
+                                     = (if mrs::*normalize-predicates-p*
+                                         (mrs::normalize-predicate foo)
+                                         (if (stringp foo) 
+                                           (string-downcase foo)
+                                           foo))
+                                     collect pred))))
+                            (pred (read-predicate line (or i j)))
+                            (alias (and pred (predicate-alias pred)))
                             (synopsis 
-                             (and colon (read-synopsis line (+ colon 1))))
-                            (bucket (and pred (lookup-predicate pred semi))))
-                       (cond
-                        (synopsis
-                         (setf (ep-pred synopsis) pred)
-                         (if bucket
-                           (push synopsis (sps-synopses bucket))
-                           (let ((sps (make-sps :synopses (list synopsis))))
+                             (and pred j (read-synopsis line (+ j 2))))
+                            (bucket 
+                             (and pred (lookup-predicate pred semi))))
+                       (when synopsis (setf (ep-pred synopsis) pred))
+                       (if (or parents synopsis)
+                         (cond
+                          (bucket
+                           (when synopsis
+                             (push synopsis (sps-synopses bucket)))
+                           (loop
+                               for parent in parents
+                               do
+                                 (pushnew
+                                  parent (sps-parents bucket)
+                                  :test #'string=)))
+                          (t
+                           (let ((sps (make-sps
+                                       :predicate pred
+                                       :synopses (and synopsis (list synopsis))
+                                       :parents parents)))
                              (setf (lookup-predicate pred semi) sps)
-                             (when alias (setf (lookup-alias alias semi) sps)))))
-                        (t
+                             (when alias
+                               (setf (lookup-alias alias semi) sps)))))
                          (format
                           t
-                          "read-semi(): ignoring |~a|." line)))))))))))))
-    (when close (close-semi semi))
-    (unless includep (push semi *semis*))
+                          "read-semi(): ignoring |~a|.~%" line))))))))))))
+    (unless inclusionp
+      (anchor-semi semi)
+      (when finalizep (finalize-semi semi))
+      (when recordp (push semi *semis*)))
     semi))
 
-(defun close-semi (semi)
-  (declare (ignore semi))
-  #+:null
+(defun anchor-semi (semi)
+  (loop 
+      for sps being each hash-value in (semi-predicates semi)
+      do (anchor-sps semi sps)))
+ 
+(defun anchor-sps (semi sps)
+  #+:lkb
+  (unless (sps-type sps)
+    (let* ((predicate (sps-predicate sps))
+           (alias (patches-alias predicate))
+           (string
+            (concatenate 'string (string predicate) mrs::*sem-relation-suffix*))
+           (type (lkb::get-type-entry (or alias (mrs:vsym string)))))
+      (setf (sps-type sps) type)
+      (setf (gethash type (semi-types semi)) sps))))
+
+(defun embed-semi (semi &key (stream t))
+  (loop
+      for link in (patches-parents)
+      for child = (lookup-predicate (first link) semi)
+      for parent = (second link)
+      when (and child (lookup-predicate parent semi))
+      do (pushnew parent (sps-parents child))
+      else do
+        (format
+         stream "embed-semi(): invalid parent patch: ~a < ~a.~%"
+         (first link) parent))
+  ;;
+  ;; for just now, a naive pairwise comparison: we do not expect these sets
+  ;; to be large, as the SEM-I is selective about which nodes to expose in
+  ;; its external hierarchy.
+  ;; _fix_me_
+  ;; the current code is actually more naive than i originally realized; there
+  ;; is no need to drive the embedding of ‘pairwise comparison’; instead, one
+  ;; single traversal of all SEM-I entries, expanding parent links on visited
+  ;; entries, should suffice.                                  (19-apr-16; oe)
+  ;;
+  (let ((cache (make-hash-table :test #'eq)))
+    (labels ((link (types)
+               (loop
+                   for type in types
+                   for match = (gethash type (semi-types semi))
+                   when match collect match))
+             (minimize (ancestors)
+               (loop
+                   for candidate in ancestors
+                   for type = (sps-type candidate)
+                   unless (loop
+                              for ancestor in ancestors
+                              thereis
+                                (and (not (eq ancestor candidate))
+                                     (sps-type ancestor)
+                                     (member type (lkb::ltype-ancestors
+                                                   (sps-type ancestor)))))
+                   collect candidate))
+             (ancestors (sps)
+               (let* ((parents (sps-parents sps))
+                      (ancestors (loop
+                                     for parent in parents
+                                     for sps = (lookup-predicate parent semi)
+                                     append (and sps (ancestors sps)))))
+                 (append parents ancestors)))
+             (patch (type)
+               (loop
+                   for name in (patches-links (lkb::ltype-name type))
+                   for link = (lkb::get-type-entry name)
+                   unless link
+                   do 
+                     (format 
+                      t "embed-semi(): ignoring invalid link `~(~a~)'."
+                      name)
+                   else append (cons link (lkb::ltype-ancestors type))))
+             (embed (sps1 sps2)
+               (let* ((type1 (sps-type sps1))
+                      (type2 (sps-type sps2))
+                      (ancestors2 (lkb::ltype-ancestors type2))
+                      (ancestors2
+                       (append
+                        ancestors2
+                        (loop
+                            for type in ancestors2
+                            append (patch type))))
+                      (parents
+                       (when (member type1 ancestors2 :test #'eq)
+                         (or (gethash type2 cache)
+                             (setf (gethash type2 cache)
+                               (minimize (link ancestors2)))))))
+                 (loop
+                     with ancestors
+                     = (remove-duplicates (ancestors sps2) :test #'string=)
+                     for parent in parents
+                     for predicate = (sps-predicate parent)
+                     unless (member predicate ancestors :test #'string=)
+                     do
+                       (format 
+                        t "embed-semi(): ~a < ~a.~%"
+                        (sps-predicate sps2) predicate)
+                       (push predicate (sps-parents sps2))))))
+      (loop
+          for sps1 being each hash-value in (semi-predicates semi)
+          when (and (sps-type sps1)
+                    #+:null
+                    (member :entity (sps-flags sps1) :test #'eq)) do
+            (loop
+                for sps2 being each hash-value in (semi-predicates semi)
+                when (and (sps-type sps2)
+                          (not (eq sps1 sps2))
+                          (member :entity (sps-flags sps2) :test #'eq))
+                do (embed sps1 sps2)))
+      ;;
+      ;; the above can result in ‘redundant’ parent links, e.g. ‘_at_p_temp’
+      ;; ending up with both ‘_at_p’ and ‘unspec_loc’, where the latter is the
+      ;; parent of ‘_at_p’ already.  given we are not imposing any ordering
+      ;; constraints on the embedding (currently) such redundancy needs to be
+      ;; eliminated after the fact ...
+      ;;
+      (loop
+          for sps being each hash-value in (semi-predicates semi)
+          for parents = (loop 
+                            for parent in (sps-parents sps) 
+                            collect (lookup-predicate parent semi))
+          do
+            (setf (sps-parents sps)
+              (loop
+                  for sps in (minimize parents) 
+                  collect (sps-predicate sps)))))))
+
+(defun finalize-semi (semi)
   (loop
       for sps being each hash-value
-      using (hash-value pred) in (semi-predicates semi)
-      for descendants
-      = (and (lkb::is-valid-type pred) (lkb::retrieve-descendants pred))
-      for ancestors
-      = (and (lkb::is-valid-type pred) (lkb::retrieve-ancestors pred))
-      do
-        (loop
-            for type in descendants
-            for descendant = (lkb::ltype-name type)
-            for bucket = (lookup-predicate descendant semi))))
+      using (hash-key predicate) in (semi-predicates semi)
+      for parents = (sps-parents sps)
+      when (and parents (not (sps-p (first parents)))) do
+        (setf (sps-parents sps)
+          (loop
+              for name in (remove-duplicates parents :test #'string=)
+              for parent = (lookup-predicate name semi)
+              when parent 
+              do (pushnew sps (sps-children parent) :test #'eq)
+              and collect parent
+              else 
+              do 
+              (format
+               t "finalize-semi(): ignoring invalid parent ‘~a’ for ‘~a’.~%"
+               name predicate))))
+  (labels ((walk (node ancestors)
+             (loop
+                 for ancestor in ancestors
+                 do (pushnew ancestor (sps-ancestors node) :test #'eq))
+             (or (sps-descendants node)
+                 (setf (sps-descendants node)
+                   (append (sps-children node)
+                           (loop
+                               with ancestors = (cons node ancestors)
+                               for child in (sps-children node)
+                               append (walk child ancestors)))))))
+    (loop
+        for sps being each hash-value in (semi-predicates semi)
+        when (and (sps-children sps) (null (sps-parents sps)))
+        do (setf (sps-descendants sps) (walk sps nil))))
+    (loop
+        for sps being each hash-value in (semi-predicates semi)
+        do
+          (setf (sps-descendants sps)
+            (sort
+             (sps-descendants sps)
+             #'< :key #'(lambda (sps) (length (sps-descendants sps)))))))
 
 (defun test-semi-compliance (mrs
                              &optional semi
@@ -210,7 +469,8 @@
     (unless (semi-p semi)
       (setf semi
         (loop for foo in *semis* when (eq (semi-name foo) semi) return foo))))
-  (unless (semi-p semi) (return-from test-semi-compliance))
+  (unless (and (semi-p semi) (mrs::psoa-p mrs))
+    (return-from test-semi-compliance))
   
   (labels ((test-ep (ep)
              (let* ((pred (mrs:rel-pred ep))
@@ -272,11 +532,17 @@
                    (test-ep ep))
         collect ep)))
 
-(defun construct-semi (&key ids semi (rules t) 
+(defun construct-semi (&key (ids t) semi (rules t) patches
+                            embedp descendp finalizep
                             (warn '(:collision)) (stream t))
-  (let ((semi (or semi (make-semi)))
-        (ids (or ids (lkb::collect-psort-ids lkb::*lexicon*))))
-    (loop
+  (let* ((semi (or semi (make-semi)))
+         (ids (if (eq ids t) (lkb::collect-psort-ids lkb::*lexicon*) ids))
+         (%semi-patches% (if patches
+                           (with-open-file (stream patches)
+                             (let ((*package* (find-package :lkb)))
+                               (read stream)))
+                           %semi-patches%)))
+   (loop
         for id in ids
         for le = (lkb::get-lex-entry-from-id id :cache nil)
         when le do (record-le semi id le))
@@ -320,12 +586,28 @@
                 stream "construct-semi(): predicate collision for ‘~(~a~)’.~%"
                 predicate))))
     ;;
-    ;; finally, construct `generalized synopses' (i.e. folding multiple frames
+    ;; now, construct `generalized synopses' (i.e. folding multiple frames
     ;; into one, where possible using optionality and type underspecification).
     ;;
     (loop
         for sps being each hash-value in (semi-predicates semi)
         do (generalize-sps sps))
+    ;;
+    ;; connect the SEM-I Predicate Structures to the grammar-internal type
+    ;; hierarchy; when requested, descend into sub-types; add parent links
+    ;; among SEM-I entries according to the type hierarchy; and expand parent
+    ;; links into inverse children and transitive ancestor and descendant
+    ;; links.
+    ;;
+    (anchor-semi semi)
+    (when descendp
+      (loop
+          for sps being each hash-value in (semi-predicates semi)
+          when (and (find :entity (sps-flags sps))
+                    (not (patches-blocked-p (sps-predicate sps))))
+          do (sps-descend semi sps)))
+    (when embedp (embed-semi semi))
+    (when finalizep (finalize-semi semi))
     semi))
 
 (defun predicate-alias (predicate)
@@ -334,7 +616,7 @@
          (alias (subseq string 0 n)))
     (unless (string= predicate alias) alias)))
 
-(defun record-le (semi id le)
+(defun record-le (semi id le &key (flags '(:entity)))
   (let* ((tdfs (lkb::lex-entry-full-fs le))
          (dag (lkb::tdfs-indef tdfs))
          (type (lkb::type-of-fs dag))
@@ -384,18 +666,19 @@
           for pred = (ep-pred ep)
           for alias = (and pred (predicate-alias pred))
           for sps = (or (lookup-predicate pred semi)
-                        (setf (lookup-predicate pred semi) (make-sps)))
+                        (setf (lookup-predicate pred semi) 
+                          (make-sps :predicate pred)))
           for spe = (make-spe
                      :id id :stem stem :forms forms
                      :type type :ep ep :index i :mrs mrs)
           do
+            (setf (sps-flags sps) (union (sps-flags sps) flags :test #'equal))
             ;;
             ;; _fix_me_
             ;; for the current ERG, subjects to verbs are [OPT bool].  fix 
             ;; this up here, so we get a more conventional looking SEM-I, but
             ;; really this should be adjusted in the grammar proper. 
             ;;                                                  (27-jan-06; oe)
-            #+:logon
             (let ((arg1 (mrs::vsym "ARG1"))
                   (pred (string pred)))
               (when (search "_v_" pred)
@@ -415,7 +698,7 @@
             (setf (ges-spes ges) (nreverse (ges-spes ges)))
             (setf (gethash id (semi-ges semi)) ges)))))
 
-(defun record-rule (semi id &optional rule)
+(defun record-rule (semi id &optional rule &key (flags '(:entity)))
   (let* ((rule (or rule
                    (gethash id lkb::*rules*)
                    (gethash id lkb::*lexical-rules*)))
@@ -462,10 +745,12 @@
           for pred = (ep-pred ep)
           for alias = (predicate-alias pred)
           for sps = (or (lookup-predicate pred semi)
-                        (setf (lookup-predicate pred semi) (make-sps)))
+                        (setf (lookup-predicate pred semi) 
+                          (make-sps :predicate pred)))
           for spe = (make-spe
                      :id id :type type :ep ep :index i :mrs mrs)
           do
+            (setf (sps-flags sps) (union (sps-flags sps) flags :test #'equal))
             (push spe (sps-spes sps))
             (push spe (ges-spes ges))
             (when alias (setf (lookup-alias alias semi) sps))
@@ -473,95 +758,170 @@
             (setf (ges-spes ges) (nreverse (ges-spes ges)))
             (setf (gethash id (semi-ges semi)) ges)))))
 
+(defun sps-descend (semi sps &optional (top sps) (type (sps-type sps)))
+  #+:lkb
+  (loop
+      for descendant in (and type (lkb::ltype-descendants type))
+      for predicate = (if mrs:*normalize-predicates-p*
+                        (mrs:normalize-predicate (lkb::ltype-name descendant))
+                        (lkb::ltype-name descendant))
+      for old = (lookup-predicate predicate semi)
+      for new = (unless (or (glbp predicate)
+                            (patches-blocked-p predicate)
+                            (when old
+                              (member
+                               (sps-predicate sps) (sps-parents old)
+                               :test #'string=)))
+                  (or old
+                      (setf (lookup-predicate predicate semi)
+                        (make-sps
+                         :predicate predicate :synopses (sps-synopses sps)
+                         :flags (acons :descend (list top) nil)))))
+      when new do
+        #-:debug
+        (format
+         t "sps-descend(): ~a > ~a.~%"
+         (sps-predicate sps) predicate)
+        (anchor-sps semi new)
+        (push (sps-predicate sps) (sps-parents new))
+        (when old
+          (loop
+              for flag in (sps-flags old)
+              when (and (consp flag) (eq (first flag) :descend))
+              do (push top (rest flag))))
+      do (sps-descend semi (or new sps) top (unless new descendant))))
+
 (defun record-mrs (semi mrs)
   (declare (ignore semi mrs)))
 
 (defun print-semi (&optional (semi (first *semis*))
-                   &key (format :concise) (stream t))
-  (labels ((print-roles (ep stream)
-             (loop
-                 with last = (first (last (ep-roles ep)))
-                 for role in (ep-roles ep)
-                 for value = (role-value role)
-                 when (variable-p value) do
-                   (let ((properties (variable-properties value))
-                         (optionality (variable-optionality value)))
-                     (format
-                      stream
-                      "~@[~*[ ~]~:@(~a~) ~(~a~)"
-                      optionality
-                      (role-name role) (variable-type value)
-                      optionality (eq role last))
-                     (when properties (format stream " { "))
-                     (loop
-                         with last = (first (last properties))
-                         for property in properties
-                         do
-                           (format
-                            stream
-                            "~@:(~a~) ~(~a~)~:[, ~; }~]"
-                            (property-name property)
-                            (property-value property)
-                            (eq property last)))
-                     (format
-                      stream
-                      "~@[~* ]~]~:[, ~;.~]"
-                      optionality (eq role last)))
-                 else do
-                   (format
-                    stream
-                    "~:@(~a~) |~a|~:[, ~;.~]"
-                    (role-name role) (constant-value value) (eq role last))))
-           (print-forms (forms stream &optional bracketp)
-             (when forms
-               (when bracketp (format stream " ["))
+                   &key (format :concise) (predicates nil predicatesp)
+                        filter (stream t))
+
+  (if (stringp stream)
+    (with-open-file (stream stream :direction :output :if-exists :supersede)
+      (print-semi semi :format format :filter filter :stream stream))
+    (labels ((print-predicate (predicate stream)
+               (if mrs::*normalize-predicates-p*
+                 (format stream "  ~(~a~) " predicate)
+                 (format stream "  ~(~s~) " predicate)))
+             (print-roles (ep stream)
                (loop
-                   for (tag . strings) in forms
-                   do 
+                   with last = (first (last (ep-roles ep)))
+                   for role in (ep-roles ep)
+                   for value = (role-value role)
+                   when (variable-p value) do
+                     (let ((properties (variable-properties value))
+                           (optionality (variable-optionality value)))
+                       (format
+                        stream
+                        "~@[~*[ ~]~:@(~a~) ~(~a~)"
+                        optionality
+                        (role-name role) (variable-type value)
+                        optionality (eq role last))
+                       (when properties (format stream " { "))
+                       (loop
+                           with last = (first (last properties))
+                           for property in properties
+                           do
+                             (format
+                              stream
+                              "~@:(~a~) ~(~a~)~:[, ~; }~]"
+                              (property-name property)
+                              (property-value property)
+                              (eq property last)))
+                       (format
+                        stream
+                        "~@[~* ]~]~:[, ~;.~]"
+                        optionality (eq role last)))
+                   else do
                      (format
                       stream
-                      "~:[, ~;~]~(~a~): ~{|~a|~^ ~}"
-                      (eq tag (first (first forms))) tag strings))
-               (when bracketp (format stream "]")))))
-    (let* ((predicates
-            (loop
-                for pred being each hash-key in (semi-predicates semi)
-                collect pred))
-           (predicates (sort predicates #'string<)))
-      (format stream "predicates:~%~%")
-      (loop
-          for pred in predicates
-          for sps = (lookup-predicate pred semi)
-          when (eq format :concise) do
-            (loop
-                with *package* = (find-package :lkb)
-                for spe in (sps-spes sps)
-                for id = (spe-id spe)
-                for type = (spe-type spe)
-                for index = (spe-index spe)
-                for stem = (spe-stem spe)
-                do
-                  (format stream "  ~(~s~) : " pred)
-                  (print-roles (spe-ep spe) stream)
-                  (format
-                   stream
-                   " { #~d in ~(~a~)~@[ [~(~a~)]~] |~@[~a~]| }"
-                   index id type stem)
-                  #+:null
-                  (print-forms (spe-forms spe) stream t)
-                  (format stream "~%"))
-          when (eq format :compact) do
-            (loop
-                with *package* = (find-package :lkb)
-                for synopsis in (sps-synopses sps) do
-                  (format stream "  ~(~s~) : " pred)
-                  (print-roles synopsis stream)
-                  (format stream "~%"))
-          when (eq format :forms) do
-            (let ((*package* (find-package :lkb)))
-              (format stream "  ~(~s~) : " pred)
-              (print-forms (sps-forms sps) stream)
-              (format stream "~%"))))))
+                      "~:@(~a~) |~a|~:[, ~;.~]"
+                      (role-name role) (constant-value value) (eq role last))))
+             (print-forms (forms stream &optional bracketp)
+               (when forms
+                 (when bracketp (format stream " ["))
+                 (loop
+                     for (tag . strings) in forms
+                     do 
+                       (format
+                        stream
+                        "~:[, ~;~]~(~a~): ~{|~a|~^ ~}"
+                        (eq tag (first (first forms))) tag strings))
+                 (when bracketp (format stream "]")))))
+      (let* ((predicates
+              (or predicates
+                  (loop
+                      for pred being each hash-key in (semi-predicates semi)
+                      collect pred)))
+             (predicates (sort predicates #'string<)))
+        (format stream "predicates:~%~%")
+        (loop
+            for pred in predicates
+            for sps = (lookup-predicate pred semi)
+            when (eq format :concise) do
+              (loop
+                  with *package* = (find-package :lkb)
+                  for spe in (sps-spes sps)
+                  for id = (spe-id spe)
+                  for type = (spe-type spe)
+                  for index = (spe-index spe)
+                  for stem = (spe-stem spe)
+                  do
+                    (print-predicate pred stream)
+                    (format stream ": ")
+                    (print-roles (spe-ep spe) stream)
+                    (format
+                     stream
+                     " { #~d in ~(~a~)~@[ [~(~a~)]~] |~@[~a~]| }"
+                     index id type stem)
+                    #+:null
+                    (print-forms (spe-forms spe) stream t)
+                    (format stream "~%"))
+            when (and (eq format :compact)
+                      (or (null filter) (ppcre:scan filter pred)))
+            do
+              (loop
+                  with *package* = (find-package :lkb)
+                  with parents = (sps-parents sps)
+                  for synopsis in (sps-synopses sps) 
+                  do
+                    (print-predicate pred stream)
+                    #+:null
+                    (when parents
+                      (loop
+                          initially (format stream "< ")
+                            with last = (first (last parents))
+                          for parent in parents
+                          do
+                            (format
+                             stream "~(~a~)~:[ & ~;~]"
+                             (sps-predicate parent) (eq parent last)))
+                      (format stream " "))
+                    (format stream ": ")
+                    (print-roles synopsis stream)
+                    (format stream "~%"))
+            when (eq format :forms) do
+              (let ((*package* (find-package :lkb)))
+                (print-predicate pred stream)
+                (format stream ": ")
+                (print-forms (sps-forms sps) stream)
+                (format stream "~%"))
+            when (eq format :hierarchy) do
+              (let ((parents (sps-parents sps)))
+                (when (or parents predicatesp)
+                  (print-predicate pred stream)
+                  (when parents
+                    (loop
+                        initially (format stream "< ")
+                        with last = (first (last parents))
+                        for parent in parents
+                        do
+                          (format
+                           stream "~(~a~)~:[ & ~;~]"
+                           (sps-predicate parent) (eq parent last))))
+                  (format stream ".~%"))))))))
 
 (defun generalize-types (type1 type2)
   (or
@@ -719,10 +1079,8 @@
           (return ep))))
 
 (defun generalize-sps (sps)
-  (setf (sps-type sps) :object)
   (loop
       for spe in (sps-spes sps)
-      for mrs = (spe-mrs spe)
       for ep1 = (spe-ep spe)
       for synopses
       = (list (generalize-ep ep1))
@@ -735,8 +1093,6 @@
                else collect ep2 into result
                finally
                  (return (nconc result (list (generalize-ep ep1)))))
-      when (and (mrs-p mrs) (rest (mrs-eps mrs)))
-      do (setf (sps-type sps) :meta)
       finally (setf (sps-synopses sps) synopses))
   (loop
       for spe in (sps-spes sps)
@@ -753,30 +1109,53 @@
               (push (cons tag strings) (sps-forms sps))
             finally (setf (sps-forms sps) (nreverse (sps-forms sps)))))
   sps)
-
-
-;;; added by AAC - called from rmrs-convert.lisp - added here because
-;;; I don't want to add yet another file to lkb.system or mess around 
-;;; with the file ordering there.
-;;; takes a string and tries to look it up in the SEMI
-;;; could no doubt be improved by better understanding of the code
-
-(defun find-semi-entries (pred)
-;;; code adapted from test-semi-compliance
-  (unless *semis*     (error "Semis not initialised"))
-  (let* ((semi (first *semis*))
-	 (pred-symbol (mrs::vsym (string-upcase pred))))
-    (if
-	(or
-;;;	 (eql pred-symbol 'lkb::def_or_a_or_udef_q_rel)
-;;; we get errors if we let through a symbol which isn't in the SEM-I
-	 (member pred-symbol *semi-fragment-relations* :test #'eq)
-	 (member
-	  pred-symbol
-	  *semi-punctuation-relations* :test #'eq)
-	 (member pred-symbol *semi-token-relations* :test #'eq)
-	 (lookup-predicate pred-symbol semi))
-	pred-symbol
-      (if (lookup-predicate pred semi)
-	  pred
-	nil))))
+
+(defun semi-compare-predicates (predicate1 predicate2
+                                &key (type :subsumption)
+                                     (semi (first *semis*)))
+  (or
+   (when (eq predicate1 predicate2) predicate1)
+   (when (and (stringp predicate1) (stringp predicate2)
+              (string= predicate1 predicate2))
+     predicate1)
+   (when (or (eq type :subsumption) (eq type :unification))
+     (let ((sps1 (semi-lookup
+                  :semi semi :predicate predicate1
+                  :alias (unless mrs::*normalize-predicates-p* predicate1)))
+           (sps2 (semi-lookup
+                  :semi semi :predicate predicate2
+                  :alias (unless mrs::*normalize-predicates-p* predicate2))))
+       (when (and sps1 sps2)
+         (or 
+          (first (member sps1 (sps-descendants sps2) :test #'eq))
+          (when (eq type :unification)
+            (or
+             (first (member sps2 (sps-descendants sps1) :test #'eq))
+             (first (intersection
+                     (sps-descendants sps1) (sps-descendants sps2)
+                     :test #'eq))))))))))
+
+(defun semi-compatible-predicates (predicate &key (semi (first *semis*)))
+  ;;
+  ;; determine ‘compatible’ predicates for use in generation: all predicates
+  ;; that can unify with .predicate. (i.e. subsume it, are subsumbed by it, or
+  ;; have at least one descendant in common with it) need to be considered for
+  ;; initialization of the generator chart.
+  ;;
+  (let ((sps (lookup-predicate predicate semi)))
+    (when sps
+      (or (sps-compatible sps)
+          (setf (sps-compatible sps)
+            (let ((result (list sps)))
+              (loop
+                  for descendant in (sps-descendants sps)
+                  do
+                    (pushnew descendant result :test #'eq)
+                    (loop
+                        for ancestor in (sps-ancestors descendant)
+                        do (pushnew ancestor result :test #'eq)))
+              (loop
+                  for ancestor in (sps-ancestors sps)
+                  do (pushnew ancestor result :test #'eq))
+              (loop
+                  for sps in result collect (sps-predicate sps))))))))

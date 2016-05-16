@@ -6,10 +6,11 @@
 
 ;;; from lexindex
 
-(defparameter *get-compatible-rels-memo* (make-hash-table))
+(defparameter *get-compatible-rels-memo* nil)
 
 (defun clear-generator-index nil
-  (clrhash *get-compatible-rels-memo*)
+  (setf *get-compatible-rels-memo*
+    (make-hash-table :test (if mrs::*normalize-predicates-p* #'equal #'eq)))
   (mrs::clear-semantic-indices)
   (mrs::clear-lrule-globals)
   (mrs::clear-grule-globals))
@@ -115,23 +116,7 @@
     (when (typep lex 'psql-lex-database)
       (dump-generator-indices-to-psql lex))
     (when (typep lkb::lex 'lkb::cdb-lex-database)
-      (mrs::serialize-semantics-indices))
-
-    ;;
-    ;; _fix_me_
-    ;; the following seems undesirable to me, as if it were illegitime for a
-    ;; grammar to use semantically vacuous entries.  furthermore, the output
-    ;; suggested by the code below assumes file and type names that are not
-    ;; standardized, hence could be mis-leading.                (2-jul-08; oe)
-    ;;
-    
-    ;; [bmw] dump trigger tdl
-    #-:logon
-    (when mrs::*empty-semantics-lexical-entries*
-      (format t "~%~%ADD THE FOLLOWING TO trigger.mtr:")
-      (make-trigger-tdl mrs::*empty-semantics-lexical-entries*))
-    
-    ))
+      (mrs::serialize-semantics-indices))))
 
 (defun reindex-lexicon nil ; <-- efficiency problem
   (format t "~% (recompiling semantic indices)")
@@ -160,24 +145,8 @@
 	       (format t "~%No feature structure for ~A~%" 
 		       (lex-entry-id entry)))))
 	   (forget-psort *lexicon* (lex-entry-id entry))))      
-      (mrs::check-for-redundant-filter-rules)))
-  
-  ;; [bmw] dump trigger tdl
-  (when mrs::*empty-semantics-lexical-entries*
-    (format t "~%~%ADD THE FOLLOWING TO trigger.mtr:")
-    (make-trigger-tdl mrs::*empty-semantics-lexical-entries*))
-  )
+      (mrs::check-for-redundant-filter-rules))))
 
-;; [bmw] code to dump trigger tdl for rules which
-;; have 'no semantics and no filter rule'
-(defun make-trigger-tdl (empty-semantics-lexical-entries)
-  (loop for x in empty-semantics-lexical-entries
-      do
-	(format t "~%~%~a_gr := generator_rule &
-[ CONTEXT.RELS <! [ PRED \"non_existing_rel\" ] !>,
-  FLAGS.TRIGGER \"~a\" ]." 
-		(string-downcase x) 
-		(string-downcase x))))
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)

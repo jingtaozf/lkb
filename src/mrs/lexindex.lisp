@@ -324,8 +324,10 @@ we assume that there will generally only be one feature
 (defun matches-rel-record (rel lexrec)
   (and (rel-p rel)
        (rel-p lexrec)
-       (compatible-types (rel-pred rel)
-            (rel-pred lexrec))
+       (if *normalize-predicates-p*
+         (mt:semi-compare-predicates
+          (rel-pred rel) (rel-pred lexrec) :type :unification)
+         (compatible-types (rel-pred rel) (rel-pred lexrec)))
        (subsetp
         (get-rel-parameter-strings rel)
         (rel-parameter-strings lexrec)
@@ -396,9 +398,14 @@ we assume that there will generally only be one feature
   ;;; types by mistake, there's a maximum number of relations
   ;;; allowed, which is set quite high, because of all the glbtypes
   (let ((returned-rels nil))
-    (loop for reltype in reltype-list
-         do
-         (loop for compatible-rel in (lkb::get-compatible-rels reltype)
+    (loop
+        for reltype in reltype-list
+        do
+          (loop 
+              for compatible-rel
+              in (if mrs::*normalize-predicates-p*
+                   (mt:semi-compatible-predicates reltype)
+                   (lkb::get-compatible-rels reltype))
               do
               (pushnew compatible-rel returned-rels :test #'eq)))
     (when (and *maximum-genindex-relations* 

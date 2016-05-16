@@ -166,6 +166,12 @@
 order in the MRS output routines and also determines the order
 of variables in the indexed representation")
 
+(defparameter *property-order*
+  (list
+   (vsym "SF") (vsym "TENSE") (vsym "MOOD") (vsym "PERF") (vsym "PROG")
+   (vsym "PERS") (vsym "NUM") (vsym "GEND") 
+   (vsym "IND") (vsym "DIV") (vsym "PT")))
+
 (defparameter *ignored-sem-features* `(,(vsym "IDIOMP")
                                        ,(vsym "LNK")
                                        ,(vsym "CFROM")
@@ -183,6 +189,24 @@ an MRS from a FS representation of an MRS")
     have no effect on the extracted MRS.  The values set here should
     correspond to the value of the pred - so they could be the
     type of the ep fs or the value of *rel-name-path*")
+
+;;;
+;;; finally, we are eliminating the symbol vs. string contrast on predicates;
+;;; whereas a grammar might use either one (or both, even for the abstractly
+;;; same predicate, e.g. _afterwards_p and "_afterwards_p" in the 1214 ERG),
+;;; these shall be treated as equivalent in the MRS universe.  also, we will
+;;; now always strip the (optional) *sem-relation-suffix* (‘_rel’ in the ERG)
+;;; from predicate names, as this is a mechanism on the TFS side only (to give
+;;; the grammar something like a separate namespace for its predicates).  in
+;;; the past, some MRS serializations suppressed the symbol vs. type contrast,
+;;; some exposed it; likewise, some stripped the suffix, and others kept it.
+;;; see the discussion on the ‘developers’ list from january 2016 for details.
+;;;
+;;; to make the transition into a better future less painful, we will preserve
+;;; the traditional behavior (still on by default) for at least a transition
+;;; period.  however, ERG 1214 will ship with predicate normalization enabled.
+;;;
+(defparameter *normalize-predicates-p* nil)
 
 ;;; types for variable naming in mrsoutput
 

@@ -258,6 +258,15 @@
                 :comment comment :shift shift
                 :separator separator :pseparator pseparator
                 :encoding encoding :meter rmeter))
+              (:lisp
+               (loop
+                   with items = (with-open-file (stream file) (read stream))
+                   with appendix
+                   = (pairlis '(:i-origin :i-register :i-difficulty :i-comment)
+                              (list origin register difficulty comment))
+                   for item in items
+                   do (nconc item appendix)
+                   finally (return items)))
               (:ptb
                (read-items-from-ptb-directory file :base base)) 
               (:conll

@@ -52,10 +52,12 @@
         (labels ((open-lnk ()
                    (case format
                      (:html (format stream "&lang;"))
+                     (:json (format stream "{"))
                      (t (format stream "<"))))
                  (close-lnk ()
                    (case format
                      (:html (format stream "&rang;"))
+                     (:json (format stream "}"))
                      (t (format stream ">")))))
           (case (first lnk)
             (:characters
@@ -64,19 +66,43 @@
                (when (and (numberp start) (numberp end)
                           (>= start 0) (>= end 0))
                  (open-lnk)
-                 (format stream "~a:~a" (second lnk) (third lnk))
+                 (case format
+                   (:json
+                    (format
+                     stream "\"from\": ~d, \"to\": ~d"
+                     (second lnk) (third lnk)))
+                   (t
+                    (format stream "~a:~a" (second lnk) (third lnk))))
                  (close-lnk))))
             (:vertices
              (open-lnk)
-             (format stream "~a#~a" (second lnk) (third lnk))
+             (case format
+               (:json
+                (format
+                 stream "\"start\": ~d, \"end\": ~d"
+                 (second lnk) (third lnk)))
+               (t
+                (format stream "~a#~a" (second lnk) (third lnk))))
              (close-lnk))
             (:tokens
              (open-lnk)
-             (format stream "~{~a~^ ~}" (rest lnk))
+             (case format
+               (:json
+                (format
+                 stream "\"tokens\": [~{~d~^, ~}]"
+                 (rest lnk)))
+               (t
+                (format stream "~{~a~^ ~}" (rest lnk))))
              (close-lnk))
             (:id
              (open-lnk)
-             (format stream "@~a" (second lnk))
+             (case format
+               (:json
+                (format
+                 stream "\"id\": ~d"
+                 (second lnk)))
+               (t
+                (format stream "@~a" (second lnk))))
              (close-lnk))))))
     (with-output-to-string (stream)
       (output-lnk lnk :stream stream :format format))))

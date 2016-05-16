@@ -343,7 +343,7 @@
   (declare (ignore properties type id))
   (when (and handel-val *rel-handel-path*)
     (with-slots (stream) mrsout
-      (format stream " LTOP: ~(~a~)" handel-val))))
+      (format stream " TOP: ~(~a~)" handel-val))))
 
 (defmethod mrs-output-index ((mrsout simple) index-val 
 			     &optional properties type id)
@@ -372,7 +372,7 @@
   (declare (ignore first-p class str))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
-    (if (stringp pred)
+    (if (and (stringp pred) (null *normalize-predicates-p*))
       (format stream "~VT[ ~s" indentation pred)
       (format stream "~VT[ ~(~a~)" indentation (or pred "_")))
     (output-lnk lnk :stream stream)))
@@ -498,7 +498,7 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
-    (lkb::add-mrs-pred-region stream pred)
+    (lkb::add-mrs-pred-region stream pred *normalize-predicates-p*)
     (output-lnk lnk :stream stream)))
 
 
@@ -1016,6 +1016,148 @@ higher and lower are handle-variables
      
 
 ;;; 
+;;; JSON output, using an alternative approach: the Common Lisp pretty printing
+;;; machinery, which gives us logical block structure and indentation.
+;;;
+(defun mrs-output-json (mrs &key (stream t)
+                                 (propertiesp t)
+                                 (columns *print-right-margin*)
+                                 prefix)
+  (if (null stream)
+    (with-output-to-string (stream)
+      (mrs-output-json 
+       mrs :stream stream :propertiesp propertiesp :columns columns))
+    (let ((label (psoa-top-h mrs))
+          (index (psoa-index mrs))
+          (variables nil)
+          (*print-right-margin* columns))
+      (when prefix (write-string prefix stream))
+      (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+        (when (var-p label)
+          (format
+           stream "\"top\": ~a, "
+           (mrs-variable-output-json label :objectp nil))
+          (pprint-newline :mandatory stream)
+          (pushnew label variables :test #'eq))
+        (when (var-p index)
+          (format
+           stream "\"index\": ~a, "
+           (mrs-variable-output-json index :objectp nil))
+          (pprint-newline :mandatory stream)
+          (pushnew index variables :test #'eq))
+        (format stream "\"relations\": ")
+        (pprint-newline :mandatory stream)
+        (pprint-logical-block (stream nil :prefix "[" :suffix "]")
+          (loop
+              with rels = (psoa-liszt mrs)
+              with last = (first (last rels))
+              for ep in rels
+              for label = (rel-handel ep)
+              for predicate = (rel-pred ep)
+              for lnk = (rel-lnk ep)
+              do
+                (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+                  (format
+                   stream "\"label\": ~a, \"predicate\": ~s, \"lnk\": "
+                   (mrs-variable-output-json label :objectp nil)
+                   predicate)
+                  (pushnew label variables :test #'eq)
+                  (output-lnk lnk :stream stream :format :json)
+                  (format stream ", \"arguments\":")
+                  (pprint-newline :fill stream)
+                  (format stream " ")
+                  (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+                    (loop
+                        with arguments = (rel-flist ep)
+                        with last = (first (last arguments))
+                        for argument in arguments
+                        for role = (fvpair-feature argument)
+                        for value = (fvpair-value argument)
+                        do
+                          (format
+                           stream "~s: ~a"
+                           (string-upcase role)
+                           (cond
+                            ((var-p value)
+                             (pushnew value variables :test #'eq)
+                             (mrs-variable-output-json value :objectp nil))
+                            (t
+                             (format nil "~s" (string value)))))
+                          (unless (eq argument last)
+                            (format stream ", ")
+                            (pprint-newline :fill stream)))))
+                (unless (eq ep last)
+                  (format stream ", ")
+                  (pprint-newline :fill stream))))
+        (format stream ",")
+        (pprint-newline :mandatory stream)
+        (format stream "\"constraints\": ")
+        (pprint-newline :mandatory stream)
+        (pprint-logical-block (stream nil :prefix "[" :suffix "]")
+          (loop
+              with hconss = (psoa-h-cons mrs)
+              with last = (first (last hconss))
+              for hcons in hconss
+              for high = (hcons-scarg hcons)
+              for low = (hcons-outscpd hcons)
+              do
+                (format
+                 stream "{\"relation\": \"qeq\", \"high\": ~a, \"low\": ~a}"
+                 (mrs-variable-output-json high :objectp nil)
+                 (mrs-variable-output-json low :objectp nil))
+                (pushnew high variables :test #'eq)
+                (pushnew low variables :test #'eq)
+                (unless (eq hcons last)
+                  (format stream ", ")
+                  (pprint-newline :fill stream))))
+        (format stream ",")
+        (pprint-newline :mandatory stream)
+        (format stream "\"variables\": ")
+        (pprint-newline :mandatory stream)
+        (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+          (loop
+              with last = (first (last variables))
+              for variable in variables
+              do 
+                (mrs-variable-output-json
+                 variable :objectp t :propertiesp propertiesp :stream stream)
+                (unless (eq variable last)
+                  (format stream ", ")
+                  (pprint-newline :fill stream))))))))
+
+(defun mrs-variable-output-json (variable
+                                 &key stream objectp (propertiesp t))
+  (if (null stream)
+    (with-output-to-string (stream)
+      (mrs-variable-output-json
+       variable :stream stream :objectp objectp :propertiesp propertiesp))
+    (cond
+     (objectp
+      (format
+       stream "\"~a~a\": "
+       (var-type variable) (var-id variable))
+      (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+        (format stream "\"type\": ~s" (var-type variable))
+        (when (and propertiesp (var-extra variable))
+          (format stream ", \"properties\": ")
+          (pprint-newline :fill stream)
+          (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+            (loop
+                with properties = (var-extra variable)
+                with last = (first (last properties))
+                for property in properties
+                do 
+                  (format
+                   stream "\"~a\": \"~(~a~)\"~@[, ~]"
+                   (extrapair-feature property)
+                   (extrapair-value property)
+                   (not (eq property last)))
+                (unless (eq property last)
+                  (pprint-newline :fill stream)))))))
+     (t
+      (format stream "\"~a~a\"" (var-type variable) (var-id variable))))))
+
+;;; 
 ;;; LaTeX output-type class
 ;;;
 (defun latex-escape-string (string)
@@ -1055,12 +1197,15 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-psoa ((mrs latex))
   (with-slots (stream) mrs
-    (format stream "\\sblock{")))
+    (format stream "\\siblock{")))
 
 (defmethod mrs-output-top-h ((mrs latex) handle
 			     &optional properties type id)
   (declare (ignore properties type))
   (with-slots (stream context) mrs
+    ;;
+    ;; temporarily prevent output of variable properties (top handle and index)
+    ;;
     (push :mute context)
     (when (and handle *rel-handel-path*)
       (format stream "\\sh{~a}}" id))))
@@ -1069,10 +1214,7 @@ higher and lower are handle-variables
 			     &optional properties type id)
   (declare (ignore properties))
   (with-slots (stream) mrs
-    ;;; :mute will still be in effect so no properties
-    ;;; will be output
-    (when index
-      (format stream "{\\svar{~a}{~a}{}}" type id))))
+    (when index (format stream "{\\svar{~a}{~a}{}}" type id))))
 
 (defmethod mrs-output-start-liszt ((mrs latex))
   (declare (special *already-seen-vars*))
@@ -1084,10 +1226,10 @@ higher and lower are handle-variables
   ;; AAC - included index now, as with other MRS output, following decision
   ;; 3017625 at the DELPH-IN Summit, but left the reset here
   ;; because better not to display the properties on the index in this
-  ;; format
+  ;; format.
+  ;;
   (setf *already-seen-vars* nil)
   (with-slots (stream context) mrs
-;;;    (format stream "}{%~%")
     (format stream "{%~%")
     (setf context nil)))
 
@@ -1815,13 +1957,14 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
        nil temporary-readtable))
     temporary-readtable))
 
-(defun mrs-check-for (character istream)
+(defun mrs-check-for (character istream &key optionalp)
    (let ((next-char (peek-char t istream nil 'eof)))
      (if (char-equal next-char character)
-         (read-char istream)
+       (read-char istream)
+       (unless optionalp
          (error
-                 "~%Syntax error: ~A expected and not found at position ~A" 
-                 character (file-position istream)))))
+          "~%Syntax error: ~A expected and not found at position ~A" 
+          character (file-position istream))))))
 
 
 
@@ -1881,7 +2024,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR
-  (mrs-check-for #\l istream)
+  (mrs-check-for #\l istream :optionalp t)
   (mrs-check-for #\t istream)
   (mrs-check-for #\o istream)
   (mrs-check-for #\p istream)
@@ -1963,7 +2106,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; or
 ;;; REL -> [ PREDNAME FEATPAIR* ]
   (mrs-check-for #\[ istream)
-  (let* ((relpred (read-mrs-atom istream))
+  (let* ((relpred (read-mrs-predicate istream))
          (lnk (read-lnk istream)))
     (when *rel-handel-path*
       (mrs-check-for #\l istream)
@@ -1983,7 +2126,11 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
               (push fvp featpairs)))))
       (make-rel :pred relpred :lnk lnk :handel hvar
                 :flist (sort featpairs #'feat-sort-func)))))
-          
+
+(defun read-mrs-predicate (stream)
+  (let ((pred (read-mrs-atom stream)))
+    (if *normalize-predicates-p* (normalize-predicate pred) pred)))
+      
 (defun read-mrs-featpair (istream)         
   ;; FEATPAIR -> FEATNAME: VAR | CFEATNAME: CONSTNAME
   (let ((feature (read-mrs-atom istream)))
