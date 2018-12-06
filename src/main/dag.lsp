@@ -1,4 +1,4 @@
-;;; Copyright (c) 1997--2002 
+;;; Copyright (c) 1997--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
