@@ -707,10 +707,7 @@
 ;;; NB These flipping inks cannot be constants since clim:make-flipping-ink
 ;;; does not guarantee EQ compile and load time results given the same arguments.
 ;;; Also, both args must be colors not inks themselves
-;;; *** temporary test, to allow this file to be loaded into an old LOGON LKB session
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (boundp '+magenta-flipping-ink+)
 (defparameter +magenta-flipping-ink+ 
     (clim:make-flipping-ink clim:+green+ clim:+white+))
 
@@ -728,7 +725,6 @@
 
 (defparameter +yellow-flipping-ink+ 
     (clim:make-flipping-ink clim:+blue+ clim:+white+))
-  ))
 
 (defun highlight-objects-mark (things frame)
   (let ((stream (clim:frame-standard-output frame)))
