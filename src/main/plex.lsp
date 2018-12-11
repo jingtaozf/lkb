@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2002
+;;; Copyright (c) 1998--2017
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -42,7 +42,7 @@
     (clrhash (slot-value lexicon 'psorts))
     (clrhash (slot-value lexicon 'stored-psorts)))
   (when (fboundp 'clear-lexicon-indices)
-    (funcall 'clear-lexicon-indices)))
+    (funcall (symbol-function 'clear-lexicon-indices))))
 
 (defmethod collect-expanded-lex-ids ((lexicon plob-lex-database))
   ;; useful for creating a subset of a lexicon which corresponds to a

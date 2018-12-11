@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2004 -- 2018 Stephan Oepen (oe@csli.stanford.edu)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -18,6 +18,12 @@
 
 (defvar %mrs%)
 
+(defun mrs-transfer-font ()
+  (clim:make-text-style :sans-serif :roman 10))
+
+(declaim (notinline mrs-transfer-font))
+
+
 (clim:define-application-frame mrs-transfer ()
   ((frames :initform nil :accessor mrs-transfer-frames :allocation :class)
    (edges :initform nil :accessor mrs-transfer-edges)
@@ -29,40 +35,69 @@
    (target :initform nil :accessor mrs-transfer-target :allocation :class)
    (stream :initform nil :accessor mrs-transfer-stream))
   (:panes
-   (top
-    (clim:outlining (:thickness 0)
-      (clim:spacing (:thickness 2)  
-        (clim:scrolling (:scroll-bars :both)
-          (clim:make-pane 
-           'clim:application-pane
-           :text-cursor nil
-           :end-of-line-action :allow
-           :end-of-page-action :allow
-           :borders nil
-           :incremental-redisplay t
-           :display-function 'show-mrs-transfer
-           :width 450 
-           :height 600)))))))
+    (mrs-transfer-pane
+      (clim:make-pane 'lkb::lkb-pane ; JAC 10-Dec-2018 - was clim:application-pane
+        :text-cursor nil
+        :end-of-line-action :allow
+        :end-of-page-action :allow
+        :borders nil
+        :text-style (mrs-transfer-font)
+        :background clim:+white+
+        :foreground clim:+black+
+        :incremental-redisplay t
+        :display-function 'show-mrs-transfer)))
+  (:layouts
+    (default
+      (clim:scrolling (:scroll-bars :both :width 500 :height 600)
+        mrs-transfer-pane))))
 
-(let ((lock (mp:make-process-lock)))
   
-  (define-mrs-transfer-command (com-close-mrs-transfer :menu "Close") 
-      ()
-    (mp:with-process-lock (lock)
-      (clim:with-application-frame (frame)
-        (setf (mrs-transfer-frames frame) 
-          (delete frame (mrs-transfer-frames frame)))
-        (clim:frame-exit frame))))
+;;; Bookkeeping for creating and closing frames
 
-  (define-mrs-transfer-command (com-close-all-mrs-transfer :menu "Close All") 
-      ()
-    (mp:with-process-lock (lock)
-      (clim:with-application-frame (frame)
-        (loop
-            for brother in (mrs-transfer-frames frame)
-            unless (eq brother frame) do
-              (clim:execute-frame-command brother '(com-close-mrs-transfer)))
-        (clim:execute-frame-command frame '(com-close-mrs-transfer))))))
+(defmethod clim:run-frame-top-level :before ((frame mrs-transfer) &key)
+  (mp:with-process-lock (lkb::*lkb-frame-lock*)
+    (push frame (mrs-transfer-frames frame))))
+
+(defmethod clim:frame-exit :before ((frame mrs-transfer)
+                                    #+:allegro &rest #+:allegro keys)
+  ;; !!! the &rest argument in Allegro CLIM is undocumented and conflicts with the CLIM 2 spec
+  #+:allegro (declare (ignore keys))
+  (mp:with-process-lock (lkb::*lkb-frame-lock*)
+    ;; if this frame was the last to be created then deregister it
+    (when (eq frame lkb::*last-frame*)
+      (setq lkb::*last-frame* nil))
+    (setf (mrs-transfer-frames frame) 
+      (delete frame (mrs-transfer-frames frame)))))
+
+(defmethod initialize-instance :around ((frame mrs-transfer) &rest initargs)
+  (if lkb::*manage-window-placement*
+    (multiple-value-bind (left top width height)
+        (lkb::compute-frame-position-and-size frame)
+      (apply #'call-next-method
+        frame :left left :top top :width width :height height initargs))
+    (call-next-method)))
+
+
+;;; Frame commands
+
+(define-mrs-transfer-command (com-close-mrs-transfer :menu "Close") 
+    ()
+  (mp:with-process-lock (lkb::*lkb-frame-lock*)
+    (clim:with-application-frame (frame)
+     (clim:frame-exit frame))))
+
+(define-mrs-transfer-command (com-close-all-mrs-transfer :menu "Close All") 
+    ()
+  (mp:with-process-lock (lkb::*lkb-frame-lock*)
+    (clim:with-application-frame (frame)
+     (let ((frames (mrs-transfer-frames frame)))
+       (loop
+         for brother in (mrs-transfer-frames frame)
+         unless (eq brother frame) do
+           (clim:execute-frame-command brother '(com-close-mrs-transfer)))
+       ;; short delay so front window close does not overtake ones beneath (if any)
+       (when (cdr frames) (sleep 0.2))
+       (clim:execute-frame-command frame '(com-close-mrs-transfer))))))
 
 
 (define-mrs-transfer-command (com-previous-mrs-transfer :menu "Previous")
@@ -144,36 +179,34 @@
 (define-mrs-transfer-command (com-transfer-mrs-debug :name "Debug" :menu t)
     ()
   (clim:with-application-frame (frame)
-    (let ((command (clim:menu-choose
-                    '(("Test" :value :test :active t)
-                      ("Scope" :value :scope :active t)
-                      ("UTool" :value :utool :active t)
-                      ("Simple" :value :mrs :active t)
-                      ("Indexed" :value :indexed :active t)
-                      ("Dependencies" :value :dependencies :active t)
-                      ("Fragment" :value :fragment :active t)
-                      ("Sort" :value :sort :active t)
-                      ("Step" :value :step :active t)
-                      #+:allegro
-                      ("Clone" :value :clone :active t)
-                      ("Save" :value :save :active t)
-                      #+:allegro
-                      ("Edit" :value :edit :active t)
-                      ("Read" :value :read :active t)
-                      ("Print" :value :print :active t)
-                      ("LaTeX" :value :latex :active t)
-                      ("Rule" :value :rule :active t)
-                      ("Select" :value :select :active t)
-                      ("Contrast" :value :contrast :active t)
-                      #+:null
-                      ("Apply" :value :apply :active t)
-                      #+:null
-                      ("Trace" :value :trace :active t)
-                      #+:null
-                      ("Untrace" :value :untrace :active t)))))
-      (case command
-
-        (:test
+    (lkb::pop-up-menu
+      '(("Test" :value :test)
+        ("Scope" :value :scope)
+        ("UTool" :value :utool)
+        ("Simple" :value :mrs)
+        ("Indexed" :value :indexed)
+        ("Dependencies" :value :dependencies)
+        ("Fragment" :value :fragment)
+        ("Sort" :value :sort)
+        ("Step" :value :step)
+        #+:allegro
+        ("Clone" :value :clone)
+        ("Save" :value :save)
+        #+:allegro
+        ("Edit" :value :edit)
+        ("Read" :value :read)
+        ("Print" :value :print)
+        ("LaTeX" :value :latex)
+        ("Rule" :value :rule)
+        ("Select" :value :select)
+        ("Contrast" :value :contrast)
+        #+:null
+        ("Apply" :value :apply)
+        #+:null
+        ("Trace" :value :trace)
+        #+:null
+        ("Untrace" :value :untrace))
+      (:test
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -182,7 +215,7 @@
                 (title (format nil "~a - Cheap Scope" (transfer-title frame))))
            (browse-mrss (list mrs) title)))
 
-        (:scope
+      (:scope
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -190,7 +223,7 @@
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-scoped-window nil mrs title)))
         
-        (:utool
+      (:utool
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -198,15 +231,15 @@
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-utool-window nil mrs title)))
 
-        (:mrs
+      (:mrs
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
                 (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
                 (title (format nil "~a - MRS" (transfer-title frame))))
            (lkb::show-mrs-window nil mrs title)))
-        
-        (:indexed
+
+      (:indexed
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -214,7 +247,7 @@
                 (title (format nil "~a - Indexed" (transfer-title frame))))
            (lkb::show-mrs-indexed-window nil mrs title)))
 
-        (:dependencies
+      (:dependencies
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -223,7 +256,7 @@
                  (format nil "~a - Dependencies" (transfer-title frame))))
            (lkb::show-mrs-dependencies-window nil mrs title)))
         
-        (:fragment
+      (:fragment
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -234,7 +267,7 @@
            (when fragments
              (browse-mrss fragments title))))
 
-        (:sort
+      (:sort
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -244,14 +277,14 @@
            (when mrs
              (browse-mrss (list (mrs::sort-mrs mrs)) title))))
         
-        (:step
+      (:step
          (let* ((edge (nth (mrs-transfer-i frame) 
                            (or (mrs-transfer-stack frame)
                                (mrs-transfer-edges frame)))))
            (browse-mrss edge "Transfer Debug")))
 
-        #+:allegro
-        (:clone
+      #+:allegro
+      (:clone
          (let ((meta (class-of frame))
                (new (clim:make-application-frame 'mrs-transfer)))
            (loop
@@ -265,7 +298,6 @@
             #'(lambda ()
                 (setf (clim:frame-pretty-name new) 
                   (or (transfer-title new) "Transfer Input"))
-                (push frame (mrs-transfer-frames new))
                 (clim:run-frame-top-level new))))
          ;;
          ;; _fix_me_
@@ -279,7 +311,7 @@
            (browse-mrss 
             (mrs-transfer-edges frame) (mrs-transfer-title frame))))
 
-        (:save
+      (:save
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -300,7 +332,7 @@
                "~&browse-mrss(): saved current view to `~a'.~%"
                file)))))
 
-        (:edit
+      (:edit
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -324,57 +356,26 @@
               (lep::eval-in-emacs 
                (format nil "(rogue-find-file \"~a\")" file))))))
 
-        (:read
+      (:read
          (let ((file 
                 (format nil "/tmp/transfer.debug.~a" (lkb::current-user))))
            (if (probe-file file)
              (ignore-errors
-              (with-open-file (stream file :direction :input)
-                (let ((mrs (mrs::read-mrs-from-file file)))
-                  (when (mrs::psoa-p mrs)
-                    #-:debug
-                    (setf %mrs% mrs)
-                    (browse-mrss (list mrs))))))
+              (let ((mrs (mrs::read-mrs-from-file file)))
+                (when (mrs::psoa-p mrs)
+                  #-:debug
+                  (setf %mrs% mrs)
+                  (browse-mrss (list mrs)))))
              (format
               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): unable to open `~a'.~%"
               file))))
 
-        (:print
-         (multiple-value-bind (destination orientation scale name)
-             (lkb::get-print-options)
-           (case destination
-             (:printer (format t "~%Direct Printing Not Yet Supported"))
-             (:file	
-              (when (or (not (probe-file name))
-                        (clim:notify-user 
-                         frame
-                         (format 
-                          nil 
-                          "File ~a exists.~%Overwrite?" 
-                          name)
-                         :style :question))
-                (handler-case
-                    (with-open-file (output name 
-                                     :direction :output 
-                                     :if-exists :supersede)
-                      (clim:with-output-to-postscript-stream 
-                          (stream output 
-                                  :scale-to-fit (not scale) 
-                                  :multi-page scale
-                                  :orientation orientation)
-                        (funcall (clim-internals::pane-display-function 
-                                  (clim-internals::find-frame-pane-of-type 
-                                   frame 'clim:application-pane))
-                                 frame stream)))
-                  (storage-condition (condition)
-                    (format t "~%Memory allocation problem: ~A~%" condition))
-                  (error (condition)
-                    (format t "~%Error: ~A~%" condition))
-                  (serious-condition (condition)
-                    (format t "~%Something nasty: ~A~%" condition))))))))
+      (:print
+         (print-pane-to-postscript
+           frame (clim:find-pane-named frame 'mrs-transfer-pane)))
 
-        (:latex
+      (:latex
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -395,9 +396,9 @@
                "~&browse-mrss(): (LaTeX) saved current view to `~a'.~%"
                file)))))
 
-        (:rule (interactively-browse-mtr frame))
+      (:rule (interactively-browse-mtr frame))
 
-        (:select
+      (:select
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
@@ -409,7 +410,7 @@
               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): current view now active as selection.~%"))))
 
-        (:contrast
+      (:contrast
          (cond
           ((mrs-transfer-target frame)
            (let* ((mrs (nth (mrs-transfer-i frame) 
@@ -448,7 +449,7 @@
            (clim:beep)
            (format
             #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
-            "~&browse-mrss(): no active MRS selection.~%"))))))))
+            "~&browse-mrss(): no active MRS selection.~%")))))))
 
 
 
@@ -463,30 +464,29 @@
          (*package* (find-package :lkb))
          (*print-right-margin* 80))
     (clim:formatting-table (stream)
-      (clim:with-text-style (stream (mrs-transfer-font))
-        (when (edge-rule edge)
-          (clim:formatting-row (stream)
-            (clim:formatting-cell (stream :align-x :left)
-              (let ((mrs::*mrs-raw-output-p* nil)
-                    (%transfer-raw-output-p% nil))
-                (format stream "~a~%" edge))))
-          (clim:formatting-row (stream)
-            (clim:formatting-cell (stream :align-x :left)
-              (format stream "~%~%"))))
+      (when (edge-rule edge)
         (clim:formatting-row (stream)
-          (let ((record 
-                 (clim:formatting-cell (stream :align-x :left)
-                   (if mrs
-                     (mrs::output-mrs1 mrs 'mrs::simple stream)
-                     (format 
+          (clim:formatting-cell (stream :align-x :left)
+            (let ((mrs::*mrs-raw-output-p* nil)
+                    (%transfer-raw-output-p% nil))
+              (format stream "~a~%" edge))))
+        (clim:formatting-row (stream)
+          (clim:formatting-cell (stream :align-x :left)
+            (format stream "~%~%"))))
+      (clim:formatting-row (stream)
+        (let ((record 
+                (clim:formatting-cell (stream :align-x :left)
+                  (if mrs
+                    (mrs::output-mrs1 mrs 'mrs::simple stream)
+                    (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (when (and (fragmentp mrs) (not (edge-source edge)))
-              (lkb::recolor-record record clim::+blue+))
-            (when (and (edge-semi edge) (null (edge-source edge)))
-              (lkb::recolor-record record clim:+magenta+))
-            (when (edge-source edge)
-              (lkb::recolor-record record clim:+red+))))))))
+          (when (and (fragmentp mrs) (not (edge-source edge)))
+            (lkb::recolor-record record clim::+blue+))
+          (when (and (edge-semi edge) (null (edge-source edge)))
+            (lkb::recolor-record record clim:+magenta+))
+          (when (edge-source edge)
+            (lkb::recolor-record record clim:+red+)))))))
 
 (defun transfer-title (frame)
   (let* ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame)))
@@ -586,39 +586,31 @@
                   else collect (make-edge :mrs edge)))))
          (setf (clim:frame-pretty-name frame) 
            (or (transfer-title frame) "Transfer Input"))
-         (push frame (mrs-transfer-frames frame))
          (clim:run-frame-top-level frame)))))
 
 (let (previous)
-  (defun interactively-browse-mtr (frame)
+  (defun interactively-browse-mtr (frame &optional (prompt ""))
     (let* ((rules
             (loop
                 for mtrs in *transfer-rule-sets*
                 append (loop for mtr in (mtrs-mtrs mtrs) collect mtr)))
-           (names (loop for rule in rules collect (mtr-id rule)))
-           (names (sort names #'string-lessp)))
-      (declare (dynamic-extent rules names))
+           (names
+            (sort (loop for rule in rules collect (mtr-id rule)) #'string-lessp)))
       (let ((selection
-             (lkb::with-package (:lkb)
-               (lkb::ask-for-lisp-movable 
-                "Transfer Rule Selection" 
-                `(("MTR Identifier" . ,(or previous (first names))))
-                150 names))))
+              (lkb::ask-for-lisp-movable
+                "Current Interaction"
+                `((,(format nil "~A~%MTR Identifier?" prompt) . ,(or previous (first names))))
+                nil names)))
         (when selection
           (let* ((id (first selection))
-                 (mtr (loop 
-                          for mtr in rules 
-                          when (eq (mtr-id mtr) id) return mtr)))
+                 (mtr (find id rules :key #'mtr-id)))
             (unless mtr
-              (clim:beep)
               (format
                #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
                "~&interactively-browse-mtr(): `~a' undefined.~%"
                id)
               (return-from interactively-browse-mtr
-                (interactively-browse-mtr frame)))
+                (interactively-browse-mtr frame (format nil "~A is not defined." id))))
             (browse-mrss mtr)
             (setf previous id)))))))
 
-(defun mrs-transfer-font ()
-  '(:sans-serif :roman 10))

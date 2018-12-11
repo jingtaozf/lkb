@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2006
+;;; Copyright (c) 1991-2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,Ben Waldron
 ;;;   see `LICENSE' for conditions.
 
@@ -432,15 +432,15 @@
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
 
-#+(or :allegro :lispworks)
+#+(or :allegro :lispworks :ccl :sbcl)
 (defvar *parser-lock* (mp:make-process-lock))
 
 (defmacro with-parser-lock ((&optional foo) &body body)
   (declare (ignore foo))
-  #+(or :allegro :lispworks)
+  #+(or :allegro :lispworks :ccl :sbcl)
   `(mp:with-process-lock (*parser-lock*)
      ,@body)
-  #-(or :allegro :lispworks)
+  #-(or :allegro :lispworks :ccl :sbcl)
   `(progn ,@body))
 
 ;;;
@@ -711,14 +711,14 @@
                 (loop 
                     until (empty-heap *agenda*)
                     do (funcall (heap-extract-max *agenda*)))))
+            ;; record time for parse forest construction, before attempting to extract parses
+            (push (get-internal-run-time) *parse-times*)
+            ;; in first-only parsing (passive or active mode) the parse loop will already
+            ;; have found a complete parse - if there is one
             (unless first-only-p
-              ;;
-              ;; best-first (passive or active mode) has already done this
-              ;; incrementally in the parse loop
-              ;;
-              (setf *parse-record* 
-                (find-spanning-edges *minimal-vertex* *maximal-vertex*))))
-          (push (get-internal-run-time) *parse-times*))
+              (setq *parse-record* 
+                (parses-from-spanning-edges
+                  (find-spanning-edges *minimal-vertex* *maximal-vertex*))))))
         (when show-parse-p (show-parse))
         (values
          (statistics-etasks *statistics*)
@@ -745,6 +745,26 @@
   (and (stringp input) 
        (> (length input) 4)
        (string= "<?xml" (subseq input 0 5))))
+
+(defun parses-from-spanning-edges (edges)
+  ;; to avoid futile work in unpacking, filter edges before as well as after - it's safe
+  ;; to test packed edges against the start symbols using unification, but we can only
+  ;; check the additional root condition on unpacked parses because a check that goes
+  ;; beyond just unification could potentially return false on a parse forest root but
+  ;; true on a (more specific) analysis packed into that root
+  (declare (special *chart-packing-p*))
+  (let ((start-symbols
+            (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
+    (if *chart-packing-p*
+        (let ((mrs:*lnkp* nil))
+          (declare (special mrs:*lnkp*))
+          ;; turn off *lnkp* in unpacking otherwise during extract-mrs, extract-lnk-from-rel-fs
+          ;; may succeed but retrieve an incomplete span specification, e.g. (:characters 39) 
+          (compute-root-edges
+            (unpack-edges
+              (loop for edge in edges nconc (filter-root-edges edge start-symbols nil)))
+            start-symbols))
+        (compute-root-edges edges start-symbols))))
 
 ;;; *****************************************************
 ;;;
@@ -783,9 +803,9 @@
   (let ((*safe-not-to-copy* nil))
     (setf *safe-not-to-copy* *safe-not-to-copy*) ;; to avoid compiler warning
     (let* ((replace-alist (list (cons 'cfrom  
-				      (format nil "~A" cfrom))
+				      (if (null cfrom) "NIL" (princ-to-string cfrom)))
 				(cons 'cto  
-				      (format nil "~A" cto)))))
+				      (if (null cto) "NIL" (princ-to-string cto))))))
 	     ;;; need to restrict replacement to the RELS list
 	     ;;; otherwise get MSG clashes
       (replace-dag-types indef-dag 
@@ -2046,16 +2066,15 @@ an unknown word, treat the gap as filled and go on from there.
     (push config (aref *chart* right 0))
     ;; index chart edges by the start vertex too
     (push config (aref *chart* left 1))
-    ;; Did we just find a parse?
+    ;; are we in best-first mode and did we just find a spanning config?
     (when (and f (eql left (car f))
-	       (eql right (cdr f)))
-      (let ((result (find-spanning-edge config (car f) (cdr f))))
-        (when result
-          (push (get-internal-run-time) *parse-times*)
-          (setf *parse-record* (nconc result *parse-record*))
-          (when *first-only-p*
-            (when (zerop (decf *first-only-p*))
-              (throw :best-first t))))))))
+	       (eql right (cdr f))
+               (not (edge-partial-tree edge)))
+      (let ((results (parses-from-spanning-edges (list edge))))
+        (when results
+          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
+          (when (<= (decf *first-only-p* (length results)) 0)
+            (throw :best-first t)))))))
 
 
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
@@ -2324,95 +2343,74 @@ an unknown word, treat the gap as filled and go on from there.
 ;;; **********************************************************
 
 (defun find-spanning-edges (start-vertex end-vertex)
-  ;; Returns all edges between two vertices and checks for root conditions -
-  ;; used to see if a parse has been found.
-  (let ((start-symbols (if (listp *start-symbol*)
-			   *start-symbol*
-			 (list *start-symbol*)))
-	(configs (aref *chart* end-vertex 0)))
-      (loop for item in configs
-	   append
-	    (when 
-		(and (eql (chart-configuration-begin item) start-vertex)
-		     (not (edge-partial-tree (chart-configuration-edge item))))
-	     ;; root may be a list of (td)fs with the interpretation that
-	     ;; if any of them match the parse is OK
-	     (if (null start-symbols)
-		 (list (chart-configuration-edge item))
-	       (if *substantive-roots-p*
-		   (create-new-root-edges item start-symbols
-					  start-vertex end-vertex)
-		 (filter-root-edges item start-symbols)))))))
+  ;; return all edges between start and end vertices
+  (loop
+    for item in (aref *chart* end-vertex 0)
+    when 
+      (and (eql (chart-configuration-begin item) start-vertex)
+	   (not (edge-partial-tree (chart-configuration-edge item))))
+    collect (chart-configuration-edge item)))
 
-;; Decide if a single edge is a successful parse (when looking for the
-;; first parse only).
-
-(defun find-spanning-edge (item start-vertex end-vertex)
-  (when (and (eql (chart-configuration-begin item) start-vertex)
-	     (not (edge-partial-tree (chart-configuration-edge item))))
-    (let ((start-symbols (if (listp *start-symbol*)
-                           *start-symbol*
-                           (list *start-symbol*))))
-      (if (null start-symbols)
-        (list (chart-configuration-edge item))
-        (if *substantive-roots-p*
-	  (create-new-root-edges item start-symbols start-vertex end-vertex)
-          (filter-root-edges item start-symbols))))))
+(defun compute-root-edges (edges roots)
+  ;; for any edges that satisfy the root condition(s) return their corresponding
+  ;; complete parses
+  ;; roots may be a list of (td)fs with the interpretation that if any of them
+  ;; match then this is OK as a parse
+  (if roots
+      (loop
+         for edge in edges
+         nconc
+         (if *substantive-roots-p*
+	     (create-new-root-edges edge roots)
+             (filter-root-edges edge roots t)))
+      edges))
 
 (defparameter *additional-root-condition* nil
   "defined in mrs/idioms.lisp")
 
-(defun filter-root-edges (item roots)
-  (loop
-      with edge = (if (edge-p item) item (chart-configuration-edge item))
-      with tdfs = (edge-dag edge)
-      for root in roots
-      for rtdfs = (get-tdfs-given-id root) 
-		  ;; might be a type
-		  ;; or a root entry
-      thereis (when 
-                  (and tdfs rtdfs 
-                       (yaduablep rtdfs tdfs)
-                       (if *additional-root-condition*
-                           (funcall *additional-root-condition* tdfs)
-                         t))
-                (list edge))))
+(defun filter-root-edges (edge roots &optional (full-check-p t))
+  ;; NB despite the name of the function, the 1st arg is definitely a single edge
+  ;; if full-check-p is nil, skip any additional root condition test
+  ;; adding a quick check here tends to filter out very few candidates
+  (and
+    (loop
+       for root in roots
+       for rtdfs = (get-tdfs-given-id root) ; might be a type or a root entry
+       thereis
+       (and rtdfs (yaduablep rtdfs (edge-dag edge))))
+    (if (and full-check-p *additional-root-condition*)
+        (funcall *additional-root-condition* (edge-dag edge))
+        t)
+    (list edge)))
 
 ;;; FIX - can't really have substantive-roots-p and idioms
 ;;; need to stop it being set if idioms are loaded
 
-(defun create-new-root-edges (item start-symbols start-vertex end-vertex)
-  (loop for start-symbol in start-symbols        
-       nconc
-       (let ((rtdfs (get-tdfs-given-id 
-                    start-symbol)))
-         (if rtdfs
-            (let ((unif
-                    (yadu rtdfs
-                          (edge-dag 
-                            (chart-configuration-edge item)))))
-               (if unif
-                   (let ((new-edge
-                          (make-edge :dag (copy-tdfs-elements unif)
-                                     :id (next-edge)
-                                     :category
-                                     (indef-type-of-tdfs unif)
-                                     :rule start-symbol
-                                     :children 
-                                     (list (chart-configuration-edge item))
-                                     :lex-ids (edge-lex-ids
-                                               (chart-configuration-edge item))
-                                     :leaves
-                                     (edge-leaves 
-                                      (chart-configuration-edge item))
-                                     :from start-vertex
-                                     :to end-vertex)))
-                     (add-to-chart start-vertex
-                                   new-edge
-                                   end-vertex
-				   ;; Don't (recursively) check for success
-				   nil)
-                     (list new-edge))))))))
+(defun create-new-root-edges (edge roots)
+  (loop
+      with tdfs = (edge-dag edge)
+      for root in roots
+      for rtdfs = (get-tdfs-given-id root) ; might be a type or a root entry
+      nconc
+      (when rtdfs
+         (let ((unif (yadu rtdfs tdfs)))
+            (when unif
+                 (let ((new-edge
+                         (make-edge :dag (copy-tdfs-elements unif)
+                                    :id (next-edge)
+                                    :category (indef-type-of-tdfs unif)
+                                    :rule root
+                                    :children (list edge)
+                                    :lex-ids (edge-lex-ids edge)
+                                    :leaves (edge-leaves edge)
+                                    :from (edge-from edge)
+                                    :to (edge-to edge))))
+                   (add-to-chart (edge-from edge)
+                                 new-edge
+                                 (edge-to edge)
+			         ;; Don't (recursively) check for success
+			         nil)
+                   (list new-edge)))))))
 
 ;;; ***************************************************************
 ;;;
@@ -2550,10 +2548,6 @@ an unknown word, treat the gap as filled and go on from there.
 (defun parse-sentences (&optional input-file (output-file 'unspec) &key rest)
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
-   ;; if xml input assume SAF XML
-   (when (file-xml-p input-file)
-     (return-from parse-sentences
-       (apply #'process-saf-file-sentences (cons input-file rest))))
    (when
       (and input-file
            (or (probe-file input-file)
@@ -2561,6 +2555,10 @@ an unknown word, treat the gap as filled and go on from there.
                  (show-message-window 
                   (format nil "Input file `~a' does not exist" input-file))
                  (return-from parse-sentences))))
+      ;; if xml input assume SAF XML
+      (when (file-xml-p input-file)
+         (return-from parse-sentences
+           (apply #'process-saf-file-sentences (cons input-file rest))))
       (with-open-file (istream input-file :direction :input)
          (if (eq output-file 'unspec)
            (setq output-file 
@@ -2568,7 +2566,7 @@ an unknown word, treat the gap as filled and go on from there.
            (if (equal input-file output-file)
                (progn
                  (show-message-window 
-                  (format nil "Attempt to overwrite input file `~a'"input-file))
+                  (format nil "Attempt to overwrite input file `~a'" input-file))
                  (return-from parse-sentences))))
          (unless output-file (return-from parse-sentences))
          (let ((line (read-line istream nil 'eof)))
@@ -2610,10 +2608,11 @@ an unknown word, treat the gap as filled and go on from there.
            (unless (fboundp *do-something-with-parse*)
              (when ostream
                (format ostream "~%;;; Total CPU time: ~A msecs~%" 
-                       (- (get-internal-run-time) start-time))
-               (format ostream "~%;;; Mean edges: ~,2F~%" 
+                       (round (* (- (get-internal-run-time) start-time) 1000)
+                       	      internal-time-units-per-second))
+               (format ostream ";;; Mean edges: ~,2F~%" 
                        (/ edge-total nsent))
-               (format ostream "~%;;; Mean parses: ~,2F~%" 
+               (format ostream ";;; Mean parses: ~,2F~%" 
                        (/ parse-total nsent))))
            (lkb-beep)
            (return))
@@ -2640,7 +2639,7 @@ an unknown word, treat the gap as filled and go on from there.
                     (finish-output ostream)))
                  (let* ((munged-string 
                          (if (fboundp 'preprocess-sentence-string)
-                             (preprocess-sentence-string sentence)
+                             (funcall (symbol-function 'preprocess-sentence-string) sentence)
                            sentence))
                         (user-input (split-into-words munged-string))
                         (*dag-recycling-p* t))

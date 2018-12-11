@@ -37,7 +37,7 @@
 (defun add-type-and-active-fs-region (stream start-pos 
       type-label-list val shrunk-p atomic-p &optional top-box full-tdfs)
    (declare (ignore full-tdfs))
-   (with-bold-output stream (format stream "~(~A~)" val))
+   (with-text-style-bold-face (stream) (format stream "~(~A~)" val))
    (add-active-fs-region stream start-pos type-label-list val shrunk-p atomic-p 
      top-box))
 
@@ -167,7 +167,7 @@
 
 (defun display-active-psort (psort ostream)
    (let ((start-pos (current-position ostream)))
-      (with-bold-output ostream
+      (with-text-style-bold-face (ostream)
         (format ostream "~A  " psort))
       (cg-user::add-fs-region-record ostream 
        (create-box-for-fs-region start-pos 
@@ -183,7 +183,7 @@
    (loop for parent in parents
       do
      (let ((start-pos (current-position ostream)))
-        (with-bold-output ostream
+        (with-text-style-bold-face (ostream)
           (format ostream "~(~A~)   " parent))           
         (cg-user::add-fs-region-record ostream
          (create-box-for-fs-region start-pos 
@@ -411,7 +411,7 @@
 
 
 
-;;; *** the title or top pop up menu ****
+;;; **** the title or top pop up menu ****
 
 (defun top-fs-action (stream fs-record name)
   (declare (ignore stream name)) 
@@ -516,7 +516,7 @@
                (with-package (:lkb)
                (ask-for-lisp-movable "Current Interaction" 
                   `(("Lex-id?" . ,psort-name))
-                  150))))                         
+                  nil))))                         
             (unless psort-name (return))
             (if
                (store-temporary-psort psort-name fs)

@@ -1,6 +1,6 @@
 ;;; Hey, emacs(1), this is -*- Mode: Common-Lisp; Package: MRS; -*- got it?
 
-;;; Copyright (c) 1998--2003
+;;; Copyright (c) 1998--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -42,9 +42,15 @@
 
 (defconstant *mrs-package* :lkb)
 
+(let ((vsym-cache (make-hash-table :test #'equalp)))
 (defun vsym (str) 
-  ;;; allow mrsglobals files to be system independent
-  (intern (string-upcase str) *mrs-package*))
+  ;; allow mrsglobals files to be system independent
+  ;; implemented as a memo function since it is called a lot
+  ;; *mrs-package* is a constant - since it can't change we don't need to worry about
+  ;; the cache contents ever becoming invalid 
+  (or (gethash str vsym-cache)
+    (setf (gethash str vsym-cache) (intern (string-upcase str) *mrs-package*))))
+)
 
 ;;;
 ;;; the following functions are basically accessors for those parts of feature

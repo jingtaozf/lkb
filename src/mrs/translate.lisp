@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2002 
+;;; Copyright (c) 1998--2016 
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -184,6 +184,8 @@
       (system:getenv "USER")
       #+(and :mcl :powerpc) 
       (ccl:process-name ccl:*current-process*)
+      #+:ccl
+      (user-name)
       #+:lucid 
       (lcl:environment-variable "USER")
       #+:sbcl

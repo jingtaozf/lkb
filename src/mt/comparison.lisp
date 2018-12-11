@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2016 Stephan Oepen (oe@ifi.uio.no)
+;;; Copyright (c) 2004 -- 2018 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -276,20 +276,29 @@
       (= constant1 constant2))
      (t (compare-types constant1 constant2 :type type))))
 
+(let ((compare-cache (make-hash-table :test #'equalp)))
 (defun compare-types (type1 type2 &key internp type)
+  ;; the string->symbol conversion is memoised since may be called a lot
+  ;; *mrs-package* is a constant - since it can't change we don't need to worry about
+  ;; the cache contents ever becoming invalid 
   (or (eq type1 type2)
       (and (stringp type1) (stringp type2) (string-equal type1 type2))
       (ignore-errors
        (let ((type1 (if internp
-                      (intern (string-upcase type1) mrs:*mrs-package*)
+                      (or (gethash type1 compare-cache)
+                          (setf (gethash type1 compare-cache)
+                                (intern (string-upcase type1) mrs:*mrs-package*)))
                       type1))
              (type2 (if internp
-                      (intern (string-upcase type2) mrs:*mrs-package*)
+                      (or (gethash type2 compare-cache)
+                          (setf (gethash type2 compare-cache)
+                                (intern (string-upcase type2) mrs:*mrs-package*)))
                       type2)))
          (when (and (mrs:is-valid-type type1) (mrs:is-valid-type type2))
            (if (eq type :subsumption)
              (mrs:equal-or-subtype type1 type2)
              (eq type1 type2)))))))
+)
 
 (defun lookup-variable (variable solution)
   (getf (solution-variables solution) variable))

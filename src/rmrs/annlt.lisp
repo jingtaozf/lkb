@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003--2004
+;;; Copyright (c) 2003--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -363,9 +363,9 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
   ;;; extract 19
   (if *rasp-xml-word-p*
       (let ((first-s (position #\s str)))
-	(if (and first-s ; *** jac 8/11/04
+	(if (and first-s ; JAC 8/11/04
 	         (char= (elt str (+ 1 first-s)) #\=)
-		 (member (elt str (+ 2 first-s)) '(#\" #\'))) ; *** jac 22/9/04
+		 (member (elt str (+ 2 first-s)) '(#\" #\'))) ; JAC 22/9/04
 	    (let ((spec-num
 		   (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
 	      (if (and spec-num 
@@ -387,7 +387,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
   (if *rasp-xml-word-p*
       (let ((first-e (position #\e str)))
 	(if (and (char= (elt str (+ 1 first-e)) #\=)
-		 (member (elt str (+ 2 first-e)) '(#\" #\'))) ; *** jac 22/9/04
+		 (member (elt str (+ 2 first-e)) '(#\" #\'))) ; JAC 22/9/04
 	    (let ((spec-num
 		   (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
 	      (if (and spec-num 

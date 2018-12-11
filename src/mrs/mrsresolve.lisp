@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2017 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 ;;; Functions for checking MRS stuctures and outputting
@@ -992,15 +992,18 @@ or modulo some number of quantifiers
 (defvar *mrs-right-margin* 50)
 
 (defun output-scoped-mrs (mrs &key (stream t))
-  (format stream "~%")
+  (terpri stream)
   (let* ((top-handel (get-true-var-num (psoa-top-h mrs)))
          (rel-list (psoa-liszt mrs)))
     (setf *output-scope-errors* nil)
-    (output-scoped-rels top-handel rel-list stream nil 0)
+    (princ
+      (with-output-to-string (s) ; buffer it for efficiency since could be 1000's of scopes
+        (output-scoped-rels top-handel rel-list s nil 0))
+      stream)
     (when *output-scope-errors*
       (unless (or *giving-demo-p* *debug-scoping*)
         (format t "~%WARNING: unconnected structure passed to output-scoped-mrs")))
-    (format stream "~%")))
+    (terpri stream)))
 
 (defun output-scoped-rels (top-handel rel-list stream handels-so-far width)
   (if (member top-handel handels-so-far)
@@ -1021,11 +1024,11 @@ or modulo some number of quantifiers
                    (output-scoped-rel (car top-rels) rel-list stream 
                                       (cons top-handel handels-so-far) width))
             (if (cdr top-rels)
-                (progn (format stream " /~A " #\\)
+                (progn (format stream " /\\ ")
                        (setf width (+ 4 width))
                        (setf top-rels (cdr top-rels))
                        (when (> width *mrs-right-margin*)
-                         (format stream "~%")
+                         (terpri stream)
                          (setf width 0)))
               (return)))
         (setf *output-scope-errors* t))))
@@ -1036,7 +1039,7 @@ or modulo some number of quantifiers
   (let ((need-comma nil)
         (current-string nil))
     (when (> width *mrs-right-margin*)
-      (format stream "~%")
+      (terpri stream)
       (setf width 0))
     (setf current-string
       (format nil "~A(" 

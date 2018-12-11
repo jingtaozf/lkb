@@ -1,4 +1,4 @@
-;; Copyright (c) 2006
+;; Copyright (c) 2006--2017
 ;;;   Ben Waldron;
 ;;; see `LICENSE' for conditions.
 
@@ -67,8 +67,7 @@
 	(return
 	  (get-output-stream-string strm))))
 
-;; remove 
- from end of line
+;; remove LF from end of line
 ;; (for use with telnet client)
 (defun clean-line (line)
   (when (stringp line)

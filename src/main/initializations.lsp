@@ -1,4 +1,4 @@
-;;; Copyright (c) 1999--2002
+;;; Copyright (c) 1999--2017
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -46,8 +46,10 @@
 ;;; not used in LKB code but required by some grammar loading stuff
 (defparameter *grammar-directory* nil)
 
+#-:allegro (defparameter *initial-terminal-io* *terminal-io*)
+
 (defparameter *lkb-background-stream*
-  #-:allegro *terminal-io*
+  #-:allegro *initial-terminal-io*
   #+:allegro excl::*initial-terminal-io*)
 
 (import '(enable-type-interactions disable-type-interactions))
@@ -90,15 +92,15 @@
    #-:allegro
    (let* ((treal (get-internal-real-time))
           (tcpu (get-internal-run-time))
-          #+:mcl (tgc (ccl:gctime))
-          #+:mcl (others (ccl::total-bytes-allocated)))
+          #+(or :mcl :ccl) (tgc (ccl:gctime))
+          #+(or :mcl :ccl) (others (ccl::total-bytes-allocated)))
       (multiple-value-prog1
          (funcall timed-function)
-         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others)))
+         (let (#+(or :mcl :ccl) (others (- (ccl::total-bytes-allocated) others)))
             (funcall report-function
-               #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
+               #+(or :mcl :ccl) (round (* (- (ccl:gctime) tgc) 1000)
                              internal-time-units-per-second)
-               #-:mcl 0
+               #-(or :mcl :ccl) 0
                0
                (round (* (- (get-internal-run-time) tcpu) 1000)
                       internal-time-units-per-second)
@@ -106,7 +108,7 @@
                (round (* (- (get-internal-real-time) treal) 1000)
                       internal-time-units-per-second)
                0 0
-               #+:mcl others #-:mcl -1)))))
+               #+(or :mcl :ccl) others #-(or :mcl :ccl) -1)))))
 
 (defun current-time (&key long)
   (decode-time (get-universal-time) :long long))
@@ -178,10 +180,12 @@
                      (symbol-value building-image-p))
                 (find :slave *features*))
 
-      (let* ((home (getenv "DELPHINHOME"))
-             (home (when home (namestring (parse-namestring home))))
-             (home (make-pathname :directory home))
-             (lkbrc (when home (dir-and-name home "dot.lkbrc"))))
+      (let* ((home (make:getenv "DELPHINHOME")) ; the only correct, portable way to access getenv
+             (home (when home
+                     (parse-namestring home nil *default-pathname-defaults* :junk-allowed t)))
+             (lkbrc (when home
+                      (merge-pathnames (make-pathname :name "dot" :type "lkbrc")
+                        (cl-fad:pathname-as-directory home)))))
         (when (and lkbrc (probe-file lkbrc))
           (with-package (:lkb) (load lkbrc))))
 
@@ -200,33 +204,39 @@
       ;; when part of the LOGON source tree, initialize appropriately
       ;;
       #+:logon
-      (let* ((home (getenv "LOGONROOT"))
-             (home (when home (namestring (parse-namestring home))))
-             (home (make-pathname :directory home))
-             (lkbrc (when home (dir-and-name home "dot.lkbrc"))))
+      (let* ((home (make:getenv "LOGONROOT"))
+             (home (when home
+                     (parse-namestring home nil *default-pathname-defaults* :junk-allowed t)))
+             (lkbrc (when home
+                      (merge-pathnames (make-pathname :name "dot" :type "lkbrc")
+                        (cl-fad:pathname-as-directory home)))))
         (when (and lkbrc (probe-file lkbrc))
           (with-package (:lkb) (load lkbrc))))
       
       ;;
       ;; and see whether there is a per-user `.lkbrc' initialization file
       ;;
-      (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
-        (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
+      (let ((lkbrc
+              (merge-pathnames (make-pathname :name ".lkbrc") (user-homedir-pathname))))
+        (when (probe-file lkbrc)
+          (with-package (:lkb) (load lkbrc))))
       
       #+:allegro
       (tpl:setq-default *package* 
-        (find-package (if (system:getenv "SSP") :ssp :lkb)))
+        (find-package (if (make:getenv "SSP") :ssp :lkb)))
       
       #+:lui
-      (let* ((lui (getenv "LUI"))
-             (port (and (stringp lui) (parse-integer lui :junk-allowed t))))
+      (let* ((lui (make:getenv "LUI"))
+             (port (and (stringp lui) (> (length lui) 0) (parse-integer lui :junk-allowed t))))
         (when lui (lui-initialize :port port :runtimep runtimep :lui lui)))
 
       ;;
       ;; no graphics when in :tty mode
       ;;
       #+(not :tty)
-      (let ((display #+:allegro (system:getenv "DISPLAY") #-:allegro nil)
+      (let ((display
+               #+:clim (make:getenv "DISPLAY")
+               #-:clim nil)
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         (when #+:mswindows t
               #-:mswindows (and (stringp display) (not (string= display "")))

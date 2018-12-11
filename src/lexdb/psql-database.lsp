@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2005
+;;; Copyright (c) 2001 -- 2018
 ;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -428,9 +428,7 @@
     (sb-alien:make-alien (sb-alien:c-string :external-format :utf8)))
 
 #+:sbcl
-(defparameter *psql-quote-literal-cstr* 
-    (sb-alien:make-alien 
-     (sb-alien:array sb-alien:char 0)))
+(defparameter *psql-quote-literal-cstr* nil) ; must allocate the cstr at runtime
 
 #+:sbcl
 (defun alien-array-dimensions (alien-array)
@@ -450,6 +448,10 @@
 (defun psql-quote-literal-aux (str)
   (unless (stringp str)
     (setf str (2-str str)))
+  (unless *psql-quote-literal-cstr* ; allocate here since cannot free a cstr from a build image
+    (setq *psql-quote-literal-cstr* 
+      (sb-alien:make-alien 
+       (sb-alien:array sb-alien:char 0))))
   (let* ((len0 (nlength str))
 	 (maxlen (max 1
 		      (+ (length str)

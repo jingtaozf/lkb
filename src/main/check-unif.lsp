@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2016 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -458,12 +458,12 @@
 
 (defun interactive-create-check-paths nil
   (let* ((test-file (ask-user-for-existing-pathname "Checkpaths sample file?"))
-         (output-file (ask-user-for-new-pathname "Checkpaths output file?")))
+         (output-file (and test-file (ask-user-for-new-pathname "Checkpaths output file?"))))
     (when (and test-file output-file)
-        (with-check-path-list-collection output-file
-	  (parse-sentences test-file t)))
-    (format t "~%Script should contain:~
-               ~%(lkb-load-lisp (this-directory) <your-checkpaths-file> t)")))
+      (with-check-path-list-collection output-file
+	 (parse-sentences test-file t))
+      (format t "~%Script should contain:~
+                 ~%(lkb-load-lisp (this-directory) <your-checkpaths-file> t)"))))
 
 
 

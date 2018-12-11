@@ -1,5 +1,8 @@
-(in-package :lkb)
+;;; Copyright (c) 1999--2018
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
+;;;   see `LICENSE' for conditions.
 
+(in-package :lkb)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -171,7 +174,8 @@
 	    (open *psorts-temp-file* 
 		  :direction :io
 		  :if-exists :append
-		  :if-does-not-exist :create))
+		  :if-does-not-exist :create
+		  #+:ccl :sharing #+:ccl :lock)) ; JAC: this is dangerous since there is no lock
 	(error (condition)
 	  (format t "~%Error ~A in opening temporary lexicon file" condition)))
       (unless (and psorts-stream

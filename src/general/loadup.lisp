@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2003
+;;; Copyright (c) 1991--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -8,7 +8,7 @@
 ;;; set LKB version
 ;;;
 
-(defvar *lkb-version* "5.4 (beta)")
+(defvar *lkb-version* "5.5")
 
 ;;; see also below - *features*
 

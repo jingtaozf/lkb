@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2004
+;;; Copyright (c) 1998--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -741,7 +741,9 @@
   (let ((covering nil)
         (partial nil)
         (start-symbols
-         (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
+          (or *gen-start-symbol* *start-symbol*))) ; JAC 14-Jun-18: backwards compatible
+    (setq start-symbols
+      (if (listp start-symbols) start-symbols (list start-symbols)))
     (dolist (new
                (if *substantive-roots-p*
                   (gen-chart-root-edges candidate-edges start-symbols)

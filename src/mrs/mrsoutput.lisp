@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2004
+;;; Copyright (c) 1998--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -256,30 +256,37 @@ duplicate variables")
   (when (is-valid-fs fs)
     (setf fs (deref fs))
     (let ((label-list (fs-arcs fs)))
-      (if (and label-list (consp label-list))
-        (loop
-            for feat-val in label-list
-            append
+      (if (consp label-list)
+        (loop for feat-val in label-list
+              unless (member (car feat-val) *ignored-extra-features* :test #'eq)
+              nconc
               (let ((new-path (cons (car feat-val) path-so-far))
                     (next-fs (cdr feat-val)))
-                (unless (member (car feat-val) *ignored-extra-features*)
-                  (create-index-property-list next-fs new-path))))
+                (declare (dynamic-extent new-path))
+                (create-index-property-list next-fs new-path)))
         (when path-so-far
           (let ((pair
                  (make-extrapair 
-                  :feature (make-mrs-feature (reverse path-so-far))
+                  :feature (make-mrs-feature
+                             (if (cdr path-so-far) (reverse path-so-far) path-so-far))
                   :value (create-type (fs-type fs)))))
             (when *mrs-record-all-nodes-p* (push (cons fs pair) *all-nodes*))
             (list pair)))))))
             
 
+(let ((mrs-feature-cache (make-hash-table :test #'equal)))
 (defun make-mrs-feature (flist)
+  ;; the feature-list->symbol conversion is memoised since it generates garbage
   (if (cdr flist)
-      (intern (apply #'concatenate 'string
-                     (string (car flist))
-                     (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
-              *mrs-package*)
-    (car flist)))
+      (or (gethash flist mrs-feature-cache)
+          (setf (gethash flist mrs-feature-cache)
+                (intern
+                   (apply #'concatenate 'string
+                      (string (car flist))
+                      (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
+                   *mrs-package*)))
+      (car flist)))
+)
 
 
 ;;; ****************************************************

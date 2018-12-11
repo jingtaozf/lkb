@@ -1,4 +1,4 @@
-;;; Copyright (c) 2002 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 2002--2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -99,8 +99,7 @@ the phrase to be checked minus the LISZT (leave this for now)
   (let* ((relpred (mrs::rel-pred rel))
          (relname (when relpred (string relpred))))
     (and relname
-         (equal "_i_rel" (subseq relname (max 0
-					      (- (length relname) 6)))))))
+         (eql (mismatch "_i_rel" relname :from-end t) 0))))
 
 #|
 old definition was leading i_

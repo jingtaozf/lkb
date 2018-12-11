@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2002
+;;; Copyright (c) 2000--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -34,9 +34,7 @@
 ;;; can obtain precise profiles without interference.  the conditionals make
 ;;; the code awkward to read, though, and should ultimately disappear.
 ;;;
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-           #-:ansi-eval-when (load eval compile)
-  (pushnew :retroactivity *features*))
+(defparameter *retroactivity-p* t)
 
 (defparameter *hyper-activity-p* t)
 
@@ -54,7 +52,7 @@
 ;;;     to be excluded (solved --- 23-oct-99 -- oe).
 ;;;
 
-(defparameter *chart-packing-p* nil)
+(defparameter *chart-packing-p* t) ; JAC 2-Aug-17: changed to t, having fixed a few issues
 
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
@@ -434,11 +432,10 @@
     ;;
     (when (and *first-only-p*
                (= begin *minimal-vertex*) (= end *maximal-vertex*))
-      (let ((result (find-spanning-edge passive begin end)))
-        (when result
-          (push (get-internal-run-time) *parse-times*)
-          (setf *parse-record* (nconc result *parse-record*))
-          (when (zerop (decf *first-only-p*))
+      (let ((results (parses-from-spanning-edges (list pedge))))
+        (when results
+          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
+          (when (<= (decf *first-only-p* (length results)) 0)
             (throw :best-first t)))))
     ;;
     ;; create new tasks through postulation of rules over .passive.
@@ -540,10 +537,14 @@
                  with id = (if recursivep id (- id))
                  for parent in (edge-parents edge) do
                    (freeze parent id t))))
-    (loop
+    (if (edge-partial-tree edge) ; JAC 3-Aug-2017: inserted additional checks here to avoid error
+      nil
+      (loop
         with dag = (tdfs-indef (edge-dag edge))
         for configuration in (passives-by-start start)
-        when (= (chart-configuration-end configuration) end) do
+        when (and (= (chart-configuration-end configuration) end)
+                  (null (edge-partial-tree (chart-configuration-edge configuration)))) ; JAC
+        do
           (let* ((oedge (chart-configuration-edge configuration))
                  (odag  (tdfs-indef (edge-dag oedge))))
             (multiple-value-bind (forwardp backwardp)
@@ -563,8 +564,7 @@
                   (push edge (edge-packed oedge))
                   (incf (statistics-proactive *statistics*))))
                 (return configuration))
-              #+:retroactivity
-              (when backwardp
+              (when (and *retroactivity-p* backwardp)
                 #+:pdebug
                 (format 
                  t 
@@ -587,7 +587,7 @@
                   (push oedge (edge-packed edge))
                   (incf (statistics-retroactive *statistics*)))
                 (freeze oedge (edge-id edge)))))
-        finally (return nil))))
+        finally (return nil)))))
 
 (defun process-rule-and-passive (task)
 

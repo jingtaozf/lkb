@@ -70,7 +70,7 @@
                (let ((start-pos (current-position str)))
                   ;; display word nodes in bold and don't record a menu for them
                   (if bold-p
-                     (with-bold-output str
+                     (with-text-style-bold-face (str)
                         (stream-write-string str s 0 (length (the string s))))
                      (progn
                         (stream-write-string str s 0 (length (the string s)))

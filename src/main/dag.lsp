@@ -1,4 +1,4 @@
-;;; Copyright (c) 1997--2018
+;;; Copyright (c) 1997--2018 
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -15,34 +15,23 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(with-unification-context)))
 
-#+:mclprofile
-(progn ; for space profiling and similar investigation
-(defparameter aa 0)
-(defparameter bb 0)
-(defparameter cc 0)
-(defparameter dd 0)
-(defparameter ee 0)
-(defparameter ff 0)
-(defparameter gg 0)
-(defparameter hh 0)
-(defparameter ii 0)
-(defparameter jj 0)
-)
-
 
 ;;; **********************************************************************
 ;;; Each temporary value set by the unifier is marked with a unification
 ;;; generation counter.  That way, we can invalidate all values set by an
 ;;; computation simply by incrementing the counter.
 
-(defvar *unify-generation* 2)
-(defvar *unify-generation-max* 2)
+(#+:sbcl sb-ext:defglobal #-:sbcl defvar *unify-generation* 2)
+(#+:sbcl sb-ext:defglobal #-:sbcl defvar *unify-generation-max* 2)
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
-(eval-when (:compile-toplevel :load-toplevel)
-  (proclaim '(type fixnum *unify-generation* *unify-generation-max*
-                *visit-generation* *visit-generation-max*)))
+#+:sbcl
+(declaim
+   (sb-ext:always-bound *unify-generation* *unify-generation-max*))
+(declaim
+   (fixnum *unify-generation* *unify-generation-max*
+           *visit-generation* *visit-generation-max*))
 
 (defun invalidate-marks ()
    (setq *unify-generation*
@@ -75,10 +64,10 @@
 (defvar *safe-not-to-copy-p* nil)
 
 
-;;; **********************************************************************
-;;; This is the structure for representing feature structures. Slots prefixed
+;;; ***********************************************************************
+;;; The structure for representing a feature structure node. Slots prefixed
 ;;; with x- must be accessed only via macros below, not directly
-;;; Size: 40 bytes (MCL), 48 bytes (Allegro)
+;;; Size: 64 bytes in 64-bit SBCL
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defstruct (dag
@@ -86,28 +75,27 @@
              (:copier copy-dag-x))
    (type nil)
    (arcs nil)
-   ;; generation counter for all temporary slots
+   ;; generation counter for the subsequent 3 temporary slots
    (x-generation 0 :type fixnum)
-   ;; new type computed during a unification
-   (x-new-type nil)
+   ;; new type computed during unification / pointer to representative for fs's equivalence class
+   (x-new-type/forward nil)
    ;; new arcs computed during a unification
    (x-comp-arcs nil)
    ;; pointer to a copy of this fs
    (x-copy nil)
-   ;; pointer to representative for this fs's equivalence class
-   (x-forward nil)
-   ;; flag used when traversing a fs doing interleaved unifications
+   ;; independent slot used when traversing a fs doing interleaved unifications
    (x-visit-slot nil))
 
 (defstruct (safe-dag
              (:include dag)
              (:constructor make-safe-dag-x (type arcs))
              (:copier copy-safe-dag-x))
-   ;; save a boolean slot in dag structure by making 'safe' dags a different
-   ;; type. We want to keep an even number of slots otherwise we likely
-   ;; waste 4 bytes
+   ;; save a slot that would just hold a boolean by making 'safe' dags a different type
    )
 )
+
+#+:sbcl
+(declaim (sb-ext:freeze-type dag safe-dag))
 
 
 (defmacro current-generation-strict-p (dag)
@@ -124,13 +112,18 @@
    )
 
 (defmacro with-dag-optimize ((dag) &body body)
-   #-lkb-nochecks (declare (ignore dag))
-   `(locally (declare (type fixnum *unify-generation*))
-       #+lkb-nochecks (declare ,@(if (symbolp dag) `((type dag ,dag)))
+   ;; wrap around code accessing a dag so we could potentially cause the compiler not
+   ;; to insert any type checks - but in practice with modern compilers this gains
+   ;; very little 
+   #-:lkb-nochecks (declare (ignore dag))
+   `(locally
+       #+:lkb-nochecks (declare ,@(if (symbolp dag) `((type dag ,dag)))
                                (optimize (speed 3) (safety 0) (space 0)))
       ,@body))
 
 (defmacro with-verified-dag ((dag) &body body)
+   ;; wrap around code when we know the dag has previously been type checked
+   ;; in case the compiler has not spotted this
    `(locally (declare ,@(if (symbolp dag) `((type dag ,dag)))
                       (optimize (speed 3) (safety 0) (space 0)))
        ,@body))
@@ -221,7 +214,7 @@
 
 #+:pooling
 (defun create-pool (size constructor)
-  (#+allegro excl:tenuring #-allegro progn
+  (#+:allegro excl:tenuring #-:allegro progn
       (let ((pool (make-pool :size size :constructor constructor))
             (data (make-array (+ size 1)
                               :initial-element nil 
@@ -312,40 +305,51 @@
 (defmacro dag-safe-p (dag)
    ;; argument must be known already to be some type of dag structure
    `(with-dag-optimize (,dag)
-      #-mcl (safe-dag-p ,dag)
-      #+mcl (eq (car (uvref ,dag 0)) 'safe-dag))) ; safe, and much quicker
+      (safe-dag-p ,dag)))
 
 
 (defmacro dag-forward (dag)
-  `(with-dag-optimize (,dag)
-     (when (current-generation-p ,dag)
-        (with-verified-dag (,dag) (dag-x-forward ,dag)))))
+  ;; what would be separate structure slots for the forwarding pointer and new-type share
+  ;; a single slot, since in 'Tomabechi World' a new type value is irrelevant if the dag
+  ;; node forwards to another - although when we're wanting a forward value we need to
+  ;; check whether there's actually a type occupying this slot instead
+  (let ((v (gensym)))
+    `(with-dag-optimize (,dag)
+       (when (current-generation-p ,dag)
+          (with-verified-dag (,dag)
+             (let ((,v (dag-x-new-type/forward ,dag)))
+                #+:null (unless (or (symbolp ,v) (stringp ,v)) ,v) ; faster? but less clear
+                (if (dag-p ,v) ,v))))))) ; check not a type
 
 (defsetf dag-forward (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (current-generation-p ,dag)
-       (with-verified-dag (,dag) 
-         (setf (dag-x-generation ,dag) *unify-generation*)
-         (setf (dag-x-new-type ,dag) nil)
-         (setf (dag-x-comp-arcs ,dag) nil)
-         (setf (dag-x-copy ,dag) nil)))
-     (with-verified-dag (,dag) (setf (dag-x-forward ,dag) ,new))))
+     ;; if there's a type here already then it's made redundant by this forwarding pointer
+     (setf (dag-x-new-type/forward ,dag) ,new)
+     (with-verified-dag (,dag) 
+        (unless (current-generation-p ,dag)
+           (setf (dag-x-generation ,dag) *unify-generation*)
+           (setf (dag-x-comp-arcs ,dag) nil)
+           (setf (dag-x-copy ,dag) nil)))
+     ,new))
 
 
 (defmacro dag-new-type (dag)
+  ;; if there's actually a forwarding pointer in the slot then a deref operation is
+  ;; missing, we will return a dag not a type and find out soon enough...
   `(with-dag-optimize (,dag)
      (when (current-generation-p ,dag)
-        (with-verified-dag (,dag) (dag-x-new-type ,dag)))))
+        (with-verified-dag (,dag) 
+           (dag-x-new-type/forward ,dag)))))
 
 (defsetf dag-new-type (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (current-generation-p ,dag)
-       (with-verified-dag (,dag) 
-         (setf (dag-x-generation ,dag) *unify-generation*)
-         (setf (dag-x-comp-arcs ,dag) nil)
-         (setf (dag-x-copy ,dag) nil)
-         (setf (dag-x-forward ,dag) nil)))
-     (with-verified-dag (,dag) (setf (dag-x-new-type ,dag) ,new))))
+     (setf (dag-x-new-type/forward ,dag) ,new)
+     (with-verified-dag (,dag) 
+        (unless (current-generation-p ,dag)
+           (setf (dag-x-generation ,dag) *unify-generation*)
+           (setf (dag-x-comp-arcs ,dag) nil)
+           (setf (dag-x-copy ,dag) nil)))
+     ,new))
 
 
 (defmacro dag-comp-arcs (dag)
@@ -355,13 +359,13 @@
 
 (defsetf dag-comp-arcs (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (current-generation-p ,dag)
-       (with-verified-dag (,dag) 
-         (setf (dag-x-generation ,dag) *unify-generation*)
-         (setf (dag-x-new-type ,dag) nil)
-         (setf (dag-x-copy ,dag) nil)
-         (setf (dag-x-forward ,dag) nil)))
-     (with-verified-dag (,dag) (setf (dag-x-comp-arcs ,dag) ,new))))
+     (setf (dag-x-comp-arcs ,dag) ,new)
+     (with-verified-dag (,dag) 
+        (unless (current-generation-p ,dag)
+           (setf (dag-x-generation ,dag) *unify-generation*)
+           (setf (dag-x-new-type/forward ,dag) nil)
+           (setf (dag-x-copy ,dag) nil)))
+     ,new))
 
 
 (defmacro dag-copy (dag)
@@ -371,13 +375,13 @@
 
 (defsetf dag-copy (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (current-generation-strict-p ,dag)
-       (with-verified-dag (,dag) 
-         (setf (dag-x-generation ,dag) *unify-generation*)
-         (setf (dag-x-new-type ,dag) nil)
-         (setf (dag-x-comp-arcs ,dag) nil)
-         (setf (dag-x-forward ,dag) nil)))
-     (with-verified-dag (,dag) (setf (dag-x-copy ,dag) ,new))))
+     (setf (dag-x-copy ,dag) ,new)
+     (with-verified-dag (,dag)
+        (unless (current-generation-strict-p ,dag)
+           (setf (dag-x-generation ,dag) *unify-generation*)
+           (setf (dag-x-new-type/forward ,dag) nil)
+           (setf (dag-x-comp-arcs ,dag) nil)))
+     ,new))
 
 
 (defmacro dag-visit (dag)
@@ -416,8 +420,8 @@
    `(cons ,attribute ,value))
 
 (defmacro with-arc-optimize ((arc) &body body)
-   #-lkb-nochecks (declare (ignore arc))
-   `(locally #+lkb-nochecks (declare ,@(if (symbolp arc) `((type cons ,arc)))
+   #-:lkb-nochecks (declare (ignore arc))
+   `(locally #+:lkb-nochecks (declare ,@(if (symbolp arc) `((type cons ,arc)))
                                      (optimize (speed 3) (safety 0) (space 0)))
       ,@body))
 
@@ -439,27 +443,20 @@
 
 
 ;;; Deref-dag follows forwarding pointers during a unification operation.
-;;; Outside unification code proper follow-pointers should be called instead
+;;; Outside unification, the follow-pointers function should be called instead
 ;;; (it could still be called inside a unification context e.g. when printing
 ;;; out dags during debugging). It can afford to do some useful consistency
 ;;; checks
 
 (defmacro deref-dag (dag) 
-   ;; could instead be defined as a compiler macro but since we're not funcalling it
-   ;; it doesn't really matter
-   (let ((dag-var (if (consp dag) (gensym) dag)))
+   (let ((dag-var (if (consp dag) (gensym) dag)) ; new variable if necessary
+         (next (gensym)))
       `(let ,(if (consp dag) `((,dag-var ,dag)) nil)
          (with-dag-optimize (,dag-var)
             (loop
-               (cond
-                 ((not (current-generation-p ,dag-var))
-                    (return))
-                 ((with-verified-dag (,dag-var) (dag-x-forward ,dag-var))
-                    (setq ,dag-var
-                       (with-verified-dag (,dag-var) (dag-x-forward ,dag-var))))
-                 (t (return))))
-            ,dag-var))))
-
+               for ,next = (dag-forward ,dag-var)
+               unless ,next return ,dag-var
+               do (setq ,dag-var ,next))))))
 
 (defun follow-pointers (dag)
    (cond
@@ -543,14 +540,10 @@
 
 (defun unify-dags (dag1 dag2)
   (if *within-unification-context-p*
-      (#+:uprofile
-       prof:with-sampling #+:uprofile nil
-       #-:uprofile
-       progn
-       #+:mclprofile (decf bb (ccl::%heap-bytes-allocated))
-       (prog1
-           (catch '*fail*
-             (progn
+      (#+:uprofile prof:with-sampling #+:uprofile ()
+       #-:uprofile progn
+         (catch '*fail*
+            (progn
                (unify1 dag1 dag2 nil)
                (when (or *unify-debug* *unify-debug-cycles*)
                  (if (cyclic-dag-p dag1)
@@ -567,10 +560,9 @@
                    (when (and *unify-debug* 
                               (not (eq *unify-debug* :return)))
                      (format t "~%Unification succeeded"))))
-               dag1))
-         #+:mclprofile (incf bb (ccl::%heap-bytes-allocated))))
-    (with-unification-context (dag1) 
-      (when (unify-dags dag1 dag2) (copy-dag dag1)))))
+               dag1)))
+      (with-unification-context (dag1) 
+        (when (unify-dags dag1 dag2) (copy-dag dag1)))))
 
 (defun unifiable-dags-p (dag1 dag2)
   (if *within-unification-context-p*
@@ -587,9 +579,10 @@
                   (format t "~%Unification failed - cyclic result"))
                 nil)
               (progn
-                (when (and *unify-debug* (not (eq *unify-debug* :return)))
+                (when (and *unify-debug*
+                           (not (eq *unify-debug* :return)))
                   (format t "~%Unification succeeded"))
-               t))))
+                t))))
       (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
 
 ;;; This is the heart of the unification algorithm, and is based on Hideto
@@ -610,16 +603,15 @@
   (setq dag1 (deref-dag dag1))
   (setq dag2 (deref-dag dag2))
   (cond
-   ((eq (dag-copy dag1) :inside)
-    (when (or *unify-debug* *unify-debug-cycles*)
-      (if (eq *unify-debug* :return)
-        (setf %failure% (list :cycle (reverse path)))
-        (format 
-         t 
-         "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
-         (reverse path))))
-    (throw '*fail* nil))
-   ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
+    ((eq (dag-copy dag1) :inside)
+      (when (or *unify-debug* *unify-debug-cycles*)
+        (if (eq *unify-debug* :return)
+          (setf %failure% (list :cycle (reverse path)))
+          (format t 
+            "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
+            (reverse path))))
+      (throw '*fail* nil))
+    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
 ;;; (defparameter *recording-constraints-p* nil
@@ -630,84 +622,78 @@
 (defvar *type-constraint-list* nil)
 
 (defun unify2 (dag1 dag2 path)
-  (multiple-value-bind (new-type constraintp)
-      (greatest-common-subtype (unify-get-type dag1) (unify-get-type dag2))
-    (if new-type
+  (let ((t1 (unify-get-type dag1))
+        (t2 (unify-get-type dag2)))
+    (multiple-value-bind (new-type constraintp)
+        (greatest-common-subtype t1 t2)
+      (if new-type
         (progn
-          (setf (dag-new-type dag1) new-type)
+          (unless (eq new-type t1) (setf (dag-new-type dag1) new-type))
           ;; theory is that the atomic type check is spurious because
           ;; an atomic type can't have a gcsubtype with a type 
           ;; that has features.  Removing this check will mean that
           ;; type constraints etc which specify features on atomic types
           ;; are only found when we try and make them well-formed
           
-        ;; unify in constraints if necessary - may have to copy them to
-        ;; prevent separate uses of same constraint in same unification
-        ;; becoming reentrant
-        (when (and constraintp *unify-wffs*)
-          (let ((constraint (if *expanding-types*
-                                (possibly-new-constraint-of 
-                                 new-type)
-                              (may-copy-constraint-of new-type))))
-            ;;                (when *recording-constraints-p*
-            ;;                (pushnew new-type *type-constraint-list* :test #'eq))
-            (if  *unify-debug*
-                (let ((res 
-                       (catch '*fail* (unify1 dag1 constraint path))))
-                  (unless res
-                    (if (eq *unify-debug* :return)
-                        (setf %failure% 
-                          (list :constraints 
-                                (reverse path) new-type nil nil))
-                      (progn (when *expanding-types*
-                               (format 
-                                t "Problem in ~A" *expanding-types*))
-                             (format 
-                              t 
-                              "~%Unification with constraint 
-                          of type ~A failed ~
-                          at path < ~{~A ~^: ~}>" 
-                              new-type (reverse path))))
-                    (throw '*fail* nil)))
-              (unify1 dag1 constraint path)))
-          ;; dag1 might just have been forwarded so dereference it again
-          (setq dag1 (deref-dag dag1)))
-        ;; cases for each of dag1 and dag2 where they have no arcs just
-        ;; considering straightforward use of unify1: if we've
-        ;; previously visited a node with no arcs then it must have got
-        ;; forwarded then so we won't ever visit it again - so no need
-        ;; to test for presence of any comp-arcs BUT:
-        ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
-        ;; we do need the additional tests
-        (cond
-         ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
-          (setf (dag-new-type dag2) new-type)
-          (setf (dag-forward dag1) dag2))
-         ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
-          (setf (dag-forward dag2) dag1))
-         (t
-          (setf (dag-forward dag2) dag1)
-          (setf (dag-copy dag1) :inside)
-          (unify-arcs dag1 dag2 path)
-          (setf (dag-copy dag1) nil))))
-  (progn
-    (when *unify-debug*
-      (if (eq *unify-debug* :return)
-          (setf %failure% 
-            (list :clash (reverse path) 
-                  (unify-get-type dag1) (unify-get-type dag2)))
-        (let ((msg 
-               (format 
-                nil 
-                "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-                (unify-get-type dag1) (unify-get-type dag2) 
-                (reverse path))))
-          (when (eq *unify-debug* :window)
-            (show-message-window msg))
-          ;;; deliberately also show in the LKB top as before, since some
-          ;;; people may have got used to it
-          (format t "~A" msg))))
-    (throw '*fail* nil)))))
+          ;; unify in constraints if necessary - may have to copy them to
+          ;; prevent separate uses of same constraint in same unification
+          ;; becoming reentrant
+          (when (and constraintp *unify-wffs*)
+            (let ((constraint (if *expanding-types*
+                                  (possibly-new-constraint-of new-type)
+                                  (may-copy-constraint-of new-type))))
+              ; (when *recording-constraints-p*
+              ;   (pushnew new-type *type-constraint-list* :test #'eq))
+              (if *unify-debug*
+                (unless (catch '*fail* (unify1 dag1 constraint path))
+                  (if (eq *unify-debug* :return)
+                    (setf %failure%
+                      (list :constraints (reverse path) new-type nil nil))
+                    (progn
+                      (when *expanding-types*
+                        (format t "Problem in ~A" *expanding-types*))
+                      (format t
+"~%Unification with constraint of type ~A failed at path < ~{~A ~^: ~}>"
+                        new-type (reverse path))))
+                  (throw '*fail* nil))
+                (unify1 dag1 constraint path))
+              ;; dag1 might just have been forwarded so dereference it again
+              (setq dag1 (deref-dag dag1))))
+
+          ;; cases for each of dag1 and dag2 where they have no arcs just
+          ;; considering straightforward use of unify1: if we've
+          ;; previously visited a node with no arcs then it must have got
+          ;; forwarded then so we won't ever visit it again - so no need
+          ;; to test for presence of any comp-arcs BUT:
+          ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
+          ;; we do need the additional tests
+          (cond
+            ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
+              (unless (eq new-type t2) (setf (dag-new-type dag2) new-type))
+              (setf (dag-forward dag1) dag2))
+            ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
+              (setf (dag-forward dag2) dag1))
+            (t
+              (setf (dag-forward dag2) dag1)
+              (setf (dag-copy dag1) :inside)
+              (unify-arcs dag1 dag2 path)
+              (setf (dag-copy dag1) nil))))
+
+        ;; type unification failure
+        (progn
+          (when *unify-debug*
+            (if (eq *unify-debug* :return)
+              (setq %failure% (list :clash (reverse path) t1 t2))
+              (let ((msg
+                      (format nil
+                        "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+                        t1 t2 (reverse path))))
+                (when (eq *unify-debug* :window)
+                  (show-message-window msg))
+                ;; deliberately also show in the LKB top as before, since some
+                ;; people may have got used to it there
+                (format t "~A" msg))))
+          (throw '*fail* nil))))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
   ;; find arc in arcs or comp-arcs with given attribute - also used in
@@ -742,7 +728,6 @@
       (process-arcs (dag-arcs dag2))
       (process-arcs (dag-comp-arcs dag2)))
     (when new-arcs1 (setf (dag-comp-arcs dag1) new-arcs1))))
-
 
 
 (defun possibly-new-constraint-of (new-type)
@@ -816,13 +801,9 @@
 ;;; any forward pointers set by the unifier.
 
 (defun copy-dag (dag)
-  #+:mclprofile (decf aa (ccl::%heap-bytes-allocated))
-  (#+:cprofile
-   prof:with-sampling #+:cprofile nil
-   #-:cprofile
-   progn
-   (prog1 (catch '*fail* (copy-dag1 dag nil))
-     #+:mclprofile (incf aa (ccl::%heap-bytes-allocated)))))
+  (#+:cprofile prof:with-sampling #+:cprofile ()
+   #-:cprofile progn
+    (catch '*fail* (copy-dag1 dag nil))))
 
 ;;; Tomabechi/Rob/John: not copying when dag is 'safe', type has not changed,
 ;;; no comp-arcs, and no copied dags underneath. No garbage generated in case
@@ -847,7 +828,7 @@
               (and (dag-new-type dag)
                    (not (eq (dag-new-type dag) (dag-type dag)))))
           (make-dag :type (unify-get-type dag) :arcs nil)
-        dag)))
+          dag)))
    (t
     ;; would have liked to have put path here, but it would hang around after
     ;; a circularity was detected - bad news for stack allocated conses
@@ -993,12 +974,8 @@
 ;;; Use -visit field not -copy since may be called from within unify
 
 (defun copy-dag-completely (dag)
-   #+:mclprofile (decf dd (ccl::%heap-bytes-allocated))
    (invalidate-visit-marks)
-   (prog1
-       (copy-dag-completely1 dag (create-dag))
-       #+:mclprofile (incf dd (ccl::%heap-bytes-allocated))
-       ))
+   (copy-dag-completely1 dag (create-dag)))
 
 (defun copy-dag-completely1 (dag toptype-dag)
    (or (dag-visit dag)
@@ -1016,8 +993,7 @@
                                   (copy-dag-completely1
                                      (dag-arc-value arc) toptype-dag))))
                         (dag-arcs dag)))))
-            (setf (dag-visit dag) new-instance)
-            new-instance))))
+            (setf (dag-visit dag) new-instance)))))
 
 
 ;;;
@@ -1107,7 +1083,7 @@
 ;;; and :inside is used for the cyclic check itself
 
 (defun cyclic-dag-p (dag)   
-   ;; return t if cyclic
+  ;; return t if cyclic
   (if *within-unification-context-p*
       (catch '*cyclic*
         (progn
@@ -1119,26 +1095,27 @@
 
 (defun cyclic-dag-p1 (dag path)   
    (setq dag (deref-dag dag))
-   (cond
-      ((eq (dag-copy dag) :outside))
-      ((eq (dag-copy dag) :inside)
-       (when (or *unify-debug* *unify-debug-cycles*)
-         (if (eq *unify-debug* :return)
-           (setf %failure% (list :cycle (reverse path)))
-           (format t "~%Cyclic check found cycle at < ~{~A ~^: ~}>" 
-                   (reverse path))))
-         (throw '*cyclic* t))
-      ((or (dag-arcs dag) (dag-comp-arcs dag))
-         (setf (dag-copy dag) :inside)
-         (dolist (arc (dag-arcs dag))
-            (let ((new-path (cons (dag-arc-attribute arc) path)))
-               (declare (dynamic-extent new-path))
-               (cyclic-dag-p1 (dag-arc-value arc) new-path)))
-         (dolist (arc (dag-comp-arcs dag))
-            (let ((new-path (cons (dag-arc-attribute arc) path)))
-               (declare (dynamic-extent new-path))
-               (cyclic-dag-p1 (dag-arc-value arc) new-path)))
-         (setf (dag-copy dag) :outside))))
+   (let ((mark (dag-copy dag)))
+      (cond
+         ((eq mark :outside))
+         ((eq mark :inside)
+           (when (or *unify-debug* *unify-debug-cycles*)
+             (if (eq *unify-debug* :return)
+               (setf %failure% (list :cycle (reverse path)))
+               (format t "~%Cyclic check found cycle at < ~{~A ~^: ~}>" 
+                       (reverse path))))
+           (throw '*cyclic* t))
+         ((or (dag-arcs dag) (dag-comp-arcs dag))
+            (setf (dag-copy dag) :inside)
+            (dolist (arc (dag-arcs dag))
+               (let ((new-path (cons (dag-arc-attribute arc) path)))
+                  (declare (dynamic-extent new-path))
+                  (cyclic-dag-p1 (dag-arc-value arc) new-path)))
+            (dolist (arc (dag-comp-arcs dag))
+               (let ((new-path (cons (dag-arc-attribute arc) path)))
+                  (declare (dynamic-extent new-path))
+                  (cyclic-dag-p1 (dag-arc-value arc) new-path)))
+            (setf (dag-copy dag) :outside)))))
 
 ;; Removes the marks left by cyclic-dag-p
 
@@ -1192,7 +1169,7 @@
         for type = (or (dag-new-type dag2) (dag-type dag2))
         if (or (eq type *toptype*) (eq type *string-type*))
         do ;; if fully unspecific type, give new type
-          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist :test #'eq)))
           (when repl
             (setf (dag-new-type dag2) repl)
             ;(format t "~%set ~a -> ~a" (dag-arc-attribute arc) repl)
@@ -1208,7 +1185,7 @@
         for type = (or (dag-new-type dag2) (dag-type dag2))
         if (or (eq type *toptype*) (eq type *string-type*))
         do ;; if fully unspecific type, give new type
-          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist)))
+          (setf repl (cdr (assoc (dag-arc-attribute arc) replace-alist :test #'eq)))
           (when repl
             (setf (dag-new-type dag2) repl)
             ;(format t "~%Tset ~a -> ~a" (dag-arc-attribute arc) repl)
@@ -1335,11 +1312,12 @@
 
 (defun really-make-features-well-formed (real-dag features-so-far type-name)
   (loop for arc in (dag-arcs real-dag)
-      always
-        (let ((label (dag-arc-attribute arc)))
-          (make-well-formed (dag-arc-value arc)
-                            (cons label features-so-far)
-                            type-name))))
+    always
+    (let ((path (cons (dag-arc-attribute arc) features-so-far)))
+      (declare (dynamic-extent path))
+      (make-well-formed (dag-arc-value arc)
+                        path
+                        type-name))))
 
 ;;; It is possible for two wffs to be unified and the result to need 
 ;;; the constraint of the resulting type to be unified in - 
@@ -1367,14 +1345,18 @@
 ;;; Get rid of pointers to any temporary dag structure
 
 (defun compress-dag (dag &key (recursivep t))
-  ;; no point in derefing dag since we don't expect to be called within
+  ;; no point in deref-ing dag since we don't expect to be called within
   ;; a unification context (so if there's a forward pointer it won't be
   ;; valid anyway)
-  (when dag
-    (setf (dag-x-comp-arcs dag) nil)
+  (when (and dag
+             ;; if no temp dags at this level then don't recurse - if there are
+             ;; any then they will be reached via another re-entrancy
+             (or (dag-x-new-type/forward dag) (dag-x-comp-arcs dag) (dag-x-copy dag)
+                 (dag-x-visit-slot dag)))
     (with-verified-dag (dag) ; it's definitely a dag
+      (setf (dag-x-new-type/forward dag) nil)
+      (setf (dag-x-comp-arcs dag) nil)
       (setf (dag-x-copy dag) nil)
-      (setf (dag-x-forward dag) nil)
       (setf (dag-x-visit-slot dag) nil)) ; copy-dag-completely can put a dag in this
     (when recursivep
       (dolist (arc (with-verified-dag (dag) (dag-arcs dag)))

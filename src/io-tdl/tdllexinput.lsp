@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1998-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see LICENSE for conditions
 
 
@@ -19,89 +19,72 @@
 
 
 (defun read-tdl-lex-file-aux-internal (file-name)
-  (let ((*readtable* (make-tdl-break-table)))
-    (with-open-file 
-	(istream file-name :direction :input)
-      (format t "~%Reading in lexical entry file ~A" 
-	      (pathname-name file-name))
-      (read-tdl-lex-stream istream))))
+  (with-open-file (istream file-name :direction :input)
+    (format t "~%Reading in lexical entry file ~A" 
+	    (pathname-name file-name))
+    (read-tdl-lex-stream istream)))
 
 
-(defun read-tdl-lex-stream (istream) 
+(defun read-tdl-lex-stream (istream)
   (loop
-      (let ((next-char (peek-char t istream nil 'eof)))
-         (when (eql next-char 'eof) (return))
-         (cond ((eql next-char #\;) 
-                 (read-line istream))
-               ; one line comments
-               ((eql next-char #\#) (read-tdl-comment istream))
-               (t (catch 'syntax-error
-                (read-tdl-lex-entry istream)))))))
+    (if (eq (peek-with-comments istream) 'eof)
+      (return)
+      (catch 'syntax-error
+        (read-tdl-lex-entry istream)))))
 
 
 (defun read-tdl-lex-entry (istream)
 ;;; Lex-def -> Lexid Avm-def . 
 ;;; Lexid  -> identifier
 ;;; Avm-def -> := Conjunction (as in tdltypeinput.lsp)
-  (let* (#+:allegro
-         (position  (1+ (file-position istream)))
-	 (name (lkb-read istream nil))
-	 (next-char (peek-char t istream nil 'eof)))
-     (unless (eql next-char #\:)
-       (lkb-read-cerror istream
-                        "~%Incorrect syntax following lexicon name ~A" name)
-       (ignore-rest-of-entry istream name))
-     #+:allegro (record-source name istream position)
-     (read-char istream)
-     (let ((next-char2 (peek-char t istream nil 'eof)))
-       (unless (eql next-char2 #\=)
-         (lkb-read-cerror istream
-                          "~%Incorrect syntax following lexicon name ~A" name)
-         (ignore-rest-of-entry istream name))
-       (read-char istream)
-       (multiple-value-bind
-           (constraint default)
-           (read-tdl-lex-avm-def istream name)
-         (check-for #\. istream name)
-         (if (member name *ordered-lex-list* :test #'eq)
-	     (format
-	      t
-	      "~%WARNING: lexicon entry `~a' redefined." name)
-	   (push name *ordered-lex-list*)
+  (let* (#+(or :allegro :mcclim)
+         (position nil) ; JAC - unused, was (1+ (file-position istream))
+	 (name (lkb-read istream nil)))
+    #+(or :allegro :mcclim) (record-source name istream position)
+    (check-for-string ":=" istream name)
+    (multiple-value-bind (constraint default)
+        (read-tdl-lex-avm-def istream name)
+      (check-for #\. istream name)
+      (unless (hash-table-p *ordered-lex-list*)
+        ;; !!! note that this is not ordered, and it doesn't have to be
+        (setq *ordered-lex-list* (make-hash-table :test #'eq)))
+      (if (gethash name *ordered-lex-list*)
+	  (format t
+	    "~%WARNING: lexical entry `~a' redefined." name)
+	  (setf (gethash name *ordered-lex-list*) t)
 ;	   (setf (cache-lex-list *lexicon-in*)
 ;	     (cons name (collect-psort-ids *lexicon-in*))) ;;fix_me properly
-	   )
-;;;	 	 (let ((*readtable* (copy-readtable nil))) ;;bmw - why? AAC
-	 (add-lex-from-file nil name constraint default)))))
-
+	  )
+      (add-lex-from-file nil name constraint default))))
 
 
 (defun read-tdl-lex-avm-def (istream name)
-  ;;; Avm-def -> := Conjunction
-  (clrhash *tdl-coreference-table*)     ; parameter defined in tdltypeinput
+  ;; analogous to read-tdl-avm-def for type definitions
+  (clrhash *tdl-coreference-table*)
   (clrhash *tdl-default-coreference-table*)
-  (let ((constraint nil)
-        (def-alist nil))
-      ;;; read-tdl-conjunction in tdltypeinput
-    (loop for unif in (read-tdl-conjunction istream name nil nil)
-         do
-         (cond ((unification-p unif) (push unif constraint))
-               ((consp unif)
+  (let ((comment nil) (constraint nil) (def-alist nil))
+    (multiple-value-bind (top-conj c)
+                         (read-tdl-top-conjunction istream name)
+      (setq comment c)
+      (dolist (unif top-conj)
+        (cond ((unification-p unif) (push unif constraint))
+              ((consp unif)
                 (let ((entry (assoc (car unif) def-alist)))
                   (if entry
                       (push (cadr unif) (cdr entry))
-                    (push unif def-alist))))
-               (t (error "~%Program error(?): Unexpected unif in ~A" name))))
-    (dolist (coref (make-tdl-coreference-conditions istream
-                    *tdl-coreference-table* nil))
-      (push coref constraint))
-    (dolist (coref (make-tdl-coreference-conditions istream 
-                    *tdl-default-coreference-table* t))
-      (let ((entry (assoc (car coref) def-alist)))
-        (if entry
-            (push (cadr coref) (cdr entry))
-          (push coref def-alist))))
-    (values constraint def-alist)))
+                      (push unif def-alist))))
+              (t (error "Inconsistency in read-tdl-lex-avm-def: unexpected unif in ~A"
+                        name))))
+      (dolist (coref
+                (make-tdl-coreference-conditions istream *tdl-coreference-table* nil))
+        (push coref constraint))
+      (dolist (coref
+                (make-tdl-coreference-conditions istream *tdl-default-coreference-table* t))
+        (let ((entry (assoc (car coref) def-alist)))
+          (if entry
+              (push (cadr coref) (cdr entry))
+              (push coref def-alist))))
+      (values constraint def-alist comment))))
 
 
 ;;; Other varieties of files
@@ -122,53 +105,27 @@
     (setf file-type :root))
   (initialise-psort-file file-name file-type)
   ;; in lexinput.lsp
-  (let ((*readtable* (make-tdl-break-table)))
-    (with-open-file 
-	(istream file-name :direction :input)
-      (format t "~%Reading in ~A file ~A"
-	      (cond ((eql file-type :nodes) "parse node")
-		    (file-type (string-downcase file-type))
-		    (t "entry"))
-	      (pathname-name file-name))
-      (read-tdl-psort-stream istream file-type)))
+  (with-open-file (istream file-name :direction :input)
+    (format t "~%Reading in ~A file ~A"
+	    (cond ((eql file-type :nodes) "parse node")
+		  (file-type (string-downcase file-type))
+		  (t "entry"))
+	    (pathname-name file-name))
+    (read-tdl-psort-stream istream file-type))
   (finalize-psort-file file-type))
 
 (defun read-tdl-psort-stream (istream file-type)
-   (loop
-      (let ((next-char (peek-char t istream nil 'eof)))
-         (when (eql next-char 'eof) (return))
-         (cond ((eql next-char #\;) 
-                 (read-line istream))
-               ; one line comments
-               ((eql next-char #\#) 
-                (read-tdl-comment istream))
-               (t 
-                (catch 'syntax-error
-                  (read-tdl-psort-entry istream file-type)))))))
+  (loop
+    (if (eq (peek-with-comments istream) 'eof)
+      (return)
+      (catch 'syntax-error
+        (read-tdl-psort-entry istream file-type)))))
 
 (defun read-tdl-psort-entry (istream file-type)
-  (let* ((name (lkb-read istream nil))
-	 (next-char (peek-char t istream nil 'eof)))
-    (unless (eql next-char #\:)
-      (lkb-read-cerror 
-       istream 
-       "~%Incorrect syntax following ~A" name)
-      (ignore-rest-of-entry istream name))
-    (read-char istream)
-    (let ((next-char2 (peek-char t istream nil 'eof)))
-      (unless (eql next-char2 #\=)
-	(lkb-read-cerror 
-	 istream 
-	 "~%Incorrect syntax following ~A" name)
-	(ignore-rest-of-entry istream name))
-      (read-char istream)
-      (multiple-value-bind
-	  (constraint default)
-	  (read-tdl-lex-avm-def istream name)
-	(check-for #\. istream name)
-      (add-psort-file-entry name constraint default file-type)))))
-
- 
-
-
+  (let ((name (lkb-read istream nil)))
+    (check-for-string ":=" istream name)
+    (multiple-value-bind (constraint default)
+        (read-tdl-lex-avm-def istream name)
+      (check-for #\. istream name)
+      (add-psort-file-entry name constraint default file-type))))
 

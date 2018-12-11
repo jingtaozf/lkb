@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2005
+;;; Copyright (c) 1991--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see LICENSE for conditions.
 ;;;
@@ -149,6 +149,10 @@
   "a type which specifies the type of any valid parse" 
   :user)
 
+(def-lkb-parameter *gen-start-symbol* 'sign
+  "a type which specifies the type of any valid generator derivation" 
+  :user)
+
 (def-lkb-parameter *fragment-start-symbols* nil
   "a list of types (or instances) which specify the type of a valid derivation
    in fragment parsing or generation mode" 
@@ -204,45 +208,6 @@
     
 ;;; Display 
 
-(def-lkb-parameter *display-type-hierarchy-on-load* t
-  "controls whether the type hierarchy appears automatically"
-  :user)
-
-(def-lkb-parameter *show-morphology* t
-  "if set, the morphological structures are shown in parse trees"
-  :user)
-
-(def-lkb-parameter *show-lex-rules* t
-  "if set, applications of lexical rules are shown in parse trees"
-  :user)
-
-(def-lkb-parameter *parse-tree-font-size* 12
-  "size of font in parse trees"
-  :user)
-
-(def-lkb-parameter *summary-tree-font-size* 7
-  "size of font in parse tree summary")
-
-(def-lkb-parameter *fs-type-font-size* 12
-  "size of font in AVMs"
-  :user)
-
-(def-lkb-parameter *fs-title-font-size* 12
-  "size of font of AVM window titles"
-  :user)
-
-(def-lkb-parameter *type-tree-font-size* 12
-  "size of font in type hierarchy display"
-  :user)
-
-(def-lkb-parameter *dialog-font-size* 12
-  "size of font in dialogs"
-  :user)
-
-(def-lkb-parameter *comparison-tree-font-size* 7
-  "size of font in tree comparison (tree pane)"
-  :user)
-
 (def-lkb-parameter *comparison-dependencies-font-size* 12
   "size of font in tree comparison (elementary dependencies in tree pane)"
   :user)
@@ -251,11 +216,53 @@
   "size of font in tree comparison (discriminant pane)"
   :user)
 
+(def-lkb-parameter *comparison-tree-font-size* 8
+  "size of font in tree comparison (tree pane)"
+  :user)
+
+(def-lkb-parameter *dialog-font-size* 12
+  "size of font in dialogs"
+  :user)
+
+(def-lkb-parameter *display-type-hierarchy-on-load* t
+  "controls whether the type hierarchy appears automatically"
+  :user)
+
+(def-lkb-parameter *fs-type-font-size* 12
+  "size of font in AVMs"
+  :user)
+
+(def-lkb-parameter *fs-title-font-size* 12
+  "no longer used: AVM window titles now use *fs-type-font-size*")
+
+(def-lkb-parameter *list-item-font-size* 12
+  "size of font in list windows, such as generator output"
+  :user)
+
+(def-lkb-parameter *parse-tree-font-size* 12
+  "size of font in parse trees"
+  :user)
+
+(def-lkb-parameter *show-lex-rules* t
+  "if set, applications of lexical rules are shown in parse trees"
+  :user)
+
+(def-lkb-parameter *show-morphology* t
+  "if set, the morphological structures are shown in parse trees"
+  :user)
+
+(def-lkb-parameter *summary-tree-font-size* 8
+  "size of font in parse tree summary")
+
+(def-lkb-parameter *type-tree-font-size* 12
+  "size of font in type hierarchy display"
+  :user)
+
 (def-lkb-parameter *maximum-list-pane-items* 150
   "maximum number of items in a list pane")
 
 (def-lkb-parameter *lex-rule-show-one-step* t
-  "if set, lexical rule application will be show one step at a time")
+  "if set, lexical rule application will be shown one step at a time")
 
 ;;; YADU
 
@@ -297,19 +304,21 @@
 ;;;
 ;;; size of static pool used to cache safe dag instances (see `dag.lsp').
 ;;;
-;;; if each dag instance has approximately 50 bytes, then we should be able to
-;;; affort some (static) 2.5 mbytes for pool storage.  once make-dag() runs out
-;;; of pool instances, new structures will be allocated dynamically (and become
-;;; garbage eventually).  hence, the initial pool size can be a crucial choice.
+;;; if each dag instance has approximately 80 bytes, then we should be able to
+;;; affort some (static) 4 MB for pool storage (assuming a pool of size
+;;; 50,000).  once make-dag() runs out of pool instances, new structures will
+;;; be allocated dynamically (and become garbage eventually).  hence, the
+;;; initial pool size can be a crucial choice.
 ;;;
 ;;; though it seems tempting to allocate new pools as required, this would mean
 ;;; that one huge sentence could grow the image size permanently.  for the time
 ;;; being we prefer to assume that the user choice of pool size is appropriate
 ;;; for what is required on average.
 ;;; 
-;;; size increased to that needed for ERG
+;;; Grammars such as the ERG could increase this parameter and then recreate
+;;; the pool -- JAC 28-May-18
 
-(def-lkb-parameter *dag-pool-size* 200000)
+(def-lkb-parameter *dag-pool-size* 50000)
 
 ;;; controls TDL or path syntax switch (not really needed)
 
