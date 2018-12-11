@@ -165,6 +165,8 @@
 (defun lkb-dialog-font ()
   (clim:make-text-style :sans-serif :roman (or *dialog-font-size* 12)))
 
+(declaim (notinline lkb-dialog-font))
+
 
 ;;; Output in a variant text style or size. Allows for both the case where the pane's text
 ;;; style follows the CLIM 2.0 font protocol, as well as when it is based on the McCLIM
