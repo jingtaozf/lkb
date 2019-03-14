@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -10,36 +10,32 @@
 ;;; Top level functions
 ;;;
 ;;; "Load"
-;;; all in various input files
-;;; apart from
 
 (defun read-script-file nil
-  (with-package (:lkb)
-    (let* (#+:allegro 
-           (excl:*libfasl* nil)
-           (file-name (ask-user-for-existing-pathname "Script file?")))
-      (with-output-to-top ()
-        (read-script-file-aux file-name)))))
+  (let* (#+:allegro (excl:*libfasl* nil) ; relevant only for versions < 7.0
+         (file-name (ask-user-for-existing-pathname "Script file?")))
+    (read-script-file-aux file-name)))
 
 ;;; "View"
 ;;;
 ;;; "Type hierarchy" show-type-tree
 
-(defparameter *last-type-name* '*top*)
+(defparameter *type-hierarchy-limit* #+:mcclim 15000 #-:mcclim 300)
 
 (defun show-type-tree nil
-  (multiple-value-bind (type show-all-p ignore-limit-p)
-      (ask-user-for-type nil '("Show all types?" . :check-box)
-	 '("Ignore 300 descendant limit?" . :check-box))
+  (multiple-value-bind (type show-all-p display-definitions-p)
+      (ask-user-for-type nil
+         #-:clim '("Show all types?" . :check-box)
+         #-:clim '("Display type definitions?" . :check-box)) ; both moved to hierarchy window
     (when type
       (if
-          (or ignore-limit-p
-	      (< (length (ltype-descendants (get-type-entry type))) 300))
-	  (create-type-hierarchy-tree type nil show-all-p)
-	(show-message-window 
-	 (format nil "Type has ~A descendants, display stopped~%Use check box to override" 
-		 (length (ltype-descendants (get-type-entry type)))))))))
-
+        (or (null *type-hierarchy-limit*)
+            (< (length (ltype-descendants (get-type-entry type))) *type-hierarchy-limit*)
+            (y-or-n-p-general 
+	      (format nil "Hierarchy contains ~A types so displaying it may take some time.
+Do you really want to view it?"
+	        (1+ (length (ltype-descendants (get-type-entry type)))))))
+        (create-type-hierarchy-tree type nil show-all-p display-definitions-p)))))
 
 
 ;;; "Type spec" show-type-spec
@@ -107,8 +103,7 @@
 		   (get-lex-entry (car orth-list))))
 	     (if lex-entries
 		 (return lex-entries)
-	       (setf prompt 
-		 (format nil "(~a is not defined)" (string-upcase word-string)))))
+	       (setf prompt "Not defined - try again.")))
       do
 	(when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
 		     orth-list)
@@ -118,9 +113,12 @@
 				  (lex-entry-id word-entry))
 			  (lex-entry-id word-entry))
 	    (display-unexpanded-lex-entry word-string word-entry
-					  (lex-entry-id word-entry))))))   
+					  (lex-entry-id word-entry)))
+	  ;; try to ensure that windows appear in chronological order
+	  (sleep 0.2))))  
 
 ;;; "Lex entry" show-lex
+
 (defun show-lex nil
   (let* ((lex (ask-user-for-lex))
         (lex-entry (if lex (get-lex-entry-from-id lex))))
@@ -162,139 +160,179 @@
                         (rule-id rule-entry))))) 
 
 
-(defparameter *last-lex-id* 'kim_1)
-        
-
-        
 ;;; 
 ;;; View utilities
 
+(defparameter *last-type-name* '*top*)
 
-(defun ask-user-for-type (&optional qstring check-box-spec show-all-types-spec 
-				    (prompt ""))
-  (let ((res
-         (with-package (:lkb)
-           (ask-for-lisp-movable "Current Interaction" 
-             (append
-	      (list (cons (format nil "~a~%~a" prompt (or qstring "Type?"))
-				  *last-type-name*))
-                (if check-box-spec (list check-box-spec) nil)
-                (if show-all-types-spec (list show-all-types-spec) nil))
-             150 *type-names*))))
-      (when res
-        (let ((type (car res))
-              (check-1-p (cadr res))
-	      (check-2-p (caddr res)))
-	  (setf *last-type-name* type)
-	  (eval-possible-leaf-type *leaf-types* type)
-          (let ((type-entry (get-type-entry type)))
-            (unless type-entry
-               (setf type 
-		 (ask-user-for-type qstring 
-				    check-box-spec 
-				    nil 
-				    (format nil "(Type ~A is not defined)" type))))
-            (values type check-1-p check-2-p))))))
+(defun ask-user-for-type (&optional qstring show-all-types-spec check-box-spec)
+  (let ((possible-name *last-type-name*)
+        (prompt "")
+        (res nil))
+    (loop
+      (setq res
+	(ask-for-lisp-movable "Current Interaction" 
+           (append
+	       (list (cons (format nil "~a~%~a" prompt (or qstring "Type?"))
+			   possible-name))
+             (if show-all-types-spec (list show-all-types-spec) nil)
+             (if check-box-spec (list check-box-spec) nil))
+           nil
+           (if (and possible-name
+                 (member possible-name *type-names* :test #'eq))
+               ;; default selection if types presented in a drop-down list
+               (cons possible-name (remove possible-name *type-names* :test #'eq))
+               nil)))
+      (when (or (null res) (null (car res))) (return nil))
+      (let ((type (car res))
+            (check-1-p (cadr res))
+	    (check-2-p (caddr res)))
+	(eval-possible-leaf-type *leaf-types* type)
+	(let ((type-entry (get-type-entry type)))
+          (cond
+            (type-entry
+              (setq *last-type-name* type)
+              (return (values type check-1-p check-2-p)))
+            (t
+              (setq prompt "Not defined - try again."
+                    possible-name type))))))))
 
 
-;;; display-fs is in outputfs.lsp
+(defparameter *last-lex-id* 'KIM)
 
-(defun ask-user-for-lex (&optional (prompt ""))
-  (let* ((possible-name
-	  (with-package (:lkb)
-	    (ask-for-lisp-movable "Current Interaction" 
-				  `((,(format nil "~a~%Lex-id?" prompt) . ,*last-lex-id*))
-				  150))))
-    (when possible-name
+(defun ask-user-for-lex ()
+  (let ((prompt "")
+        (possible-name
+          (if (and *last-lex-id* (get-lex-entry-from-id *last-lex-id*))
+            *last-lex-id*
+            "")))
+    (loop
+      (setq possible-name
+	(ask-for-lisp-movable "Current Interaction" 
+			      `((,(format nil "~a~%Lex id?" prompt) . ,possible-name))
+			      nil))
       (let* ((lex (car possible-name))
              (lex-entry (get-lex-entry-from-id lex)))
-       (setf *last-lex-id* lex)
-       (unless lex-entry
-          (setf lex (ask-user-for-lex
-		     (format nil "(Lexical entry ~A is not defined)" lex))))
-        lex))))
+        (cond
+          ((null lex) (return nil))
+          (lex-entry
+            (setq *last-lex-id* lex)
+            (return (values lex lex-entry)))
+          (t 
+            (setq prompt "Not defined - try again."
+                  possible-name lex)))))))
 
-(defparameter *last-other-id* 'root)
 
-(defun ask-user-for-other-id (&optional (prompt ""))
-  (let ((possible-name
-         (with-package (:lkb)
- 	  (ask-for-lisp-movable "Current Interaction" 
-		 	        `((,(format nil "~a~%Entry id?" prompt) . ,*last-other-id*))
-			        150))))
-      (when possible-name
-         (let* ((id (car possible-name))
-		(id-entry (get-other-entry id)))
-	   (setf *last-other-id* id)
-	   (unless id-entry
-	     (setf id (ask-user-for-other-id (format nil "(~A is not defined)" id))))
-	   (values id id-entry)))))
+(defparameter *last-other-id* 'ROOT_STRICT)
 
-(defparameter *last-rule-id* 'head-specifier-rule)
+(defun ask-user-for-other-id ()
+  (let ((prompt "")
+        (possible-name
+          (if (and *last-other-id* (get-other-entry *last-other-id*))
+            *last-other-id*
+            "")))
+    (loop
+      (setq possible-name
+	(ask-for-lisp-movable "Current Interaction" 
+			      `((,(format nil "~a~%Entry id?" prompt) . ,possible-name))
+			      nil))
+      (let* ((id (car possible-name))
+             (id-entry (get-other-entry id)))
+        (cond
+          ((null id) (return nil))
+          (id-entry
+            (setq *last-other-id* id)
+            (return (values id id-entry)))
+          (t 
+            (setq prompt "Not defined - try again."
+                  possible-name id)))))))
 
-(defun ask-user-for-rule nil
-  (let ((rule-names nil))
-    (declare (dynamic-extent rule-names))
+
+(defparameter *last-rule-id* nil)
+
+(defun ask-user-for-rule ()
+  (let*
+    ((prompt "")
+     (rule-names (rules-sorted-on-name *rules*))
+     (possible-name
+       (cond
+         ((and *last-rule-id* (get-grammar-rule-entry *last-rule-id*))
+           *last-rule-id*)
+         (rule-names ; first alphabetically that starts with character "S"
+           (or (find #\S rule-names :key #'(lambda (name) (schar (string name) 0)))
+               (car rule-names)))
+         (t ""))))
+    (loop
+      (setq possible-name
+	(ask-for-lisp-movable "Current Interaction" 
+			      `((,(format nil "~a~%Rule?" prompt) . ,possible-name))
+			      nil rule-names))
+      (let* ((name (car possible-name))
+             (rule-entry (get-grammar-rule-entry name)))
+        (cond
+          ((null name) (return nil))
+          (rule-entry
+            (setq *last-rule-id* name)
+            (return rule-entry))
+          (t 
+            (setq prompt "Not defined - try again."
+                  possible-name name)))))))
+
+(defun rules-sorted-on-name (ht)
+  ;; return names sorted alphabetically
+  (let ((names nil))
     (maphash #'(lambda (name value)
-		 (declare (ignore value))
-		 (push name rule-names))
-	     *rules*)
-    (setf rule-names (sort rule-names #'string-lessp))
-    (let ((possible-name
-           (with-package (:lkb)
-             (ask-for-lisp-movable "Current Interaction" 
-                                   `(("Rule?" . ,*last-rule-id*)) 
-                                   150 rule-names))))
-      (when possible-name
-	(let* ((name (car possible-name))
-               (rule-entry (get-grammar-rule-entry name)))
-	  (unless rule-entry
-	    (format t "~%~A is not defined" name)
-	    (setf rule-entry (ask-user-for-rule)))
-	  (when name (setf *last-rule-id* name))
-	  rule-entry)))))
+                 (declare (ignore value))
+                 (push name names))
+             ht)
+    (sort names #'string-lessp)))
+
 
 (defparameter *last-lex-rule-id* nil)
 
-(defun ask-user-for-lexical-rule nil
-  (if *lexical-rules*
-      (let ((rule-names nil))
-        (declare (dynamic-extent rule-names))
-        (maphash #'(lambda (name value)
-                     (declare (ignore value))
-                     (push name rule-names))
-                 *lexical-rules*)
-        (setf rule-names (sort rule-names #'string-lessp))
-        (let ((possible-rule-name
-               (if *last-lex-rule-id*
-                   (with-package (:lkb)
-                     (ask-for-lisp-movable "Current Interaction" 
-                                           `(("Lexical Rule?" . ,*last-lex-rule-id*))
-                                           150 rule-names))
-                 (with-package (:lkb)
-                   (ask-for-lisp-movable "Current Interaction" 
-                                         `(("Lexical Rule?" . ,(car rule-names)))
-                                         150 rule-names))))) 
-          (when possible-rule-name
-            (let* ((name (car possible-rule-name))
-                   (rule-entry (get-lex-rule-entry name)))
-              (unless rule-entry 
-                (format t "~%Lexical rule ~A is not defined" name)
-                (setf rule-entry (ask-user-for-lexical-rule)))
-              (when name (setf *last-lex-rule-id* name))
-              rule-entry))))))
+(defun ask-user-for-lexical-rule ()
+  (let*
+    ((prompt "")
+     (rule-names (rules-sorted-on-name *lexical-rules*))
+     (possible-name
+       (cond
+         ((and *last-lex-rule-id* (get-lex-rule-entry *last-lex-rule-id*))
+            *last-lex-rule-id*)
+         (rule-names ; first alphabetically that starts with character "V"
+           (or (find #\V rule-names :key #'(lambda (name) (schar (string name) 0)))
+               (car rule-names)))
+         (t ""))))
+    (loop
+      (setq possible-name
+	(ask-for-lisp-movable "Current Interaction" 
+			      `((,(format nil "~a~%Lexical rule?" prompt) . ,possible-name))
+			      nil rule-names))
+      (let* ((name (car possible-name))
+             (rule-entry (get-lex-rule-entry name)))
+        (cond
+          ((null name) (return nil))
+          (rule-entry
+            (setq *last-lex-rule-id* name)
+            (return rule-entry))
+          (t 
+            (setq prompt "Not defined - try again."
+                  possible-name name)))))))
 
-(defparameter *last-word* "the")
+
+(defparameter *last-word* nil)
 
 (defun ask-user-for-word (prompt)
-   (let ((possible-name
-            (ask-for-strings-movable "Current interaction" 
-               `((,(format nil "~a~%Word?" prompt) . 
-                     ,(or *last-word* 
-                        (car (lex-words *lexicon*))))) 150)))
-      (when possible-name
-         (let* ((lex (car possible-name))
-               (lex-string
+   (let ((possible-word
+           (or *last-word* 
+               (let ((words (lex-words *lexicon*)))
+                 (or (car (member "the" words :test #'equalp)) (car words))))))
+      (setq possible-word
+        (ask-for-strings-movable "Current interaction" 
+                 `((,(format nil "~a~%Word?" prompt) . ,possible-word))
+                 nil))
+      (when possible-word
+         (let* ((lex (car possible-word))
+                (lex-string
                   (if (stringp lex)
                      lex
                      (format nil "~S" lex))))
@@ -304,115 +342,102 @@
 
 ;;; Lexical rule application
 
-
-(defun apply-lex (&optional id)
-   (let* ((lex (or id (ask-user-for-lex)))
-         (lex-entry (if lex (get-lex-entry-from-id lex)))
-         (lex-entry-fs
-            (if lex-entry (lex-entry-full-fs lex-entry))))
-      (when lex-entry-fs 
-         (let 
-            ((lex-rule (ask-user-for-lexical-rule)))
-           (when lex-rule
-               (let 
-                   ((result
-                     (apply-lex-interactive lex lex-entry-fs lex-rule)))
-                  (cond (result
-                        (display-fs result
-                           (format nil "~(~A~) + ~A" 
-                                   lex (rule-id lex-rule))
-                           (rule-id lex-rule)))
-                     (t (format t 
-                           "~%Lexical rule application failed")))))))))
-
-(defun apply-lex-rules (&optional id)
+(defun apply-lex (&optional id fs)
   (let* ((lex (or id (ask-user-for-lex)))
-         (lex-entry (if lex (get-lex-entry-from-id lex)))
-         (lex-entry-fs
-	  (if lex-entry (lex-entry-full-fs lex-entry))))
+          (lex-entry-fs
+            (cond (fs)
+                  ((and lex (get-lex-entry-from-id lex))
+                    (lex-entry-full-fs (get-lex-entry-from-id lex))))))
     (when lex-entry-fs 
-      (apply-or-reapply-lex-rules lex-entry-fs lex))))
+      (let ((lex-rule (ask-user-for-lexical-rule)))
+        (when lex-rule
+          (let* (#+:clim (*standard-output* clim-user::*lkb-top-stream*)
+                 (*unify-debug* :window) ; JAC - added at request of Berthold
+                 (result
+                   (apply-lex-interactive lex lex-entry-fs lex-rule)))
+            (cond (result
+                    (let ((id (format nil "~(~A~) + ~A" lex (rule-id lex-rule))))
+                       (display-fs
+                         result
+                         (format nil "~A = ~(~A~)" id (extract-orth-from-fs result))
+                         id)))
+                  (t (lkb-beep)
+                     (format #+:clim clim-user::*lkb-top-stream*
+		             #-:clim t 
+                             "~%Lexical rule application failed")))))))))
+
+(defun apply-lex-rules (&optional id fs)
+  (let* ((lex (or id (ask-user-for-lex)))
+          (lex-entry-fs
+            (cond (fs)
+                  ((and lex (get-lex-entry-from-id lex))
+                    (lex-entry-full-fs (get-lex-entry-from-id lex))))))
+    (when lex-entry-fs 
+      (apply-or-reapply-lex-rules lex lex-entry-fs))))
       
-(defun apply-or-reapply-lex-rules (fs lex)
+(defun apply-or-reapply-lex-rules (lex fs)
   (setf *number-of-applications* 0)
   (let* ((*maximal-lex-rule-applications* 
-	  (if *lex-rule-show-one-step* 1
-	    *maximal-lex-rule-applications*))
+	   (if *lex-rule-show-one-step* 1
+	       *maximal-lex-rule-applications*))
 	 (result-list
-	  (try-all-lexical-rules 
-	   (list (cons nil fs)))))
+	   (try-all-lexical-rules (list (cons nil fs)))))
     (if result-list
-	   (draw-active-list
-	    (mapcar #'(lambda (result-pair)
-			(let* ((done (format nil "~(~A~) ~{+ ~A~}" 
-				       lex 
-				       (reverse 
-					(car result-pair))))
-			       (string
-				#+:bmw
-			       (format nil "~(~A~) = ~A" 
-				       (extract-orth-from-fs 
-					(cdr result-pair))
-				       done)
-			       #-:bmw
-			       (format nil "~A = ~(~A~)" 
-				       done
-				       (extract-orth-from-fs 
-					(cdr result-pair)))
-			       ))
-			  (cons string (cons string
-					     (cons done
-						   (cdr result-pair))))))
+	(draw-active-list
+	    (mapcar #'(lambda (rules-and-fs)
+			(let* ((done
+			         (format nil "~(~A~) ~{+ ~A~}" 
+				         lex 
+				         (reverse (car rules-and-fs))))
+			       (done-and-str
+			         (format nil "~A = ~(~A~)" 
+				         done
+				         (extract-orth-from-fs (cdr rules-and-fs)))))
+			  (list* done-and-str done-and-str done (cdr rules-and-fs))))
 		    result-list)
 	    "Lexical rule results"
 	    (list
-	     (cons 
-	      "Apply all lex rules"
-	      #'(lambda (display-res)
-		  (apply-or-reapply-lex-rules
-			       (cddr display-res) (cadr display-res))))
-	     (cons 
-	      "Feature structure"
-	      #'(lambda (display-res)
-		  (display-fs (cddr display-res)
-			      (car display-res))))))
-	  (progn
+	      (cons 
+	        "Feature structure"
+	        #'(lambda (display-res)
+		    (display-fs (cddr display-res) (car display-res) (cadr display-res))))
+              (cons 
+	        "Apply lex rule..."
+	        #'(lambda (display-res)
+		    (apply-lex (cadr display-res) (cddr display-res))))
+              (cons 
+	        "Apply all lex rules"
+	        #'(lambda (display-res)
+		    (apply-or-reapply-lex-rules (cadr display-res) (cddr display-res))))))
+	(progn
 	   (lkb-beep)
-	   (format #+:clim
-		   clim-user::*lkb-top-stream*
-		   #-:clim
-		   t
+	   (format #+:clim clim-user::*lkb-top-stream*
+		   #-:clim t
 		   "~%No applicable lexical rules")))))
-
-
 
 
 ;;; "Parse"
 ;;;
 ;;; "Parse Input" do-parse
 
-
 (defparameter *last-parses* '("the dog barks"))
 
-
 (defun do-parse nil
+  (declare (special *last-generate-from-edge*))
   (let* ((sentence 
             (ask-for-strings-movable "Current Interaction" 
                `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
     (when sentence
       (setf *sentence* (car sentence))
       (close-existing-chart-windows)
+      (setq *last-generate-from-edge* nil)
       (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
-        (setq *last-parses* 
-          (butlast
-           (cons str (remove str *last-parses* :test #'equal))
-           (max 0 (- (length *last-parses*) 12))))
-                                        ; limit number of sentences retained
+        (setq *last-parses* (cons str (remove str *last-parses* :test #'equal)))
+        (setq *last-parses*
+          (subseq *last-parses* 0 (min (length *last-parses*) 12)))
+        (parse
+	  (split-into-words (preprocess-sentence-string str)))))))
 
-        (with-output-to-top ()
-	  (parse
-	   (split-into-words 
-	    (preprocess-sentence-string str))))))))
 
 ;;; "Generate" generate-from-edge
 ;;; this is in mrstoplevel.lsp
@@ -424,13 +449,12 @@
   ;;; I've made this just work on FSs since the default
   ;;; stuff won't fail anyway
   (let* ((check-details
-          (with-package (:lkb)
-            (ask-for-lisp-movable 
-             "Check unification" '(("fs1" . head-specifier-rule) 
-                                   ("path1 in ()s (optional)" . (args first))
-                                   ("fs2" . sleeps_1)
-                                   ("path2 in ()s (optional)" . nil)
-                                   ("name for result (optional)" . nil)))))
+           (ask-for-lisp-movable 
+             "Check Unification" '(("fs1" . head-specifier-rule) 
+                                 ("path1 in ()s (optional)" . (args first))
+                                 ("fs2" . sleeps_1)
+                                 ("path2 in ()s (optional)" . nil)
+                                 ("name for result (optional)" . nil))))
          (fs1-id (car check-details))
          (path1 (cadr check-details))
          (fs2-id (caddr check-details))
@@ -463,54 +487,50 @@
                (interactive-unification-check))))))
 
 
-; The corresponding menu item should get disabled - it shouldn't available and
-; quietly not do anything
-;#-(or :clim :www)
-;(defun compare-parses (&optional edges)
-;  (declare (ignore edges))
-;  nil)
-
-
 ;;
 ;; Interactively set parameters
 ;;
 
 (defun get-parameters ()
   (setq *lkb-user-params* (sort *lkb-user-params* #'string<))
-  (let* ((*print-readably* t)
-	 (params (mapcan #'(lambda (p)
-			     ;; Skip things we won't be able to read back in
-			     ;; (bmw) these skipped params are _lost_ when saving to file
-			     (handler-case
+  (let* ((unreadable-params nil)
+	 (p-v-pairs (mapcan #'(lambda (p)
+			       ;; Skip things we won't be able to read back in (bmw)
+			       ;; these skipped params are _lost_ when saving to file
+			       ;; JAC: these skipped params are also not displayed
+                               (handler-case
 				 (list 
-				  (cons (format nil "~S" p) 
-					(write-to-string (symbol-value p))))
-			       (print-not-readable () nil)))
+				   (cons (string-downcase (symbol-name p))
+			             (let ((*print-readably* t))
+				       (prin1-to-string (symbol-value p)) ; is it printable?
+				       (symbol-value p))))
+				 (print-not-readable ()
+			           (push p unreadable-params)
+			           nil)))
 			 *lkb-user-params*))
-	 (result (ask-for-strings-movable "Set options" params)))
+	 (result (ask-for-lisp-movable "Set Options" p-v-pairs 780)))
     (when result
-      (loop for p in params
-	  for r in result
-	  do (setf (symbol-value (read-from-string (car p)))
-	       (read-from-string r)))
+      (loop with res = result
+            for p in *lkb-user-params*
+            unless (member p unreadable-params)
+	    do (setf (symbol-value p) (pop res)))
       (unless *user-params-file*
 	(setf *user-params-file* 
 	  (ask-user-for-new-pathname "File to save parameters?")))
       (when *user-params-file*
 	(handler-case 
-	    (with-open-file
-		(ostream *user-params-file* :direction :output
-		 :if-exists :supersede)
-	      (format ostream ";;; Automatically generated file - do not edit!")
-	      (loop for p in params
-		  for r in result
-		  do
-		    (format ostream "~%(defparameter ~S '~S)"
-			    (read-from-string (car p))
-			    (read-from-string r))))
+	  (with-open-file
+		(ostream *user-params-file* :direction :output :if-exists :supersede)
+	      (format ostream ";;; Automatically generated file - do not edit!~%")
+              (loop with res = result
+                    for p in *lkb-user-params*
+                    unless (member p unreadable-params)
+		    do
+		    (let ((*package* (find-package "KEYWORD"))) ; so symbols get package prefix
+		      (format ostream "(~S ~S '~S)~%" 'defparameter p (pop res)))))
 	  (file-error (condition)
-	    (format t "~%Parameters not saved to file ~A
-                      ~A" *user-params-file* condition)))))))
+	    (format t "~%Parameters not saved to file ~A~%~A"
+	    	      *user-params-file* condition)))))))
   
 ;;
 ;; Save and load shrunk paths in display settings file
@@ -533,29 +553,28 @@
 
 (defun load-display-settings nil
   (set-up-display-settings
-   (ask-user-for-existing-pathname "Load type display settings from?")))
+   (ask-user-for-existing-pathname "Type display settings file?")))
+
 
 ;;; debugging - finding maximal type
 
 (defun find-type-from-features nil
   (let ((feature-list
-         (with-package (:lkb)
-           (ask-for-lisp-movable "Current Interaction" 
-                                 `(("Feature(s)" . (,*diff-list-list*)))
-                                 150))))
+         (ask-for-lisp-movable "Current Interaction" 
+                               `(("Feature(s)" . (,*diff-list-list*)))
+                               nil)))
     (when feature-list 
       (when (listp (car feature-list)) 
         (setf feature-list (car feature-list)))
       (let ((type (maximal-type-of-list feature-list)))
         (if type
-            (format t "~%Maximal type for ~A is ~A" feature-list type)
-          (let ((bogus-features (loop for f in feature-list
-                                     nconc
-                                      (if (not (maximal-type-of f)) 
-                                          (list f)))))
-            (if bogus-features
-                (format t "~%Features ~A not found in this grammar"
-                        bogus-features)
-              (format t "~%Features ~A not mutually compatible" feature-list))))))))
+            (format t "~&Maximal type for ~A is ~A~%" feature-list type)
+            (let ((bogus-features (loop for f in feature-list
+                                      unless (maximal-type-of f)
+                                      collect f)))
+              (if bogus-features
+                  (format t "~&Features ~A not found in this grammar~%"
+                          bogus-features)
+                  (format t "~&Features ~A not mutually compatible~%" feature-list))))))))
 
 ;;; various fns moved to utils.lsp, because they are relevant in tty mode

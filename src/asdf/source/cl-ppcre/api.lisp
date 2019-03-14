@@ -1005,6 +1005,7 @@ match.
                           ,target-string ,replacement ,@rest))
         (t form)))
 
+(declaim (notinline regex-replace-all))
 (defun regex-replace-all (regex target-string replacement
                                 &key (start 0)
                                      (end (length target-string))

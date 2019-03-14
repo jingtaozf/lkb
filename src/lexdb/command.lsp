@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2006
+;;; Copyright (c) 2001 -- 2016
 ;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -53,7 +53,7 @@
       (format t "~&(LexDB) contents of scratch (0 entries): NIL")
       (lkb-beep))
      (t
-      (when (y-or-n-p-general 
+      (when (lkb-y-or-n-p 
 	     (format nil "Confirm CLEAR all ~a entries from private 'rev'?" rev-size))
 	(lexdb-time ("clearing private 'rev'" "done clearing private 'rev'")
 		    (clear-private-rev lex))
@@ -68,7 +68,7 @@
       (format t "~&(LexDB) contents of scratch (0 entries): NIL")
       (lkb-beep))
      (t
-      (when (y-or-n-p-general 
+      (when (lkb-y-or-n-p 
 	     (format nil "Confirm COMMIT ~a entries from private 'rev' to 'public.rev'?"
 		     (table-head-count lex :rev)))
 	(lexdb-time ("committing private 'rev' to 'public.rev'" 

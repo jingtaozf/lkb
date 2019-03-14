@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2004
+;;; Copyright (c) 1998--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -221,9 +221,7 @@ duplicate variables")
 
 (defun create-variable (fs gen)
   (when (is-valid-fs fs)
-    (let ((existing-variable (assoc fs *named-nodes*)))
-      (if existing-variable
-        (cdr existing-variable)
+    (or (cdr (assoc fs *named-nodes* #+:lkb :test #+:lkb #'eq))
         (let* ((idnumber (funcall gen))
                (var-type (determine-variable-type fs))
                (extra (create-index-property-list fs))
@@ -233,7 +231,7 @@ duplicate variables")
           (push (cons fs variable-identifier) *named-nodes*)
           (when *mrs-record-all-nodes-p*
             (push (cons fs variable-identifier) *all-nodes*))
-          variable-identifier)))))
+          variable-identifier))))
 
 (defun create-indexing-variable (fs)
   ;;; this is called when we are building an mrs structure for indexing
@@ -252,34 +250,39 @@ duplicate variables")
 ;;; intermediate types on the path - all relevant information
 ;;; must be contained in the atomic types
 
+(let ((property-list-cache (make-hash-table :test #'equal)))
 (defun create-index-property-list (fs &optional path-so-far)
   (when (is-valid-fs fs)
     (setf fs (deref fs))
-    (let ((label-list (fs-arcs fs)))
-      (if (and label-list (consp label-list))
-        (loop
-            for feat-val in label-list
-            append
-              (let ((new-path (cons (car feat-val) path-so-far))
-                    (next-fs (cdr feat-val)))
-                (unless (member (car feat-val) *ignored-extra-features*)
-                  (create-index-property-list next-fs new-path))))
+    (let ((feat-vals (fs-arcs fs)))
+      (if feat-vals
+        (loop for feat-val in feat-vals
+              unless (member (car feat-val) *ignored-extra-features* :test #'eq)
+              nconc
+              (let ((new-path (cons (car feat-val) path-so-far)))
+                (declare (dynamic-extent new-path)) ; allocate the feature path on stack
+                (create-index-property-list (cdr feat-val) new-path)))
         (when path-so-far
-          (let ((pair
-                 (make-extrapair 
-                  :feature (make-mrs-feature (reverse path-so-far))
-                  :value (create-type (fs-type fs)))))
-            (when *mrs-record-all-nodes-p* (push (cons fs pair) *all-nodes*))
-            (list pair)))))))
+          (let ((key (cons path-so-far (fs-type fs))))
+            (declare (dynamic-extent key)) ; NB on stack so only to be used in lookup
+            (let ((pair
+                    (or (gethash key property-list-cache)
+                      (setf
+                        (gethash (cons (copy-list (car key)) (cdr key)) ; copy both key and path
+                          property-list-cache)
+                        (make-extrapair
+                          :feature (make-mrs-feature (reverse path-so-far))
+                          :value (create-type (fs-type fs)))))))
+              (when *mrs-record-all-nodes-p* (push (cons fs pair) *all-nodes*))
+              (list pair))))))))
+)
             
-
 (defun make-mrs-feature (flist)
-  (if (cdr flist)
-      (intern (apply #'concatenate 'string
-                     (string (car flist))
-                     (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
-              *mrs-package*)
-    (car flist)))
+  (intern
+    (apply #'concatenate 'string
+           (string (car flist))
+           (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
+    *mrs-package*))
 
 
 ;;; ****************************************************
@@ -400,13 +403,11 @@ duplicate variables")
 
 
 (defun extract-cfrom-from-rel-fs (fs)
-  (let ((label-list (fs-arcs fs)))
-    (if *rel-cfrom-feature*
-	(let ((cfrom-fs
-	       (cdr (assoc *rel-cfrom-feature*
-			   label-list))))
-	  (or (extract-integer-from-fs-type cfrom-fs)
-	       -1)))))
+  (if *rel-cfrom-feature*
+      (let ((cfrom-fs
+              (cdr (assoc *rel-cfrom-feature* (fs-arcs fs) :test #'eq))))
+        (or (extract-integer-from-fs-type cfrom-fs)
+            -1))))
 
 (defun extract-integer-from-fs-type (fs)
   (if fs
@@ -418,13 +419,11 @@ duplicate variables")
 		  res))))))
 
 (defun extract-cto-from-rel-fs (fs)
-  (let ((label-list (fs-arcs fs)))
-    (if *rel-cto-feature*
-	(let ((cto-fs
-	       (cdr (assoc *rel-cto-feature*
-			   label-list))))
-	  (or (extract-integer-from-fs-type cto-fs)
-	       -1)))))
+  (if *rel-cto-feature*
+      (let ((cto-fs
+              (cdr (assoc *rel-cto-feature* (fs-arcs fs) :test #'eq))))
+        (or (extract-integer-from-fs-type cto-fs)
+            -1))))
 
 (defun extract-pred-from-rel-fs (rel-fs &key rawp)
     (let* ((label-list (fs-arcs rel-fs))
@@ -443,8 +442,14 @@ duplicate variables")
           type))))
              
 (defun normalize-predicate (predicate)
-  (when (and predicate (or (symbolp predicate) (stringp predicate)))
-    (remove-right-sequence *sem-relation-suffix* (string-downcase predicate))))
+  (if (or (stringp predicate) (and predicate (symbolp predicate)))
+    (remove-right-sequence
+      *sem-relation-suffix*
+      ;; check casing, since usually all lower case already
+      (if (loop for c across (string predicate) thereis (upper-case-p c))
+        (string-downcase predicate)
+        predicate))
+    (error "Inconsistency - unexpected argument ~A to ~S" predicate 'normalize-predicate)))
 
 (defun extract-type-from-rel-fs (rel-fs)
   (fs-type rel-fs))
@@ -453,28 +458,27 @@ duplicate variables")
   (declare (ignore str))
   (let* ((label-list (fs-arcs rel-fs))
          (reduced-list
-          (loop for fvp in label-list
-              for feature = (car fvp)
-              for value = (cdr fvp)
-              unless (or (member feature *ignored-sem-features*)
-                         (eql feature (car *rel-handel-path*))
-                         (eql feature (car *rel-name-path*))
-                         #+:lkb (eql feature lkb::*recording-word*))
-              collect 
+          (loop for (feature . value) in label-list
+              ;; JAC 04-01-2019 - changed eql tests to eq
+              unless (or (member feature *ignored-sem-features* :test #'eq)
+                         (eq feature (car *rel-handel-path*))
+                         (eq feature (car *rel-name-path*))
+                         #+:lkb (eq feature lkb::*recording-word*))
+              collect
                 (make-fvpair :feature feature
-                             :value 
-                             (or (when *mrs-record-all-nodes-p*
-                                   (lookup-mtr-node value))
-                                 (if (member feature *value-feats*)
+                             :value
+                             (or (and *mrs-record-all-nodes-p*
+                                      (lookup-mtr-node value))
+                                 (if (member feature *value-feats* :test #'eq)
                                      (create-type (fs-type value))
-                                   ;; (substitute-ersatz 
-                                   ;;  (create-type (fs-type value))
-                                   ;;   str)
-                                   (if indexing-p
-                                     (create-indexing-variable value)   
-                                     (create-variable
-                                      value
-                                      variable-generator))))))))
+                                     ;; (substitute-ersatz
+                                     ;;  (create-type (fs-type value))
+                                     ;;   str)
+                                     (if indexing-p
+                                         (create-indexing-variable value)
+                                         (create-variable
+                                           value
+                                           variable-generator))))))))
     (sort reduced-list #'feat-sort-func)))
 
 (defun substitute-ersatz (const-str orig-str)
@@ -500,16 +504,15 @@ duplicate variables")
   sort)
 
 (defun feat-sort-func (fvp1 fvp2)
-  (let ((feat1 (fvpair-feature fvp1))
-         (feat2 (fvpair-feature fvp2)))
-    (feat-order-func feat1 feat2)))
-
-(defun feat-order-func (feat1 feat2)
-  (let ((remlist (member feat1 *feat-priority-list*)))
-    (if remlist (or (member feat2 remlist)
-                    (not (member feat2 *feat-priority-list*)))
-      (unless (member feat2 *feat-priority-list*)
-        (string-lessp feat1 feat2)))))
+  ;; JAC 04-01-2019 - changed eql tests to eq
+  (let* ((feat1 (fvpair-feature fvp1))
+         (feat2 (fvpair-feature fvp2))
+         (remlist (member feat1 *feat-priority-list* :test #'eq)))
+    (if remlist
+        (or (member feat2 remlist :test #'eq)
+            (not (member feat2 *feat-priority-list* :test #'eq)))
+        (unless (member feat2 *feat-priority-list* :test #'eq)
+          (string-lessp feat1 feat2)))))
 
 
 ;;; *******************************************************
@@ -859,14 +862,18 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
 ;;;
 ;;; ************************************************************
 
+(let ((variable-type-cache (make-hash-table :test #'eq)))
 (defun determine-variable-type (fs)
   (let ((type (create-type (if (is-valid-fs fs) (fs-type fs) fs))))
-    (cond (*variable-type-mapping* (string-downcase type))
-	  ((equal-or-subtype type *event-type*) "e")
+    (cond (*variable-type-mapping*
+            ;; memoise the case conversion
+            (or (gethash type variable-type-cache)
+                (setf (gethash type variable-type-cache) (string-downcase (string type)))))
+          ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *non_expl-ind-type*) "i")
           ((equal-or-subtype type *deg-ind-type*) "d")
-          ((equal-or-subtype type *handle-type*) "h")  
+          ((equal-or-subtype type *handle-type*) "h")
           ((equal-or-subtype type *non_event-type*) "p")
           ((equal-or-subtype type *event_or_index-type*) "i")
           ;;
@@ -874,6 +881,7 @@ the mod-anc is an index-lbl-pair - the target-ancs are a diff list of these
           ;;
           ((equal-or-subtype type (mrs::vsym "a")) "a")
           (t "u"))))
+)
 
 (defun ep-shorthand (ep)
   ;;

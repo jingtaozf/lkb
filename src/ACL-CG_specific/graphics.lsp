@@ -73,7 +73,7 @@
 
 ;;; BOLD AND UNDERLINED OUTPUT
 
-(defmacro with-bold-output (ostream body)
+(defmacro with-text-style-bold-face ((ostream) body)
   `(let ((current-font (cg:font ,ostream)))
       (setf (cg:font ,ostream) (cg:vary-font current-font 
                              :style (cons :bold (cg:font-style current-font))))

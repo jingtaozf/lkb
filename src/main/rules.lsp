@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2005 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see LICENSE for conditions
 
 
@@ -38,16 +38,16 @@
 (defun clear-grammar nil
   (setf *ordered-rule-list* nil)
   (when (fboundp 'clear-generator-grules)
-    (funcall 'clear-generator-grules))
+    (funcall (symbol-function 'clear-generator-grules)))
   (clrhash *rules*))
 
 (defun clear-lex-rules nil
   (setf *ordered-lrule-list* nil)
   (setf *ordered-sprule-list* nil)
   (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries))
+    (funcall (symbol-function 'reset-cached-lex-entries)))
   (when (fboundp 'clear-generator-lrules)
-    (funcall 'clear-generator-lrules))
+    (funcall (symbol-function 'clear-generator-lrules)))
   (clrhash *lexical-rules*))
 
 (defstruct (rule (:include psort))
@@ -563,26 +563,27 @@ base fs plus rule (except the type itself, of course)
     (with-input-from-string (stream string)
          (loop for irreg = (read-line stream nil nil)
              while irreg
-             unless (or (zerop (length irreg)) (eq (elt irreg 0) #\;))
+             unless (or (zerop (length irreg)) (char= (char irreg 0) #\;))
              do
-               (let* ((irreg-right (position '#\  irreg))                         
+               (let* ((irreg-right (position #\space irreg))                         
                       (spelling 
                        (if irreg-right
-                           (string-upcase (subseq irreg 0 irreg-right))))
+                           (nstring-upcase
+                             (subseq irreg 0 irreg-right))))
                       (aff-right 
                        (if irreg-right
-                           (position '#\  irreg :start (+ 1 irreg-right))))
+                           (position #\space irreg :start (1+ irreg-right))))
                       (affixname 
                        (if (and irreg-right aff-right)
-                           (string-upcase
-                            (subseq irreg (+ 1 irreg-right) aff-right))))
+                           (nstring-upcase
+                             (subseq irreg (1+ irreg-right) aff-right))))
                       (stem-right 
                        (if aff-right
-                           (position '#\  irreg :start (+ 1 aff-right))))
+                           (position #\space irreg :start (1+ aff-right))))
                       (stem 
                        (if aff-right
-                           (string-upcase
-                            (subseq irreg (+ 1 aff-right) stem-right)))))
+                           (nstring-upcase
+                             (subseq irreg (1+ aff-right) stem-right)))))
                  (if (and spelling affixname stem)
                      (add-to-irregulars spelling (create-lex-rule-name affixname) 
                                         stem)))))))

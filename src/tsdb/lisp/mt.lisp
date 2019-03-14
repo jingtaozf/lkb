@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2018 Stephan Oepen (oe@csli.stanford.edu)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -1002,11 +1002,13 @@
          (setf (get-field type *string-similarity-streams*) nil)))
       (when pid
         (ignore-errors
-         (run-process "kill -HUP ~d" pid
+         ;; JAC 29-Oct-2018: first 2 args in each of the following 3 calls were incorrect so
+         ;; they would always have failed
+         (run-process (format nil "kill -HUP ~d" pid)
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process "kill -TERM ~d" pid
+         (run-process (format nil "kill -TERM ~d" pid)
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process "(when kill -QUIT ~d" pid
+         (run-process (format nil "kill -QUIT ~d" pid)
                       :wait t :output "/dev/null" :error-output "/dev/null"))
         (sys:os-wait nil pid)
         (setf (get-field type *string-similarity-pids*) nil)))))

@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2003--2010
+;;; Copyright (c) 2003--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -78,11 +78,13 @@
     (setf *sppp-stream* nil))
   (when *sppp-pid*
     (ignore-errors
-     (run-process "kill -HUP ~d" *sppp-pid* 
+     ;; JAC 29-Oct-2018 - first 2 args in each of the following 3 calls were incorrect so
+     ;; they would always have failed
+     (run-process (format nil "kill -HUP ~d" *sppp-pid*)
                   :wait t :output "/dev/null" :error-output "/dev/null")
-     (run-process "kill -TERM ~d" *sppp-pid* 
+     (run-process (format nil "kill -TERM ~d" *sppp-pid*)
                   :wait t :output "/dev/null" :error-output "/dev/null")
-     (run-process "kill -QUIT ~d" *sppp-pid* 
+     (run-process (format nil "kill -QUIT ~d" *sppp-pid*)
                   :wait t :output "/dev/null" :error-output "/dev/null"))
     #+:allegro
     (sys:os-wait nil *sppp-pid*)

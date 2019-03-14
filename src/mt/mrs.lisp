@@ -137,21 +137,23 @@
 
 (defun clone-variable (variable &key skolemizep (cachep t))
   (when variable
-    (or (and cachep (rest (assoc variable %mrs-copy-cache%)))
-        (let ((copy (mrs::make-var 
-                     :type (mrs:var-type variable) :id (mrs:var-id variable))))
-          (setf (mrs:var-extra copy)
-            (loop
-                for extra in (mrs:var-extra variable)
-                collect (mrs::make-extrapair 
-                         :feature (mrs::extrapair-feature extra)
-                         :value (mrs::extrapair-value extra))))
+    (or (and cachep
+             (cdr (assoc variable %mrs-copy-cache% :test #'eq)))
+        (let ((copy (mrs::copy-var variable)))
+          ;; JAC 04-01-2019 - commented out deep copy below since neither the list
+          ;; nor the extrapairs are ever tested for eq-ness or destructively modified
+          ;; (setf (mrs:var-extra copy)
+          ;;   (loop
+          ;;       for extra in (mrs:var-extra variable)
+          ;;       collect (mrs::make-extrapair
+          ;;                 :feature (mrs::extrapair-feature extra)
+          ;;                 :value (mrs::extrapair-value extra))))
           (when skolemizep
             (push
-             (mrs::make-extrapair 
-              :feature *mtr-skolem-property*
-              :value (mrs::var-id variable))
-             (mrs:var-extra copy)))
+              (mrs::make-extrapair
+                :feature *mtr-skolem-property*
+                :value (mrs::var-id variable))
+              (mrs:var-extra copy)))
           (when cachep (push (cons variable copy) %mrs-copy-cache%))
           copy))))
 

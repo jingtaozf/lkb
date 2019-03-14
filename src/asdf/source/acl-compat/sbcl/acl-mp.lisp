@@ -141,7 +141,7 @@
 
 (defun/sb-thread process-kill (process)
   (when (process-id process)
-    (sb-thread:destroy-thread (process-id process))
+    (sb-thread:terminate-thread (process-id process)) ; JAC: was sb-thread:destroy-thread
     (setf (process-id process) nil))
   (sb-thread:with-mutex (*all-processes-lock*)
     (setf *all-processes* (delete process *all-processes*))))

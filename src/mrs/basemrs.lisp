@@ -328,7 +328,7 @@
 
 (defmethod mrs-output-start-fn ((mrsout simple))
   (with-slots (stream) mrsout
-    (format stream "~V%" 1)))
+    (format stream " ~V%" 1))) ; initial space otherwise bounding box could be incorrect
 
 (defmethod mrs-output-end-fn ((mrsout simple))
   (with-slots (stream) mrsout
@@ -512,7 +512,7 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 (defmethod mrs-output-start-fn ((mrsout column-two))
   (with-slots (stream indentation) mrsout
     (setf indentation (+ indentation 60))
-    (format stream "~V%" 1)))
+    (format stream " ~V%" 1)))
 
 ;;; 
 ;;; indexed output-type class
@@ -524,7 +524,7 @@ ACONS: <x1,h4> in <<x2,h3>,<x5,h6>>, <x11,h41> in <<x21,h31>,<x51,h61>>
 
 (defmethod mrs-output-start-fn ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream "~V%" 1)))
+    (format stream " ~V%" 1)))
 
 (defmethod mrs-output-end-fn ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -706,7 +706,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-fn ((mrsout prolog))
   (with-slots (stream) mrsout
-    (format stream "~V%" 1)))
+    (format stream " ~V%" 1)))
 
 (defmethod mrs-output-end-fn ((mrsout prolog))
   (with-slots (stream) mrsout
@@ -749,7 +749,7 @@ higher and lower are handle-variables
   (declare (ignore class lnk str))
   (with-slots (stream) mrsout
     (unless first-p (format stream ","))
-    (format stream "rel('~A'," 
+    (format stream "~%rel('~A'," ; JAC: added line break
             (remove-right-sequence 
 	     *sem-relation-suffix*
 	     (string-downcase pred)))))
@@ -792,7 +792,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-start-h-cons ((mrsout prolog))
   (with-slots (stream) mrsout
-    (format stream ",hcons([")))
+    (format stream ",~%hcons(["))) ; JAC: added line break
 
 (defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower first-p
 				 higher-id higher-sort lower-id lower-sort)
@@ -859,7 +859,7 @@ higher and lower are handle-variables
     
 (defmethod mrs-output-start-fn ((mrs html))
   (with-slots (stream) mrs
-    (format stream "~V%" 1)))
+    (format stream " ~V%" 1)))
 
 (defmethod mrs-output-end-fn ((mrs html))
   (with-slots (stream) mrs
@@ -1679,14 +1679,14 @@ higher and lower are handle-variables
 ;;; Utility fns
 
 (defun remove-right-sequence (remove-seq existing-seq)
-  ;;; if existing-seq terminates in the string given by remove-seq
-  ;;; return the existing-sequence without it
+  ;; if existing-seq terminates in the string remove-seq then return the existing-seq
+  ;; without it
   (let ((sl (length existing-seq))
         (rl (length remove-seq)))
     (if (and (> sl rl)
-             (equal remove-seq (subseq existing-seq (- sl rl))))
-      (subseq existing-seq 0 (- sl rl))
-      existing-seq)))
+             (string= remove-seq existing-seq :start2 (- sl rl)))
+        (subseq existing-seq 0 (- sl rl))
+        existing-seq)))
     
 (defun remove-variable-junk (var)
   (if (stringp var)
@@ -1707,11 +1707,11 @@ higher and lower are handle-variables
       (output-mrs1 mrs-instance device stream))
     (output-mrs1 mrs-instance device t)))
 
-(let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
-  #-:allegro
-  (declare (ignore lock))
+(let ((lock (mp:make-process-lock)))
+  ;; JAC: this lock used to be Allegro-only, but seems to be vital for correct working.
+  ;; All other ports define make-process-lock, so let's extend to them
   (defun output-mrs1 (mrs-instance device stream &optional (id 0))
-    (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
+    (mp:with-process-lock (lock)
       (def-print-operations device 0 stream)
       (initialize-display-structure *mrs-display-structure* mrs-instance id)
       (cond ((psoa-p mrs-instance)
@@ -2718,11 +2718,10 @@ to test
 	(output-algebra-sement1 sement device stream))
     (output-algebra-sement1 sement device t)))
 
-(let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
-  #-:allegro
-  (declare (ignore lock))
+(let ((lock (mp:make-process-lock)))
+  ;; JAC: this lock used to be Allegro-only, as also in output-mrs1
   (defun output-algebra-sement1 (sement device stream)
-    (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
+    (mp:with-process-lock (lock)
       (def-print-operations device 0 stream)
       (cond ((sement-p sement)
              (print-sement sement)

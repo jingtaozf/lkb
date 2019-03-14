@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2002.
+;;; Copyright (c) 1998--2017
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -6,14 +6,14 @@
 
 ;; A thread-safe first-in first-out queue
 
-#+(or :allegro :lispworks)
+#+(or :allegro :lispworks :ccl)
 (defmacro with-queue-lock ((queue) &body body)
   (let ((lock (gensym)))
     `(let ((,lock (queue-lock ,queue)))
        (mp:with-process-lock (,lock)
 	 ,@body))))
 
-#-(or :allegro :lispworks)
+#-(or :allegro :lispworks :ccl)
 (defmacro with-queue-lock ((queue) &body body)
   (declare (ignore queue))
   `(progn
@@ -26,7 +26,7 @@
 
 (defun make-queue ()
   (let ((queue (x-make-queue)))
-    #+(or :allegro :lispworks) (setf (queue-lock queue) (mp:make-process-lock))
+    #+(or :allegro :lispworks :ccl) (setf (queue-lock queue) (mp:make-process-lock))
     (setf (queue-head queue) (cons nil nil))
     (setf (queue-tail queue) (queue-head queue))
     queue))
@@ -60,7 +60,7 @@
 ;;; process with asynchronous processing and around 600 mbyte otherwise.  for
 ;;; better testing, disable asynchronous mode in LOGON.         (13-jun-06; oe)
 ;;;
-#+(and (or :allegro :lispworks) (not :logon))
+#+(and (or :allegro :lispworks :ccl) (not :logon))
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
@@ -80,7 +80,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-(and (or :allegro :lispworks) (not :logon))
+#-(and (or :allegro :lispworks :ccl) (not :logon))
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2004
+;;; Copyright (c) 1991--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
 ;;;   Benjamin Waldron; see `LICENSE' for conditions.
 
@@ -34,7 +34,7 @@
            #-:ansi-eval-when (load eval compile)
 
   (pushnew :lkb *features*)
-  (pushnew :lkb-v5.4 *features*)         
+  (pushnew :lkb-v5.5 *features*)         
 
   #+(or :cl-http (not (or :mcl :clim))) 
   (pushnew :tty *features*)
@@ -66,15 +66,15 @@
   ;; activate the LUI support code for select environments
   ;;
   #+(or (and :allegro (or :linux86 :linux86-64 :powerpc))
-        (and :openmcl :powerpc)
-        (and :sbcl (or :x86 :x86-64) :linux))
+        (and :ccl (or :powerpc :x86-64) (or :linux :darwin)) ; not on Windows
+        (and :sbcl (or :x86 :x86-64) (or :linux :darwin)))
   (pushnew :lui *features*)
 
   ;;
   ;; activate PSQL (used in the lexical database) support when running
   ;; on supported platforms, i.e. Linux (x86), Solaris, and Windoze
   ;;
-  #+(or :allegro (and :sbcl (or :x86 :x86-64) :linux))
+  #+(or :allegro (and :sbcl (or :x86 :x86-64) (or :linux :darwin)))
   (pushnew :psql *features*)		
 
   ;;
@@ -106,13 +106,11 @@
 
 (defparameter *lisp-specific-directory*
   (or
-   #+(and :allegro :clim) "ACL_specific"
-   #+(and :mcl :clim) "ACL_specific"
-   #+(and :lispworks :clim) "ACL_specific"
+   #+:clim "ACL_specific"
    #+(and :allegro (not :clim) :tty) "ACL_specific"
    #+(and :null
           :allegro :common-graphics (not (or :clim :tty))) "ACL-CG_specific"
-   #+(and :mcl (not :clim)) "MCL_specific"
+   #+:mcl "MCL_specific"
    ""))
 
 (defsystem "lkb"
@@ -124,8 +122,8 @@
                  #+:preprocessor "preprocessor"
                  #+:xml "s-xml")
 
-    :initially-do
-    (require :pxml)
+    #+:allegro :initially-do
+    #+:allegro (require :pxml)
     :finally-do 
     (let* ((package (find-package :lkb))
            (symbol (find-symbol "*MRS-LOADED*" package)))
@@ -169,6 +167,7 @@
               ((:file "graphics")    ; basic font handling etc
                (:file "misc")        ; non-graphics Lisp specific
                (:file "topmenu")     ; main interaction window/menu
+               (:file "selectfile")  ; select-file for CLIM
                (:file "dialog")))    ; querying user
 
     (:module "main functionality"
@@ -305,8 +304,8 @@
       :components
 	      (#+:clim
                (:file "graph")              ; uses CLIM graph drawing
-               #+(and :mcl (not :clim)) (:file "picwin")      ; low level 
-               #+(and :mcl (not :clim)) (:file "picfield")    ; low level
+               #+:mcl (:file "picwin")      ; low level
+               #+:mcl (:file "picfield")    ; low level
 ;               #+(and :allegro (not :clim) :common-graphics)
 ;               (:file "fsclasses")          ; classes for display	       
                (:file "activefs")           ; display FS in window
@@ -317,7 +316,7 @@
                #+(or :clim :www)
                (:file "compare")))          ; comparing parses
 
-     #+:allegro
+     #+(or :allegro :mcclim)
      (:module "emacs-interface"              
       :source-pathname *lisp-specific-directory*
       :binary-pathname *lisp-specific-directory*
@@ -410,7 +409,7 @@
                                         ; rules which can be used without LKB
        #+(and :clim (not :tty)) 
        (:file "lkb-acl-mrs")            ; display etc in CLIM
-       #+(and :mcl (not :clim) (not :tty)) 
+       #+(and :mcl (not :tty))
        (:file "lkb-mcl-mrs")))          ; display etc in MCL
      
      (:module "generator-morph"

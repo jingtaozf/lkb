@@ -1,10 +1,9 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
-;;; MCL port
-;;; split old toplevel.lsp into toplevel.lsp which should be generic CL
-;;; and this file which has the commands to create the actual menu
+;;; When porting to MCL, old toplevel.lsp was split into toplevel.lsp which should
+;;; be generic CL and this file which has the commands to create the actual menu
 
 ;;; ACL port - redefine menu commands
 ;;; split file again - menus.lsp is independent between ACL and MCL
@@ -15,8 +14,11 @@
 (in-package :clim-user)
 
 (eval-when (compile load eval)
-  (setf *default-text-style*
-    (merge-text-styles '(:sans-serif nil nil) *default-text-style*))
+  ;; the CLIM2 standard specifies *default-text-style* as a constant so it can't be
+  ;; setf'ed - in McCLIM the default family is already :sans-serif
+  (unless (constantp '*default-text-style*)
+    (setf (symbol-value '*default-text-style*)
+      (merge-text-styles (make-text-style :sans-serif nil nil) *default-text-style*)))
   (export '(*lkb-top-frame* *lkb-top-stream*
             *last-directory*
             set-up-lkb-interaction 
@@ -119,49 +121,15 @@
 	  (menu-items menu))))
 
 (defmethod construct-menu ((menu menu-item) &optional table)
-  (let ((name (intern (concatenate 'string "COM-" (menu-title menu)))))
+  (let (#+:sbcl (sb-ext:*muffled-warnings* t) ; suppress COM- redefinition warnings
+        (name (intern (concatenate 'string "COM-" (menu-title menu)))))
     (eval `(define-command (,name
 			    :menu ,(menu-title menu)
 			    :command-table ,table) ()
-	     (handler-case
+	     (lkb::execute-menu-command
 		 (funcall (quote ,(menu-value menu)))
-               #+:allegro
-               (excl:interrupt-signal (condition)
-		 (format t "~%Interrupted"))
-               ;; placeholder - we need a way
-               ;; of generating an interrupt which will
-               ;; affect these processes
-               (storage-condition (condition)
-		 (format t "~%Memory allocation problem: ~A~%" condition))
-               (error (condition)
-		 (format t "~%Error: ~A~%" condition))
-	       (serious-condition (condition)
-		 (format t "~%Something nasty: ~A~%" condition)))))))
+               (format t "~%While attempting to execute menu command ~A" ,(menu-title menu)))))))
 
-#|
-(defun construct-menu (menu)
-  (apply #'concatenate 'string
-	 (nconc
-	  (list "("
-		(prin1-to-string (slot-value menu 'menu-title))
-		" ")
-	  (mapcar #'construct-menu-1 (slot-value menu 'menu-items))
-	  (list ")"))))
-
-(defun construct-menu-1 (menu)
-  (if (lkb-menu-item-p menu)
-      (apply #'concatenate 'string
-	     (nconc
-	      (list "("
-		    (prin1-to-string (lkb-menu-item-menu-title menu))
-		    " ")
-	      (mapcar #'construct-menu-1 
-		      (lkb-menu-item-menu-items menu))
-	      (list ")")))
-    (format nil "[ ~S ~A t ]"
-	    (first menu)
-	    (string-downcase (string (third menu))))))
-|#
 
 ;; Create lkb interaction frame
 
@@ -181,12 +149,13 @@
   (setf *lkb-menu-mrs-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
-    (:big  (create-big-lkb-system-menu)))
-  #|
-  (:full (create-lkb-system-menu)) 
-  (:yadu (create-yadu-system-menu)))
-  |#
-  (unless (system:getenv "LKB_GUI_EXTERNAL")
+    (:big  (create-big-lkb-system-menu))
+    #|
+    (:full (create-lkb-system-menu)) 
+    (:yadu (create-yadu-system-menu))
+    |#
+    )
+  (unless (make:getenv "LKB_GUI_EXTERNAL") ; are we running inside Trollet or similar?
     (set-up-clim-interaction)))
 
 (defun set-up-clim-interaction ()
@@ -234,50 +203,72 @@
   ;; go to it
   (start-lkb-frame))
 
-;; Top-level CLIM frame
+
+;;; Top-level CLIM frame
+
+(defclass lkb-top-pane (application-pane) ())
 
 (define-application-frame lkb-top ()
-  (standard-application-frame) 
-  (:panes 
-   (display
-    (outlining (:thickness 1 :record-p t)
-      (spacing (:thickness 1 :record-p t)  
-	(scrolling (:scroll-bars :both :record-p t)
-	  (make-pane 'application-pane
-		     :name "lkb-pane"
-		     :text-cursor nil
-		     :end-of-line-action :allow
-		     :borders nil
-		     :background +white+
-		     :foreground +black+
-		     :draw t
-		     :record-p t
-		     :display-time t))))))
+  ()
+  #+:mcclim (:menu-bar lkb-top-command-table) ; apparently not necessary in Allegro CLIM
+  (:panes
+    (lkb-top-pane
+      (make-pane 'lkb-top-pane
+		 :text-cursor nil
+		 :end-of-line-action :wrap
+		 :end-of-page-action :scroll
+		 ;; *** :borders nil
+		 :background +white+
+		 :foreground +black+
+                 :text-style (lkb::lkb-dialog-font)
+		 :display-time t)))
   (:layouts
-   (default display))
-  (:geometry :width 550 :height 200)
-  (:command-table lkb-top-command-table))
+    (default
+      (scrolling (#+:mcclim :scroll-bar #-:mcclim :scroll-bars :both) ; CLIM spec ambiguous
+        #+:mcclim
+        (clim:spacing (:thickness 3 :background clim:+white+) lkb-top-pane)
+        #-:mcclim
+        lkb-top-pane)))
+  (:command-table #+:mcclim (lkb-top-command-table) #-:mcclim lkb-top-command-table))
+
+(defmethod clim:frame-exit :before ((frame lkb-top)
+                                    #+:allegro &rest #+:allegro keys)
+  ;; !!! the &rest argument in Allegro CLIM is undocumented and conflicts with the CLIM 2 spec
+  #+:allegro (declare (ignore keys))
+  ;; deal gracefully with attempts to send output to a closed lkb-top frame
+  (setq *lkb-top-stream* lkb::*lkb-background-stream*))
 
 (defun start-lkb-frame ()
   (let ((old-frame *lkb-top-frame*))
-    (setf *lkb-top-process*
-      (mp:run-function "start-lkb-frame"
-                               #'run-lkb-top-menu 
-                               #+:allegro
-                               excl::*initial-terminal-io*
-                               #-:allegro *terminal-io*))
-    ;; note - if this is being called from a command in the old frame it's
-    ;; important this is the last action ...
-    (when old-frame
-      (execute-frame-command old-frame '(com-close-to-replace)))))
+    ;; put frame in the same place on the screen as old frame, if any
+    (multiple-value-bind (left top)
+        (if old-frame (lkb::frame-screen-boundary old-frame))
+      (setq *lkb-top-frame* nil) ; the old frame is no longer LKB Top
+      (setf *lkb-top-process*
+        (mp:run-function "start-lkb-frame"
+                         #'run-lkb-top-menu 
+                         #+:allegro excl:*initial-terminal-io*
+                         #-:allegro lkb::*initial-terminal-io*
+                         (or left 200)
+                         (if top (- top lkb::+window-manager-top-offset+) 120)))
+      ;; note - if this is being called from a command in the old frame it's
+      ;; important this is the last action ...
+      (when old-frame
+        (execute-frame-command old-frame '(com-close-to-replace))))))
 
-(defun run-lkb-top-menu (background-stream)
+(defun run-lkb-top-menu (background-stream left top)
   ;; define this function so that stuff can be called on exit from LKB
-  (let ((frame (make-application-frame 'lkb-top)))
+  (let ((frame
+          (make-application-frame 'lkb-top
+                                  :pretty-name "Lkb Top"
+                                  :left left :top top
+                                  :width 600 :height 250)))
     (dolist (command *lkb-menu-disabled-list*)
       (setf (command-enabled command frame) nil))
+    ;; JAC - we can set *lkb-top-frame* here but not *lkb-top-stream* since there
+    ;; is no guarantee that the panes have yet been attached to the frame, so
+    ;; do it instead in a run-frame-top-level :before method
     (setf *lkb-top-frame* frame)
-    (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
     ;; crude way of seeing whether this is being called when we already have a
     ;; grammar
     (when lkb::*current-grammar-load-file*
@@ -303,8 +294,17 @@
           (excl:exit 0 :no-unwind t :quiet t))
         #+:lispworks
         (lw:quit :ignore-errors-p t)
-        #-(or :allegro :lispworks)
+        #+:ccl
+        (ccl:quit 0)
+        #+:sbcl
+        (sb-ext:exit)
+        #-(or :allegro :lispworks :ccl :sbcl)
         (error "no known mechanism to shutdown Lisp (see `topmenu.lsp'")))))
+
+(defmethod run-frame-top-level :before ((frame lkb-top) &key &allow-other-keys)
+  ;; !!! With McCLIM and SBCL, in some unexplained circumstances the window may not draw
+  ;; itself fully - in that case calling (sleep 0.2) here seems to fix the problem
+  (setq *lkb-top-stream* (find-pane-named frame 'lkb-top-pane)))
 
 #|
 (defun user-exit-lkb-frame (frame)
@@ -321,13 +321,8 @@
     (when (lkb::lkb-y-or-n-p "Really exit the system?")
       (setf *complete-lisp-close* t)
       (frame-exit frame))))
-
-(defun restart-lkb-function nil
-  (lkb::read-psort-index-file)
-  (setf *last-directory* nil)
-  (set-up-lkb-interaction))
-
 |#
+
 
 (defun restart-lkb-window nil
   (setf *last-directory* nil)
@@ -363,6 +358,53 @@
       (format t "~%Image saved~%")
       nil))))
 
+#+(or :ccl :sbcl)
+(defun dump-lkb (image-location)
+  (cond
+    (lkb::*current-grammar-load-file*
+      (lkb::lkb-beep)
+      (warn "Dump system call ignored since a grammar has been loaded"))
+    #+:mcclim
+    (*lkb-top-frame*
+      (lkb::lkb-beep)
+      (warn "Dump system call ignored since CLIM frames have been created"))
+    (t
+      (let ((build-date
+              (string-trim '(#\newline)
+                (with-output-to-string (str) (lkb::write-time-readably str)))))
+        (flet
+          ((restore-dumped-lkb ()
+               (format t "Welcome to LKB ~A (built with ~A, ~A)~%~%"
+                 cl-user::*lkb-version* (lisp-implementation-type)
+                 build-date) 
+               (force-output *standard-output*)
+               #+:sbcl (sb-debug::enable-debugger)
+               #+:sbcl (setf sb-impl::*descriptor-handlers* nil)
+               #+(or :sbcl :ccl) (make::set-lkb-memory-management-parameters)
+               (in-package :lkb)
+               (setq *print-pretty* nil)
+               (setq lkb::*initial-terminal-io* *terminal-io*)
+               ;; reset portable utilities temp directory since it's machine-specific
+               (uiop/stream:setup-temporary-directory)
+               ;; allow McCLIM to find alternative default fonts
+               #+:mcclim (mcclim-truetype::autoconfigure-fonts)
+               (unless (probe-file (lkb::lkb-tmp-dir))
+                 (warn "Temporary files directory ~A does not exist" (lkb::lkb-tmp-dir)))
+               (lkb::start-lkb)))
+          #+:ccl
+          (progn
+            (setq ccl::*inhibit-greeting* t)
+            (setq ccl:*restore-lisp-functions* (list #'restore-dumped-lkb))
+            (ccl:save-application image-location :prepend-kernel t)) ; then lisp quits
+          #+:sbcl
+          (progn
+            (setq sb-int:*repl-read-form-fun* #'make::sbcl-repl-read-form)
+            (setq sb-ext:*init-hooks* (list #'restore-dumped-lkb))
+            (sb-debug::disable-debugger)
+            (sb-ext:save-lisp-and-die
+              (pathname image-location) :executable t :save-runtime-options t)
+            (sb-ext:exit)))))))
+
 (defun enable-type-interactions nil
   ;; it may only work from within the application frame
   (dolist (command *lkb-menu-disabled-list*)
@@ -370,7 +412,7 @@
         (setf (command-enabled command *lkb-top-frame*) t))))
 
 (defun disable-type-interactions nil
-  (when clim-user::*lkb-top-frame*
+  (when *lkb-top-frame*
     ;; this is called when a type file is being redefined it may only
     ;; work from within the application frame
     (dolist (command *lkb-menu-disabled-list*)
@@ -390,29 +432,38 @@
 ;;; consuming 
     
 (defun parse-sentences-batch nil
-  ;;; for MCL this can just be parse-sentences
   (mp:run-function "Batch parse" #'lkb::parse-sentences))
 
-;; Direct output to LKB window, if present
+;; Direct ordinary output to LKB Top window, if present
 
 (defun invoke-with-output-to-top (body)
-  (unwind-protect
+  (multiple-value-prog1
+    (unwind-protect
       (let ((*standard-output* *lkb-top-stream*)
+	    (*terminal-io* *lkb-top-stream*)
             ;;
             ;; _fix_me_
             ;; we believe that debug output from the CLIM patches may cause a
             ;; force-output() on *debug-io* to raise an error(), when running 
             ;; in a background process.                        (13-feb-08; oe)
             ;;
-            #-:logon
-	    (*debug-io* *lkb-top-stream*)
-	    ;; (*terminal-io* *lkb-top-stream*)
-	    (*standard-input* *lkb-top-stream*)
+            #-(or :logon :mcclim)
+	    (*debug-io* *lkb-top-stream*) ; JAC - LKB Top inappropriate for input/debugging
+            #-:mcclim
+            (*trace-output* *lkb-top-stream*)
+	    #-:mcclim
+            (*standard-input* *lkb-top-stream*) 
 	    (*error-output* *lkb-top-stream*)
-	    (*query-io* *lkb-top-stream*)
-	    (*trace-output* *lkb-top-stream*))
-	(when (not (eq mp:*current-process* *lkb-top-process*))
+	    #-:mcclim
+	    (*query-io* *lkb-top-stream*))
+        #+:allegro
+        (when (not (eq mp:*current-process* *lkb-top-process*))
 	  (mp:process-add-arrest-reason *lkb-top-process* :output))
-	(setf (stream-recording-p *standard-output*) t)
-	(funcall body))
-    (mp:process-revoke-arrest-reason *lkb-top-process* :output)))
+	;; JAC - previously we had
+	;; (setf (stream-recording-p *standard-output*) t)
+        ;; but surely it's unnecessary since Lkb Top is always recording?
+	;; In any case, if the user has closed Lkb Top then it's incorrect
+        (funcall body))
+      #+:allegro
+      (mp:process-revoke-arrest-reason *lkb-top-process* :output))
+    (force-output)))

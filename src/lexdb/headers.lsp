@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2005
+;;; Copyright (c) 2001 -- 2018
 ;;;   Ben Waldron, John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -124,9 +124,11 @@
 	   (append '("3" "4" "0") excl::*load-foreign-types*))
 	  )
       (load-libpq '("libpq.so.5" "libpq.so.5.0" "libpq.so" "libpq.so.4" "libpq.so.3")))
+    #+:darwin
+    (load-libpq '("libpq.dylib"))
     #+:mswindows
     (load-libpq '("libpq.dll"))
-    #-(or :linux :mswindows)
+    #-(or :linux :darwin :mswindows)
     (load-libpq nil)))
 
 (defun load-libpq (lib-names)
@@ -185,10 +187,9 @@
 	       (> (length tdl-fragment) 0))
     (return-from tdl-to-unifs))
   ;; assume fragment non-empty...
-  (let ((*readtable* (make-tdl-break-table)))
-    (read-tdl-lex-avm-def (make-string-input-stream 
-			   (concatenate 'string tdl-fragment "."))
-			  nil)))
+  (read-tdl-lex-avm-def (make-string-input-stream 
+			  (concatenate 'string tdl-fragment "."))
+			"TDL fragment"))
 
 ;;; RECORD TO PSORT STRUCT
 

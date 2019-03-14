@@ -1,6 +1,6 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
-;;; Copyright (c) 2003--2003
+;;; Copyright (c) 2003--2017
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -157,6 +157,7 @@
                      "[~a] lsp-loop(): premature end of file ~
                       (read ~a characters)~%" 
                      id n)
+                    (format t "[~a] lsp-loop(): read: `~s'.~%" id buffer)
                     (lsp-shutdown-client id)
                     (return)
                   when (= n size) do
@@ -184,6 +185,7 @@
          t
          "[~a] lsp-read(): premature end of file (read ~a characters)~%" 
          id n)
+        (format t "[~a] lsp-read(): read: `~s'.~%" id buffer)
         (return)
       when (= n size) do
         (incf size size)
@@ -334,6 +336,7 @@
                 (hierarchy (display-type-in-tree name))
                 (skeleton (show-type-spec-aux name type))
                 (expansion (show-type-aux name type))
+                #+(or :allegro :mcclim)
                 (source (edit-source name))
                 (t
                  (format

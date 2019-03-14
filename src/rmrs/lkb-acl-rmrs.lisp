@@ -1,4 +1,4 @@
-;; Copyright (c) 2003--2004
+;; Copyright (c) 2003--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -12,8 +12,9 @@
     ((rmrs :initform nil
 	   :accessor rmrs-ordinary-rmrs))
   :display-function 'show-rmrs-ordinary  
-  :width *parse-window-width* 
-  :height *parse-window-height*)
+  :text-style (lkb-parse-tree-font)
+  :width :compute 
+  :height :compute)
 
 (define-lkb-frame mrs-rmrs
     ((mrsstruct :initform nil
@@ -21,8 +22,9 @@
      (rmrs :initform nil
                 :accessor mrs-rmrs-rmrs))
   :display-function 'show-mrs-rmrs  
-  :width *parse-window-width* 
-  :height *parse-window-height*)
+  :text-style (lkb-parse-tree-font)
+  :width :compute 
+  :height :compute)
 
 ;;; compare functionality
 
@@ -34,6 +36,7 @@
      (comparison-record :initform nil
 	    :accessor mrs-rmrs-compare-comparison-record))
   :display-function 'show-mrs-rmrs-compare
+  :text-style (lkb-parse-tree-font)
   :width (* 2 *parse-window-width*) 
   :height *parse-window-height*)
 
@@ -43,8 +46,9 @@
     ((dmrs :initform nil
 	   :accessor dmrs-ordinary-dmrs))
   :display-function 'show-dmrs-ordinary  
-  :width *parse-window-width* 
-  :height *parse-window-height*)
+  :text-style (lkb-parse-tree-font)
+  :width :compute 
+  :height :compute)
 
 (define-lkb-frame mrs-dmrs
     ((mrsstruct :initform nil
@@ -52,8 +56,9 @@
      (rmrs :initform nil
 	   :accessor mrs-dmrs-dmrs))
   :display-function 'show-mrs-dmrs  
-  :width *parse-window-width* 
-  :height *parse-window-height*)
+  :text-style (lkb-parse-tree-font)
+  :width :compute 
+  :height :compute)
 
 ;;; end frames
 
@@ -201,8 +206,7 @@
 (defun show-rmrs-ordinary (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((rmrs (rmrs-ordinary-rmrs mframe)))
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))))
+      (mrs::output-rmrs1 rmrs 'mrs::compact stream t)))
 
 ;;; Window from parser
 
@@ -224,8 +228,7 @@
   (declare (ignore max-width max-height))
   (let ((rmrs (mrs-rmrs-rmrs mframe)))
     (if rmrs
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))
+      (mrs::output-rmrs1 rmrs 'mrs::compact stream t)
       (format stream "~%::: RMRS structure could not be extracted~%"))))
 
 ;;; RMRS comparison
@@ -238,8 +241,6 @@
 (defun show-mrs-rmrs-compare-window-really (rmrs1 rmrs2 comparison-record
 					    title)
   (let ((mframe (clim:make-application-frame 'mrs-rmrs-compare)))
-    (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
-    (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-rmrs-compare-rmrs1 mframe) 
       rmrs1)
     (setf (mrs-rmrs-compare-rmrs2 mframe) 
@@ -255,17 +256,15 @@
 	(rmrs2 (mrs-rmrs-compare-rmrs2 mframe))
 	(comparison-record (mrs-rmrs-compare-comparison-record mframe)))
     (if (and rmrs1 rmrs2 comparison-record)
-        (clim:with-text-style (stream *normal*)
-	  (clim:with-output-recording-options (stream :draw nil :record t)
-	    (let  
-		((pts1 (mrs::output-rmrs1 rmrs1 
-					     'mrs::compact-g stream t t)))
-	      (move-to-x-y stream 0 0)
-	      (let ((pts2
-		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t t)))
-		(add-comparison-pointers stream pts1 pts2 
-					 comparison-record)))))
-      (format stream "~%::: RMRS structures could not be extracted~%"))))
+        (clim:with-output-recording-options (stream :draw nil :record t)
+	  (let  
+	    ((pts1 (mrs::output-rmrs1 rmrs1 'mrs::compact-g stream t t)))
+	    (move-to-x-y stream 0 0)
+	    (let ((pts2
+		    (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t t)))
+	      (add-comparison-pointers stream pts1 pts2 
+				       comparison-record))))
+        (format stream "~%::: RMRS structures could not be extracted~%"))))
 
 (defun add-comparison-pointers (stream pts1 pts2 comparison-record)
   (when (and pts1 pts2 comparison-record
@@ -443,8 +442,7 @@
 (defun show-dmrs-ordinary (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((dmrs (dmrs-ordinary-dmrs mframe)))
-      (clim:with-text-style (stream (lkb-parse-tree-font))
-	(mrs::layout-dmrs dmrs :clim stream))))
+    (mrs::layout-dmrs dmrs :clim stream)))
 
 ;;; DMRS display from parser
 
@@ -477,9 +475,8 @@
   (declare (ignore max-width max-height))
   (let ((dmrs (mrs-dmrs-dmrs mframe)))
     (if dmrs
-	(clim:with-text-style (stream (lkb-parse-tree-font))
-	  (mrs::layout-dmrs dmrs :clim stream))
-      (format stream "~%::: DMRS structure could not be extracted~%"))))
+	(mrs::layout-dmrs dmrs :clim stream)
+        (format stream "~%::: DMRS structure could not be extracted~%"))))
 
 ;;; layout-dmrs is in dmrs.lisp and produces an abstract 
 ;;; layout of the nodea and links

@@ -1,6 +1,6 @@
 ;;; -*- Mode: Common-Lisp; Package: CDB; -*-
 
-;;; Copyright (c) 1999--2003
+;;; Copyright (c) 1999--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -236,7 +236,8 @@
 	      (setf stream (open filename
 				 :element-type 'unsigned-byte
 				 :direction :input
-				 :if-does-not-exist :error))
+				 :if-does-not-exist :error
+				 #+:ccl :sharing #+:ccl :lock)) ; JAC: dangerous since no lock
 	    (error (condition)
 	      (error "~%Error ~A in opening CDB file ~A: does file exist?" 
 		     condition filename)))
@@ -309,21 +310,27 @@
 ;; Search hash table for a matching entry
 
 (defun scan-forward (stream key hash origin start end not-first)
-  (loop 
-      with h = nil
-      when (eql end (file-position stream)) do
-        (file-position stream origin)
-      when (and not-first (eql start (file-position stream))) do
+  ;; scan start -> end, then origin -> start
+  ;; JAC 22-Oct-2018: previously called file-position on every iteration - this
+  ;; was expensive (it's probably a system call) and unnecessary
+  (loop
+      with pos = (file-position stream)
+      when (= end pos) do
+        (file-position stream (setq pos origin))
+      when (and not-first (= start pos)) do
         (return-from scan-forward nil)
-      do 
-        (setf not-first t)
-        (setf h (read-fixnum stream))
-        (cond ((zerop h) (return-from scan-forward nil))
-              ((eql hash h)
-               (let ((result (grab-record (read-fixnum stream) stream)))
-                 (when (equal (car result) key)
-                   (return-from scan-forward (cdr result)))))
-              (t (read-fixnum stream)))))
+      do
+        (setq not-first t)
+        (let ((h (read-fixnum stream)))
+          (cond ((zerop h) (return-from scan-forward nil))
+                ((= hash h)
+                 (let ((result (grab-record (read-fixnum stream) stream)))
+                   (when (string= (car result) key)
+                     (return-from scan-forward (cdr result)))))
+                (t (read-fixnum stream))))
+         ;; compute new file position on the basis of having read two 4-byte fixnums
+         ;; on a stream with element-type unsigned-byte
+         (incf pos 8)))
 
 ;; Look up a key in a CDB
 

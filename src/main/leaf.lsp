@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1998-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see LICENSE for conditions
 
 
@@ -261,7 +261,7 @@
 	    (t 
 	     (when existing-type
 	       (remove-leaf-type *leaf-types* name)
-	       (format t "WARNING: ~%Type `~A' redefined." name))
+	       (format t "~%WARNING: type `~A' redefined." name))
 	     (if (cdr parents)
 		 (format t "~%Error: type ~A cannot be a leaf type - it has ~
 multiple parents ~A" name parents)

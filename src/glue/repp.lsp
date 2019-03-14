@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB; Coding: utf-8; -*-
 
 
-;;; Copyright (c) 2000--2007 Stephan Oepen; see `LICENSE' for conditions.
+;;; Copyright (c) 2000--2018 Stephan Oepen; see `LICENSE' for conditions.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -353,9 +353,14 @@
             to (if range (min (+ start range space) (- l 1)) (- l 1))
             for c = (char string i)
             when (or (char= b c)
-                     (and (char= c #\") (or (char= b #\“) (char= b #\”)))
-                     (and (char= c #\') (or (char= b #\‘) (char= b #\’)))
-                     (and (char= c #\`) (char= b #\‘)))
+                     (and (char= c #\")
+                          (or (char= b #-openmcl #\“ #+openmcl #\U+201C)
+                              (char= b #-openmcl #\” #+openmcl #\U+201D)))
+                     (and (char= c #\')
+                          (or (char= b #-openmcl #\‘ #+openmcl #\U+2018)
+                              (char= b #-openmcl #\’ #+openmcl #\U+2019)))
+                     (and (char= c #\`)
+                          (char= b #-openmcl #\‘ #+openmcl #\U+2018)))
             do
               (loop
                   for solution in solutions

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2003
+;;; Copyright (c) 1991--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -13,6 +13,7 @@
 
 (in-package :lkb)
 
+
 ;;; the main entry points are a series of functions with names like
 ;;; display-basic-fs
 ;;; these functions create a window. They then call
@@ -20,56 +21,25 @@
 ;;;  these draw the FS into the window and
 ;;;  have the side effects of making the type names active
 
-;;; This is the font for the pop up menu and the display windows
+;;; Font for the feature structure. Previously, any title and morph rule expressions were
+;;; output in the font returned by make-active-fs-title-font-spec:
+;;; :fix :roman *fs-title-font-size*
+;;; However, this monospace/size variation seems unnecessarily fussy, and does not work well
+;;; when we allow the user to specify a different font family for linguistic entities
 
-(defun make-active-fs-type-font-spec nil
-  (list :sans-serif :roman *fs-type-font-size*))
+(defun make-active-fs-type-font-spec ()
+  (clim:make-text-style :sans-serif :roman (or *fs-type-font-size* 12)))
 
-(defun make-active-fs-title-font-spec nil
-  (list :fix :roman *fs-title-font-size*))
-
-;;; ***** active types *****
-
-;;; moved from outputfs.lsp to make that Lisp-independent
-
-;;; for ACL it appears that we need things of a particular type for
-;;; presentations, and the easiest way of doing this is with a struct
-
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-           #-:ansi-eval-when (load eval compile)
-  (defstruct type-thing value type-label-list shrunk-p full-tdfs))
+(declaim (notinline make-active-fs-type-font-spec))
 
 
-;;; YADU - here and below, the slot full-tdfs is needed so that B+C96
-;;; style lexical rules can be displayed in the type -> type format
-;;; with the full fs associated with full-tdfs
-
-(defparameter *bold* nil)
-(defparameter *normal* nil)
-
-
-(defun add-type-and-active-fs-region (stream start-pos 
-				      type-label-list val shrunk-p atomic-p 
-				      &optional top-box full-tdfs)
-  (declare (ignore start-pos atomic-p top-box))
-  (let ((type-rec
-         (make-type-thing :value val
-                          :type-label-list type-label-list
-                          :shrunk-p shrunk-p
-                          :full-tdfs full-tdfs)))
-    (clim:with-text-style (stream *bold*)
-      (clim:with-output-as-presentation 
-	  (stream type-rec 'type-thing)
-	(write-string (string-downcase val) stream)))))
-
-
-;;; ***** Records and classes *******
+;;; the record of the FS associated with a window
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (defstruct fs-display-record 
-  ;; the record of the FS associated with a window
      fs title paths parents type-fs-display id))
+
 
 ;;
 ;; Define a frame class for our FS windows
@@ -80,19 +50,50 @@
 	  :accessor active-fs-window-fs))
   :info-bar t
   :display-function 'draw-active-fs
-  :width 500				;:compute 
-  :height 500				;:compute
+  :text-style (make-active-fs-type-font-spec)
+  ;; width and height could in principle be :compute, but then the window almost always
+  ;; fills the screen, which is not user-friendly...
+  :width 500
+  :height 500
   :output-record (make-instance 'clim:standard-tree-output-history))
 
-;; Update the path window when we are over a type name
+
+;;; ***** active types *****
+
+;;; moved from outputfs.lsp to make that Lisp-independent
+
+;;; it appears that we need things of a particular type for
+;;; presentations, and the easiest way of doing this is with a structure
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct type-thing value type-label-list shrunk-p full-tdfs))
+
+(clim:define-presentation-type type-thing ())
+
+(defun add-type-and-active-fs-region (stream start-pos 
+				      type-label-list val shrunk-p atomic-p 
+				      &optional top-box full-tdfs)
+  ;; YADU - here and below, the slot full-tdfs is needed so that B+C96
+  ;; style lexical rules can be displayed in the type -> type format
+  ;; with the full fs associated with full-tdfs
+  (declare (ignore start-pos atomic-p top-box))
+  (let ((type-rec
+         (make-type-thing :value val
+                          :type-label-list type-label-list
+                          :shrunk-p shrunk-p
+                          :full-tdfs full-tdfs)))
+    (with-text-style-bold-face (stream)
+      (clim:with-output-as-presentation 
+	  (stream type-rec 'type-thing)
+	(write-string (string-downcase val) stream)))))
 
 (define-info-bar type-thing (object stream)
   (let ((path (reverse (type-thing-type-label-list object))))
-    (declare (dynamic-extent path))
-    (clim:with-text-style (stream *normal*)
-      (dolist (feat path)
-	(write-string (string-downcase (symbol-name feat)) stream)
-	(write-char #\space stream)))))
+    (dolist (feat path)
+      (write-string (string-downcase (symbol-name feat)) stream)
+      (write-char #\space stream))))
+
 
 ;;; **** display function entry points ****
 
@@ -100,32 +101,16 @@
   (mp:run-function "FS" #'display-basic-fs-really
                    fs title parents paths id))
 
-
 (defun display-basic-fs-really (fs title parents paths id)
-  (let ((fs-window 
-         (clim:make-application-frame 'active-fs-window)))
+  (let ((fs-window (clim:make-application-frame 'active-fs-window)))
     (setf (active-fs-window-fs fs-window) 
       (make-fs-display-record :fs fs :title title :paths paths 
 			      :parents parents
 			      :type-fs-display *type-fs-display*
                               :id id))
     (setf (clim:frame-pretty-name fs-window) title)
-    ;; Initialize fonts
-    (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
-    (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
-    ;; Set up path display
-    (let ((path-pane 
-	   (find :path (clim:frame-current-panes fs-window)
-		 :test #'eq :key #'clim:pane-name)))
-      (setf (lkb-window-doc-pane fs-window) path-pane)
-      #+:allegro
-      (clim:change-space-requirements 
-       path-pane
-       :resize-frame t
-       :height (clim:text-style-height *normal* path-pane)
-       :max-height (clim:text-style-height *normal* path-pane)))
-    ; Run it
     (clim:run-frame-top-level fs-window)))
+
 
 (defun display-fs (fs title &optional id)
   (if #+:lui (lui-status-p :avm) #-:lui nil
@@ -138,7 +123,8 @@
 (defun display-fs-and-paths (fs title paths &optional id)
   (display-basic-fs fs title nil paths id))
 
-;;; process lock appears to be necessary (at least in CLIM 2.1.beta)
+
+;;; process lock appears to be necessary (at least in Allegro CLIM 2.1.beta)
 ;;; to avoid the situation where the wrong output goes to a 
 ;;; window when several FSs are drawn one after another
 ;;; for instance, when displaying a series of results of LR application
@@ -157,29 +143,30 @@
            (fudge 20)
 	   (max-width 0))
       (silica:inhibit-updating-scroll-bars #+:allegro (stream)
-        (clim:with-text-style (stream *normal*)
-	  (clim:with-output-recording-options (stream :draw nil :record t)
-	    (draw-active-title stream fs title parents paths)
-	    (when (and
-		   *show-spelling-rules*
-		   (member id *morph-rule-set* 
-			   :key #'morph-rule-rules 
-			   :test #'member))
-	      (draw-morph-rule stream id))
-	    (when parents 
-	      (setf max-width (+ fudge 
-				 (display-active-parents parents stream))))
-	    (let ((dag-width (or (if (tdfs-p fs) 
-				     (display-dag2 fs 'edit stream)
-				   (display-dag1 fs 'edit stream)) 0)))
-	      (setf max-width (max (+ fudge dag-width max-width)))
-	      (when paths (setf max-width 
-			    (max max-width 
-				 (+ fudge 
-				    (display-active-dpaths paths stream))))))
-	    (move-to-x-y stream max-width (current-position-y stream)))))
-      (clim:replay (clim:stream-output-history stream) stream))
-    stream))
+        (clim:with-output-recording-options (stream :draw #+:mcclim t #-:mcclim nil
+                                                    :record t)
+	  (draw-active-title stream fs title parents paths)
+	  (when (and
+		  *show-spelling-rules*
+		  (member id *morph-rule-set* 
+			  :key #'morph-rule-rules 
+			  :test #'member))
+	    (draw-morph-rule stream id))
+	 (when parents 
+	   (setf max-width (+ fudge 
+			      (display-active-parents parents stream))))
+	 (let ((dag-width (or (if (tdfs-p fs) 
+				  (display-dag2 fs 'edit stream)
+				  (display-dag1 fs 'edit stream)) 0)))
+	   (setf max-width (max (+ fudge dag-width max-width)))
+	   (when paths (setf max-width 
+			     (max max-width 
+				  (+ fudge 
+				     (display-active-dpaths paths stream))))))
+	 (move-to-x-y stream max-width (current-position-y stream))))
+      #-:mcclim (clim:replay (clim:stream-output-history stream) stream)
+      stream)))
+
 
 ;;; display-dag2 and display-lrule should be in output(td)fs.lsp
 ;;; rather than activefs.lsp
@@ -190,26 +177,29 @@
   ;; this function is dedicated to my Mother and Father
   (format ostream "~%Parents = ")
   (loop for parent in parents
-       do
-       (if (listp parent) ;; glbtypes are followed 
-                          ;; by a list of real parents
+        do
+        (if (listp parent) ; glbtypes are followed by a list of real parents
+            (progn
+              (format ostream "[")
+              (loop for real-parent in parent
+                    for pt on parent
+                    do
+                    (display-actual-parent real-parent ostream)
+                    (when (cdr pt) (format ostream " ")))
+              (format ostream "] "))
            (progn
-             (format ostream "[")
-             (loop for real-parent in parent
-                  do
-                  (display-actual-parent real-parent ostream))
-             (format ostream "]"))
-         (display-actual-parent parent ostream)))
+             (display-actual-parent parent ostream)
+             (format ostream " "))))
   (let ((max-width (current-position-x ostream)))
     (format ostream "~%")
     max-width))
 
 (defun display-actual-parent (parent ostream)
   (let ((val (make-type-thing :value parent)))
-    (clim:with-text-style (ostream '(nil :bold nil))
+    (with-text-style-bold-face (ostream)
       (clim:with-output-as-presentation 
           (ostream val 'type-thing)
-        (format ostream "~(~A~) " (type-thing-value val))))))
+        (format ostream "~(~A~)" (type-thing-value val))))))
 
        
 (defun display-active-dpaths (dpath-list ostream)
@@ -222,16 +212,15 @@
 
 (defun draw-active-title (stream fs title parents paths)
   (declare (ignore fs parents paths))
-  (clim:with-text-style (stream (make-active-fs-title-font-spec))
-    (clim:with-output-as-presentation 
-	(stream t 'symbol)
-      (format stream "~%~A~%" title))))
+  ;; used to use text-style returned by call to make-active-fs-title-font-spec
+  (clim:with-output-as-presentation 
+      (stream t 'symbol)
+    (format stream "~%~A~%" title)))
 
 (defun draw-morph-rule (stream id)
-  (clim:with-text-style (stream (make-active-fs-title-font-spec))
-    (format stream "~&")
-    (pprint-morph-rule id :stream stream)
-    (format stream "~&")))
+  ;; used to use text-style returned by call to make-active-fs-title-font-spec
+  (format stream "~&~A~&" (pprint-morph-rule id :stream nil)))
+
 
 ;;; Support for interactive unification check
 
@@ -254,23 +243,23 @@
     (highlight-objects (clim:output-record-children sel) frame)))
 
 (defun try-unify-fs (frame type-thing)
-  (with-output-to-top ()
-    (let* ((fs2 (frame-dag frame))
-	   (path2 (reverse (type-thing-type-label-list type-thing)))
-	   (dag (unify-paths-with-fail-messages 
-		 (create-path-from-feature-list *path1*)
-		 *fs1*
-		 (create-path-from-feature-list path2)
-		 fs2
-		 ;; was copied, but shouldn't be necessary
-		 :selected1 *path1* :selected2 path2 
-		 t))
-	   (result (when dag (make-tdfs :indef dag))))
-      (terpri)
-      (when result
-	(display-fs result "Unification result"))))
+  (let* ((fs2 (frame-dag frame))
+	 (path2 (reverse (type-thing-type-label-list type-thing)))
+	 (dag (unify-paths-with-fail-messages 
+		(create-path-from-feature-list *path1*)
+		*fs1*
+		(create-path-from-feature-list path2)
+		fs2
+		;; was copied, but shouldn't be necessary
+		:selected1 *path1* :selected2 path2 
+		t))
+	 (result (when dag (make-tdfs :indef dag))))
+    (terpri)
+    (when result
+      (display-fs result "Unification result")))
   (setq *fs1* nil)
   (unhighlight-class frame))
+
 
 ;;; Search for coreferences in a feature structure
 
@@ -278,6 +267,8 @@
            #-:ansi-eval-when (load eval compile)
   (defstruct pointer
     label valuep type-label-list))
+
+(clim:define-presentation-type pointer ())
 
 (defun add-active-pointer (stream position pointer type-label-list valuep)
   (declare (ignore position))
@@ -293,11 +284,9 @@
 
 (define-info-bar pointer (object stream)
   (let ((path (reverse (pointer-type-label-list object))))
-    (declare (dynamic-extent path))
-    (clim:with-text-style (stream *normal*)
-      (dolist (feat path)
-	(write-string (string-downcase (symbol-name feat)) stream)
-	(write-char #\space stream)))))
+    (dolist (feat path)
+      (write-string (string-downcase (symbol-name feat)) stream)
+      (write-char #\space stream))))
 
 (define-active-fs-window-command (com-pointer-menu)
     ((pointer 'pointer :gesture :select))
@@ -314,7 +303,7 @@
 					      (and (eql (pointer-label pointer)
 							(pointer-label p))
 						   (pointer-valuep p))))))))
-	      (scroll-to (car sel) (clim:frame-standard-output frame))
+	      (scroll-to (elt sel 0) (clim:frame-standard-output frame))
 	      (setq *fs1* nil)
 	      (highlight-objects sel frame)))
      ;; Find the next use of a pointer after this one
@@ -332,7 +321,7 @@
 		  (sel (when rec
 			 (clim:output-record-children rec))))
 	     (when sel
-	       (scroll-to (car sel) (clim:frame-standard-output frame))
+	       (scroll-to (elt sel 0) (clim:frame-standard-output frame))
 	       (setq *fs1* nil)
 	       (highlight-objects sel frame)))))))
 
@@ -361,7 +350,7 @@
 	 ("Help" :value help
 		 :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink)
-         #+:allegro
+         #+(or :allegro :mcclim)
 	 ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
@@ -376,17 +365,17 @@
 		  :active ,(and *fs1* (highlighted-class frame))))
        (hier (display-type-in-tree type))
        (help (display-type-comment type (ltype-comment type-entry)))
-       #+:allegro
-       (source (edit-source type))
        (shrink (shrink-fs-action frame
 				 (if (type-thing-shrunk-p type-thing)
 				     :expand 
 				   :shrink)
 				 type-label-list))
+       #+(or :allegro :mcclim)
+       (source (edit-source type))
        (def (show-type-spec-aux type type-entry))
        (exp (show-type-aux type type-entry))
-       (full (if full-tdfs
-		 (display-fs full-tdfs (format nil "LR constraint"))))
+;      (full (if full-tdfs
+;		 (display-fs full-tdfs (format nil "LR constraint"))))
        (select (select-fs frame type-thing))
        (unify (try-unify-fs frame type-thing))))))
 
@@ -403,10 +392,10 @@
 (defun display-type-comment (type comment-string &optional parent-stream)
   (declare (ignore parent-stream type))
   (when comment-string
-    (with-output-to-top ()
-      (format t "~%~A" comment-string))))
+    (format t "~%~A~%" comment-string)
+    (force-output)))
 
-;;; *** the title or top pop up menu ****
+;;; **** the title or top pop up menu ****
 
 (define-active-fs-window-command (com-title-fs-menu)
     ((name 'symbol :gesture :select))
@@ -416,36 +405,42 @@
         (fs (fs-display-record-fs 
 	     (active-fs-window-fs clim:*application-frame*))))
     (pop-up-menu
-     `(("Output TeX ..." :value tex)
-       ("Apply lex rule ..." :value lexrule
-                             :active ,(and id
-                                           (get-lex-entry-from-id id)
-                                           *ordered-lrule-list*))
+     `(("Output TeX..." :value tex)
+       ("Apply lex rule..." :value lexrule
+                            :active ,(and id
+                                          (active-fs-lexical-id-p id)
+                                          *ordered-lrule-list*))
        ("Apply all lex rules" :value allrules
                               :active ,(and id
-                                            (get-lex-entry-from-id id)
+                                            (active-fs-lexical-id-p id)
                                             *ordered-lrule-list*))
        #|
        ("Show spelling change rule" :value spelling-rule
 				    :active ,(member id *morph-rule-set* 
-				    :key #'morph-rule-rules
-				    :test #'member))
-				    |#
-       #+:allegro
+				                     :key #'morph-rule-rules
+				                     :test #'member))
+       |#
+       #+(or :allegro :mcclim)
        ("Show source" :value source 
 		      :active ,(and id (source-available-p id))))
      (tex (output-fs-in-tex fs))
-     #+:allegro
-     (source (edit-source id))
-;     (spelling-rule 
-;      (pprint-morph-rule 
-;		     id 
-;		     :stream excl::*initial-terminal-io* 
-;		     ;#+:clim clim-user::*lkb-top-stream* #-:clim t
-;		     ))
-     (lexrule (apply-lex id))
-     (allrules (apply-lex-rules id)))))
-  
+     (lexrule (apply-lex id fs))
+     (allrules (apply-lex-rules id fs))
+     #|
+     (spelling-rule 
+       (pprint-morph-rule 
+		     id 
+		     ;; :stream excl::*initial-terminal-io* 
+		     ;; #+:clim clim-user::*lkb-top-stream* #-:clim t
+                     ))
+     |#
+     #+(or :allegro :mcclim)
+     (source (edit-source id)))))
+
+(defun active-fs-lexical-id-p (id)
+  (or (get-lex-entry-from-id id)
+      (and (stringp id) (search " + " id)))) ; result of a lexical rule application
+
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 
 ;;; display-fs-spec etc are in lexinput.lsp
@@ -454,10 +449,12 @@
            #-:ansi-eval-when (load eval compile)
   (defstruct psort-thing value))
 
+(clim:define-presentation-type psort-thing ())
+
 (defun display-active-psort (psort ostream)
   (let ( ; (start-pos (current-position ostream))
         (val (make-psort-thing :value psort)))
-    (clim:with-text-style (ostream '(nil :bold nil))
+    (with-text-style-bold-face (ostream)
         (clim:with-output-as-presentation 
               (ostream val 'psort-thing)
                    (format ostream "~A  " (psort-thing-value val))))))
@@ -475,47 +472,22 @@
 
 
 (defun pop-up-psort-menu-items (psort lex-entry)
-  (let ((command (clim:menu-choose
-		  '(("Entry definition" :value def)
-		    ("Expanded entry" :value exp)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (def (display-unexpanded-lex-entry psort lex-entry))  
-	    (exp (display-fs (lex-entry-full-fs lex-entry) 
-			     (format nil "~(~A~) - expanded" psort)
-                             psort)))
-        (storage-condition (condition)
-          (with-output-to-top ()
-            (format t "~%Memory allocation problem: ~A~%" condition)))
-	(error (condition)
-	  (with-output-to-top ()
-	    (format t "~%Error: ~A~%" condition)))
-        (serious-condition (condition)
-          (with-output-to-top ()
-            (format t "~%Something nasty: ~A~%" condition)))))))
+  (pop-up-menu
+    '(("Entry definition" :value def)
+      ("Expanded entry" :value exp))
+    (def (display-unexpanded-lex-entry psort lex-entry))  
+    (exp (display-fs (lex-entry-full-fs lex-entry) 
+		     (format nil "~(~A~) - expanded" psort)
+                             psort))))
 
 
 (defun pop-up-lex-rule-menu-items (psort rule-entry)
   (declare (ignore psort))
-  (let ((command (clim:menu-choose
-		  '(("Show rule" :value rule)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (rule (display-fs (rule-full-fs rule-entry) 
-			      (format nil "~(~A~)" (rule-id rule-entry))
-                              (rule-id rule-entry))))
-        (storage-condition (condition)
-          (with-output-to-top ()
-            (format t "~%Memory allocation problem: ~A~%" condition)))
-	(error (condition)
-	  (with-output-to-top ()
-	    (format t "~%Error: ~A~%" condition)))
-        (serious-condition (condition)
-          (with-output-to-top ()
-            (format t "~%Something nasty: ~A~%" condition)))))))
-
+  (pop-up-menu
+    '(("Show rule" :value rule))
+    (rule (display-fs (rule-full-fs rule-entry) 
+		      (format nil "~(~A~)" (rule-id rule-entry))
+                              (rule-id rule-entry)))))
         
         
 ;;;  ***** TeX macros  ******
@@ -538,12 +510,11 @@
          (with-package (:lkb)
          (ask-for-lisp-movable "Current Interaction" 
 				   `(("Lex-id?" . ,psort-name))
-				   150))))
+				   nil))))
       (when psort-name
 	(or (store-temporary-psort-entry psort-name fs)
 	    (progn
-	      (clim:notify-user clim:*application-frame* 
-				"Entry name already used")
+	      (show-message-window "Entry name already used")
 	      (store-as-psort fs)))))))
 
 

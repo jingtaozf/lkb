@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2004
+;;; Copyright (c) 1998--2018
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -741,7 +741,9 @@
   (let ((covering nil)
         (partial nil)
         (start-symbols
-         (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
+          (or *gen-start-symbol* *start-symbol*))) ; JAC 14-Jun-18: backwards compatible
+    (setq start-symbols
+      (if (listp start-symbols) start-symbols (list start-symbols)))
     (dolist (new
                (if *substantive-roots-p*
                   (gen-chart-root-edges candidate-edges start-symbols)
@@ -1306,41 +1308,9 @@
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
                  (append (first needed) *semantics-index-path*))
               nil))
-        (let ((dag (gen-chart-restrict-and-copy
+        (let ((dag (restrict-and-copy-tdfs
                       (tdfs-at-end-of mother-path rule-tdfs))))
            (when dag (values dag (restrict-fs (tdfs-indef dag))))))))
-
-
-(defun gen-chart-restrict-and-copy (dag)
-   ;; delete arcs just holding constituents' feature structures -
-   ;; before copying otherwise their copies would be thrown away
-   ;; immediately we have to check whether any of the deleted dags
-   ;; contain a cycle - if so then the whole rule application should
-   ;; fail. C.f. active parser function restrict-and-copy-tdfs
-   (let* ((real-dag (deref-dag (tdfs-indef dag)))
-          (new (clone-dag real-dag))
-          (arcs-to-check nil))
-     (flet ((member-with-cyclic-check (arc)
-              (when (member (dag-arc-attribute arc) 
-                            *deleted-daughter-features* :test #'eq)
-                (push arc arcs-to-check)
-                t)))
-       (setf (dag-arcs new)
-         (remove-if #'member-with-cyclic-check (dag-arcs new)))
-       (setf (dag-comp-arcs new)
-         (remove-if #'member-with-cyclic-check (dag-comp-arcs new)))
-       ;; take advantage of the fact that removed arcs might share
-       ;; structure by checking them all at once
-       (let ((res
-               (and
-                 (not (cyclic-dag-p
-                        (make-dag :type *toptype* 
-                                  :arcs arcs-to-check)))
-                 (setf (dag-forward real-dag) new)
-                 (copy-tdfs-elements dag))))
-         (or res
-           ;; charge copy failure to last successful unification
-           (progn (decf (statistics-stasks *statistics*)) nil))))))
 
 
 ;;; Second phase, where intersective modifiers are introduced

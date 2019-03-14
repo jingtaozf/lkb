@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2005
+;;; Copyright (c) 1991--2017
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `LICENSE' for conditions.
 
@@ -569,7 +569,7 @@
     (clrhash psorts)
     (setf cache-lex-list nil)
     (when (fboundp 'clear-lexicon-indices)
-      (funcall 'clear-lexicon-indices))
+      (funcall (symbol-function 'clear-lexicon-indices)))
     (when recurse 
       (mapcar #'(lambda (x) (empty-cache x :recurse recurse))
 	      (extra-lexicons lexicon)))

@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 1996 -- 2016 Stephan Oepen (oe@csli.stanford.edu)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -174,15 +174,15 @@
    #-:allegro
    (let* ((treal (get-internal-real-time))
           (tcpu (get-internal-run-time))
-          #+:mcl (tgc (ccl:gctime))
-          #+:mcl (others (ccl::total-bytes-allocated)))
+          #+(or :mcl :ccl) (tgc (ccl:gctime))
+          #+(or :mcl :ccl) (others (ccl::total-bytes-allocated)))
       (multiple-value-prog1
          (funcall timed-function)
-         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others)))
+         (let (#+(or :mcl :ccl) (others (- (ccl::total-bytes-allocated) others)))
             (funcall report-function
-               #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
+               #+(or :mcl :ccl) (round (* (- (ccl:gctime) tgc) 1000)
                              internal-time-units-per-second)
-               #-:mcl 0
+               #-(or :mcl :ccl) 0
                0
                (round (* (- (get-internal-run-time) tcpu) 1000)
                       internal-time-units-per-second)
@@ -190,4 +190,4 @@
                (round (* (- (get-internal-real-time) treal) 1000)
                       internal-time-units-per-second)
                0 0
-               #+:mcl others #-:mcl -1)))))
+               #+(or :mcl :ccl) others #-(or :mcl :ccl) -1)))))

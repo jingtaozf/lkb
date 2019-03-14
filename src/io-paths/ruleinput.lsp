@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2017 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
@@ -99,7 +99,7 @@
 
 (defun read-morph-file nil 
     (let* ((ovwr (lkb-y-or-n-p "Overwrite any existing lexical rules?"))
-          (filename (ask-user-for-existing-pathname "Morphological rules")))
+          (filename (ask-user-for-existing-pathname "Morphological rules file?")))
       (when filename
         (read-morph-file-aux filename ovwr))))
 

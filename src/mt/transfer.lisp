@@ -1260,7 +1260,7 @@
           (return (stable-sort result #'> :key #'edge-depth)))))
 
 (defun apply-mtr (edge mtr &key subsumesp)
-  
+
   ;;
   ;; first, evaluate the pre-unification `quick-check' of predicates
   ;;
@@ -1272,23 +1272,23 @@
                #+:null
                (loop
                    for pred in (mtr-avoids mtr)
-                   never (member pred (edge-preds edge) :test #'=))
+                   never (loop for p in (edge-preds edge) thereis (= p pred)))
                (loop
                    for pred in (mtr-requires mtr)
-                   always (member pred (edge-preds edge) :test #'=))
+                   always (loop for p in (edge-preds edge) thereis (= p pred)))
                (loop
                    for pred in (mtr-consumes mtr)
-                   always (member pred (edge-preds edge) :test #'=)))
+                   always (loop for p in (edge-preds edge) thereis (= p pred))))
     (return-from apply-mtr))
-  
+
   (loop
       with %transfer-variable-id% = (+ (edge-n edge) 1)
       for solution in (unify-mtr (edge-mrs edge) mtr :subsumesp subsumesp)
       for mrs = (expand-solution (edge-mrs edge) mtr solution)
       for new
       = (when mrs
-          (make-edge 
-           :rule mtr :mrs mrs :daughter edge 
+          (make-edge
+           :rule mtr :mrs mrs :daughter edge
            :solution solution :n %transfer-variable-id%))
       when new do
         ;;
@@ -2257,23 +2257,24 @@
 ;;;
 (defun postprocess-mrs (mrs)
   (let ((mrs (mrs::copy-psoa mrs))
-        copies)
-    (labels ((postprocess-variable (variable)
-               (when variable
-                 (or (rest (assoc variable copies))
-                     (let ((copy (mrs::copy-var variable)))
-                       (setf (mrs:var-extra copy)
-                         (loop
-                             for extra in (mrs:var-extra variable)
-                             for feature = (mrs::extrapair-feature extra)
-                             unless (or (eq feature *mtr-skolem-property*)
-                                        #-:null
-                                        (eq feature *mtr-mark-property*)
-                                        (eq feature *mtr-scratch-property*)
-                                        (eq feature *mtr-ditch-property*))
-                             collect extra))
-                       (push (cons variable copy) copies)
-                       copy)))))
+        (copies nil))
+    (flet ((postprocess-variable (variable)
+             (when variable
+               (or (cdr (assoc variable copies :test #'eq))
+                   (let ((copy (mrs::copy-var variable)))
+                     (setf (mrs:var-extra copy)
+                       (loop
+                           for extra in (mrs:var-extra variable)
+                           for feature = (mrs::extrapair-feature extra)
+                           unless (or (eq feature *mtr-skolem-property*)
+                                      #-:null
+                                      (eq feature *mtr-mark-property*)
+                                      (eq feature *mtr-scratch-property*)
+                                      (eq feature *mtr-ditch-property*))
+                           collect extra))
+                     (push (cons variable copy) copies)
+                     copy)))))
+      (declare (dynamic-extent postprocess-variable)) ; closure on stack
       (setf (mrs:psoa-top-h mrs) (postprocess-variable (mrs:psoa-top-h mrs)))
       (setf (mrs:psoa-index mrs) (postprocess-variable (mrs:psoa-index mrs)))
       (setf (mrs:psoa-liszt mrs)
@@ -2281,7 +2282,7 @@
             for ep in (mrs:psoa-liszt mrs)
             for copy = (mrs::copy-rel ep)
             do
-              (setf (mrs:rel-handel copy) 
+              (setf (mrs:rel-handel copy)
                 (postprocess-variable (mrs:rel-handel ep)))
               (setf (mrs::rel-flist copy)
                 (loop
@@ -2290,12 +2291,12 @@
                     unless (or (role-delete-p (mrs:fvpair-feature role) value)
                                (and (mrs::var-p value)
                                     (variable-delete-p value)))
-                    collect 
-                      (mrs::make-fvpair 
-                       :feature (mrs:fvpair-feature role)
-                       :value (if (mrs::var-p value) 
-                                (postprocess-variable value)
-                                value))))
+                    collect
+                      (mrs::make-fvpair
+                        :feature (mrs:fvpair-feature role)
+                        :value (if (mrs::var-p value)
+                                   (postprocess-variable value)
+                                   value))))
             collect copy))
       (setf (mrs:psoa-h-cons mrs)
         (loop
