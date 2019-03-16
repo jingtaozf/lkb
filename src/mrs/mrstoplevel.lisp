@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2017 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -29,7 +29,7 @@
                         edge))
                  *gen-record*)
               #'string-lessp :key #'car)
-           (format nil "Generator Results (~A)" (length *gen-record*))
+           "Generated Sentences"
            (list
               (cons "Feature structure"
                  #'(lambda (edge)
@@ -64,7 +64,7 @@
          (if (numberp id)
            (list id)
            (ask-for-lisp-movable "Current Interaction" 
-            `(("Specify an edge number" . ,*edge-id*)) nil))))
+            `(("Specify an edge number" . ,*edge-id*)) 60))))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                 (edge-record (find-gen-edge-given-id edge-id)))
@@ -92,6 +92,7 @@
          root)
       (lkb-beep)))
       
+
 
 (defun create-gen-chart-pointers (root all-p)
    ;; create a global mapping from edge-ids to symbols, not interned - so we don't
@@ -128,6 +129,7 @@
                   (get (cadr pair) 'chart-edge-descendents)
                   edge-symbols))))))
 
+
 (defun create-gen-chart-pointers-collapse (nodes edge-symbols)
    (mapcan
       #'(lambda (node)
@@ -138,60 +140,56 @@
       nodes))
 
 
+
 ;;; from toplevel.lsp
 
 ;;; "Generate"
 ;;;
 ;;; "Generate" generate-from-edge
 
-(defparameter *last-generate-from-edge* nil)
 
-(defun generate-edge-suggestion nil
-  (or *last-generate-from-edge*
-    (and *parse-record* (edge-id (car *parse-record*)))
-    *edge-id*))
+(defparameter *last-generate-from-edge* nil)
 
 #-:tty
 (defun generate-from-edge nil
   (let ((possible-edge-name 
          (ask-for-lisp-movable 
           "Current Interaction" 
-          `(("Parser edge number for input MRS?" . ,(generate-edge-suggestion)))
-          nil)))
+          `(("Parser edge number for input MRS?" 
+             . ,(or *last-generate-from-edge* *edge-id*))) 60)))
     (when possible-edge-name
-      (setq *last-generate-from-edge* (car possible-edge-name))
+      (setf *last-generate-from-edge* (car possible-edge-name))
       (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
 	(if parser-edge
 	    (really-generate-from-edge parser-edge)
-	    (show-message-window (format nil "No parser edge ~A" (car possible-edge-name))))))))
+	  (show-message-window (format nil "No parser edge ~A" (car possible-edge-name))))))))
 
 #-:tty
 (defun really-generate-from-edge (parser-edge)    
   (declare (special *dmrs-grammar-p*))
-  (let
-    ((input-sem (if *dmrs-grammar-p*
-		    (mrs::extract-dmrs parser-edge)
-		    (mrs::extract-mrs parser-edge))))
-    (cond 
-      (*dmrs-grammar-p* 
+  (let* ((input-sem (if *dmrs-grammar-p*
+			(mrs::extract-dmrs parser-edge)
+			(mrs::extract-mrs parser-edge))))
+    (with-output-to-top ()
+      (cond 
+       (*dmrs-grammar-p* 
 	(show-message-window
-	  (format nil "Generation from native DMRS not implemented yet")))
+	 (format nil "Generation from native DMRS not implemented yet")))
 	#|
 	     (when (and input-sem 
 		     (mrs::dmrs-nodes input-sem))
 	       (close-existing-chart-windows)
-	       (generate-from-dmrs input-sem)
-	       (show-gen-result))
-	|#
-      ((and input-sem (mrs::psoa-p input-sem)
-            (mrs::psoa-liszt input-sem))
-	(close-existing-chart-windows)
-	(generate-from-mrs input-sem)
-	(show-gen-result))
-      (t
-        (show-message-window
-          (format nil "Could not extract valid *MRS from edge ~A"
-		      (edge-id parser-edge)))))))
+	     (generate-from-dmrs input-sem)
+	     (show-gen-result)))
+	     |#
+	    ((and input-sem (mrs::psoa-p input-sem)
+               (mrs::psoa-liszt input-sem))
+	     (close-existing-chart-windows)
+	     (generate-from-mrs input-sem)
+	     (show-gen-result))
+	    (t (show-message-window
+		(format nil "Could not extract valid *MRS from edge ~A"
+			(edge-id parser-edge))))))))
 
 #-:tty
 (defun toggle-mrs-base nil
@@ -219,7 +217,7 @@
 
 (defun do-generate-tty (&optional edge-name debug-p)
    (let ((possible-edge-name 
-            (or edge-name (generate-edge-suggestion))))
+            (or edge-name *last-generate-from-edge* *edge-id*)))
       (when possible-edge-name
          (setq *last-generate-from-edge* edge-name)
          (let ((parser-edge (find-edge-given-id possible-edge-name)))

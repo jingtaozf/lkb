@@ -147,24 +147,18 @@
     (setf vpm (find vpm *vpms* :key #'vpm-id)))
   (when (null vpm) (return-from map-mrs mrs))
   
-  (let ((%variables% nil)
-        (type-map-cache nil)
+  (let ((%variables%)
         (copy (mrs::make-psoa)))
     (labels ((map-variable (variable)
                (if (mrs::var-p variable)
-                 (or (rest (assoc variable %variables% :test #'eq))
-                     (let* ((var-type (mrs:var-type variable))
-                            (copy (mrs::make-var 
-                                    :type
-                                    (or (cdr (assoc var-type type-map-cache :test #'equal))
-                                        (let ((mt (map-type var-type vpm direction)))
-                                          (push (cons var-type mt) type-map-cache)
-                                          mt))
-                                    :id
-                                    (mrs:var-id variable))))
+                 (or (rest (assoc variable %variables%))
+                     (let ((copy (mrs::make-var 
+                                  :type (map-type
+                                         (mrs:var-type variable) vpm direction)
+                                  :id (mrs:var-id variable))))
                        (setf (mrs:var-extra copy)
                          (map-properties
-                          var-type
+                          (mrs:var-type variable)
                           (mrs:var-extra variable)
                           vpm direction))
                        (when preserve
@@ -237,7 +231,7 @@
   ;; a special case: when there are no property mappings, in principle we might
   ;; opt to delete all properties, as the VPM definition states that only those
   ;; matched explicitly will be preserved.  however, in our `dual' universe of
-  ;; grammar-internal and SEM-I namespaces and our current half-baked approach
+  ;; grammar-internal and SEM-I namespaces and our current half-assed approach
   ;; to using grammar-internal names for MTR matching, convert-dag-to-mtr() may
   ;; manufacture a VPM with variable type but no property mappings for creation
   ;; of MTRs.  to make that work, treat nil property mappings as the identity
@@ -245,13 +239,13 @@
   ;;
   (when (null (vpm-pms vpm)) (return-from map-properties properties))
   (loop
-      with result ;; with mapped ; see below
+      with result with mapped
       for pm in (vpm-pms vpm)
       for lhs = (if (eq direction :forward) (pm-lhs pm) (pm-rhs pm))
       for rhs = (if (eq direction :forward) (pm-rhs pm) (pm-lhs pm))
       for values = (loop
                        for property in lhs
-                       for match
+                       for match 
                        = (loop
                              for foo in properties
                              when (eq (mrs::extrapair-feature foo) property)
@@ -260,14 +254,12 @@
       do
         (loop
             for mr in (pm-mrs pm)
-            when (test-pmr type values mr direction)
-            do
-              ;; JAC 04-01-2019 - commented out since variable mapped is never used
-              ;; (loop
-              ;;     for property in lhs
-              ;;     do (pushnew property mapped :test #'eq))
+            when (test-pmr type values mr direction) do
               (loop
-                  with right
+                  for property in lhs
+                  do (pushnew property mapped :test #'eq))
+              (loop
+                  with right 
                   = (if (eq direction :forward) (mr-right mr) (mr-left mr))
                   for property in rhs
                   for new in right
@@ -302,16 +294,14 @@
             (compare-types type (rest match) :type :subsumption :internp t))
            ((eq match *vpm-wildcard*) value)
            ((eq match *vpm-blade*) (null value))
-           (t
+           (t 
             (case (mr-test mr)
               (:equality
                (eq value match))
               (:subsumption
                (or (eq value match)
-                   (and value
-                     ;; LKB subtype test does not require its arguments to be valid type names
-                     #-:lkb (mrs::is-valid-type value) #-:lkb (mrs::is-valid-type match)
-                     (mrs::equal-or-subtype value match))))))))))
+                   (and (mrs::is-valid-type value) (mrs::is-valid-type match)
+                        (mrs::equal-or-subtype value match))))))))))
 
 (defun map-type (type vpm &optional (direction :forward))
   (when (consp vpm)
@@ -327,23 +317,20 @@
   ;; that comparsing MRSs post-generation will end up using MRS variable types
   ;; (`e', `x', et al.) but SEM-I variable properties.         (22-jan-09; oe)
   ;;
-  ;; JAC 04-01-2019 - when testing against *vpm-wildcard*, instead of symbol
-  ;; equality (which requires a costly vsym call), test string equality
   (loop
-      with wildcard = (string *vpm-wildcard*)
       for mr in (and (eq direction :forward) (vpm-tms vpm))
       for left
       = (if (eq direction :forward) (mr-left mr) (mr-right mr))
       when (and (if (eq direction :forward)
                   (first (mr-direction mr))
                   (rest (mr-direction mr)))
-                (or (string-equal (string left) wildcard) 
+                (or (eq (mrs:vsym left) *vpm-wildcard*)
                     (compare-types
                      type left :type (mr-test mr) :internp t)))
       return (let ((right (if (eq direction :forward)
                             (mr-right mr)
                             (mr-left mr))))
-               (if (string-equal (string right) wildcard) 
+               (if (eq (mrs:vsym right) *vpm-wildcard*)
                  type
                  right))
       finally (return type)))

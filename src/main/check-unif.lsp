@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2016 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -300,7 +300,11 @@
 
 
 (defmacro type-bit-representation-p (x)
-  `(typep ,x 'fixnum))
+  ;; mcl produces inline code for ccl:fixnump, but not integerp - and we know
+  ;; that the bit representation is < most-positive-fixnum
+  #+:mcl `(ccl:fixnump ,x)
+  #+:allegro `(excl:fixnump ,x)
+  #-(or :mcl :allegro) `(integerp ,x))
 
 
 #|
@@ -322,63 +326,53 @@
       table))
 |#
 
-
 ;;; Statically compute set of restrictor values for a tdfs or dag, and check
 ;;; two sets of values for compatibility
+;;;
+
 
 (defun restrict-fs (fs)
-  (loop
-      for path-spec in *check-paths-optimised*
+  (loop for path-spec in *check-paths-optimised*
       collect
 	(let ((v (existing-dag-at-end-of fs (car path-spec))))
 	  (when v
 	    (let ((type (type-of-fs v)))
-	      (if (consp (cdr path-spec))
-		  ;; there is a bit-vector encoding for the possible values
-		  ;; of this path, so use it instead of the type name
-		  (or (cdr (assoc type (cdr path-spec) :test #'eq))
-		      (error "Inconsistency - ~A could not find restrictor ~
+	      (when type
+		(if (consp (cdr path-spec))
+		    ;; there is a bit-vector encoding for the possible values
+		    ;; of this path, so use it instead of the type name
+		    (or
+		     (cdr (assoc type (cdr path-spec) :test #'eq))
+		     (error "Inconsistency - ~A could not find restrictor ~
                               bit vector for type ~A at path ~A" 
-			     'restrict-fs type (car path-spec)))
-		  type))))))
+			    'restrict-fs type (car path-spec)))
+		  type)))))))
 
 (defun restrictors-compatible-p (daughter-restricted child-restricted)
-  (loop
-      for dt in daughter-restricted
+  (loop for dt in daughter-restricted
       for ct in child-restricted
-      always
-        (cond
-          ((or (eq dt ct) (null dt) (null ct))) 
-          ((and (type-bit-representation-p dt) (type-bit-representation-p ct))
-            ;; fixnum (bit) encodings
-            (not (zerop (logand dt ct))))
-          (t
-            ;; type name symbol encodings
-            (greatest-common-subtype dt ct)))))
-
-(defun restrictors-subsuming-p (restricted1 restricted2)
-  ;; succeed if there is subsumption in either direction
-  (loop
-      for dt in restricted1
-      for ct in restricted2
-      always
-        (cond
-          ((or (eq dt ct) (null dt) (null ct)))
-          ((and (type-bit-representation-p dt) (type-bit-representation-p ct))
-            ;; fixnum (bit) encodings
-            (let ((gcs (logand dt ct)))
-              (or (= gcs dt) (= gcs ct))))
-          (t
-            ;; type name symbol encodings
-            (let ((gcs (greatest-common-subtype dt ct)))
-              (or (eq gcs dt) (eq gcs ct)))))))
+      do
+	(cond
+	 ;; eq possibly avoids a function call
+	 ((or (eq dt ct) (null dt) (null ct))) 
+	 ((not (type-bit-representation-p dt)) 
+	  ;; a type - i.e. a symbol or disjunction (list)
+	  ;; not bit vector encoding, so do type unification the hard way
+          (unless (greatest-common-subtype dt ct)
+	    (return-from restrictors-compatible-p nil)))
+	 ;; a bit vector
+	 ((zerop (logand (the fixnum dt) (the fixnum ct)))
+	  (return-from restrictors-compatible-p nil))))
+  t)
 
 
 ;;; Versions called dynamically inside the scope of a set of unifications
 
+;;;
 ;;; note that x-existing-dag-at-end-of() now assumes the input argument has
 ;;; been dereferenced already; otherwise, x-restrict-fs() would amount in one
 ;;; deref-dag() call per quick check path.                 (23-jun-99  -  oe)
+;;;
 
 (defun x-restrict-fs (fs)
   (loop 
@@ -387,13 +381,16 @@
       collect
         (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
           (when v
-            (let ((type (unify-get-type v)))
-              (if (consp (cdr path-spec))
+            (let ((type (or (dag-new-type v) (dag-type v))))
+              (when type
+                (when (consp type) (setq type (car type)))
+                (if (consp (cdr path-spec))
                   (or (cdr (assoc type (cdr path-spec) :test #'eq))
-                      (error "Inconsistency - ~A could not find restrictor ~
-                              bit vector for type ~A at path ~A"
-                             'x-restrict-fs type (car path-spec)))
-                  type))))))
+                      (error "Inconsistency - ~A ~
+                              could not find restrictor bit vector ~
+                              for type ~A at path ~A" 'x-restrict-fs
+                              type (car path-spec)))
+                  type)))))))
 
 (defun x-restrict-and-compatible-p (fs child-restricted)
   (loop
@@ -401,23 +398,26 @@
       for path-spec in *check-paths-optimised*
       for dt = (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
                  (when v
-                   (let ((type (unify-get-type v)))
-                     (if (consp (cdr path-spec))
-                         (or (cdr (assoc type (cdr path-spec) :test #'eq))
-                             (error "Inconsistency - ~A could not find restrictor ~
-                                     bit vector for type ~A at path ~A"
-                                    'x-restrict-and-compatible-p type (car path-spec)))
-                         type))))
+                   (let ((type (or (dag-new-type v) (dag-type v))))
+                     (when type
+                       (when (consp type) (setq type (car type)))
+                       (if (consp (cdr path-spec))
+                           (or (cdr (assoc type (cdr path-spec) :test #'eq))
+                               (error "Inconsistency - ~A ~
+                                       could not find restrictor bit vector ~
+                                       for type ~A at path ~A" 'x-restrict-fs
+                                       type (car path-spec)))
+                         type)))))
       for ct in child-restricted
-      always
+      do
         (cond
-          ((or (eq dt ct) (null dt) (null ct))) 
-          ((and (type-bit-representation-p dt) (type-bit-representation-p ct))
-            ;; fixnum (bit) encodings
-            (not (zerop (logand dt ct))))
-          (t
-            ;; type name symbol encodings
-            (greatest-common-subtype dt ct)))))
+         ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
+         ((not (type-bit-representation-p dt))
+	  (unless (greatest-common-subtype dt ct) 
+	    (return-from x-restrict-and-compatible-p nil)))
+         ((zerop (logand (the fixnum dt) (the fixnum ct)))
+	  (return-from x-restrict-and-compatible-p nil))))
+  t)
 
 (defun x-existing-dag-at-end-of (dag labels-chain)
   (cond 
@@ -429,13 +429,13 @@
          (deref-dag one-step-down) (cdr labels-chain)))))))
 
 (defun x-get-dag-value (dag attribute)
+  (dolist (arc (dag-comp-arcs dag) nil)
+    (when (eq attribute (dag-arc-attribute arc))
+      (return-from x-get-dag-value (dag-arc-value arc))))
   (dolist (arc (dag-arcs dag))
     (when (eq attribute (dag-arc-attribute arc))
-      (return-from x-get-dag-value (dag-arc-value arc))))
-  (dolist (arc (dag-comp-arcs dag))
-    (when (eq attribute (dag-arc-attribute arc))
-      (return-from x-get-dag-value (dag-arc-value arc))))
-  nil)
+      (return-from x-get-dag-value (dag-arc-value arc)))))
+
 
 
 #|
@@ -458,12 +458,12 @@
 
 (defun interactive-create-check-paths nil
   (let* ((test-file (ask-user-for-existing-pathname "Checkpaths sample file?"))
-         (output-file (and test-file (ask-user-for-new-pathname "Checkpaths output file?"))))
+         (output-file (ask-user-for-new-pathname "Checkpaths output file?")))
     (when (and test-file output-file)
-      (with-check-path-list-collection output-file
-	 (parse-sentences test-file t))
-      (format t "~%Script should contain:~
-                 ~%(lkb-load-lisp (this-directory) <your-checkpaths-file> t)"))))
+        (with-check-path-list-collection output-file
+	  (parse-sentences test-file t)))
+    (format t "~%Script should contain:~
+               ~%(lkb-load-lisp (this-directory) <your-checkpaths-file> t)")))
 
 
 

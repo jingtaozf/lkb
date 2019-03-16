@@ -2,7 +2,7 @@
 
 ;;;
 ;;; [incr tsdb()] --- Competence and Performance Profiling Environment
-;;; Copyright (c) 2010 -- 2018 Stephan Oepen (oe@ifi.uio.no)
+;;; Copyright (c) 2010 -- 2010 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -51,8 +51,9 @@
       (multiple-value-setq (*genia-stream* foo *genia-pid*)
         (run-process (format nil "exec ~a" *genia-binary*)
          :wait nil :output :stream :input :stream 
-         #-:openmcl :error-output #-:openmcl "/dev/null"
-         #-:openmcl :if-error-output-exists #-:openmcl :append))
+         #-(or :sbcl :openmcl) :error-output #-(or :sbcl :openmcl) "/dev/null"
+         #-(or :sbcl :openmcl) :if-error-output-exists 
+         #-(or :sbcl :openmcl) :append))
       (setf foo foo))))
 
 (defun genia-shutdown ()
@@ -66,16 +67,16 @@
     (ignore-errors
      (run-process (format nil "kill -HUP ~d" *genia-pid*)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null")
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
      (run-process (format nil "kill -TERM ~d" *genia-pid*)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null")
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
      (run-process (format nil "kill -QUIT ~d" *genia-pid*)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null"))
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null"))
     #+:allegro
     (sys:os-wait nil *genia-pid*)
     (setf *genia-pid* nil)))

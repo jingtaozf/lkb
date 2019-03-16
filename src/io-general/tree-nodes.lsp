@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2018
+;;; Copyright (c) 1991--2005
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -16,19 +16,12 @@
         (if #+:lui (lui-status-p :tree) #-:lui nil
           #+:lui (lui-show-parses edges *sentence*) #-:lui nil
           #+:clim
-          (if
-            (or (<= (length edges) 300)
-              (y-or-n-p-general
-                (format nil "There are ~A trees, which might take some time to display.
-Do you want to view them?"
-                  (length edges))))
-            (show-parse-summary edges title))
+          (show-parse-tree-frame edges title)
           #-:clim
           (dolist (edge edges) (display-parse-tree edge nil)))
         (let ((hook (when (and (find-package :mrs) 
-                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)
-                               (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))
-                      (symbol-function (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
+                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))
+                      (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
           (when hook (funcall hook edges))))
       (progn
         (lkb-beep)
@@ -40,7 +33,7 @@ Do you want to view them?"
   (let ((possible-edge-name
          (with-package (:lkb)
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Specify an edge number" . ,*edge-id*)) nil))))
+               `(("Specify an edge number" . ,*edge-id*)) 60))))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                (edge-record (find-edge-given-id edge-id)))
@@ -50,27 +43,12 @@ Do you want to view them?"
 
 
 (defun find-edge-given-id (edge-id)
-  ;; JAC Nov-2017: we might not find the target edge in the parse chart if packing is on,
-  ;; since unpacking creates further edges - so also look in the parse results
-  (labels
-    ((find-edge-in-chart ()
-       (or
-         (dotimes (i *chart-max*)
-           (let ((configs (aref *chart* i 1)))
-	     (dolist (config configs)
-	       (let ((edge (chart-configuration-edge config)))
-	         (when (eql edge-id (edge-id edge))
-	           (return-from find-edge-in-chart edge))))))))
-     (find-edge-in-parse (e)
-       (cond
-         ((eql (edge-id e) edge-id) e)
-         (t
-           (dolist (c (edge-children e))
-             (let ((found (find-edge-in-parse c)))
-               (when found (return-from find-edge-in-parse c))))))))
-    (or (find-edge-in-chart)
-        (loop for p in *parse-record* thereis (find-edge-in-parse p)))))
-      
+   (dotimes (i *chart-max*)
+      (let ((configs (aref *chart* i 1)))
+	(dolist (config configs)
+	  (let ((edge (chart-configuration-edge config)))
+	    (when (eql edge-id (edge-id edge))
+	      (return-from find-edge-given-id edge)))))))
 
 ;;; called from display-parse-tree
 
@@ -127,12 +105,9 @@ Do you want to view them?"
   ;;;     and this is checked against the *local-path*
   ;;;     of the label nodes, and so on recursively
   ;;;     This gives nodes like S/NP
-  ;;;
+
   ;;; Longer term, rules should be indexed by these categories.
-  ;;;
-   (unless (hash-table-p *cached-category-abbs*)
-      (setq *cached-category-abbs* (make-hash-table :size 150 :test #'eq)))
-   (or (gethash fs *cached-category-abbs*)
+   (or (cdr (assoc fs *cached-category-abbs*))
        (let ((abb
               (if (not *simple-tree-display*)
                  (calculate-tdl-label fs)
@@ -142,8 +117,9 @@ Do you want to view them?"
 			  (tmpl-fs (if tmpl-entry (tdfs-indef (psort-full-fs tmpl-entry)))))
                        (when (and tmpl-fs (dag-subsumes-p tmpl-fs (tdfs-indef fs)))
                           (return tmpl)))))))
-          (setf (gethash fs *cached-category-abbs*) abb))))
-
+          (push (cons fs abb) *cached-category-abbs*)
+          abb)))
+        
 
 ;;; code after this point is for the PAGE simulation version
 
@@ -310,6 +286,9 @@ Do you want to view them?"
                                 (car *args-path*)))))
 
                               
+;;; JAC added the following to parseout.lsp, but better here
+
+
 (defun tree-node-text-string (x)
    (let ((full-string
            (typecase x
@@ -348,34 +327,11 @@ Do you want to view them?"
           (adjust-chart-pointers root)
           (draw-chart-lattice 
            root
-           (format nil "Parse Chart for \"~A\""
-                   (shortened-sentence-string (get root 'chart-edge-descendents))))
+           (format nil "Parse Chart for \"~A...\""
+                   (car (get root 'chart-edge-descendents))))
           root)))
     (lkb-beep)))
 
-(defun shortened-sentence-string (word-list &optional (len 24))
-  ;; return word-list as a string in len or fewer characters, but always including
-  ;; at least the first word. If X11/Lisp can't reliably display non-Latin-1
-  ;; characters in a window title bar then replace them with middle dot
-  (labels
-    ((sanitize-string (s)
-      #+:mcclim s
-      #-:mcclim
-      (concatenate 'string
-	(loop for c across s collect (if (> (char-code c) 255) #\middle_dot c))))
-     (shorten-sentence (words prev-len)
-      (if words
-        (let* ((w (sanitize-string (string (car words))))
-               (cur-len (length w)))
-          (if
-            (or (zerop prev-len)
-                (and (null (cdr words)) (<= (+ prev-len cur-len) len)) ; final word fits?
-                (<= (+ prev-len cur-len 4) len)) ; +4 for space char and elipsis
-            (cons w
-              (shorten-sentence (cdr words) (+ prev-len cur-len 1))) ; +1 for space char
-            (list "...")))
-        nil)))
-    (format nil "~{~A~^ ~}" (shorten-sentence word-list 0))))
 
 (defun create-chart-pointers (root)
   ;; create a global mapping from edge-ids to symbols, and also (below) a
@@ -570,14 +526,12 @@ Do you want to view them?"
   edge-symbol)
 
 (defun reapply-rule (rule daughters nu-orth)
-  (declare (special *unify-robust-p*))
   ;; Since all the tree unifications are in one big unification
   ;; context, we need to make a copy of each rule each time it is used
   (let ((rule-dag (copy-tdfs-completely (rule-full-fs rule))))
     ;; Re-do rule unifications
     (loop 
-	with *unify-debug* = :return
-        for path in (cdr (rule-order rule))
+	for path in (cdr (rule-order rule))
         for dtr in daughters
 	as dtr-fs = (get dtr 'edge-fs)
 	do 
@@ -586,10 +540,7 @@ Do you want to view them?"
                (if *unify-robust-p*
                  (debug-yadu! rule-dag dtr-fs path)
                  (yadu! rule-dag dtr-fs path)))
-             (unless rule-dag
-               (error
-"Unification failure ~S~%Attempt to reunify ~A with ~A ~A failed when drawing parse tree"
-                  %failure% (tdfs-indef dtr-fs) (rule-id rule) path))))
+             (unless rule-dag (error "Unifications failed to reunify when drawing parse tree"))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
 		     (copy-tdfs-completely nu-orth)))

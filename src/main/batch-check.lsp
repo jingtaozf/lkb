@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron
 ;;; see LICENSE for conditions
 
 ;;; Functions for checking instances are well formed
@@ -22,7 +22,6 @@
 (defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t) (lexicon *lexicon*))
   (format t "~&;;; Running batch check over lexicon ~a"
 	  (or (name lexicon) ""))
-  (force-output)
   (let ((*batch-mode* t))
     #+:psql
     (when (typep lexicon 'psql-lex-database)
@@ -34,8 +33,7 @@
 	  do
 	    (check-lex-entry id lexicon
 			     :unexpandp unexpandp
-			     :ostream *lkb-background-stream*))
-      (terpri *lkb-background-stream*)))
+			     :ostream *lkb-background-stream*))))
   (when check-duplicates
     (display-tdl-duplicates lexicon))
 ;  (format t "~%(emptying cache)")
@@ -70,7 +68,7 @@
       (loop
           for dup-set in x-recs-dup
           do
-            (format t "~%")
+            (format t "~%~%")
             (loop
                 for x in dup-set
 		for x-lex = (first x)
@@ -122,9 +120,7 @@
 		  "~%No feature structure for ~A~%" lex-id))
 	(when (and new-fs
 		   *grammar-specific-batch-check-fn*)
-	  (funcall *grammar-specific-batch-check-fn* new-fs id)
-          (fresh-line *lkb-background-stream*)
-          (force-output *lkb-background-stream*)) ; in case it has output stuff there
+	  (funcall *grammar-specific-batch-check-fn* new-fs id))   
 	(when new-fs
 	  (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) 
 					    start-path)

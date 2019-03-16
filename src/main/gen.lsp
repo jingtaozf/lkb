@@ -137,20 +137,6 @@
       res))
 
 
-(defmacro find-attribute-in-arcs-lists (attribute arcs comp-arcs)
-  ;; find arc in arcs or comp-arcs with given attribute
-  (let ((v (gensym)))
-    `(let ((,v ,attribute))
-        (block find-attribute
-           (macrolet ((find-attribute (v as)
-                        (let ((a (gensym)))
-                           `(dolist (,a ,as)
-                              (when (eq (dag-arc-attribute ,a) ,v)
-                                (return-from find-attribute ,a))))))
-              (find-attribute ,v ,arcs)
-              (find-attribute ,v ,comp-arcs)
-              nil)))))
-
 (defun generalise-subparts (dag1 dag2 real-result-dag path)
   (let ((arcs1 (dag-arcs dag1))
         (comp-arcs1 (dag-comp-arcs dag1))
@@ -160,8 +146,8 @@
          ((generalise-arcs (arcs)
              `(dolist (arc ,arcs)
                   (let* ((label (dag-arc-attribute arc))
-                         (elem1 (find-attribute-in-arcs-lists label arcs1 comp-arcs1))
-                         (elem2 (find-attribute-in-arcs-lists label arcs2 comp-arcs2))
+                         (elem1 (unify-arcs-find-arc label arcs1 comp-arcs1))
+                         (elem2 (unify-arcs-find-arc label arcs2 comp-arcs2))
                          (new-path (cons label path)))
                      (declare (dynamic-extent new-path))
                      (if (and elem1 elem2)
@@ -288,12 +274,8 @@
     (values forwardp backwardp)))
 
 (defun subtype-or-equal (type1 type2)
-  ;; is type1 equal to type2 or a subtype of it?
-  (cond
-    ((eq type1 type2))
-    ((stringp type2)
-       (and (stringp type1) (string= type1 type2)))
-    (t (subtype-p type1 type2))))
+   (or (equal type1 type2)
+      (subtype-p type1 type2)))
 
 
 #|

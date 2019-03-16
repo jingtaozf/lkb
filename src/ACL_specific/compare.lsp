@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2018
+;;; Copyright (c) 1998--2002
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -62,8 +62,6 @@
   symbol
   record
   ink)
-
-(clim:define-presentation-type ctree ())
 
 (defun compare-parses (&optional (edges *parse-record*)
                        &key input mode view)
@@ -113,8 +111,7 @@
     (setf (compare-frame-runp frame) runp)
     (set-up-compare-frame frame edges :input input)
     (setf (clim:frame-pretty-name frame) 
-      (or input
-          (format nil "Compare \"~a\"" (shortened-sentence-string (edge-leaves (first edges)) 48))))
+      (or input (format nil "~a" (edge-leaves (first edges)))))
     (when runp
       (funcall #'clim:run-frame-top-level frame))
     frame))
@@ -164,12 +161,14 @@
              (integerp *tree-comparison-threshold*)
              (> (length edges) *tree-comparison-threshold*)
              (or *tree-automatic-update-p*
-                 ;; avoid implementation-dependent notify-user ... :style :question
-                 (null (lkb-y-or-n-p
+                 (null (clim:notify-user 
+                        frame
                         (format 
                          nil 
                          "Excessive Set of Trees (~a).  Continue?"
-                         (length edges))))))
+                         (length edges))
+                        :style :question 
+                        :title "Tree Comparison Safeguard"))))
     (frame-cursor frame :horizontal-scroll)
     (record-decision (make-decision :type :skip) frame)
     (return-from set-up-compare-frame :skip))
@@ -214,7 +213,7 @@
            "~&[~a] set-up-compare-frame(): expanding tree # ~a~%"
            (current-time :long :short) i)
           #-:allegro
-          (identity nil) ; ccl complains if 'do' body is empty
+          nil
         finally
           #+:allegro
           (when (and runp *tree-use-node-labels-p*)
@@ -223,7 +222,7 @@
              "~&[~a] set-up-compare-frame(): rebuilt ~a tree~p.~%"
              (current-time :long :short) (length edges) (length edges)))
           #-:allegro
-          (identity nil)))
+          nil))
   ;;
   ;; keep copy of original set of trees; needed for full resets
   ;;
@@ -345,14 +344,14 @@
          ((null result))
          (t
           (format
-           #+:allegro excl:*initial-terminal-io* #-:allegro *initial-terminal-io*
+           #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
            "tree-initialization-hook(): ~
             discriminant count mismatch (~a vs. ~a).~%"
            (length result) (length (compare-frame-discriminants frame)))))
         (when condition
           (clim:beep)
           (format
-           #+:allegro excl:*initial-terminal-io* #-:allegro *initial-terminal-io*
+           #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
            "tree-initialization-hook(): error `~a'.~%"
            (normalize-string (format nil "~a" condition)))))))
 
@@ -401,10 +400,9 @@
   ;; to redraw both lower panes.
   ;; 
   (when (and runp display)
-    #+:mcclim (when (clim:frame-panes frame) (clim:redisplay-frame-panes frame :force-p t))
-    #-:mcclim (clim:redisplay-frame-pane frame 'top :force-p t)
-    #-:mcclim (clim:redisplay-frame-pane frame 'comment :force-p t)
-    #-:mcclim (clim:redisplay-frame-pane frame 'status :force-p t))
+    (clim::redisplay-frame-pane frame 'top :force-p t)
+    (clim::redisplay-frame-pane frame 'comment :force-p t)
+    (clim::redisplay-frame-pane frame 'status :force-p t))
   (when display (update-trees frame))
 
   ;;
@@ -463,10 +461,9 @@
   ;; always update tree and discriminant state here: this will cause the frame
   ;; to redraw both lower panes.
   ;; 
-  #+:mcclim (when (clim:frame-panes frame) (clim:redisplay-frame-panes frame :force-p t))
-  #-:mcclim (clim:redisplay-frame-pane frame 'top :force-p t)
-  #-:mcclim (clim:redisplay-frame-pane frame 'comment :force-p t)
-  #-:mcclim (clim:redisplay-frame-pane frame 'status :force-p t)
+  (clim::redisplay-frame-pane frame 'top :force-p t)
+  (clim::redisplay-frame-pane frame 'comment :force-p t)
+  (clim::redisplay-frame-pane frame 'status :force-p t)
   (update-trees frame))
 
 (defstruct decision
@@ -484,25 +481,22 @@
       (record-decision decision frame))))
   
 (defun comparison-top-font ()
-  (clim:make-text-style :sans-serif :roman 12))
+  (list :sans-serif :roman 12))
 
 (defun comparison-tree-font ()
-  (clim:make-text-style :sans-serif :roman (or *comparison-tree-font-size* 8)))
+  (list :sans-serif :roman (or *comparison-tree-font-size* 7)))
 
 (defun comparison-dependencies-font ()
-  (clim:make-text-style :sans-serif :roman (or *comparison-dependencies-font-size* 12)))
+  (list :sans-serif :roman (or *comparison-dependencies-font-size* 10)))
 
 (defun comparison-comment-font ()
-  (clim:make-text-style :sans-serif :roman (or *comparison-discriminant-font-size* 8)))
+  (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
 (defun comparison-status-font ()
-  (clim:make-text-style :sans-serif :roman (or *comparison-discriminant-font-size* 8)))
+  (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
 (defun comparison-discriminant-font ()
-  (clim:make-text-style :sans-serif :roman (or *comparison-discriminant-font-size* 8)))
-
-(declaim (notinline comparison-top-font comparison-tree-font comparison-dependencies-font
-    comparison-comment-font comparison-status-font comparison-discriminant-font))
+  (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
 (clim:define-application-frame compare-frame ()
   ((runp :initform 0 :accessor compare-frame-runp)
@@ -542,107 +536,90 @@
    (ids :initform nil :accessor compare-frame-ids)
    (controller :initform nil :accessor compare-frame-controller))
   (:panes
-    (top
-      (clim:outlining (:thickness 1)
-        (clim:spacing (:thickness 2 :background clim:+white+)  
-          (clim:make-pane 'lkb-pane ; JAC 10-Dec-2018 - was clim:application-pane, and also below
-                          :display-function 'draw-top-window
-                          :text-cursor nil
-                          :text-style (comparison-top-font)
-                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :end-of-line-action :allow
-                          :end-of-page-action :allow
-                          :incremental-redisplay nil
-                          :display-time nil
-                          :background clim:+white+
-                          :foreground clim:+black+))))
-    (trees  
-      (clim:outlining (:thickness 1)
-        (clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
-                          ;; !!! in McCLIM the scroller seems to restrain its contained pane
-                          #+:mcclim :suggested-width #+:mcclim *tree-display-trees-width*
-                          #+:mcclim :suggested-height #+:mcclim *tree-display-height*)
-          #+:mcclim
-          (clim:spacing (:thickness 3 :background clim:+white+)
-            #1=(clim:make-pane 'lkb-pane
-                               :display-function 'draw-trees-window
-                               :text-cursor nil
-                               #-:mcclim :width #-:mcclim *tree-display-trees-width*
-                               #-:mcclim :height #-:mcclim *tree-display-height*
-                               :text-style (comparison-tree-font)
-                               :end-of-line-action :allow
-                               :end-of-page-action :allow
-                               :incremental-redisplay nil
-                               :display-time nil
-                               :background clim:+white+
-                               :foreground clim:+black+))
-          #-:mcclim #1#))) ; !!! in Allegro CLIM, spacing would stop the scroller working
-    (comment 
-      (clim:outlining (:thickness 1)
-        (clim:spacing (:thickness 1 :background clim:+white+)  
-          (clim:make-pane 'lkb-pane
-                          :display-function 'draw-comment-window
-                          :text-cursor nil
-                          :text-style (comparison-comment-font)
-                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :end-of-line-action :allow
-                          :end-of-page-action :allow
-                          :incremental-redisplay nil
-                          :display-time nil
-                          :background clim:+white+
-                          :foreground clim:+black+))))
-    (status 
-      (clim:outlining (:thickness 1)
-        (clim:spacing (:thickness 1 :background clim:+white+)  
-          (clim:make-pane 'lkb-pane
-                          :display-function 'draw-status-window
-                          :text-cursor nil
-                          :text-style (comparison-status-font)
-                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                          :end-of-line-action :allow
-                          :end-of-page-action :allow
-                          :incremental-redisplay nil
-                          :display-time nil
-                          :background clim:+white+
-                          :foreground clim:+black+))))
-    (discriminants  
-      (clim:outlining (:thickness 1)
-        (clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
-                         ;; McCLIM scroller problem as above
-                         #+:mcclim :suggested-width #+:mcclim *tree-display-discriminants-width*)
-          #+:mcclim
-          (clim:spacing (:thickness 3 :background clim:+white+)
-            #2=(clim:make-pane 'lkb-pane
-                               :display-function 'draw-discriminants-window
-                               :text-cursor nil
-                               #-:mcclim :width #-:mcclim *tree-display-discriminants-width*
-                               :text-style (comparison-discriminant-font)
-                               :end-of-line-action :allow
-                               :end-of-page-action :allow
-                               :incremental-redisplay t
-                               :background clim:+white+
-                               :foreground clim:+black+))
-          #-:mcclim #2#)))) ; Allegro CLIM problem as above
+   (top
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 2)  
+        (clim:make-pane 'clim:application-pane
+                        :display-function 'draw-top-window
+                        :text-cursor nil
+                        :text-style (comparison-top-font)
+                        :height :compute
+                        :end-of-line-action :allow
+                        :end-of-page-action :allow
+                        :borders nil
+                        :incremental-redisplay nil
+                        :display-time nil
+                        :background clim:+white+
+                        :foreground clim:+black+))))
+   
+   (trees  
+    (clim:spacing (:thickness 0)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-trees-window
+			  :text-cursor nil
+			  :width *tree-display-trees-width*
+			  :text-style (comparison-tree-font)
+			  :end-of-line-action :allow
+			  :end-of-page-action :allow
+			  :borders nil
+			  :incremental-redisplay nil
+			  :display-time nil
+			  :background clim:+white+
+			  :foreground clim:+black+)))))
+   (comment 
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+        (clim:make-pane 'clim:application-pane
+                        :display-function 'draw-comment-window
+                        :text-cursor nil
+                        :text-style (comparison-comment-font)
+                        :height :compute
+                        :end-of-line-action :allow
+                        :end-of-page-action :allow
+                        :borders nil
+                        :incremental-redisplay nil
+                        :display-time nil
+                        :background clim:+white+
+                        :foreground clim:+black+))))
+   (status 
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+        (clim:make-pane 'clim:application-pane
+                        :display-function 'draw-status-window
+                        :text-cursor nil
+                        :text-style (comparison-status-font)
+                        :height :compute
+                        :end-of-line-action :allow
+                        :end-of-page-action :allow
+                        :borders nil
+                        :incremental-redisplay nil
+                        :display-time nil
+                        :background clim:+white+
+                        :foreground clim:+black+))))
+   (discriminants  
+    (clim:spacing (:thickness 0)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-discriminants-window
+			  :text-cursor nil
+			  :width *tree-display-discriminants-width*
+			  :height *tree-display-height*
+			  :text-style (comparison-discriminant-font)
+			  :end-of-line-action :allow
+			  :end-of-page-action :allow
+			  :borders nil
+			  :incremental-redisplay t
+			  :background clim:+white+
+			  :foreground clim:+black+))))))
   (:layouts
-    (:default (clim:vertically ()
-                top
-                (clim:horizontally () 
-                  trees 
-                  (clim:vertically () comment status discriminants))))))
-
-(defmethod initialize-instance :around ((frame compare-frame) &rest initargs)
-  (if *manage-window-placement*
-    (multiple-value-bind (left top width height)
-        (compute-frame-position-and-size frame)
-      (apply #'call-next-method
-        frame :left left :top top :width width :height height initargs))
-    (call-next-method)))
+   (:default (clim:vertically ()
+               top
+               (clim:horizontally () 
+                 trees 
+                 (clim:vertically () comment status discriminants))))))
 
 (define-compare-frame-command (com-exit-compare-frame :menu "Close")
     ()
@@ -754,15 +731,14 @@
 (define-compare-frame-command (com-confidence-compare-frame :menu "Confidence")
     ()
   (clim:with-application-frame (frame)
-    (pop-up-menu
-      '(("High (3)" :value 3)
-        ("Fair (2)" :value 2)
-        ("Low (1)" :value 1)
-        ("Zero (0)" :value 0))
-      #'(lambda (confidence)
-          (setf (compare-frame-confidence frame) confidence)))
-    #+:mcclim (clim:redisplay-frame-panes frame :force-p t)
-    #-:mcclim (clim:redisplay-frame-pane frame 'top :force-p t)))
+    (let ((command (clim:menu-choose
+                    '(("High (3)" :value 3 :active t)
+                      ("Fair (2)" :value 2 :active t)
+                      ("Low (1)" :value 1 :active t)
+                      ("Zero (0)" :value 0 :active t)))))
+      (when command
+        (setf (compare-frame-confidence frame) command)))
+    (clim::redisplay-frame-pane frame 'top :force-p t)))
 
 (define-compare-frame-command (com-toggle-compare-frame :menu "Toggle")
     ()
@@ -777,39 +753,42 @@
 
   (declare (ignore rest))
   ;;
-  ;; first test whether we are displaying the window with an initialized frame
+  ;; in case we were displaying the window with an uninitialized frame
   ;;
-  (if (compare-frame-edges frame)
+  (when (null (compare-frame-edges frame))
     (clim:formatting-table (stream)
+      (clim:with-text-style (stream (comparison-top-font))
+        (clim:formatting-row (stream)
+          (let ((record 
+                 (clim:formatting-cell (stream :align-x :center :min-width 950)
+                   (format
+                    stream
+                    "- analyzing the parse forest; please wait -"))))
+            (recolor-record record clim:+red+)
+            (clim:replay record stream)))))
+    (return-from draw-top-window))
+
+  (clim:formatting-table (stream)
+    (clim:with-text-style (stream (comparison-top-font))
       (clim:formatting-row (stream)
         (let ((record 
-                (clim:formatting-cell (stream :align-x :center :min-width 950)
-                  (format
-                    stream
-                    "~:[~*~;(~a) ~][~a : ~a~@[ @ ~a~]]  ~a"
-                    (compare-frame-item frame) (compare-frame-item frame)
-                    (length (compare-frame-in frame)) 
-                    (length (compare-frame-out frame))
-                    (let ((foo (compare-frame-confidence frame)))
-                      (when (and (integerp foo) (>= foo 0) (<= foo 3))
-                        (aref #("zero" "low" "fair" "high") foo)))
-                    (compare-frame-input frame)))))
+               (clim:formatting-cell (stream :align-x :center :min-width 950)
+                 (format
+                  stream
+                  "~:[~*~;(~a) ~][~a : ~a~@[ @ ~a~]]  ~a"
+                  (compare-frame-item frame) (compare-frame-item frame)
+                  (length (compare-frame-in frame)) 
+                  (length (compare-frame-out frame))
+                  (let ((foo (compare-frame-confidence frame)))
+                    (when (and (integerp foo) (>= foo 0) (<= foo 3))
+                      (aref #("zero" "low" "fair" "high") foo)))
+                  (compare-frame-input frame)))))
           (when (= (length (compare-frame-in frame)) 1)
             (recolor-record record clim:+blue+)
             (clim:replay record stream))
           (when (update-match-p frame)
             (recolor-record record clim:+magenta+)
-            (clim:replay record stream)))))
-
-    (clim:formatting-table (stream)
-      (clim:formatting-row (stream)
-        (let ((record 
-                (clim:formatting-cell (stream :align-x :center :min-width 950)
-                  (format
-                    stream
-                    "- analyzing the parse forest; please wait -"))))
-          (recolor-record record clim:+red+)
-          (clim:replay record stream))))))
+            (clim:replay record stream)))))))
 
 (defun draw-trees-window (frame stream &rest rest)
 
@@ -821,10 +800,9 @@
     (return-from draw-trees-window))
 
   (setf (compare-frame-tstream frame) stream)
-  (when (and (compare-frame-trees frame) ; JAC - don't attempt to display an empty table
-           (or (not (integerp *tree-display-threshold*))
-               (<= (length (compare-frame-trees frame)) 
-                   *tree-display-threshold*)))
+  (unless (and (integerp *tree-display-threshold*)
+               (> (length (compare-frame-trees frame)) 
+                  *tree-display-threshold*))
     (clim:formatting-table (stream :x-spacing "X")
       (loop
           for tree in (compare-frame-trees frame)
@@ -832,78 +810,83 @@
             (setf (ctree-ink tree) clim:+foreground-ink+)
             (setf (ctree-record tree)
               (clim:with-new-output-record (stream)
-                (clim:with-output-recording-options (stream :record t)
-                  (clim:formatting-row (stream)
-                    (clim:formatting-cell 
-                        (stream :align-x :center :align-y :top)
-                      (with-text-style-bold-face (stream (comparison-dependencies-font))
-                        (format stream "~%[~a]" (ctree-id tree))))
-                    (clim:formatting-cell 
-                        (stream :align-x :left :align-y :center)
-                      (clim:formatting-row (stream)
-                        (clim:formatting-cell 
-                            (stream :align-x :left :align-y :top)
-                          (format stream "~@[(~a)~]~%" (ctree-score tree)))
-                        (clim:formatting-cell 
-                            (stream :align-x :center :align-y :top)
-                          (clim:with-output-as-presentation 
-                              (stream tree 'ctree :single-box t)
-                            (if (eq (compare-frame-view frame) :classic)
-                              (clim:format-graph-from-root
-                               (or (ctree-symbol tree)
-                                   (setf (ctree-symbol tree)
-                                     (make-new-parse-tree 
-                                      (ctree-edge tree) 1)))
-                               #'(lambda (node stream)
-                                   (multiple-value-bind (s lex-p) 
-                                       (get-string-for-edge node)
-                                     (if lex-p
-                                       (with-text-style-bold-face (stream) (write-string s stream))
-                                       (write-string s stream))))
-                               #'(lambda (node) (get node 'daughters))
-                               :graph-type #-:mcclim :parse-tree #+:mcclim :tree ; see graph.lsp
-                               :stream stream 
-                               :merge-duplicates nil
-                               :orientation :vertical
-                               :generation-separation 7
-                               :move-cursor t
-                               :within-generation-separation 7
-                               :center-nodes nil)
-                              (let* ((edge (ctree-edge tree))
-                                     (mrs (or (edge-mrs edge)
-                                              (setf (edge-mrs edge)
-                                                (ignore-errors
-                                                 (mrs::extract-mrs edge))))))
-                                (when mrs
-                                  (mrs:eds-output-psoa
-                                   mrs :stream stream))))))))
-                    ;; (terpri stream) ; JAC - not in accordance with the CLIM spec
-                    )))))
+                (clim:with-text-style (stream (comparison-tree-font))
+                  (clim:with-output-recording-options (stream :record t)
+                    (clim:formatting-row (stream)
+                      (clim:formatting-cell 
+                          (stream :align-x :center :align-y :top)
+                        (clim:with-text-style 
+                            (stream 
+                             (clim:parse-text-style '(:sans-serif :bold 12)))
+                          (format stream "~%[~a]" (ctree-id tree))))
+                      (clim:formatting-cell 
+                          (stream :align-x :left :align-y :center)
+                        (clim:formatting-row (stream)
+                          (clim:formatting-cell 
+                              (stream :align-x :left :align-y :top)
+                            (format stream "~@[(~a)~]~%" (ctree-score tree)))
+                          (clim:formatting-cell 
+                              (stream :align-x :center :align-y :top)
+                            (clim:with-output-as-presentation 
+                                (stream tree 'ctree :single-box t)
+                              (if (eq (compare-frame-view frame) :classic)
+                                (clim:format-graph-from-root
+                                 (or (ctree-symbol tree)
+                                     (setf (ctree-symbol tree)
+                                       (make-new-parse-tree 
+                                        (ctree-edge tree) 1)))
+                                 #'(lambda (node stream)
+                                     (multiple-value-bind (s bold-p) 
+                                         (get-string-for-edge node)
+                                       (clim:with-text-face
+                                           (stream (if bold-p :bold :roman))
+                                         (write-string s stream))))
+                                 #'(lambda (node) (get node 'daughters))
+                                 :graph-type :parse-tree
+                                 :stream stream 
+                                 :merge-duplicates nil
+                                 :orientation :vertical
+                                 :generation-separation 7
+                                 :move-cursor t
+                                 :within-generation-separation 7
+                                 :center-nodes nil)
+                                (let* ((edge (ctree-edge tree))
+                                       (mrs (or (edge-mrs edge)
+                                                (setf (edge-mrs edge)
+                                                  (ignore-errors
+                                                   (mrs::extract-mrs edge))))))
+                                  (when mrs
+                                    (mrs:eds-output-psoa
+                                     mrs :stream stream))))))))
+                      (terpri stream)))))))
       (when (and (compare-frame-trees frame)
                  (null (rest (compare-frame-trees frame))))
         (draw-trees-window-completion frame stream)))
-    (update-tree-colours frame)
-    #+:mcclim (clim:change-space-requirements stream))) ; update scroll bars
+    (update-tree-colours frame)))
 
 (define-compare-frame-command (com-tree-popup)
     ((tree 'ctree :gesture :select))
 
-  (let ((mrsp *mrs-loaded*)
-        (edge (ctree-edge tree)))
-    (pop-up-menu
-      `(("Yes" :value yes :active t)
-        #+:null
-        ("No" :value no :active t)
-        ("Enlarged Tree" :value show)
-        ("MRS" :value mrs :active ,mrsp)
-	("RMRS" :value rmrs :active ,mrsp)
-        ("Indexed MRS" :value indexed :active ,mrsp)
-        ("Scoped MRS" :value scoped :active ,mrsp)
-        #+:logon
-        ("UTool MRS" :value utool :active ,mrsp)
-        ("Dependencies" :value dependencies :active ,mrsp)
-        ("Rephrase" :value rephrase :active ,mrsp))
-      (yes 
+  (let* ((mrsp *mrs-loaded*)
+         (command (clim:menu-choose
+                   (list
+                    '("Yes" :value yes :active t)
+                    #+:null
+                    '("No" :value no :active t)
+                    '("Enlarged Tree" :value show)
+                    (list "MRS" :value 'mrs :active mrsp)
+		    (list "RMRS" :value 'rmrs :active mrsp)
+                    (list "Indexed MRS" :value 'indexed :active mrsp)
+                    (list "Scoped MRS" :value 'scoped :active mrsp)
+                    #+:logon
+                    (list "UTool MRS" :value 'utool :active mrsp)
+                    (list "Dependencies" :value 'dependencies :active mrsp)
+                    (list "Rephrase" :value 'rephrase :active mrsp))))
+         (edge (ctree-edge tree)))
+    (when command
+      (handler-case
+	  (ecase command
+	    (yes 
              (record-decision 
               (make-decision :type :select :value edge))
 	     (clim:with-application-frame (frame)
@@ -914,8 +897,7 @@
                             '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
-      #+:null
-      (no
+	    (no
              ;;
              ;; _fix_me_
              ;; not sure what to do here: there may be no discriminant(s) to
@@ -932,7 +914,7 @@
                             '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
-      (show 
+	    (show 
              (clim:with-application-frame (frame)
                (display-parse-tree
                 nil nil
@@ -941,30 +923,40 @@
                               (make-new-parse-tree (ctree-edge tree) 1)))
                 :title (format nil "Parse Tree #~a" (ctree-id tree))
                 :counter (compare-frame-chart frame))))
-      (mrs
+            (mrs
              (when edge
                (ignore-errors (funcall 'show-mrs-window edge))))
-      (rmrs 
+	    (rmrs 
 	     (when edge
 	       (ignore-errors (funcall 'show-mrs-rmrs-window edge))))
-      (indexed
+            (indexed
              (when edge
                (ignore-errors (funcall 'show-mrs-indexed-window edge))))
-      (scoped
+            (scoped
              (when edge
                (ignore-errors (funcall 'show-mrs-scoped-window edge))))
-      #+:logon
-      (utool
+            #+:logon
+            (utool
              (when edge
                (ignore-errors (funcall 'show-mrs-utool-window edge))))
-      (dependencies
+            (dependencies
              (when edge
                (ignore-errors (funcall 'show-mrs-dependencies-window edge))))
-      (rephrase
+            (rephrase
              (let ((symbol (when (find-package :mt)
                              (find-symbol "REPHRASE" :mt))))
                (when (and symbol (fboundp symbol))
-                 (funcall symbol edge)))))))
+                 (funcall symbol edge)))))
+            
+        (storage-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Memory allocation problem: ~A~%" condition)))
+	(error (condition)
+	  (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))
+        (serious-condition (condition)
+          (with-output-to-top ()
+            (format t "~%Something nasty: ~A~%" condition)))))))
 
 (defun draw-trees-window-completion (frame stream)
   (let* ((hook *tree-completion-hook*)
@@ -985,11 +977,9 @@
       (when condition
         (clim:beep)
         (format
-         #+:allegro excl:*initial-terminal-io* #-:allegro *initial-terminal-io*
+         #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
          "tree-completion-hook(): error `~a'.~%"
          (normalize-string (format nil "~a" condition))))
-      ;; if the hook result specifies a font/face/size then it must stay within the
-      ;; CLIM 2.0 protocol, and not stray into the McCLIM font family protocol extension
       (let* ((comment (if (stringp result)
                         result
                         (rest (assoc :comment result))))
@@ -999,7 +989,7 @@
              (size (rest (assoc :size result)))
              (style (when (or font face size)
                       (clim:merge-text-styles
-                        (list font face size) (comparison-dependencies-font))))
+                       (list font face size) '(:sans-serif :bold 12))))
              (color (rest (assoc :color result)))
              (color (ignore-errors (apply #'clim:make-rgb-color color)))
              (bottomp (rest (assoc :bottom result)))
@@ -1013,7 +1003,7 @@
                    (clim:formatting-row (stream)
                      (clim:formatting-cell 
                          (stream :align-x :center :align-y :top)
-                       (format stream "")) ; JAC - removed superfluous (ctree-id tree)
+                       (format stream "" (ctree-id tree)))
                      (clim:formatting-cell (stream :align-x align)
                        (clim:with-text-style (stream style)
                          (format stream "~%~a" comment)))))))
@@ -1028,8 +1018,10 @@
                    (clim:formatting-row (stream)
                      (clim:formatting-cell 
                          (stream :align-x :center :align-y :top)
-                       (with-text-style-bold-face (stream (comparison-dependencies-font))
-                         (format stream "~%[~a]" (ctree-id tree))))
+                       (clim:with-text-style 
+                           (stream 
+                            (clim:parse-text-style '(:sans-serif :bold 12)))
+                         (format stream "[~a]" (ctree-id tree))))
                      (clim:formatting-cell (stream :align-x :left)
                        (clim:formatting-column (stream)
                          (clim:formatting-cell (stream :align-x :left)
@@ -1041,13 +1033,10 @@
             (recolor-record 
              record
              (let ((status (mrs:eds-suspicious-p eds))
-                   (orange (or
-                              #-:mcclim
-                              (clim:find-named-color
+                   (orange (or (clim:find-named-color
                                 "orange" (clim:frame-palette frame) 
                                 :errorp nil)
-                              #+:mcclim
-                              clim:+orange+)))
+                               clim:+yellow+)))
                (cond
                 ((member :cyclic status) clim:+red+)
                 ((member :fragmented status) orange)
@@ -1062,7 +1051,7 @@
                    (clim:formatting-row (stream)
                      (clim:formatting-cell 
                          (stream :align-x :center :align-y :top)
-                       (format stream "")) ; JAC - removed superfluous (ctree-id tree)
+                       (format stream "" (ctree-id tree)))
                      (clim:formatting-cell (stream :align-x align)
                        (clim:with-text-style (stream style)
                          (format stream "~%~a" comment)))))))
@@ -1073,40 +1062,40 @@
   
   (declare (ignore rest))
 
-  (clim:formatting-table (stream)
-    (clim:formatting-row (stream)
-      (clim:formatting-cell (stream :align-x :center :min-width 410)
-        (let* ((comment (compare-frame-comment frame))
-               (comment (if (or (null comment) (equal comment ""))
-                          " "
-                          comment)))
-          (format stream "~a" comment))))))
+  (clim:with-text-style (stream (comparison-comment-font))
+    (clim:formatting-table (stream)
+      (clim:formatting-row (stream)
+        (clim:formatting-cell (stream :align-x :center :min-width 410)
+          (let* ((comment (compare-frame-comment frame))
+                 (comment (if (or (null comment) (equal comment ""))
+                            " "
+                            comment)))
+            (format stream "~a" comment)))))))
 
 (defun draw-status-window (frame stream &rest rest)
   
   (declare (ignore rest))
 
-  (clim:formatting-table (stream)
-    (clim:formatting-row (stream)
-      (clim:formatting-cell (stream :align-x :center :min-width 410)
-        (let ((version (compare-frame-version frame))
-              (gold (compare-frame-gversion frame)))
-          (if (and version (not (equal version "")))
-            (format 
-             stream 
-             "~a~:[    ~;~]" 
-             version (or (null gold) (equal gold "")))
-            (format stream " "))
-          (when (and gold (not (equal gold "")))
-            (let ((record (clim:with-new-output-record (stream)
-                            (format stream "~a" gold))))
-              (recolor-record 
-               record 
-               (if (update-match-p frame) clim:+magenta+ clim:+blue+))
-              (clim:replay record stream))))))))
+  (clim:with-text-style (stream (comparison-status-font))
+    (clim:formatting-table (stream)
+      (clim:formatting-row (stream)
+        (clim:formatting-cell (stream :align-x :center :min-width 410)
+          (let ((version (compare-frame-version frame))
+                (gold (compare-frame-gversion frame)))
+            (if (and version (not (equal version "")))
+              (format 
+               stream 
+               "~a~:[    ~;~]" 
+               version (or (null gold) (equal gold "")))
+              (format stream " "))
+            (when (and gold (not (equal gold "")))
+              (let ((record (clim:with-new-output-record (stream)
+                              (format stream "~a" gold))))
+                (recolor-record 
+                 record 
+                 (if (update-match-p frame) clim:+magenta+ clim:+blue+))
+                (clim:replay record stream)))))))))
 
-(clim:define-presentation-type discriminant ())
-
 (defun draw-discriminants-window (frame stream &rest rest)
 
   (declare (ignore rest))
@@ -1119,84 +1108,96 @@
     (return-from draw-discriminants-window))
 
   (let ((discriminants (compare-frame-discriminants frame)))
-    (clim:formatting-table (stream :x-spacing "X")
-      (loop
-          for item in discriminants
-          for record = (discriminant-record item)
-          when record do (clim:clear-output-record record)
-          unless (discriminant-hidep item) do
-            (clim:formatting-row (stream)
-              (setf (discriminant-record item)
-                (clim:with-new-output-record (stream)
-                  (clim:with-output-recording-options (stream :record t)
-                    (clim:with-output-as-presentation
-                        (stream item 'discriminant)
-                      (clim:updating-output 
-                          (stream :cache-value (discriminant-state item))
-                        (clim:formatting-cell 
-                            (stream :align-x :center :min-width "+")
-                          (write-string
-                           (discriminant-state-as-string item) stream)))
-                      (clim:updating-output 
-                          (stream :cache-value (discriminant-toggle item))
-                        (clim:formatting-cell 
-                            (stream :align-x :center :min-width "+")
-                          (write-string 
-                           (discriminant-toggle-as-string item) stream)))
-                      (clim:formatting-cell (stream :align-x :left)
-                        (format stream "~a" (discriminant-key item)))
-                      (clim:formatting-cell (stream :align-x :left)
-                        (format 
-                         stream 
-                         "~@[~a~]" (discriminant-value item))))))))
-            ;;
-            ;; _fix_me_
-            ;; there ought to be a way of drawing things in the intended 
-            ;; colour right from the start; apparently, neither rob nor i 
-            ;; could work that out quickly; CLIM isa bitch to work with :-(.
-            ;;                                               (9-oct-02; oe)
-            (let ((record (discriminant-record item)))
-              (when (discriminant-gold item)
-                (recolor-record record (if (update-match-p frame) 
-                                         clim:+magenta+
-                                         clim:+blue+))
-                (clim:replay record stream))))))
-  #+:mcclim (clim:change-space-requirements stream)) ; ??? should update scroll bars
+    (clim:with-text-style (stream (comparison-discriminant-font))
+      (clim:formatting-table (stream :x-spacing "X")
+        (loop
+            for item in discriminants
+            for record = (discriminant-record item)
+            when record do (clim:clear-output-record record)
+            unless (discriminant-hidep item) do
+              (clim:formatting-row (stream)
+                (setf (discriminant-record item)
+                  (clim:with-new-output-record (stream)
+                    (clim:with-output-recording-options (stream :record t)
+                      (clim:with-output-as-presentation
+                          (stream item 'discriminant)
+                        (clim:updating-output 
+                            (stream :cache-value (discriminant-state item))
+                          (clim:formatting-cell 
+                              (stream :align-x :center :min-width "+")
+                            (write-string
+                             (discriminant-state-as-string item) stream)))
+                        (clim:updating-output 
+                            (stream :cache-value (discriminant-toggle item))
+                          (clim:formatting-cell 
+                              (stream :align-x :center :min-width "+")
+                            (write-string 
+                             (discriminant-toggle-as-string item) stream)))
+                        (clim:formatting-cell (stream :align-x :left)
+                          (format stream "~a" (discriminant-key item)))
+                        (clim:formatting-cell (stream :align-x :left)
+                          (format 
+                           stream 
+                           "~@[~a~]" (discriminant-value item))))))))
+              ;;
+              ;; _fix_me_
+              ;; there ought to be a way of drawing things in the intended 
+              ;; colour right from the start; apparently, neither rob nor i 
+              ;; could work that out quickly; CLIM isa bitch to work with :-(.
+              ;;                                               (9-oct-02; oe)
+              (let ((record (discriminant-record item)))
+                (when (discriminant-gold item)
+                  (recolor-record record (if (update-match-p frame) 
+                                           clim:+magenta+
+                                           clim:+blue+))
+                  (clim:replay record stream))))))))
 
 (define-compare-frame-command (com-discriminant-popup)
     ((discriminant 'discriminant :gesture :select))
-  (pop-up-menu
-    `(("Yes" :value yes)
-      ("No" :value no)
-      ("Unknown" :value unknown)
-      (,(format nil "In Parses (~a)" (length (discriminant-in discriminant)))
-       :value in)
-      (,(format nil "Out Parses (~a)" (length (discriminant-out discriminant)))
-       :value out))
-    (yes
-      (record-decision (make-decision :type :yes :value discriminant))
-      (setf (discriminant-state discriminant) t)
-      (setf (discriminant-toggle discriminant) t))
-    (no 
-      (record-decision (make-decision :type :no :value discriminant))
-      (setf (discriminant-state discriminant) nil)
-      (setf (discriminant-toggle discriminant) nil))
-    (unknown 
-      (record-decision 
-        (make-decision :type :unknown :value discriminant))
-      (setf (discriminant-state discriminant) :unknown)
-      (setf (discriminant-toggle discriminant) :unknown))
-    ;;
-    ;; _fix_me_
-    ;; in concise mode, at least, make these only show trees that are
-    ;; still available globally, i.e. ignore all trees that have become
-    ;; out already.                                    (20-jan-03; oe)
-    ;;
-    (in (show-parse-summary (discriminant-in discriminant)))
-    (out (show-parse-summary (discriminant-out discriminant))))
-  (clim:with-application-frame (frame)
-    (recompute-in-and-out frame)
-    (update-trees frame t :discriminant)))
+  (let ((command (clim:menu-choose
+		  `(("Yes" :value yes)
+		    ("No" :value no)
+		    ("Unknown" :value unknown)
+		    (,(format 
+                       nil 
+                       "In Parses (~a)" 
+                       (length (discriminant-in discriminant)))
+                     :value in)
+		    (,(format
+                       nil
+                       "Out Parses (~a)"
+                       (length (discriminant-out discriminant)))
+                       :value out)))))
+    (when command
+      (handler-case
+	  (ecase command
+	    (yes 
+             (record-decision (make-decision :type :yes :value discriminant))
+             (setf (discriminant-state discriminant) t)
+             (setf (discriminant-toggle discriminant) t))
+	    (no 
+             (record-decision (make-decision :type :no :value discriminant))
+             (setf (discriminant-state discriminant) nil)
+             (setf (discriminant-toggle discriminant) nil))
+	    (unknown 
+             (record-decision 
+              (make-decision :type :unknown :value discriminant))
+             (setf (discriminant-state discriminant) :unknown)
+             (setf (discriminant-toggle discriminant) :unknown))
+            ;;
+            ;; _fix_me_
+            ;; in concise mode, at least, make these only show trees that are
+            ;; still available globally, i.e. ignore all trees that have become
+            ;; out already.                                    (20-jan-03; oe)
+            ;;
+            (in (show-parse-tree-frame (discriminant-in discriminant)))
+            (out (show-parse-tree-frame (discriminant-out discriminant))))
+	(error (condition) 
+	  (declare (ignore condition))
+          nil))
+      (clim:with-application-frame (frame)
+        (recompute-in-and-out frame)
+        (update-trees frame t :discriminant)))))
 
 (defun update-trees (frame 
                      &optional (redrawp t) (context nil)
@@ -1279,9 +1280,8 @@
              do
                (setf (discriminant-hidep discriminant) nil))))
 
-      #-:mcclim
-      (when (and runp (not (eq context :tree)))
-        (clim:redisplay-frame-pane frame 'trees :force-p t))
+      (unless (or (null runp) (eq context :tree))
+        (clim::redisplay-frame-pane frame 'trees :force-p t))
       ;;
       ;; _fix_me_
       ;; always force complete redraw: omitting this causes rather disturbing
@@ -1290,9 +1290,8 @@
       ;; drawing function needs improvement (maybe CLIM :-{).  (15-oct-02; oe)
       ;;
       (when runp
-        #+:mcclim (when (clim:frame-panes frame) (clim:redisplay-frame-panes frame :force-p t))
-        #-:mcclim (clim::redisplay-frame-pane frame 'discriminants :force-p t)
-        #-:mcclim (clim::redisplay-frame-pane frame 'top :force-p t))))
+        (clim::redisplay-frame-pane frame 'discriminants :force-p t)
+        (clim::redisplay-frame-pane frame 'top :force-p t))))
   
   (when runp (frame-cursor frame :default)))
 
@@ -1320,9 +1319,7 @@
 (defun recolor-record (record ink)
   (labels ((recolor-node (node) 
 	     (when (clim:displayed-output-record-p node)
-	       ;; the function (setf clim:displayed-output-record-ink) is not in the
-               ;; CLIM standard, so this code is non-portable
-	       #+:allegro (setf (clim:displayed-output-record-ink node) ink))
+	       (setf (clim:displayed-output-record-ink node) ink))
 	     (clim:map-over-output-records #'recolor-node node)))
     (recolor-node record)))
 
@@ -1622,10 +1619,11 @@
            (null toggle) indentation
            indentation
            (discriminant-key item) indentation
-           (discriminant-value item))) ; JAC: removed superfluous arg
+           (discriminant-value item) indentation))
     (format stream "~v,0t</table>" indentation)))
 
 (defun ptb-compare-hook (frame &key size)
+  (declare (ignore extras))
   (let* ((input (compare-frame-input frame))
          (input (if (stringp input)
                   (let ((symbol (find-symbol "READ-PTB-FROM-STRING" :tsdb)))

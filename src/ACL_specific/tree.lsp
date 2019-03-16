@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2018
+;;; Copyright (c) 1991--2002
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -14,27 +14,22 @@
 ;;; This version uses built in Allegro graph drawer rather than JAC's
 ;;; and is based on Rob's parse tree drawing code
 
-;;; *** temporary test, to allow this file to be loaded into an old LOGON LKB session
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (boundp '*window-width*)
-(defparameter *window-width* 500
+(defconstant *window-width* 400
   "Initial width of tree window")
 
-(defparameter *window-height* 500
+(defconstant *window-height* 400
   "Initial height of tree window")
 
-(defparameter *tree-node-sep* 6
+(defun make-tree-text-style nil
+  (clim:parse-text-style 
+   (list 
+    :sans-serif :roman *type-tree-font-size*)))
+
+(defconstant *tree-node-sep* 6
   "Spacing between nodes in a single generation.")
 
-(defparameter *tree-level-sep* #+:mcclim 20 #-:mcclim 12
+(defconstant *tree-level-sep* 12
   "Spacing between levels in the tree.")
-  ))
-
-(defun make-tree-text-style ()
-  (clim:make-text-style :sans-serif :roman (or *type-tree-font-size* 12)))
-
-(declaim (notinline make-tree-text-style))
 
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
@@ -45,15 +40,13 @@
     (type-entry nil)			; type record for node
     (children nil)))
 
-(clim:define-presentation-type hier-node ())
-
 ;; Close function
 
 (defvar *type-hierarchy-frames* nil)
 
 ;;; frames are pushed on to this list when created
 ;;; by display-type-hierarchy.  Would be tidier if they were
-;;; removed when that window closes, but doesn't seem to be necessary
+;;; removed by the quit function, but doesn't seem to be necessary
 
 (defun close-existing-type-hierarchy-trees nil
   (loop for frame in *type-hierarchy-frames*
@@ -65,23 +58,31 @@
 ;; Open a type-hierarchy-window
 ;;
 
-(defun create-type-hierarchy-tree (&optional (type *toptype*)
-                                   existing
-				   (show-all-p (if existing (type-hierarchy-show-all-p existing)))
-                                   (display-definitions-p
-                                     (if existing (type-hierarchy-display-definitions-p existing))))
+(defun create-type-hierarchy-tree (&optional (type *toptype*) old-window 
+					     show-all-p)
+  ;; if show-all-p is true then we never hide any nodes. If it's false
+  ;; then we call hide-in-type-hierarchy-p on each type to see whether
+  ;; it should be hidden
+  (loop for name in *type-names*
+      do 
+	(unless (symbolp name)
+	  (let ((real-thing name))
+	    (setq name (intern (princ-to-string name)))
+	    (setf (get name 'real-thing) real-thing))) 
+	(setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
-  (let ((node
-          (car (make-new-type-tree type show-all-p))))
-    (display-type-hierarchy
-      node existing show-all-p display-definitions-p type)))
+  (let ((node (car (make-new-type-tree type show-all-p t))))
+    (display-type-hierarchy 
+     node (format nil "Type hierarchy below ~(~A~)" type) t old-window
+     show-all-p)))
+
+;;; initially all nodes are marked not visible. If we're not a shrunk node,
+;;; go on to attempt to mark each daughter as visible
+;;; If we're marked as visible then daughters must have been done already
+;;; If we start below a shrunk node then nodes are visible despite this
 
 (defun propagate-visibility-in-type-tree (type)
-  ;; initially all nodes are marked not visible. If we're not a shrunk node,
-  ;; go on to attempt to mark each daughter as visible
-  ;; If we're marked as visible then daughters must have been done already
-  ;; If we start below a shrunk node then nodes are visible despite this
    (let ((type-record (get-type-entry type)))
       (when (and (not (ltype-shrunk-p type-record))
                  (not (ltype-visible-p type-record)))
@@ -91,251 +92,111 @@
       (setf (ltype-visible-p type-record) t)))
 
 
-;;; Compute the daughters and parents to show in the type hierarchy display. Goes both
-;;; upwards and downwards in the hierarchy, and takes account of both 'hidden' types and
-;;; shrunk types.
-
-(defun make-new-type-tree (type show-all-p)
-  ;; if show-all-p is true then we never hide any nodes. If it's false
-  ;; then we call hide-in-type-hierarchy-p on each type to see whether
-  ;; it should be hidden
-  (let* ((hide-fn
-           (and (not show-all-p) (fboundp 'hide-in-type-hierarchy-p)
-              (symbol-function 'hide-in-type-hierarchy-p)))
-         (ntypes (length *type-names*))
-         (type-table (make-array ntypes :element-type 'bit))
-         (index-to-type-name (make-array ntypes :element-type t))
-         (hide-table (make-hash-table :test #'eq)))
-    (flet
-      ((caching-hide-fn (type)
-         (multiple-value-bind (hidep foundp)
-              (gethash type hide-table)
-            (if foundp
-                hidep
-                (setf (gethash type hide-table) (funcall hide-fn type))))))
-      (loop for name in *type-names*
-            for ind from 0
-            do 
-	    (unless (symbolp name)
-	      (let ((real-thing name))
-	        (setq name (intern (princ-to-string name)))
-	        (setf (get name 'real-thing) real-thing))) 
-	    (setf (get name 'daughters) nil)
-            (setf (get name 'type-index) ind)
-            (setf (svref index-to-type-name ind) name))
-       (make-new-type-tree-upwards
-         type (if hide-fn #'caching-hide-fn) type-table index-to-type-name)
-       (make-new-type-tree-downwards
-         type (if hide-fn #'caching-hide-fn) type-table index-to-type-name)
-       (list *toptype*))))
-
-(defun make-new-type-tree-upwards (type hide-fn type-table index-to-type-name)
-   (let ((ptypes nil))
-      (labels
-         ((non-hidden-parents (type)
-            (loop for p in (ltype-parents (get-type-entry type))
-               nconc
-               (if (and (not (eq p *toptype*)) hide-fn (funcall hide-fn p))
-                  (non-hidden-parents p)
-                  (list p))))
-          (make-new-type-tree-upwards-1 (type)
-            ;; ignore any shrunk status otherwise might not reach *toptype*
-            (let ((node
-                     (if (symbolp type) type (intern (princ-to-string type)))))
-               (dolist (parent (non-hidden-parents type))
-                  (let ((p
-                          (if (symbolp parent) parent (intern (princ-to-string parent)))))
-                     (unless (get p 'daughters) ; processed already?
-                        (push p ptypes)
-                        (make-new-type-tree-upwards-1 p))
-                     (push node (get p 'daughters)))))))
-         (make-new-type-tree-upwards-1 type)
-         (loop for p in ptypes
-            do (setf (get p 'daughters)
-                  (filter-descendant-daughters
-                     (get p 'daughters) type-table index-to-type-name))))))
-
-(defun make-new-type-tree-downwards (type hide-fn type-table index-to-type-name)
-   ;; make sure that start type is not hidden, no matter what the
+(defun make-new-type-tree (type show-all-p toplevel-p)
+   ;; make sure that top type is not hidden, no matter what
    ;; hide-in-type-hierarchy-p function says - otherwise we may end up
-   ;; displaying nothing at all (if all its descendents are also hidden)
-   (let ((done (make-hash-table :test #'eq)))
-      (labels
-         ((make-new-type-tree-downwards-1 (type toplevel-p)
-            (let ((type-record (get-type-entry type)))
-               (when (ltype-visible-p type-record) ; i.e. not shrunk
-                  (let ((node
-                           (if (symbolp type) type (intern (princ-to-string type)))))
-                     (unless (gethash node done)
-                        (let ((dlist
-                                (loop for d in (ltype-daughters type-record)
-                                   nconc
-                                   (make-new-type-tree-downwards-1 d nil))))
-                           (setf (get node 'daughters)
-                              (if hide-fn
-                                 (filter-descendant-daughters dlist
-                                    type-table index-to-type-name)
-                                 dlist))
-                        (setf (gethash node done) t)))
-                     (if (and (not toplevel-p) hide-fn (funcall hide-fn type))
-                        (copy-list (get node 'daughters))
-                        (list node)))))))
-         (make-new-type-tree-downwards-1 type t))))
-
-(defun filter-descendant-daughters (dlist type-table index-to-type-name)
-   ;; dlist is a list of potential daughters. Remove duplicates, and also filter out
-   ;; any potential daughter that is a descendant of another daughter in this list -
-   ;; preventing display of spurious links caused by splicing out GLBs
-   (declare (bit-vector type-table))
-   (cond
-      ((null (cdr dlist)) dlist)
-      (t
-         (fill type-table 0)
-         (loop for d in dlist
-            do
-            (setf (sbit type-table (get d 'type-index)) 1))
-         (loop
-            with start = 0
-            for n = (position 1 type-table :start start) ; iterate across 1's
-            while n
-            do
-            (loop
-               for desc in (ltype-descendants (get-type-entry (svref index-to-type-name n)))
-               do
-               (setf (sbit type-table (get (ltype-name desc) 'type-index)) 0))
-            (setq start (1+ n)))
-         ;; return types corresponding to 1's
-         (loop
-            with res = nil
-            with start = 0
-            for n = (position 1 type-table :start start)
-            while n
-            do
-            (push (svref index-to-type-name n) res)
-            (setq start (1+ n))
-            finally (return res)))))
+   ;; displaying no hierarchy at all (if all descendents are hidden), or just
+   ;; one branch rather than all
+   (let ((type-record (get-type-entry type)))
+      (when (ltype-visible-p type-record)
+         (let ((node
+                 (if (symbolp type) type
+                    (intern (princ-to-string type)))))
+            (unless (get node 'daughters)
+               (setf (get node 'daughters)
+                  (delete-duplicates
+                     (mapcan
+                        #'(lambda (d) (copy-list (make-new-type-tree d show-all-p nil)))
+                        (ltype-daughters type-record))
+                     :test #'eq)))
+            (if (and (not toplevel-p) (not show-all-p)
+                   (fboundp 'hide-in-type-hierarchy-p)
+                   (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+               (get node 'daughters)
+               (list node))))))
 
 ;;
-;; Define a frame class for type hierarchy windows
+;; Define a frame class for our tree window
 ;;
 
 (define-lkb-frame type-hierarchy
   ((nodes :initform nil
 	  :accessor type-hierarchy-nodes)
    (show-all-p :initform nil
-	       :accessor type-hierarchy-show-all-p)
-   (display-definitions-p :initform nil
-	                  :accessor type-hierarchy-display-definitions-p)
-   (focus-type :initform nil
-	       :accessor type-hierarchy-focus-type)
-   (scaling :initform 1.0
-	    :accessor type-hierarchy-scaling))
+	       :accessor type-hierarchy-show-all-p))
   :display-function 'draw-type-hierarchy
-  :text-style (make-tree-text-style)
   :width *window-width* 
-  :height *window-height*)
+  :height *window-height*
+  :text-style (make-tree-text-style))
 
-(defun display-type-hierarchy (node existing show-all-p
-                               display-definitions-p focus-type)
+(defun display-type-hierarchy (node title horizontalp existing show-all-p)
+  (declare (ignore horizontalp))
   (if existing
-    (clim:redisplay-frame-panes existing :force-p t)
-    (mp:run-function "Type Hierarchy" 
-      #'display-type-hierarchy-really
-      node
-      (format nil "Type Hierarchy ~A ~(~A~)"
-              (cond
-                ((eq focus-type *toptype*) "below")
-                ((null (ltype-daughters (get-type-entry focus-type))) "above")
-                (t "around"))
-              focus-type)
-      show-all-p display-definitions-p focus-type)))
+      (progn
+        (setf (type-hierarchy-nodes existing) node)
+	(setf (clim:frame-pretty-name existing) title)
+        (clim:redisplay-frame-panes existing :force-p t))
+      (mp:run-function "Type Hierarchy" 
+                               #'display-type-hierarchy-really
+                               node title show-all-p)))
 
-(defun display-type-hierarchy-really (node title show-all-p display-definitions-p focus-type)
-  (let ((frame (clim:make-application-frame 'type-hierarchy)))
-    (push frame *type-hierarchy-frames*)
-    (setf (type-hierarchy-nodes frame) node)
-    (setf (type-hierarchy-show-all-p frame) show-all-p)
-    (setf (type-hierarchy-display-definitions-p frame) display-definitions-p)
-    (setf (type-hierarchy-focus-type frame) focus-type) ; window will scroll to show this type
-    (setf (clim:frame-pretty-name frame) title)
-    (clim:run-frame-top-level frame)))
+(defun display-type-hierarchy-really (node title show-all-p)
+  (let ((thframe (clim:make-application-frame 'type-hierarchy)))
+    (push thframe *type-hierarchy-frames*)
+    (setf (type-hierarchy-nodes thframe) node)
+    (setf (type-hierarchy-show-all-p thframe) show-all-p)
+    (setf (clim:frame-pretty-name thframe) title)
+    (clim:run-frame-top-level thframe)))
 
-
-(defparameter *type-hierarchy-zoom-factor* 1.6)
-(defconstant +zoom-factor-epsilon+ 0.00001)
 
 (defun draw-type-hierarchy (type-hierarchy stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let* ((node-tree (type-hierarchy-nodes type-hierarchy))
-         (focus-type (type-hierarchy-focus-type type-hierarchy))
-         (scaling (type-hierarchy-scaling type-hierarchy))
-         (telescopedp (< scaling (- 1.0 +zoom-factor-epsilon+)))
-         (display-definitions-p (type-hierarchy-display-definitions-p type-hierarchy))
-         (text-size (* *type-tree-font-size* scaling)))
+         (viewport (clim:pane-viewport stream))
+         (x (if viewport (clim:bounding-rectangle-min-x viewport)))
+         (y (if viewport (clim:bounding-rectangle-min-y viewport))))
     (silica:inhibit-updating-scroll-bars #+:allegro (stream)
-      ;; would ideally do all of the scaling just with clim:with-scaling, but CLIM does not
-      ;; scale text, and scaling text in conjunction with overall scaling causes inconsistency
       (clim:format-graph-from-root
-        node-tree
-        #'(lambda (node s)
-            (clim:with-output-as-presentation (stream node 'hier-node :single-box t)
-              (with-text-style-new-size (stream text-size)
-                (if (ltype-shrunk-p
-                      (or (get-type-entry node) 
-                          (get-type-entry (get node 'real-thing))))
-                  (clim:surrounding-output-with-border (s :line-dashes t :line-thickness 2)
-                    (draw-type-entry node s telescopedp display-definitions-p))
-                  (draw-type-entry node s telescopedp display-definitions-p)))))
-          #'(lambda (node) (get node 'daughters))
-          :stream stream 
-          :merge-duplicates t
-          :orientation :horizontal 
-          :maximize-generations #+:mcclim t #-:mcclim nil ; definitely t for McCLIM
-          :generation-separation
-          (ceiling (* *tree-level-sep* (expt scaling 0.5))) ; slower increase/decrease to spread
-          :within-generation-separation
-          (max (floor (* *tree-node-sep* scaling)) (if display-definitions-p 1 0))
-          :arc-drawing-options
-          (list :ink ; zoomed out links gray since black gives a too dense effect
-            (if telescopedp (clim:make-gray-color 0.6) clim:+black+))
-          :graph-type :dag
-          :center-nodes nil)
-      #+:mcclim (clim:change-space-requirements stream) ; recompute stream's bounding box
-      (scroll-to-type-in-hierarchy stream focus-type))))
+       node-tree
+       #'(lambda (node s)
+	   (let ((pos (current-position s)))
+	     (clim:with-output-as-presentation (stream node 'hier-node)
+	       (clim:with-drawing-options (stream :ink clim:+red+)
+		 (write-string (type-node-text-string node) s)))
+	     (when (ltype-shrunk-p
+		    (or (get-type-entry node) 
+			(get-type-entry (get node 'real-thing))))
+	       (frame-text-box s pos (current-position s)))))
+       #'(lambda (node) (get node 'daughters))
+       :stream stream 
+       :merge-duplicates t
+       ;; CLIM bug -  duplicate-key duplicate-test are missing
+       ;; :arc-drawer #'store-and-draw
+       :orientation :horizontal 
+       :generation-separation *tree-level-sep*
+       :within-generation-separation *tree-node-sep*
+       :center-nodes nil))
+    (when (and x y)
+      (clim:scroll-extent stream x y))))
 
-(defvar *type-print-fn* nil)
-(defparameter +pale-steel-blue+ (clim:make-rgb-color 0.90 0.92 0.95)) ; lighter than LightSteelBlue
+(defparameter *node-text-scratch-string*
+    (make-array 32 :element-type 'character :fill-pointer 0))
 
-(defun draw-type-entry (type-name stream telescopedp display-definitions-p)
-  (let
-    ((*type-print-fn*
-       #'(lambda (name depth stream)
-           (if (= depth 0)
-             (clim:with-drawing-options (stream :ink clim:+red+) (write-string name stream))
-             (write-string name stream))))
-     dag)
-    (if (and display-definitions-p
-             (setq dag (ltype-local-constraint (get-type-entry type-name))))
-      (clim:surrounding-output-with-border (stream :filled t :line-thickness 0
-          :ink #+:mcclim +pale-steel-blue+ #-:mcclim clim:+blue+) ; !!! Allegro CLIM doesn't fill
-        (display-dag1 dag 'display stream))
-      (clim:with-drawing-options (stream :ink clim:+red+)
-        (write-string
-          (type-node-text-string type-name (if telescopedp 20 32)) ; more abbreviated if small
-          stream)))))
-
-(defun type-node-text-string (node max-length)
-  (let* ((full-string (symbol-name node))
-         (full-length (length full-string))
-         (len (min full-length max-length))
-         (str (nstring-downcase (subseq full-string 0 len)))) ; subseq always copies
-    (when (> full-length len) (replace str "..." :start1 (- len 3)))
-    str))
-
-(defun scroll-to-type-in-hierarchy (stream type-name)
-  (let ((record
-          (find-object stream #'(lambda (x) (eq x type-name)))))
-    (when record (scroll-to record stream))))
+(defun type-node-text-string (node)
+   (#+:allegro excl:without-interrupts   ; the code in here isn't re-entrant
+    #+:lispworks mp:without-interrupts
+    #+:mcl without-interrupts
+    #-(or :allegro :lispworks mcl) 
+    (error "no known without-interrupts(); see `tree.lsp'")
+      (let* ((str *node-text-scratch-string*)
+             (full-string (symbol-name node))
+             (full-length (length full-string))
+             (len (min full-length 32)))
+         (setf (fill-pointer str) len)
+         (dotimes (n len)
+            (setf (char str n) (char-downcase (char full-string n))))
+         (when (> full-length 30) (setf (subseq str 29) "...")) ; '...'
+         str)))
 
 ;;
 ;; Make nodes active
@@ -348,90 +209,76 @@
     (let ((type-entry (get-type-entry node)))
       (pop-up-menu 
        `(("Help" :value help 
-	         :active ,(ltype-comment type-entry))
+	   :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink
 			  :active ,(ltype-daughters type-entry))
 	 ("Type definition" :value def)
 	 ("Expanded type" :value exp)
 	 ("New hierarchy" :value new))
        (help (display-type-comment node (ltype-comment type-entry)))
-       (shrink
-         (setf (ltype-shrunk-p type-entry) (not (ltype-shrunk-p type-entry)))
-	 (create-type-hierarchy-tree
-           (type-hierarchy-focus-type frame) frame))
+       (shrink (setf (ltype-shrunk-p type-entry) 
+		 (not (ltype-shrunk-p type-entry)))
+	       (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
+					   (type-hierarchy-show-all-p frame)))
        (def (show-type-spec-aux node type-entry))
        (exp (show-type-aux node type-entry))
        (new
-        ;; used to put up a dialog, but check box options are now in hierarchy window (below)
-        ;; (let ((*last-type-name* (ltype-name type-entry)))
-	;;    (declare (special *last-type-name*))
-	;;    (show-type-tree))
-        (create-type-hierarchy-tree (ltype-name type-entry) nil))))))
+	(let ((*last-type-name* (ltype-name type-entry)))
+	  (declare (special *last-type-name*))
+	  (multiple-value-bind (type show-all-p)
+	      (ask-user-for-type nil 
+				 '("Show all types?" . :check-box)
+				 '("Ignore 300 descendant limit" . :check-box))
+	    (when type
+	      (let ((type-entry (get-type-entry type)))
+		(when type-entry 
+		  (create-type-hierarchy-tree type nil show-all-p)))))))))))
+ 
+;;; NB Problems caused by having only 1 field per type for shrunk and visible
+;;; flags and allowing multiple type windows on screen at once:
+;;; shrinking/expanding a type in one window will give inconsistent
+;;; expand/shrink behavour of that type if it appears in another window.  A
+;;; type may be expanded automatically in the process of highlighting one of
+;;; its descendents, which could also cause confusion wrt another window
 
+;;; called from top level menu commands etc. Try to make type visible by
+;;; unshrinking any ancestors if necessary - up to top type for this window if
+;;; we currently have one on screen, and ask for type hierarchy window to be
+;;; scrolled so given type is visible in centre, and the type highlighted. If
+;;; we're looking in an existing window and the type isn't a descendent of the
+;;; window's top type then we show a new hierarchy
 
-;;; Add buttons to menu bar: zoom in/out, show/hide types, show/hide defns
-
-(define-type-hierarchy-command (com-zoom-in-from-hierarchy :menu "Zoom In")
-  ()
-  (clim:with-application-frame (frame)
-    (when (< (type-hierarchy-scaling frame)
-             (- (expt *type-hierarchy-zoom-factor* 4) +zoom-factor-epsilon+)) ; prevent >4 zoom ins
-      (setf (type-hierarchy-scaling frame)
-        (* (type-hierarchy-scaling frame) *type-hierarchy-zoom-factor*)))
-    (create-type-hierarchy-tree
-      (type-hierarchy-focus-type frame) frame)))
-
-(define-type-hierarchy-command (com-zoom-out-from-hierarchy :menu "Zoom Out")
-  ()
-  (clim:with-application-frame (frame)
-    (when (> (type-hierarchy-scaling frame)
-             (+ (expt (/ 1 *type-hierarchy-zoom-factor*) 9) +zoom-factor-epsilon+)) ; prevent >9
-      (setf (type-hierarchy-scaling frame)
-        (/ (type-hierarchy-scaling frame) *type-hierarchy-zoom-factor*)))
-    (create-type-hierarchy-tree
-      (type-hierarchy-focus-type frame) frame)))
-
-(define-type-hierarchy-command (com-show-types-from-hierarchy :menu "Show/Hide Types")
-  ()
-  (clim:with-application-frame (frame)
-    (setf (type-hierarchy-show-all-p frame) (not (type-hierarchy-show-all-p frame)))
-    (create-type-hierarchy-tree
-      (type-hierarchy-focus-type frame) frame)))
-
-(define-type-hierarchy-command (com-show-defns-from-hierarchy :menu "Show/Hide Defns")
-  ()
-  (clim:with-application-frame (frame)
-    (setf (type-hierarchy-display-definitions-p frame)
-      (not (type-hierarchy-display-definitions-p frame)))
-    (create-type-hierarchy-tree
-      (type-hierarchy-focus-type frame) frame)))
-
-
-;;; NB Problems caused by having only 1 field per type for shrunk
-;;; flag and allowing multiple type windows on screen at once: if a type
-;;; of interest is not visible in a window due to ancestor(s) being shrunk
-;;; then we would have to unshrink them to display the type. Finesse
-;;; the issue by only highlighting a type if it's displayed in the first
-;;; type hierarchy window - otherwise open a new hierarchy window.
+(defvar *needs-redisplay* nil)
 
 (defun display-type-in-tree (node &optional scroll-onlyp)
   (let* ((frame (reuse-frame 'type-hierarchy))
-         (type-entry
-	   (or (get-type-entry node)
-	       (get-type-entry (get node 'real-thing))))
+	 (type-entry
+	  (or (get-type-entry node)
+	      (get-type-entry (get node 'real-thing))))
 	 (type (ltype-name type-entry))
-         stream record)
+	 (top-type (if frame
+		       (type-hierarchy-nodes frame) 
+		     *toptype*))
+	 (*needs-redisplay* nil))
     (when type-entry
-      (cond
-        ((and frame
-	      (setq stream (clim:frame-standard-output frame))
-              (setq record (find-object stream #'(lambda (t1) (eq t1 type)))))
-          (scroll-to record stream)
-          (highlight-objects (list record) frame))
-        ((not scroll-onlyp)
-          (create-type-hierarchy-tree type nil nil nil))))))
+      (if (and frame
+	       (or (eq type top-type)
+		   (member type-entry (retrieve-descendants top-type))))
+          ;; ensure the type will be visible, whether or not it is now
+          (progn
+            (unshrink-ancestors type-entry top-type)
+            (when *needs-redisplay*
+              (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
+                                          (type-hierarchy-show-all-p frame)))
+            (let* ((stream (clim:frame-standard-output frame))
+                   (record (find-object stream #'(lambda (t1) (eq t1 type)))))
+              (when record
+                (scroll-to record stream)
+                (highlight-objects (list record) frame))))
+        (unless scroll-onlyp
+          (create-type-hierarchy-tree type nil t))))))
         
-#|
+
 (defun unshrink-ancestors (type-entry top-type)
   ;; can't just use type-ancestors list since we have to stop at top-type arg
   (unless (eql (ltype-name type-entry) top-type)
@@ -442,7 +289,6 @@
 	     (setq *needs-redisplay* t))
 	   (setf (ltype-shrunk-p parent-entry) nil)
 	   (unshrink-ancestors parent-entry top-type)))))
-|#
 
 
 ;; ----------------------------------------------------------------------
@@ -450,7 +296,8 @@
 
 (defvar *davinci-nodes* nil)
 
-(defun davinci (&optional (type *toptype*) show-all-p)
+(defun davinci (&optional (type *toptype*) old-window show-all-p)
+  (declare (ignore old-window))
   ;; if show-all-p is true then we never hide any nodes. If it's false
   ;; then we call hide-in-type-hierarchy-p on each type to see whether
   ;; it should be hidden
@@ -462,7 +309,7 @@
     (setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
-  (let ((node (car (make-new-type-tree type show-all-p)))
+  (let ((node (car (make-new-type-tree type show-all-p t)))
 	(*davinci-nodes* (make-hash-table :test #'equal)))
     (with-open-file (stream "~/test.daVinci" :direction :output 
 		     :if-exists :supersede)
@@ -491,6 +338,11 @@
 ;; ----------------------------------------------------------------------
 ;; Draw type hierarchy using dot
 
+;; Remove edges which are implied by transitivity
+(defun detrans (node)
+  (let ((type-record 
+
+
 (defun dot (&optional (type *toptype*) show-all-p)
   ;; if show-all-p is true then we never hide any nodes. If it's false
   ;; then we call hide-in-type-hierarchy-p on each type to see whether
@@ -504,7 +356,7 @@
     (setf (get name 'daughters) nil))
   (clear-type-visibility)
   (propagate-visibility-in-type-tree type)
-  (let ((node (car (make-new-type-tree type show-all-p)))
+  (let ((node (detrans (car (make-new-type-tree type show-all-p t))))
 	(node-hash (make-hash-table :test #'equal)))
     (with-open-file (stream "~/test.dot" :direction :output 
 		     :if-exists :supersede)

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2018
+;;; Copyright (c) 1991 -- 2005;
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `LICENSE' for conditions.
 
@@ -159,7 +159,7 @@
                                                            :available-p :always)
                                            (make-menu-item :name "Save display settings..."
                                                            :value 'output-display-settings)
-                                           (make-menu-item :name "Load display settings..."
+                                           (make-menu-item :name "Load display options..."
                                                            :value 'load-display-settings))
                                           :available-p :always)))))
 
@@ -232,7 +232,7 @@
                         :value 'show-chart)
                      (make-menu-item :name "Batch parse..."
   		        :value 'parse-sentences-batch)
-		     (make-menu-item :name "Compare"
+		     (make-menu-item :name "Compare..."
                         :value 'compare-parses))
                   :available-p :grammar)
          (make-lkb-submenu-item :menu-title "MRS"
@@ -347,7 +347,7 @@
                                   :value 'command-export-lexicon-to-tdl
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Set filter"
+                  (make-menu-item :name "Set Filter"
                                   :value 'command-set-filter-lexdb
                                   ;:available-p :always
 				  )
@@ -380,12 +380,12 @@
 	   (list 
 	    (make-menu-item :name "Shrink menu"
 			    :value 'shrink-lkb-menu :available-p :always)
-	    (make-menu-item :name "Set options..."
+	    (make-menu-item :name "Set options ..."
 			    :available-p :always
 			    :value 'get-parameters)
 	    (make-menu-item :name "Save display settings..."
 			    :value 'output-display-settings)
-	    (make-menu-item :name "Load display settings..."
+	    (make-menu-item :name "Load display options..."
 			    :value 'load-display-settings))
 	   :available-p :always))))))
 

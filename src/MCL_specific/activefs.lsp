@@ -216,7 +216,7 @@
    (display-basic-fs fs title nil paths old-window id))
 
 
-;;; **** main display function ****
+;;; *** main display function ***
 
 ;;; very crude attempt to avoid windows displaying on top
 ;;; of eachother - obviously any sensible stuff would
@@ -311,7 +311,7 @@
 
 (defun add-type-and-active-fs-region (stream start-pos type-label-list val
                                       shrunk-p atomic-p &optional top-box full-tdfs)
-   (with-text-style-bold-face (stream)
+   (with-bold-output stream
       (write-string (string-downcase (string val)) stream))
    (add-active-fs-region stream start-pos (current-position stream) type-label-list val
       shrunk-p atomic-p top-box full-tdfs))
@@ -324,7 +324,7 @@
    (format ostream "~%Parents = ")
    (flet ((display-individual-parent (parent ostream endp)
             (let ((start-pos (current-position ostream)))
-               (with-text-style-bold-face (ostream)
+               (with-bold-output ostream
                   (format ostream "~(~A~)" parent)
                   (add-active-fs-region ostream start-pos (current-position ostream)
                      nil parent nil t)
@@ -476,7 +476,7 @@
 
 
 
-;;; **** the title or top pop up menu ****
+;;; *** the title or top pop up menu ****
 
 (defun draw-active-title (stream fs title parents paths id)
    ;; creates a pop up menu 
@@ -574,7 +574,7 @@
               (with-package (:lkb)
                (ask-for-lisp-movable "Current Interaction" 
                   `(("Lex-id?" . ,psort-name))
-                  nil))))
+                  150))))
             (if psort-name
               (or 
                (store-temporary-psort *lexicon* psort-name fs)
@@ -587,7 +587,7 @@
 
 (defun display-active-psort (psort ostream)
    (let ((start-pos (current-position ostream)))
-     (with-text-style-bold-face (ostream)
+     (with-bold-output ostream
         (format ostream "~A  " psort))
      (push
         (make-psort-click-field :view-pos start-pos

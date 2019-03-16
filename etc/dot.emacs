@@ -20,7 +20,7 @@
 ;;;
 
 (defconst delphin-home 
-  (or (getenv "DELPHINHOME") "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
+  (or (getenv "DELPHINHOME") "~/Documents/delphin"))
 
 (defconst allegro-home 
   (or (getenv "ACL_HOME") "/lingo/local/acl"))
@@ -103,24 +103,16 @@
   (interactive)
 
   (delphin:allegro t)
-  ;;
-  ;; use pre-built run-time binaries distributed from `lingo.stanford.edu'
-  ;;
+
   (setq fi:common-lisp-image-name 
     (format
-     "%s/lkb/%s/lkb%s"
-     delphin-home
-     (delphin:system-binaries t)
-     (if (or (string-match "windows" system-configuration)
-             (string-match "mingw-nt" system-configuration)
-             (string-match "msvc" system-configuration))
-       ".exe"
-       "")))
+     "%s/lkb_macos/lkb.command"
+     delphin-home))
 
   (setq fi:common-lisp-image-file
-    (format "%s/lkb/%s/lkb.dxl" delphin-home (delphin:system-binaries t)))
+    fi:common-lisp-image-name)
 
-  (setq fi:common-lisp-image-arguments (list "-locale" allegro-locale))
+  (setq fi:common-lisp-image-arguments (list))
 
   ;;
   ;; start up inferior lisp process

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1991-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see LICENSE for conditions
 
 
@@ -97,7 +97,6 @@
       (loop for file-name in file-names
          do
          (format t "~%Reading in type file ~A" (pathname-name file-name))
-         (force-output)
          (with-open-file 
             (istream file-name :direction :input)
             (read-type-stream istream)))) 

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2017
+;;; Copyright (c) 1991--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -258,9 +258,11 @@ redefine the function spelling-change-rule-p in user-fs.lsp as appropriate"))
   "a temporary file for leaf types")
 
 (defun lkb-tmp-dir nil 
-  ;;; This is a function, rather than a global, because we 
+  ;;; This should be a function, rather than a global, because we 
   ;;; need something that will work for an individual user
   ;;; e.g. by calling user-homedir-pathname
+  ;;; unfortunately this doesn't do what we want for MCL
+  ;;; so this hardwires the pathname
   (or
    #+(and :allegro :mswindows)
    (let ((tmp
@@ -277,8 +279,8 @@ redefine the function spelling-change-rule-p in user-fs.lsp as appropriate"))
 		  
      (when (and (pathnamep tmp) (ignore-errors (directory tmp))) tmp))
   (let ((pathname (user-homedir-pathname))
-        (tmp-dir #-:darwin '("tmp")
-                 #+:darwin '("Documents" "tmp")))
+        (tmp-dir #-:mcl '("tmp")
+                 #+:mcl '("Documents" "tmp")))
     (make-pathname
      :host (pathname-host pathname) :device (pathname-device pathname)
      :directory (append (pathname-directory pathname) tmp-dir)

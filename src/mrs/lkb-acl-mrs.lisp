@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2018
+;;; Copyright (c) 1998--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -10,33 +10,29 @@
     ((mrs :initform nil
 	   :accessor mrs-ordinary-mrs))
   :display-function 'show-mrs-ordinary  
-  :text-style (lkb-parse-tree-font)
-  :width :compute 
+  :width *parse-window-width* 
   :height *parse-window-height*)
 
 (define-lkb-frame mrs-simple
     ((mrsstruct :initform nil
                 :accessor mrs-simple-mrsstruct))
   :display-function 'show-mrs-simple
-  :text-style (lkb-parse-tree-font)
-  :width :compute
-  :height (* *parse-window-height* 1.2)) ; not :compute since not compact vertically
+  :width (* *parse-window-width* 1.5)
+  :height (* *parse-window-height* 1.2))
 
 (define-lkb-frame mrs-indexed
     ((mrsstruct :initform nil
 	    :accessor mrs-indexed-mrsstruct))
   :display-function 'show-mrs-indexed
-  :text-style (lkb-parse-tree-font)
-  :width :compute
-  :height :compute)
+  :width *parse-window-width* 
+  :height *parse-window-height*)
 
 (define-lkb-frame mrs-sement
     ((mrsstruct :initform nil
 	    :accessor mrs-sement-mrsstruct))
   :display-function 'show-mrs-sement
-  :text-style (lkb-parse-tree-font)
-  :width :compute
-  :height :compute)
+  :width *parse-window-width* 
+  :height *parse-window-height*)
 
 (define-lkb-frame mrs-sement-check
     ((global-messages :initform nil
@@ -46,17 +42,15 @@
      (actual-sement :initform nil
 	    :accessor mrs-sement-algebra-actual-sement))
   :display-function 'show-mrs-sement-check-results
-  :text-style (lkb-parse-tree-font)
-  :width :compute 
-  :height :compute)
+  :width *parse-window-width* 
+  :height *parse-window-height*)
 
 (define-lkb-frame mrs-prolog
     ((mrsstruct :initform nil
                 :accessor mrs-prolog-mrsstruct))
-  :display-function 'show-mrs-prolog
-  :text-style (lkb-parse-tree-font)
-  :width :compute
-  :height :compute)
+  :display-function 'show-mrs-prolog  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
 
 (define-lkb-frame mrs-scoped
     ((mrsstruct :initform nil
@@ -64,24 +58,21 @@
      (scoped :initform nil
                 :accessor mrs-scoped-scoped))
   :display-function 'show-mrs-scoped  
-  :text-style (lkb-parse-tree-font)
-  :width *parse-window-width* ; not :compute since there may be a lot of output
+  :width *parse-window-width* 
   :height *parse-window-height*)
 
 (define-lkb-frame mrs-dependencies
     ((mrsstruct :initform nil
                 :accessor mrs-dependencies-mrsstruct))
   :display-function 'show-mrs-dependencies  
-  :text-style (lkb-parse-tree-font)
-  :width :compute
-  :height :compute)
+  :width *parse-window-width* 
+  :height (round *parse-window-height* 2))
 
 (define-lkb-frame mrs-fol
     ((mrsstruct :initform nil
                 :accessor mrs-fol-mrsstruct))
   :display-function 'show-mrs-fol  
-  :text-style (lkb-parse-tree-font)
-  :width *parse-window-width* ; not :compute since there may be a lot of output
+  :width *parse-window-width* 
   :height *parse-window-height*)
 
 ;;; XML output - eventually we want to do this generally for all windows
@@ -175,8 +166,6 @@
 
 (defstruct mrs-type-thing value)
 
-(clim:define-presentation-type mrs-type-thing ())
-
 (define-mrs-simple-command (com-type-mrs-menu)
     ((mrs-type-thing 'mrs-type-thing :gesture :select))
   (mrs-type-thing-command mrs-type-thing))
@@ -184,9 +173,9 @@
 (defun add-mrs-pred-region (stream val &optional normalizep)
   (let ((pred-rec
          (make-mrs-type-thing :value val)))
-    (with-text-style-bold-face (stream)
+    (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
-	  (stream pred-rec 'mrs-type-thing :single-box t)
+	  (stream pred-rec 'mrs-type-thing)
         (if (and (stringp val) (null normalizep))
           (format stream "~s" val)
           (format stream "~(~a~)" val))))))
@@ -199,7 +188,7 @@
        `(("Type hierarchy" :value hier
 			    :active 
 			    ,(ltype-constraint type-entry))
-         #+(or :allegro :mcclim)
+         #+:allegro
          ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
@@ -208,7 +197,7 @@
 	 ("Expanded type" :value exp
 			  :active ,(ltype-constraint type-entry)))
        (hier (display-type-in-tree type))
-       #+(or :allegro :mcclim)
+       #+:allegro
        (source (edit-source type))
        (def (show-type-spec-aux type type-entry))
        (exp (show-type-aux type type-entry))))))
@@ -223,8 +212,6 @@
    (mrs-sement-mrsstruct clim:*application-frame*)))
 
 (defstruct slot-thing value)
-
-(clim:define-presentation-type slot-thing ())
 
 (define-mrs-sement-command (com-slot-menu)
     ((slot-thing 'slot-thing :gesture :select))
@@ -241,9 +228,9 @@
   ;;; called from the display functions
   (let ((pred-rec
          (make-slot-thing :value name)))
-    (with-text-style-bold-face (stream)
+    (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
-	  (stream pred-rec 'slot-thing :single-box t)
+	  (stream pred-rec 'slot-thing)
         (if (stringp name)
           (format stream "~s" name)
           (format stream "~(~a~)" name))))))
@@ -259,6 +246,8 @@
 
 (defun show-mrs-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
+    (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
+    (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-simple-mrsstruct mframe) 
       (or mrs (and edge (mrs::extract-mrs edge))))
     (setf (clim:frame-pretty-name mframe) (or title "Simple MRS"))
@@ -269,7 +258,7 @@
     (if #+:lui (lui-status-p :mrs :indexed) #-:lui nil
       (lui-display-mrs mrs title :indexed)
       (mp:run-function
-        "Indexed MRS" #'show-mrs-indexed-window-really edge mrs title))))
+       "Indexed MRS" #'show-mrs-indexed-window-really edge mrs title))))
 
 (defun show-mrs-indexed-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))
@@ -353,7 +342,7 @@
         (ignore-errors (mrs::make-scoped-mrs mrsstruct))
       (when condition
         (format
-         #+:allegro excl:*initial-terminal-io* #-:allegro *initial-terminal-io*
+         #+:allegro excl:*initial-terminal-io* #-:allegro t
          "make-scoped-mrs(): `~a'~%" 
          (normalize-string (format nil "~a" condition)))
         (return-from show-mrs-scoped-window-really))
@@ -380,7 +369,7 @@
         (ignore-errors (mt:utool-process mrs :action :solve))
       (when condition
         (format
-         #+:allegro excl:*initial-terminal-io* #-:allegro *initial-terminal-io*
+         #+:allegro excl:*initial-terminal-io* #-:allegro t
          "utool-process(): `~a'~%" 
          (normalize-string (format nil "~a" condition)))
         (return-from show-mrs-utool-window-really))
@@ -424,23 +413,26 @@
     (if mrsstruct
       (if #+:lui (lui-status-p :mrs) #-:lui nil
         (lui-display-mrs mrsstruct)
-        (clim:with-output-recording-options (stream :draw nil :record t)
-          (mrs::output-mrs1 mrsstruct 'mrs::active-t stream)))
+        (clim:with-text-style (stream *normal*)
+	  (clim:with-output-recording-options (stream :draw nil :record t)
+            (mrs::output-mrs1 mrsstruct 'mrs::active-t stream))))
       (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-indexed (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-indexed-mrsstruct mframe)))
     (if mrsstruct
-        (mrs::output-mrs1 mrsstruct 'mrs::indexed stream)
-        (format stream "~%::: MRS structure could not be extracted~%"))))
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-mrs1 mrsstruct 'mrs::indexed stream))
+      (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-sement (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((sement (mrs-sement-mrsstruct mframe)))
     (if sement
-        (mrs::output-algebra-sement1 sement 'mrs::active-slot stream)
-        (format stream "~%::: Sement structure could not be extracted~%"))))
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-algebra-sement1 sement 'mrs::active-slot stream))
+      (format stream "~%::: Sement structure could not be extracted~%"))))
 
 ;;; results are reconstruction-result structures as defined in algebra.lisp
 #|
@@ -454,50 +446,52 @@
   (let ((global-messages (mrs-sement-algebra-global-messages mframe))
 	(actual-sement (mrs-sement-algebra-actual-sement mframe))
 	(results (mrs-sement-algebra-results mframe)))
-    (dolist (message global-messages)
-      (format stream " ~%~A" message))
-    (if results
-	(progn
-	  (format stream " ~%Reconstructed sement(s)~%")
-	  (dolist (result results)
-	    (let ((sement (mrs::reconstruction-result-reconstructed-sement
+    (clim:with-text-style (stream (lkb-parse-tree-font))
+      (dolist (message global-messages)
+	(format stream "~%~A" message))
+      (if results
+	  (progn
+	    (format stream "~%Reconstructed sement(s)~%~%")
+	    (dolist (result results)
+	      (let ((sement (mrs::reconstruction-result-reconstructed-sement
 			     result))
-		  (messages (mrs::reconstruction-result-messages
-			      result)))
+		    (messages (mrs::reconstruction-result-messages
+			       result)))
 		(format stream "~%")
 		(when sement
 		  (mrs::output-algebra-sement1 
-		    sement 'mrs::simple-indexed stream)
-		  (format stream "~%"))
+		   sement 'mrs::simple-indexed stream))
+		(format stream "~%")
 		(dolist (message messages)
 		  (mrs::do-comparison-message message 'mrs::simple-indexed stream)))))
 	(format stream "~%::: No sement structure was reconstructed~%"))
-    (if actual-sement
-	(progn
-	  (format stream "~%~%Extracted sement~%")
-	  (mrs::output-algebra-sement1 
-	    actual-sement 'mrs::simple-indexed stream))
-	(format stream "~%~%No extracted sement~%"))))
+      (if actual-sement
+	  (progn
+	    (format stream "~%~%Extracted sement~%")
+	    (mrs::output-algebra-sement1 
+	     actual-sement 'mrs::simple-indexed stream))
+	(format stream "~%~%No extracted sement~%")))))
 
 
 (defun show-mrs-prolog (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-prolog-mrsstruct mframe)))
     (if mrsstruct
-        (mrs::output-mrs1 mrsstruct 'mrs::prolog stream)
-        (format stream "~%::: MRS structure could not be extracted~%"))))
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-mrs1 mrsstruct 'mrs::prolog stream))
+      (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-scoped (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-scoped-mrsstruct mframe))
         (binding-sets (mrs-scoped-scoped mframe)))
     (if binding-sets
-        (loop
-           for binding in binding-sets
-           do
-           (setf mrs::*canonical-bindings* (mrs::canonical-bindings binding))
-             (mrs::output-scoped-mrs mrsstruct :stream stream))
-        (format stream "~%::: MRS structure does not scope~%"))))
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (loop for binding in binding-sets
+               do
+               (setf mrs::*canonical-bindings* (mrs::canonical-bindings binding))
+               (mrs::output-scoped-mrs mrsstruct :stream stream)))
+      (format stream "~%::: MRS structure does not scope~%"))))
 
 
 (defun show-mrs-dependencies (mframe stream &key max-width max-height)
@@ -506,14 +500,12 @@
          (eds (mrs:eds-convert-psoa mrsstruct)))
     (if eds
       (let ((record (clim:with-new-output-record (stream)
-                      (format stream "~a~%" eds)))
+                      (clim:with-text-style (stream (lkb-parse-tree-font))
+                        (format stream "~a~%" eds))))
             (status (mrs:eds-suspicious-p eds))
-            (orange (or
-                        #-:mcclim
-                        (clim:find-named-color
+            (orange (or (clim:find-named-color
                          "orange" (clim:frame-palette mframe) :errorp nil)
-                        #+:mcclim
-                        clim:+orange+)))
+                        clim:+yellow+)))
         (cond
          ((member :cyclic status) (recolor-record record clim:+red+))
          ((member :fragmented status) (recolor-record record orange)))
@@ -526,9 +518,10 @@
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-fol-mrsstruct mframe)))
     (if mrsstruct
-	(mrs::output-fol-approximation mrsstruct stream)
-        ;; output-fol-approximation is in mrs/interface.lisp
-        (format stream "~%::: MRS structure could not be extracted~%"))))
+	(clim:with-text-style (stream (lkb-parse-tree-font))
+	  (mrs::output-fol-approximation mrsstruct stream))
+      ;; output-fol-approximation is in mrs/interface.lisp
+      (format stream "~%::: MRS structure could not be extracted~%"))))
 
 
 ;;; calling function (called from emacs)
@@ -537,22 +530,23 @@
   (with-package (:mrs)
     (let ((mrs (mrs::read-single-mrs-xml-from-string str)))
       (when (and mrs (mrs::psoa-p mrs))
-	(show-mrs-ordinary-window mrs "Ordinary MRS")))))
+	(show-mrs-ordinary-window mrs "MRS")))))
 
 ;;; Window from emacs
 
 (defun show-mrs-ordinary-window (mrs title)
-  (mp:run-function "Ordinary MRS"
+  (mp:run-function "MRS ORDINARY"
    #'show-mrs-ordinary-window-really :mrs mrs :title title))
   
 (defun show-mrs-ordinary-window-really (&key mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-ordinary)))
     (setf (mrs-ordinary-mrs mframe) 
       mrs)
-    (setf (clim:frame-pretty-name mframe) (or title "Ordinary MRS"))
+    (setf (clim:frame-pretty-name mframe) (or title "MRS"))
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-ordinary (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((mrs (mrs-ordinary-mrs mframe)))
-    (mrs::output-mrs1 mrs 'mrs::simple stream t)))
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::output-mrs1 mrs 'mrs::simple stream t))))

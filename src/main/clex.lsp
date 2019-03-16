@@ -1,4 +1,4 @@
-;;; Copyright (c) 1999--2018
+;;; Copyright (c) 1999--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `LICENSE' for conditions.
 
@@ -362,9 +362,8 @@
 ;; Check to see if compiled files match originals
 
 (defun up-to-date-p (in-files out-files)
-  (and in-files ; JAC 28-Oct-2018: *** max function gave error if no in-files - is fix correct? 
-    (when (every #'probe-file out-files)
-      (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
-	    (out-date (apply #'min (mapcar #'file-write-date out-files))))
-        (> out-date in-date)))))
+  (when (every #'probe-file out-files)
+    (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
+	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
+      (> out-date in-date))))
 

@@ -6,25 +6,32 @@
 ;;; Checking the type hierarchy to see if it meets 
 ;;; the various constraints
 
-;;; general purpose functions for creating symbols associated with a 'template' ...
+;;; general purpose functions for creating new atoms ...
 
 (defun next (template)
-   (let*
-      ((num (incf (get template 'last-number 0)))
-       (instance
-         (intern
-           (concatenate 'string (symbol-name template) (princ-to-string num)))))
-      (declare (number num))
-      (push instance (get template 'children))
-      (setf (get instance 'root-template) template)
-      instance))
+       (let ((instance nil)
+             (number (+ (or (get template 'last-number)
+                            0)
+                        1)))
+         (setf (get template 'last-number)
+               number)
+         (setf instance
+               (intern
+                 (concatenate 'string
+                              (string template)
+                              (princ-to-string number))))
+         (push instance
+               (get template 'children))
+         (setf (get instance 'root-template)
+               template)
+         instance))
 
-;;; ... and destroying them
+;;; and destroying them
 
 (defun scratch (templates)
-    ;; see the function Next - scratch removes all info from the template symbols
-    ;; used by Next and in effect reinitialises the values.  It can take a single
-    ;; item or a list of templates to be reinitialised.
+;;; see the function Next - scratch removes all info from the template symbols
+;;; used by Next and in effect reinitialises the values.  It can take a single
+;;; item or a list of templates to be reinitialised.
     (dolist (template (if (listp templates) templates (list templates)))
 	    (remprop template 'last-number)
 	    (dolist (child (get template 'children))
@@ -43,12 +50,13 @@
 
 (defun add-type-from-file (name parents constraint default comment 
                            &optional daughters)
+  (declare (special *tdl-context* *tdl-all-contexts*))
   ;;; YADU --- extra arg needed
   (if *leaf-type-addition*
     (add-leaf-type name parents constraint default comment daughters)
     (let ((existing-type (get-type-entry name)))
       (when existing-type
-        (format t "~%WARNING: Type `~A' redefined" name)
+        (format t "~%WARNING: Type `~A' redefined." name)
         (push name *type-redefinitions*))
       (let ((new-type 
                (make-ltype :name name 
@@ -64,7 +72,16 @@
                (error "Two top types ~A and ~A have been defined" 
                   *toptype* name))
             (setf *toptype* name))
-         (set-type-entry name new-type)))))
+         (set-type-entry name
+            new-type))
+      (when (and *tdl-context*
+                 (string-equal name (rest (assoc :type *tdl-context*))))
+        ;;
+        ;; _fix_me_
+        ;; what to do for annotated re-definition?  maybe merge contexts?
+        ;;                                                      (19-mar-13; oe)
+        (push *tdl-context* *tdl-all-contexts*)
+        (setf *tdl-context* nil)))))
 
 (defun amend-type-from-file (name parents constraint default comment)
   (let ((ok t)
@@ -92,7 +109,7 @@
 (defun add-info-to-type-from-file (name parents constraint default comment)
   (let ((existing-type (get-type-entry name)))
     (unless existing-type
-      (cerror "Cancel load" "Cannot add information to type ~a as it is not yet defined" name))
+      (cerror "Cancel load" "Cannot add information to type ~a as it is not already defined" name))
     (let* ((existing-parents (ltype-parents existing-type))
 	   (existing-constraint (ltype-constraint-spec existing-type))
 	   (existing-default (ltype-default-spec existing-type))
@@ -107,7 +124,7 @@
 	    (new-constraint (append existing-constraint constraint))
 	    (new-default (append existing-default default))
 	    (new-comment (if existing-comment
-			     (concatenate 'string existing-comment (string #\newline) comment)
+			     (concatenate 'string existing-comment " " comment)
 			   comment)))
 	(setf (ltype-parents existing-type) new-parents)
 	(setf (ltype-constraint-spec existing-type) new-constraint)
@@ -132,65 +149,46 @@
 (defparameter *display-glb-messages* nil
    "if set, informs user of glbtypes as they are created")
 
-(defparameter *display-glb-summary* nil
-   "if set, summary statistics are displayed about glbtype creation")
-
 
 (defun check-type-table nil
-  (macrolet
-    ((report-glb-time (&body forms)
-       `(let ((.start-time. (get-internal-run-time))
-             #+:sbcl (.start-bytes. (sb-ext:get-bytes-consed)))
-          ,@forms
-          (when *display-glb-summary*
-            (format t "~%Glb computation took ~,3F seconds of run time"
-              (/ (- (get-internal-run-time) .start-time.) internal-time-units-per-second))
-            #+:sbcl
-            (let ((allocated (- (sb-ext:get-bytes-consed) .start-bytes.)))
-              (when (> allocated 0) (format t ", ~:D bytes allocated" allocated)))
-            (force-output)))))
-    (scratch 'glbtype)
-    (format t "~%Checking type hierarchy")
-    (force-output) 
-    (setq *type-names* (sort (collect-type-names) #'string-lessp))
-    (when (and *toptype* (add-daughters-to-type-table) (check-for-cycles-etc *toptype*))
-      (unmark-type-table)
-      (set-up-ancestors-and-descendants)
-      (format t "~%Checking for unique greatest lower bounds")
-      (force-output) 
-      (report-glb-time ; this block is suitable place for execution profiling
-        (let ((*partitions* nil) (nglbs 0))
-          (find-good-partitions *toptype*)
-          (unmark-type-table)
-          ;; A partition of 5 types is the smallest to potentially need new glb types. Sort
-          ;; partitions so behaviour is likely to be the same if grammar has not changed
-          (setq *partitions*
-            (sort (remove-if #'(lambda (p) (< (length p) 5)) *partitions*)
-               #'> :key #'length))
-          (when (and *display-glb-summary* *partitions*)
-            (format t "~%Identified ~A non-trivial type partition~:p" (length *partitions*)))
-          (dolist (partition *partitions*)
-            (incf nglbs (compute-and-add-glbtypes partition)))
-          (if (zerop nglbs)
-            (format t "~%No glb types needed") (format t "~%Created ~A glb type~:p" nglbs))
-          (force-output)))
-      (set-up-ancestors-and-descendants)
-      (if *hierarchy-only-p*
-        (expand-local-only-constraints)
-        (progn
-          (format t "~%Expanding constraints")
-          (when (expand-and-inherit-constraints)
-            (format t "~%Making constraints well formed")
-            (when (strongly-type-constraints)
-              (optimise-check-unif-paths)
-              ;; YADU --- extra expansion stage
-              ;; earlier stages are unchanged
-              (format t "~%Expanding defaults")
-              (when (expand-type-hierarchy-defaults)
-                (format t "~%Type file checked successfully")
-                (gc-types)
-                (clear-type-cache) ; not for consistency, but for efficiency
-                t))))))))
+   (scratch 'glbtype)
+   (format t "~%Checking type hierarchy")
+   (setq *type-names* (sort (collect-type-names) #'string-lessp))
+   (when *toptype*
+     (when 
+       (add-daughters-to-type-table)
+       (when (check-for-cycles-etc *toptype*)
+         (unmark-type-table)
+         (set-up-ancestors-and-descendants)
+         (format t "~%Checking for unique greatest lower bounds") 
+         (let ((*partitions* nil) (glbp nil))
+            (find-good-partitions *toptype*)
+            (unmark-type-table)
+            ;; (format t "~%Constructing glb types") (force-output t)
+            (dolist
+               (partition
+                  ;; sort so behaviour reproducible if grammar has not changed
+                  (sort *partitions* #'> :key #'length))
+               (setq glbp (compute-and-add-glbtypes partition glbp)))
+            ;; (unless glbp (format t "~%No glb types needed"))
+            )
+         (set-up-ancestors-and-descendants)
+         (if *hierarchy-only-p*
+           (expand-local-only-constraints)
+           (progn
+             (format t "~%Expanding constraints")
+             (when (expand-and-inherit-constraints)
+               (format t "~%Making constraints well formed")
+               (when (strongly-type-constraints)
+                 (optimise-check-unif-paths)
+                 ;; YADU --- extra expansion stage
+                 ;; earlier stages are unchanged
+                 (format t "~%Expanding defaults")
+                 (when (expand-type-hierarchy-defaults)
+                   (format t "~%Type file checked successfully")
+                   (gc-types)
+                   (clear-type-cache) ; not for consistency, but for efficiency
+                   t)))))))))
 
 
 (defun patch-type-table nil
@@ -247,25 +245,26 @@
 ;;; an immediate and a non-immediate daughter of another
 
 (defun add-daughters-to-type-table nil
-   ;; for each parent link, add the corresponding daughter link - also do some consistency
-   ;; checks on parent specs
-   (loop for name in *type-names*
-      with ok = t
-      do
-      (loop for (parent . tail) on (ltype-parents (get-type-entry name)) 
+   ;; checks for correctness of parent specs
+   (let ((ok t))
+      (loop for name in *type-names*
          do
-         (if (member parent tail :test #'eq)
-            (format t "~%~A has repeated parent ~A - repeat ignored"
-               name parent)
-            (let ((parent-entry (get-type-entry parent)))
-               (cond 
-                  (parent-entry 
-                     (push name (ltype-daughters parent-entry)))
-               (t
-                  (setf ok nil)
-                  (format t "~%~A specified to have non-existent parent ~A"
-                     name parent))))))
-      finally (return ok)))
+         (let* ((type-entry (get-type-entry name))
+                (parents (ltype-parents type-entry)))
+           ;;; type-parents gets reset by glb code
+           (loop for parent in parents
+                do
+                (let ((parent-entry (get-type-entry parent)))
+                  (cond 
+                   (parent-entry 
+                    (pushnew name 
+                             (ltype-daughters parent-entry)
+                             :test #'eq))
+                   (t (setf ok nil)
+                      (format t
+                              "~%~A specified to have non-existent parent ~A"
+                              name parent)))))))
+      ok))
 
 (defun check-for-cycles-etc (top)
   (let ((top-entry (get-type-entry top)))
@@ -369,983 +368,440 @@
    ok))
 
 
-;;; Set up descendants and ancestors - done before glb computation because needed for
-;;; partition finding, and after as well since it would be tricky to keep them updated
-;;; while processing each partition separately and ignoring authored types that are
-;;; 'inactive' wrt glbs
-
-(defmacro loop-across-bit-vector-1-bits ((x bv . keys) &body body)
-  ;; similar to dotimes, except that x is set to the index of successive 1 bits of bv
-  (let ((s (gensym)) (v (gensym)))
-    `(loop
-       with ,v simple-bit-vector = ,bv
-       with ,s fixnum = ,(getf keys :start 0)
-       for ,x = (position 1 ,v :start ,s
-                  ,@(if (getf keys :end) `(:end ,(getf keys :end))))
-       while ,x
-       do
-       (locally (declare (fixnum ,x)) (setq ,s (1+ ,x)) ,@body))))
-
+;;; Set up descendants and ancestors - done before glb computation
+;;; because needed for partition finding, and after as well since so much
+;;; changes during glb computation that it's not worth trying to keep
+;;; descendants and ancestors up-to-date during it
 
 (defun set-up-ancestors-and-descendants ()
-  ;; JAC 18-Jan-18: compute a temporary bit vector representation of descendants then
-  ;; use this to construct ancestors and descendants lists. Could be done more efficiently
-  ;; (e.g. by iterating over types, recording daughter links and computing transitive
-  ;; closure), but instead we recurse down daughters lists in order to check hierarchy
-  ;; connectivity
-  (let*
-    ((ntypes (hash-table-count *types*))
-     (index-to-type (make-array ntypes))
-     (type-index-table (make-hash-table :test #'eq :size ntypes)))
-    (labels
-      ((compute-descendant-bit-codes (entry)
-         (cond
-           ((ltype-descendants entry))
-           ((null (ltype-daughters entry))
-             ;; don't create a bit vector, just return the type's (integer) index
-             (setf (ltype-descendants entry) (gethash entry type-index-table)))
-           (t
-             (setf (ltype-descendants entry) t)
-             (loop
-               with desc = (make-array ntypes :element-type 'bit :initial-element 0)
-               for daughter in (ltype-daughters entry)
-               for dcode = (compute-descendant-bit-codes (get-type-entry daughter))
-               do
-               (cond
-                 ((eq dcode t)
-                    (error "Inconsistency - circularity involving type ~A" (ltype-name entry)))
-                 ((numberp dcode)
-                    (setf (sbit desc dcode) 1))
-                 (t (setq desc (bit-ior desc dcode t))))
-               finally
-               (setf (sbit desc (gethash entry type-index-table)) 1)
-               (return (setf (ltype-descendants entry) desc)))))))
-      (loop
-        for entry being each hash-value in *types*
-        for n from 0
-        do
-        (setf (ltype-ancestors entry) nil)
-        (setf (ltype-descendants entry) nil)
-        (setf (gethash entry type-index-table) n)
-        (setf (svref index-to-type n) entry))
-      (compute-descendant-bit-codes (get-type-entry *toptype*))
-      (loop
-        for entry being each hash-value in *types*
-        do
-        (let ((desc (ltype-descendants entry)))
-          (unless desc
-            (error
-"Inconsistency - type ~A unreachable in a top-down traversal of the type hierarchy"
-                (ltype-name entry)))
-          (setf (ltype-descendants entry) nil) ; descendants slot now becomes a list
-          (when (bit-vector-p desc)
-            (loop-across-bit-vector-1-bits (n desc)
-              (let ((d (svref index-to-type n)))
-                (unless (eq d entry)
-                  (push entry (ltype-ancestors d))
-                  (push d (ltype-descendants entry)))))))))))
+   (maphash 
+      #'(lambda (node type-entry)
+          (declare (ignore node))
+          (setf (ltype-ancestors type-entry) nil)
+          (setf (ltype-descendants type-entry) nil))
+      *types*)
+   (maphash 
+      #'(lambda (node type-entry)
+          (declare (ignore node))
+          (set-up-ancestors type-entry))
+      *types*)
+   (set-up-descendants (get-type-entry *toptype*)))
+
+(defun set-up-ancestors (type-entry)
+  (or (ltype-ancestors type-entry)
+      (let ((parents (ltype-parents type-entry))
+            (ancestors nil))
+        (when parents
+           (setq ancestors
+              (cons (get-type-entry (car parents))
+                 (set-up-ancestors (get-type-entry (car parents)))))
+           (dolist (parent (cdr parents))
+	      (pushnew (get-type-entry parent) ancestors :test #'eq)
+	      (dolist (ancestor (set-up-ancestors (get-type-entry parent)))
+	         (pushnew ancestor ancestors :test #'eq))))
+        (setf (ltype-ancestors type-entry) ancestors)
+        ancestors)))
+
+(defun set-up-descendants (type-entry)
+  (or (ltype-descendants type-entry)
+      (let ((daughters (ltype-daughters type-entry))
+            (descendants nil))
+         (when daughters
+            (setq descendants
+               (cons (get-type-entry (car daughters))
+                  (set-up-descendants (get-type-entry (car daughters)))))
+            (dolist (daughter (cdr daughters))
+	       (pushnew (get-type-entry daughter) descendants :test #'eq)
+	       (dolist (descendant (set-up-descendants (get-type-entry daughter)))
+	          (pushnew descendant descendants :test #'eq))))
+         (setf (ltype-descendants type-entry) descendants)
+         descendants)))
 
 
-;;; Compute partitions of the hierarchy, returning a list of lists of
-;;; nodes which are mutually independent. Shortens the type bit
+;;; Compute partitions of the hierarchy, returning a list of lists of nodes
+;;; which are mutually independent. Additionally filter out from partitions
+;;; sets of types which are in tree-shaped configurations. Shortens the type bit
 ;;; representations and reduces the number of comparisons performed from
-;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions.
-;;; The key test is whether for each descendant of a type x, each of that
-;;; descendant's parents are one of x's descendants - i.e. its parents
-;;; remain within the partition's 'envelope'
+;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions
+
 
 (defun find-good-partitions (type)
   ;; AAC - Oct 12 1998 - faster version
-  #+:baseglb
-  (push ; put all types in the same partition
-     (mapcar #'(lambda (x) (get-type-entry x)) (cons type (remove type *type-names*)))
-     *partitions*)
-  #-:baseglb
   (let* ((type-entry (get-type-entry type))
          (daughters (ltype-daughters type-entry)))
-     (when (and (not (active-node-p type-entry))
-                (not (seen-node-p type-entry)))
-        (mark-node-active type-entry)
-        (when daughters
-           (dolist (daughter daughters)
-	      (find-good-partitions daughter))
-           (let ((descendants (ltype-descendants type-entry))
-                 (desc-names-non-leaf (make-hash-table :test #'eq)))
-              (loop
-                 for d in descendants
-                 when (ltype-daughters d) ; leaf types are irrelevant
-                 do (setf (gethash (ltype-name d) desc-names-non-leaf) t))
-              (when
-                 (loop
-                    for descendant in descendants
-                    always
-                    (or (seen-node-p descendant)
-                        (null (cdr (ltype-parents descendant)))
-                        (loop for p in (ltype-parents descendant)
-                           always
-                           (gethash p desc-names-non-leaf))))
-                 (let ((partition-nodes
-                       (loop for descendant in descendants
-                             when (not (seen-node-p descendant))
-			     collect (progn (mark-node-seen descendant)
-			                    descendant))))
-                    (when partition-nodes
-		       (push (cons type-entry partition-nodes) *partitions*)))))))))
+    (when (and (not (active-node-p type-entry))
+               (not (seen-node-p type-entry)))
+      (mark-node-active type-entry)
+      (when daughters
+        (dolist (daughter daughters)
+	   (find-good-partitions daughter))
+        (let* ((descendants (ltype-descendants type-entry))
+               (desc-names (mapcar #'ltype-name descendants)))
+          (when
+              (not
+               (dolist (descendant descendants)
+                 (unless
+                     (or (seen-node-p descendant)
+                         (null (cdr (ltype-parents descendant)))
+                         (subsetp
+                          (ltype-parents descendant) desc-names :test #'eq))
+                   (return t))))
+            (let ((partition-nodes
+                   (loop for descendant in descendants
+                        when (not (seen-node-p descendant))
+			collect (progn (mark-node-seen descendant)
+			               descendant))))
+	      (when partition-nodes
+		 (push (partition-non-tree-config-types type-entry partition-nodes)
+                    *partitions*)))))))))
+
+
+(defun partition-non-tree-config-types (top others)
+   (let ((partition-types (cons top others))
+         (filtered nil))
+       (dolist (type partition-types)
+          (when (cdr (ltype-parents type)) ; multiple parents
+ 	     (dolist (ancestor (ltype-ancestors type))
+	        (when (member ancestor partition-types :test #'eq)
+	           (pushnew type filtered :test #'eq)
+                   (pushnew ancestor filtered :test #'eq)))))
+       (cons top (delete top filtered :test #'eq))))
 
 
 ;;; Glb type computation. Assigns a (temporary) bit representation for
 ;;; each type in heirarchy, and uses it to efficiently check if each pair
-;;; of types has a glb and add it if not.
+;;; of types has a glb and add it if not
 
-;;; There are 4 read/compile-time switches (3 features and 1 constant):
-;;;   bitseqbc   straightforward native bit vector implementation of bit codes
-;;;   wholebc    bit codes processed as whole units without variable start/end indices
-;;;   baseglb    baseline glb algorithm, as implemented by Ulrich Callmeier in PET
-;;;   +bc-nsum+  number of summary words
-;;; By default the three features are off and +bc-nsum+ is 3, which gives the most
-;;; efficient implementation.
+#|
+;;; Type bit code operations assuming simple bit vector representation.
+;;; Useful example code - DO NOT DELETE!
 
-;;; The code below implements the type bit operations using a straightforward native
-;;; bit vector representation. This approach is relatively slow in practice, but the
-;;; code is included as a reference implementation and to help understand the more
-;;; complex but much faster approach below.
+(progn
+(defparameter +bit-code-temp+ nil)
+(defparameter +bit-code-zero+ nil)
 
-#+:bitseqbc
-(locally
-#-:tdebug (declare (optimize (speed 3) (safety 0)))
+(defun make-bit-code (length)
+   (make-array length :element-type 'bit :initial-element 0))
 
-(defun make-bit-code (nbits)
-   (declare (fixnum nbits))
-   (make-array nbits :element-type 'bit :initial-element 0))
-
-(defmacro bit-code-start (c) 0)
-(defsetf bit-code-start (c) (value)
-  (error "Attempt to set bit-code start when option not available"))
-
-(defmacro bit-code-end (c) `(1- (length ,c)))
-(defsetf bit-code-end (c) (value)
-  (error "Attempt to set bit-code end when option not available"))
-
-(defmacro bit-code-first (c) 0)
-(defsetf bit-code-first (c) (value)
-  (error "Attempt to set bit-code first when option not available"))
-
-(defun clear-bit-code (c)
-   (declare (simple-bit-vector c))
-   (fill c 0))
-
-(defun copy-bit-code (c)
-   (declare (simple-bit-vector c))
-   (copy-seq c))
-
-(defun finalise-bit-code (c) c)
-
-(defun set-bit-code (c n)
-   (declare (simple-bit-vector c) (fixnum n))
-   (setf (sbit c n) 1))
-
-(defun bit-code-ior (c1 c2 c3)
-   (declare (simple-bit-vector c1 c2 c3))
-   (bit-ior c1 c2 c3))
-
-(defmacro bit-code-zero/one-1-bit-p (c)
-   ;; does c have only zero or one bits set?
-   `(locally
-       #-:tdebug (declare (optimize (speed 3) (safety 0)))
-       (let ((pos1 (position 1 (the simple-bit-vector ,c))))
-          (and pos1 (not (find 1 (the simple-bit-vector ,c) :start (1+ pos1)))))))
-
-(defun bit-code-and-zero/one-p (c1 c2 c3)
-   (declare (simple-bit-vector c1 c2 c3))
-   ;; c3 <- c1 AND c2 (destructive)
-   ;; and return a boolean indicating whether c3 would be all zero (and optionally
-   ;; furthermore whether only one bit in c3 is set), although if returning true
-   ;; then the contents of c3 are not used
-   (not (find 1 (bit-and c1 c2 c3))))
-
-(defun bit-code-position-1 (c)
-   (declare (simple-bit-vector c))
-   ;; (zero-based) index of first bit that is set in c, or undefined if no 1 bits
-   (position 1 c))
-
-(defun bit-code-equal-p (c1 c2)
-   (declare (simple-bit-vector c1 c2))
+(defun bit-code-equal (c1 c2)
    (equal c1 c2))
 
-(defun bit-code-two-1-bits-p (c)
-   (declare (simple-bit-vector c))
-   ;; does c have at most 2 bits set?
-   (let* ((pos1 (position 1 c))
-          (pos2 (and pos1 (position 1 c :start (1+ pos1)))))
-      (and pos2 (not (find 1 c :start (1+ pos2))))))
+(defun bit-code-and-zero-p (c1 c2 c3)
+   ;; c3 <- c1 AND c2 (destructive)
+   ;; also return boolean indicating whether c3 is all zero
+   (unless (= (length c1) (length +bit-code-zero+))
+      (setq +bit-code-zero+
+         (make-array (length c1) :element-type 'bit :initial-element 0)))
+   (bit-and c1 c2 c3)
+   (equal c3 +bit-code-zero+))
 
-(let ((temp (make-array 0 :element-type 'bit)))
-   (defun bit-code-subsume-p (c1 c2)
-      (declare (simple-bit-vector c1 c2 temp))
-      ;; does code c1 subsume c2? i.e. for every bit not set in c1, is the corresponding
-      ;; bit in c2 also unset?
-      (unless (= (length temp) (length c1))
-         (setq temp
-            (make-array (length c1) :element-type 'bit)))
-      (not (find 1 (bit-andc1 c1 c2 temp))))
-)
+(defun bit-code-ior (c1 c2 c3)
+   (bit-ior c1 c2 c3))
 
-(defmacro loop-across-bit-code-1-bits ((x bc) &body body)
-   `(loop-across-bit-vector-1-bits (,x ,bc) ,@body))
+(defun bit-code-subsume-p (c1 c2)
+   ;; does code c1 subsume c2? i.e. for every bit not set in c1, is the
+   ;; corresponding bit in c2 also unset?
+   (unless (= (length c1) (length +bit-code-temp+) (length +bit-code-zero+))
+      (setq +bit-code-temp+
+         (make-array (length c1) :element-type 'bit))
+      (setq +bit-code-zero+
+         (make-array (length c1) :element-type 'bit :initial-element 0)))
+   (equal (bit-andc1 c1 c2 +bit-code-temp+) +bit-code-zero+))
 
-(defun print-bit-code (c) (print c))
-)
-
-
-;;; The preceding bit code representation of types as bit vectors will not be efficient
-;;; unless logical operations on them are performed 32 or 64 bits at a time. Although one
-;;; can usually trust the Common Lisp system to do this effectively, the algorithms will
-;;; also not be efficient unless logical operations used as predicates may exit early,
-;;; and unless logical operations can be applied to sub-sequences of bits between
-;;; indices determined at runtime. In Common Lisp there is no portable way of referencing
-;;; segments of bit vectors except by moving subsequences of bits to separate vectors or
-;;; creating new arrays that are displaced to the originals - but this entails allocating
-;;; some memory every time. The best practical approach is to represent each type code by
-;;; a vector of fixnums, and to program the operations on codes ourselves 64 or so bits at
-;;; a time. The scheme as implemented here is completely portable and should run efficiently
-;;; in any Common Lisp system. (A related but non-portable approach is described by Henry
-;;; Baker "Efficient implementation of bit-vector operations in Common Lisp", ACM Lisp
-;;; Pointers, 3(2-4).)
-;;;
-;;; JAC 15-Aug-17: added one or more "summary words" for each type, held in the first
-;;; +bc-nsum+ element(s) of the type's vector - each successive bit in these summary
-;;; words is the logical OR of each successive 64 (or so) bits of the type bit code.
-;;; Given two types, if the result of ANDing these summary words is all zeros, then
-;;; it's guaranteed that the AND of the full representations will also be all zeros.
-;;; Similarly, if the result of ANDing the complement of one set of summary words with
-;;; another is non-zero, then the former type cannot subsume the latter. See
-;;; finalise-bit-code, bit-code-and-zero/one-p and bit-code-subsume-p below.
-;;;
-;;; Pre-dating this implementation, in 2011 Glenn Slayden <glenn@agree-grammar.com>
-;;; independently devised and implemented summary bits for sparse type bit codes -
-;;; see code posted at http://agree-grammar.com/src/miew/bitarr.cs . The design and
-;;; purpose of that implementation is very similar to the one here.
-;;;
-;;; JAC 8-Oct-17: added two further initial words holding the index of the first
-;;; and last non-zero words in the type bit code. These are used to skip initial and final
-;;; sequences of zero bits in the AND, subsumption and equal operations. The start index
-;;; is also used to sort and index lists of types, and both the start and end indexes are
-;;; used as pre-filters and early termination tests for the computations involving AND
-;;; and subsumption. These start and end indices are very effective due to the sparseness
-;;; of the type bit codes, and the fact that since the hierarchy is tree-like it is
-;;; possible to assign bit vector indices that are close to types that are close in the
-;;; hierarchy. NB outside the start-end region of the bit code there may be non-zero
-;;; words left over from previous operations - these must not be accessed.
-;;;
-;;; Pre-dating this implementation, in PET, Ulrich Callmeier experimented with a method of
-;;; "zoning" bit codes so operations such as the subtype test are restricted to just the
-;;; region containing 1 bits; he partially implemented this but then removed the code on
-;;; 05/30/03 - see http://pet.opendfki.de/changeset/99
-;;;
-;;; JAC 13-Mar-18: changed bit codes so they don't explicitly store leading or trailing
-;;; words that are all zero - this can be thought of as a 'compressed' state. With this
-;;; approach (depending on the grammar), bit codes occupy as little as 4% of the storage
-;;; they required previously. Now, 'start' and 'end' are logical indices which do not
-;;; necessarily key into the vector directly, and there is a further field, 'first',
-;;; holding the actual vector index of the first non-zero word (i.e. in the case of
-;;; compressed bit codes its value is always +bc-nsum+ + 3, and for uncompressed bit
-;;; codes its value is the same as 'start').
-;;;
-;;; The memory layout of these bit code representations is:
-;;; #(<summary words> <logical start of non-zero words> <logical end of non-zero words>
-;;;   <actual index of first non-zero word> <type bit code words>)
-;;;
-;;; For example, the following are valid uncompressed and compressed representations
-;;; respectively of the same data (assuming 1 summary word):
-;;; #(#x0180000000000000 7 8 7 0 0 0 #x0000000000000001 #x0000000000000002 0 0) 
-;;; #(#x0180000000000000 7 8 4 #x0000000000000001 #x0000000000000002) 
-;;;
-;;; We use simple general vectors of fixnums; an alternative would be specialized arrays
-;;; with element-type (unsigned-byte 64), but that would prevent us storing (fixnum)
-;;; vector indices in the same array, thus entailing an extra level of indirection for
-;;; accessing the bit codes. For the bit code elements we use only positive fixnums, since
-;;; using negative as well yields only one more bit, at the cost of complicating the bit
-;;; setting and testing operations.
-;;;
-;;; NB The summary words are consistent at the points where the AND and subsumption
-;;; operations are applied. DO NOT attempt to use them in the bit code equal, OR
-;;; or position-1 functions.
-
-#-:bitseqbc
-(locally
-#-:tdebug (declare (optimize (speed 3) (safety 0)))
-
-(defconstant +bc-word-len+ (integer-length most-positive-fixnum)) ; not using negative fixnums
-
-(defconstant +bc-nsum+ #-:baseglb 3 #+:baseglb 0) ; number of summary words (may be zero)
-
-(defconstant +bc-sef+ #-:wholebc 3 #+:wholebc 0) ; start/end/first slots, when applicable
-
-(defun make-bit-code (nbits)
-   (declare (fixnum nbits))
-   (let
-      ((c (make-array
-             (+ +bc-nsum+                      ; summary words
-                +bc-sef+                       ; start, end, first
-                (ceiling nbits +bc-word-len+)) ; type bit code words
-             :element-type t)))
-      (clear-bit-code c)
-      c))
-
-(defmacro bit-code-start (c)
-   `(the fixnum
-      (locally #-:tdebug (declare (optimize (speed 3) (safety 0)))
-         #-:wholebc
-         (svref (the simple-vector ,c) +bc-nsum+)
-         #+:wholebc
-         (+ +bc-nsum+ +bc-sef+))))
-
-(defsetf bit-code-start (c) (value)
-   #-:wholebc `(setf (svref ,c +bc-nsum+) ,value)
-   #+:wholebc (error "Attempt to set bit-code start when option turned off"))
-
-(defmacro bit-code-end (c)
-   `(the fixnum
-      (locally #-:tdebug (declare (optimize (speed 3) (safety 0)))
-         #-:wholebc
-         (svref (the simple-vector ,c) (+ +bc-nsum+ 1))
-         #+:wholebc
-         (1- (length (the simple-vector ,c))))))
-
-(defsetf bit-code-end (c) (value)
-   #-:wholebc `(setf (svref ,c (+ +bc-nsum+ 1)) ,value)
-   #+:wholebc (error "Attempt to set bit-code end when option turned off"))
-
-(defmacro bit-code-first (c)
-   `(the fixnum
-      (locally #-:tdebug (declare (optimize (speed 3) (safety 0)))
-         #-:wholebc
-         (svref (the simple-vector ,c) (+ +bc-nsum+ 2))
-         #+:wholebc
-         (+ +bc-nsum+ +bc-sef+))))
-
-(defsetf bit-code-first (c) (value)
-   #-:wholebc `(setf (svref ,c (+ +bc-nsum+ 2)) ,value)
-   #+:wholebc (error "Attempt to set bit-code first when option turned off"))
-
-(defun clear-bit-code (c)
-   (declare (simple-vector c))
-   #+:wholebc (fill c 0)
-   #+(and (not :wholebc) :tdebug) (fill c 'x) ; provoke error for accesses outside start-end
-   #-:wholebc (setf (bit-code-start c) (1- (length c))) ; counter-intuitive, but correct
-   #-:wholebc (setf (bit-code-end c) (1- (+ +bc-nsum+ 3)))
-   #-:wholebc (setf (bit-code-first c) (bit-code-start c)))
-
-(defun copy-bit-code (c) ; returns compressed result
-   (declare (simple-vector c))
-   (let*
-      ((n-code-words (- (1+ (bit-code-end c)) (bit-code-start c)))
-       (new
-         (make-array (+ +bc-nsum+ +bc-sef+ n-code-words) :element-type t)))
-      (replace new c :end1 (+ +bc-nsum+ +bc-sef+)) ; copy across summary words, start, end
-      #-:wholebc (setf (bit-code-first new) (+ +bc-nsum+ 3))
-      (replace new c
-         :start1 (+ +bc-nsum+ +bc-sef+)
-         :start2 (bit-code-first c) :end2 (+ (bit-code-first c) n-code-words))
-      new))
-
-(defun finalise-bit-code (c)
-   (declare (simple-vector c))
-   (when (> +bc-nsum+ 0) ; summary words to be computed?
-      (loop
-         initially (fill c 0 :end +bc-nsum+)
-         for n fixnum from (bit-code-start c) to (bit-code-end c)
-         for nc fixnum from (bit-code-first c)
-         unless (zerop (the fixnum (svref c nc)))
-         do
-         (multiple-value-bind (sw-elt sw-bit)
-               (truncate n +bc-word-len+)
-            (declare (fixnum sw-elt sw-bit))
-            (setq sw-elt (rem sw-elt +bc-nsum+))
-            (setf (svref c sw-elt)
-               (logior (the fixnum (svref c sw-elt)) (the fixnum (ash 1 sw-bit)))))))
-   c)
-
-(defun set-bit-code (c n) ; assumes c is uncompressed
-   (declare (simple-vector c) (fixnum n))
-   (multiple-value-bind (e1 e2)
-         (truncate n +bc-word-len+)
-      (declare (fixnum e1 e2))
-      (incf e1 (+ +bc-nsum+ +bc-sef+)) ; convert from zero-based integer to bit code index
-      ;; if e1 is outside current start-end interval then zero-fill between it and interval
-      #-:wholebc
-      (when (< e1 (bit-code-start c))
-         (fill c 0 :start e1 :end (bit-code-start c))
-         (setf (bit-code-start c) e1)
-         (setf (bit-code-first c) e1))
-      #-:wholebc
-      (when (> e1 (bit-code-end c))
-         (fill c 0 :start (1+ (bit-code-end c)) :end (1+ e1))
-         (setf (bit-code-end c) e1))
-      (setf (svref c e1)
-         (logior (the fixnum (svref c e1)) (the fixnum (ash 1 e2))))))
-
-(defun bit-code-ior (c1 c2 c3) ; assumes c3 (= result) is uncompressed and large enough
-   (declare (simple-vector c1 c2 c3))
-   ;; NB not used as a predicate so summary words are irrelevant
-   (loop
-      with start fixnum = (min (bit-code-start c1) (bit-code-start c2))
-      with end fixnum = (max (bit-code-end c1) (bit-code-end c2))
-      with nc1 fixnum = (bit-code-first c1)
-      with nc2 fixnum = (bit-code-first c2)
-      for n fixnum from start to end
-      for c1e fixnum =
-        (if (<= (bit-code-start c1) n (bit-code-end c1)) (prog1 (svref c1 nc1) (incf nc1)) 0)
-      for c2e fixnum =
-        (if (<= (bit-code-start c2) n (bit-code-end c2)) (prog1 (svref c2 nc2) (incf nc2)) 0)
-      do
-      (setf (svref c3 n) (logior c1e c2e))
-      finally
-      #-:wholebc (setf (bit-code-start c3) start)
-      #-:wholebc (setf (bit-code-end c3) end)
-      #-:wholebc (setf (bit-code-first c3) start)
-      (return c3)))
-
-(defmacro bit-code-zero/one-1-bit-p (c &optional start end)
-   ;; NB c might not have been through finalise-bit-code so we can't use its summary words
-   `(locally
-       #-:tdebug (declare (optimize (speed 3) (safety 0)))
-       #-:wholebc
-       (and
-          ,(if (and start end)
-              `(= ,start ,end) `(= (bit-code-start ,c) (bit-code-end ,c)))
-          (let ((e (svref ,c (bit-code-first ,c))))
-             (declare (fixnum e))
-             ;; the expression e & (e-1) returns e without its least significant 1 bit
-             (zerop (logand e (the fixnum (1- e))))))
-       #+:wholebc
-       (let ((s
-               ,(if (and start end)
-                   `(and (= ,start ,end) ,start)
-                   `(loop for n fixnum from (bit-code-start ,c) to (bit-code-end ,c)
-                       with nz = nil ; index of first non-zero word
-                       do
-                       (unless (zerop (the fixnum (svref ,c n))) (if nz (return nil) (setq nz n)))
-                       finally (return nz)))))
-          (and s
-             (let ((e (svref ,c s)))
-                (declare (fixnum e))
-                (zerop (logand e (the fixnum (1- e)))))))))
-
-(defmacro bit-code-and-zero/one-p (c1 c2 c3) ; assumes c3 (= result) is uncompressed
-   `(locally
-       #-:tdebug (declare (optimize (speed 3) (safety 0)))
-       (or
-          ;; first check the bit code summary words
-          ,(if (> +bc-nsum+ 0)
-              `(and
-                  ,@(loop for i from 0 below +bc-nsum+
-                       collect
-                       `(zerop (logand (the fixnum (svref ,c1 ,i))
-                                       (the fixnum (svref ,c2 ,i)))))))
-          (bit-code-and-zero/one-p-1 ,c1 ,c2 ,c3))))
-
-(defun bit-code-and-zero/one-p-1 (c1 c2 c3) ; assumes c3 is uncompressed and large enough
-   (declare (simple-vector c1 c2 c3))
-   (loop
-      with first-poss-nz fixnum = (max (bit-code-start c1) (bit-code-start c2))
-      with last-poss-nz fixnum = (min (bit-code-end c1) (bit-code-end c2))
-      with o1 fixnum = (- (bit-code-start c1) (bit-code-first c1)) ; no. of omitted leading 0 words
-      with o2 fixnum = (- (bit-code-start c2) (bit-code-first c2))
-      for n fixnum from first-poss-nz to last-poss-nz
-      unless (zerop (logand (the fixnum (svref c1 (- n o1))) (the fixnum (svref c2 (- n o2)))))
-      return
-      (loop
-         with first-actual-nz fixnum = n
-         with last-actual-nz fixnum = n
-         for m fixnum from first-actual-nz to last-poss-nz
-         for res fixnum =
-            (logand (the fixnum (svref c1 (- m o1))) (the fixnum (svref c2 (- m o2))))
-         do
-         (setf (svref c3 m) res)
-         (setq last-actual-nz (if (zerop res) last-actual-nz m))
-         finally
-         #-:wholebc (setf (bit-code-first c3) first-actual-nz)
-         (if #-:baseglb (bit-code-zero/one-1-bit-p c3 first-actual-nz last-actual-nz)
-             #+:baseglb nil
-            (return t)
-            (progn
-               #+:wholebc (fill c3 0 :end first-actual-nz)
-               #+:wholebc (fill c3 0 :start (1+ last-actual-nz))
-               #-:wholebc (setf (bit-code-start c3) first-actual-nz)
-               #-:wholebc (setf (bit-code-end c3) last-actual-nz)
-               (return nil))))
-      finally (return t)))
+(defun set-bit-code (c n)
+   (setf (sbit c n) 1))
 
 (defun bit-code-position-1 (c)
-   (declare (simple-vector c))
-   ;; NB c may not have been through finalise-bit-code so we can't use its summary words
-   (let*
-      ((start #-:wholebc (bit-code-start c)
-              #+:wholebc
-              (loop for n fixnum from (bit-code-start c) to (bit-code-end c)
-                    while (zerop (the fixnum (svref c n)))
-                    finally (return n)))
-       (e (svref c #-:wholebc (bit-code-first c) #+:wholebc start)))
-      (declare (fixnum e start))
-      (the fixnum
-         (+ (the fixnum (* (- start (+ +bc-nsum+ +bc-sef+)) ; convert from index to 0-based integer
-                           +bc-word-len+))
-            ;; the expression e & -e returns the least significant 1 bit in e
-            (1- (integer-length (logand e (the fixnum (- e)))))))))
+   ;; index of first bit that is set in c
+   (position 1 c))
+)
+|#
 
-(defmacro bit-code-equal-p (c1 c2)
-   ;; NB c2 hasn't been through finalise-bit-code so we can't use summary words
-   `(locally
-       #-:tdebug (declare (optimize (speed 3) (safety 0)))
-       (and #-:wholebc (= (bit-code-start ,c1) (bit-code-start ,c2))
-            #-:wholebc (= (bit-code-end ,c1) (bit-code-end ,c2))
-            (bit-code-equal-p-1 ,c1 ,c2))))
+;;; The actual type bit code representation is different since not all lisp
+;;; systems have all of these operations running at a decent speed (especially
+;;; the equal and position functions). Instead, each code is represented by a
+;;; simple vector of fixnums, with all operations on codes being performed
+;;; 30 or so bits at a time. (A related approach is described by Henry
+;;; Baker "Efficient implementation of bit-vector operations in Common Lisp",
+;;; ACM Lisp Pointers, 3(2-4).) The scheme as implemented here is completely
+;;; portable and should run well in all reasonable Lisp systems
 
-(defun bit-code-equal-p-1 (c1 c2)
-   (declare (simple-vector c1 c2))
-   (loop
-      for n fixnum from (bit-code-start c1) to (bit-code-end c1)
-      for nc1 fixnum from (bit-code-first c1)
-      for nc2 fixnum from (bit-code-first c2)
-      always (= (the fixnum (svref c1 nc1)) (the fixnum (svref c2 nc2)))))
+(progn
+(defconstant +fixnum-len+
+   (min (1+ (integer-length most-positive-fixnum))
+        (1+ (integer-length most-negative-fixnum))))
 
-(defun bit-code-two-1-bits-p (c)
-   (declare (simple-vector c))
-   ;; only called twice on each glb type, so not worth filtering with summary words
-   (loop for n fixnum from (bit-code-start c) to (bit-code-end c)
-      for nc fixnum from (bit-code-first c)
-      with sum fixnum = 0
-      do (incf sum (logcount (the fixnum (svref c nc))))
-      always (<= sum 2)))
+(defun make-bit-code (length)
+   (make-array (ceiling length +fixnum-len+) :element-type t :initial-element 0))
 
-(defmacro bit-code-subsume-p (c1 c2)
-   `(locally
-       #-:tdebug (declare (optimize (speed 3) (safety 0)))
-       (and
-          ;; first check the bit code summary words
-          ,@(loop for i from 0 below +bc-nsum+
-              collect
-              `(zerop (logandc1 (the fixnum (svref ,c1 ,i))
-                                (the fixnum (svref ,c2 ,i)))))
-          ;; and also check start/end index compatibility
-          #-:wholebc
-          (and (<= (bit-code-start ,c1) (bit-code-start ,c2))
-               (>= (bit-code-end ,c1) (bit-code-end ,c2)))
-          (bit-code-subsume-p-1 ,c1 ,c2))))
+(defun bit-code-equal (c1 c2)
+   ;; need the array decl up here since if it's in the locally then acl
+   ;; seems to overlook it. The arrayp tests should still be OK and not
+   ;; optimised away since we're not at the highest speed setting just yet
+   (declare (type simple-vector c1 c2))
+   (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) t)
+         (declare (fixnum n))
+         (unless (= (the fixnum (svref c1 n)) (the fixnum (svref c2 n))) (return nil)))))
 
-(defun bit-code-subsume-p-1 (c1 c2)
-   (declare (simple-vector c1 c2))
-   (loop
-      for n fixnum from (bit-code-start c2) to (bit-code-end c2) ; NB c1 bounds are irrelevant
-      for nc1 fixnum from (+ (bit-code-first c1) (- (bit-code-start c2) (bit-code-start c1)))
-      for nc2 fixnum from (bit-code-first c2)
-      always
-      (zerop (logandc1 (the fixnum (svref c1 nc1)) (the fixnum (svref c2 nc2))))))
+(defun bit-code-and-zero-p (c1 c2 c3)
+   (declare (type simple-vector c1 c2 c3))
+   (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
+      (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (let ((acc 0))
+         (declare (fixnum acc))
+         (dotimes (n (length c1) (zerop acc))
+            (declare (fixnum n))
+            (let ((x (logand (the fixnum (svref c1 n)) (the fixnum (svref c2 n)))))
+               (declare (fixnum x))
+               (setf (svref c3 n) x)
+               (setq acc (logior x acc)))))))
 
-(defmacro loop-across-bit-code-1-bits ((x bc) &body body)
-  (let ((n (gensym)) (nc (gensym)) (e (gensym)) (i (gensym)) (c (gensym)) (m (gensym)))
-    `(loop
-       with ,c simple-vector = ,bc
-       for ,n fixnum from (bit-code-start ,c) to (bit-code-end ,c)
-       for ,nc fixnum from (bit-code-first ,c)
-       for ,e fixnum = (svref ,c ,nc)
-       unless (zerop ,e)
-       do
-       (loop for ,i fixnum from 0 below +bc-word-len+
-         with ,m fixnum = (* (the fixnum (- ,n (+ +bc-nsum+ +bc-sef+))) ; convert to 0-based integer
-                             +bc-word-len+)
-         when (logbitp ,i ,e)
-         do
-         (let ((,x (+ ,m ,i)))
-           (declare (fixnum ,x))
-           ,@body)))))
+(defun bit-code-ior (c1 c2 c3)
+   (declare (type simple-vector c1 c2 c3))
+   (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
+      (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) c3)
+         (declare (fixnum n))
+         (setf (svref c3 n)
+            (logior (the fixnum (svref c1 n)) (the fixnum (svref c2 n)))))))
 
-(defun print-bit-code (c)
-   (flet
-      ((list-hex (n m)
-         (format nil "(~{~A~^ ~})"
-            (loop for i from n to m
-               for e = (svref c i)
-               with n-hex-digits = (ceiling +bc-word-len+ 4) ; allow for either 32/64-bit system
-               collect
-               (format nil "#x~V,'0X" n-hex-digits e)))))
-      (format t "~%#<bit-code sum=~A start=~A end=~A ints=~A> "
-         (list-hex 0 (1- +bc-nsum+))
-         (bit-code-start c) (bit-code-end c)
-         (list-hex (bit-code-first c)
-            (+ (bit-code-first c) (- (bit-code-end c) (bit-code-start c)))))
-      c))
+(defun bit-code-subsume-p (c1 c2)
+   (declare (type simple-vector c1 c2))
+   (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) t)
+         (declare (fixnum n))
+         (unless (zerop (logand (lognot (the fixnum (svref c1 n))) (the fixnum (svref c2 n))))
+            (return nil)))))
+
+(defun set-bit-code (c n)
+   (multiple-value-bind (e1 e2)
+      (truncate n +fixnum-len+)
+      (setf (svref c e1)
+      	 (logior (svref c e1)
+            (if (zerop e2) most-negative-fixnum (ash 1 (- (1- +fixnum-len+) e2)))))))
+
+(defun bit-code-position-1 (c)
+   (declare (type simple-vector c))
+   (unless (arrayp c) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c) nil)
+         (declare (fixnum n))
+         (let ((e (svref c n)))
+            (declare (fixnum e))
+            (unless (zerop e)
+               (return
+                  (+ (* n +fixnum-len+)
+                     (if (minusp e) 0 (- +fixnum-len+ (integer-length e))))))))))
 )
 
 
-;;; GLB computation over a partition of the type hierarchy. Main steps:
-;;; 
-;;; * Assign a bit code to each type
-;;; * Check pairs of types and create a GLB type if they have no unique common subtype
-;;; * Insert GLB types into hierarchy, recomputing parent/daughter links
+;;; Entry point for glb computation: compute-and-add-glbtypes. Don't need to
+;;; consider any types that are at the fringe of the hierarchy and have only
+;;; a single parent
 ;;;
-;;; The overall approach to finding GLBs draws on insights in Ait-Kaci et al.'s 1989
-;;; paper 'Efficient Implementation of Lattice Operations'.
-;;; The basic algorithms used here for assigning bit codes to types, computing
-;;; corresponding GLB types, and reconstructing the graph representation of the type
-;;; hierarchy were originally published in Ulrich Callmeier's 2001 dissertation
-;;; 'Efficient Parsing with Large-Scale Unification Grammars'
-;;; http://www.coli.uni-saarland.de/~uc/thesis/thesis.ps (pp 28-30). However, there
-;;; are many improvements here which greatly reduce processing time for large and
-;;; complex type hierarchies.
+;;; Type codes can be looked up efficiently by hashing them on the index of
+;;; their first non-zero bit. Thanks to Ulrich Callmeier for the code
+;;; on which much of this is based
 
-(defun compute-and-add-glbtypes (types)
-   ;; A type satisfying no-split-no-join-type-p or internal-tree-type-p doesn't need a bit
-   ;; code since it is not 'active' with respect to GLB computation: it cannot be a GLB,
-   ;; cannot be a parent/daughter of a new GLB type, and cannot cause a new GLB type to
-   ;; be created. A type satisfying no-split-type-p can be a GLB, can be a daughter of
-   ;; a new GLB type, but cannot cause a new GLB type to be created.
-   (labels
-      ((no-split-no-join-type-p (type) ; no more than 1 incoming and 1 outgoing arc?
-          #+:baseglb nil
-          #-:baseglb
-          (and (null (cdr (ltype-parents type))) (null (cdr (ltype-daughters type)))))
-       (internal-tree-type-p (type)
-          #+:baseglb 
-          (and (null (ltype-daughters type)) ; leaf type (no children, exactly one parent)?
-               (null (cdr (ltype-parents type))))
-          #-:baseglb
-          (and (null (cdr (ltype-parents type))) ; below root of a tree-shaped part of hierarchy?
-             (loop for d in (ltype-daughters type)
-                always
-                (internal-tree-type-p (get-type-entry d)))))
-       (no-split-type-p (type) ; no more than 1 outgoing arc that's non-tree shaped?
-          #+:baseglb nil
-          #-:baseglb
-          (loop for d in (ltype-daughters type)
-             count (not (internal-tree-type-p (get-type-entry d))) into sum
-             always (< sum 2))))
-      (let*
-         ((active-types ; top (first) type of the partition is not 'active'
-             (remove-if
-                #'(lambda (x) (or (no-split-no-join-type-p x) (internal-tree-type-p x)))
-                (cdr types)))
-          (nactive (length active-types))
-          (split-types (remove-if #'no-split-type-p active-types))
-          (nsplits (length split-types)))
-         ;; minimum to get a new GLB is 4 active types (excluding top type of the partition),
-         ;; with at least 2 splits (and 2 joins as well, but these might also be splits)
-         (if (and (>= nactive 4) (>= nsplits 2))
-            (let ((code-table (make-array nactive :initial-element nil)))
-               (when *display-glb-summary*
-                  (format t "~%Partition ~A of ~A types (~A active, ~A splits)"
-                     (ltype-name (car types)) (length types) nactive nsplits)
-                  (force-output))
-               (setq active-types
-                  (assign-type-bit-codes types active-types nactive code-table))
-               (let ((glbtypes
-                       (compute-glbtypes-from-bit-codes split-types nactive code-table)))
-                  (when (and *display-glb-summary* glbtypes)
-                     (format t " -> ~A glb~:p" (length glbtypes))
-                     (force-output))
-                  (when glbtypes
-                     (insert-glbtypes-into-hierarchy active-types glbtypes))
-                  (dolist (type-list (list glbtypes active-types))
-                     (dolist (type type-list) (setf (ltype-bit-code type) nil)))
-                  (length glbtypes)))
-            0))))
+(defvar *bit-coded-type-table*)
+
+(defmacro get-bit-coded-type (bit-coded-type-table code)
+   `(svref ,bit-coded-type-table (bit-code-position-1 ,code)))
+
+(defun lookup-type-from-bits (code)
+   ;; hash code and check for equal one in bucket
+   (dolist (type (get-bit-coded-type *bit-coded-type-table* code) nil)
+      (when (bit-code-equal (ltype-bit-code type) code)
+         (return type))))
 
 
-(defmacro get-type-bit-code (code code-table)
-   ;; type bit codes hashed on the position of their first non-zero bit
-   `(svref ,code-table (bit-code-position-1 ,code)))
+(defun external-single-parent-type-p (type-entry)
+   (and (null (ltype-daughters type-entry))
+        (null (cdr (ltype-parents type-entry)))))
 
-(defun assign-type-bit-codes (types active-types nactive code-table)
-   ;; Assign a bit code to each active type. The code for each type is the OR of all
-   ;; its descendants with one additional bit set. Traversal of type hierarchy is
-   ;; depth-first, assigning type bit positions so that parent has the smallest -
-   ;; this parent position is used subsequently to index the type.
-   ;; Process only the types list, and pass through any type not in active-types.
-   ;; Avoid copying bit codes until a destructive operation needs to be performed.
-   ;; Returns a re-ordered active-types list, reflecting the bit position used for
-   ;; each type.
-   (let ((status (make-hash-table :test #'eq :size nactive))
-         (n nactive)
-         (temp (make-bit-code nactive))
-         (active-ordered nil))
+(defun compute-and-add-glbtypes (types glbp)
+   (let*
+      ((internal-types
+          (cons (car types)
+             (remove-if #'external-single-parent-type-p (cdr types))))
+       (ntypes (length internal-types)))
+      (if (> ntypes 3)
+         (let ((*bit-coded-type-table* (make-array ntypes :initial-element nil)))
+            (assign-type-bit-codes internal-types ntypes)
+            (let ((glbtypes
+                    (compute-glbtypes-from-bit-codes internal-types ntypes)))
+               (when glbtypes
+                  ;; (format t "~A~A" (if glbp "+" " ") (length glbtypes))
+                  ;; (force-output t)
+                  (insert-glbtypes-into-hierarchy internal-types glbtypes))
+               (dolist (type (append glbtypes internal-types))
+                  (setf (ltype-bit-code type) nil))
+               (or glbp glbtypes)))
+         glbp)))
+
+
+(defun assign-type-bit-codes (types ntypes)
+   ;; assign a bit code to types (of length the number of types), the first
+   ;; element being the common ancestor of all of them. Code for each type
+   ;; is the OR of all its descendants with one additional bit set
+   (let ((n ntypes))
       (labels
-         ((length-<= (x y)
-            (if (and x y) (length-<= (cdr x) (cdr y)) (null x)))
-          (assign-type-bit-codes1 (type)
-            (if (gethash type status)
-               (or (ltype-bit-code type)
-                  (let*
-                     ((ds
-                        (mapcar #'(lambda (dn) (get-type-entry dn)) (ltype-daughters type)))
-                      (subs
-                        ;; allocate bit positions to largest descendant sub-graphs first
-                        (loop for d in (sort ds #'length-<= :key #'ltype-descendants)
-                           when (assign-type-bit-codes1 d)
-                           collect it))
-                      (code
-                        (bit-code-ior-set-n
-                           subs (if (eq (gethash type status) :active) (decf n)) temp)))
-                     (when (eq (gethash type status) :active)
-                        (setq code (finalise-bit-code code))
-                        (setf (ltype-bit-code type) code)
-                        (push code (get-type-bit-code code code-table))
-                        (push type active-ordered))
-                     code)))))
-         (loop for type in types do (setf (gethash type status) t))
-         (loop for type in active-types do (setf (gethash type status) :active))
-         (assign-type-bit-codes1 (car types))
-         active-ordered)))
-
-(defun bit-code-ior-set-n (subs n temp)
-   (if (or (cdr subs) n)
-      (progn
-         (clear-bit-code temp)
-         (dolist (sub subs) (bit-code-ior sub temp temp))
-         (when n (set-bit-code temp n))
-         (copy-bit-code temp))
-      (car subs)))
+         ((assign-type-bit-codes1 (type)
+            (let ((code (ltype-bit-code type)))
+               (unless code
+                  (setq code (make-bit-code ntypes))
+                  (setf (ltype-bit-code type) code)
+                  (dolist (d-name (ltype-daughters type))
+                     (let ((d (get-type-entry d-name)))
+                        (when (member d types :test #'eq)
+                           (setq code
+                              (bit-code-ior code (assign-type-bit-codes1 d) code)))))
+                  (decf n)
+                  (set-bit-code code n)
+                  (push type
+                     (get-bit-coded-type *bit-coded-type-table* code)))
+               code)))
+         (assign-type-bit-codes1 (car types)))))
 
 
-(defun sort-types-increasing-start-decreasing-end (types)
-   ;; primary sort on increasing bit code start, secondary sort on decreasing end
-   (sort types
-      #'(lambda (c1 c2)
-          (or (< (bit-code-start c1) (bit-code-start c2))
-              (and (= (bit-code-start c1) (bit-code-start c2))
-                   (> (bit-code-end c1) (bit-code-end c2)))))
-      :key #'ltype-bit-code))
-
-(defun compute-glbtypes-from-bit-codes (types ntypes code-table)
-   ;; For every pair of types check if they have any common subtypes (is the AND of the
-   ;; two types' codes non-zero?), and if so, if they already have a glb type (is there
-   ;; a type with a code equal to the AND of the codes?). If not, a glb type is created
-   ;; with this code. Process iterates with new types until no more are constructed 
-   (flet
-      ((bit-code-exists-p (code code-table)
-         (loop for c in (get-type-bit-code code code-table)
-            thereis (bit-code-equal-p c code))))
-      (let ((temp (make-bit-code ntypes))
-            (new nil) (glbtypes nil))
-         (loop
-            (unless (cdr types) (return glbtypes))
-            ;; The sorting and iteration structure below is optimal in the sense that only
-            ;; pairs of types with overlapping descendant bit spans are considered
-            (loop
-               for t1 on (sort-types-increasing-start-decreasing-end types)
-               for t1c = (ltype-bit-code (car t1))
-               do
-               (loop
-                  for t2 on (cdr t1)
-                  for t2c = (ltype-bit-code (car t2))
-                  until (> (bit-code-start t2c) (bit-code-end t1c)) ; will also hold for rest of t2
-                  do
-                  (when (and (not (bit-code-and-zero/one-p t1c t2c temp))
-                             (not (bit-code-exists-p temp code-table)))
-                     (let* ((code (finalise-bit-code (copy-bit-code temp)))
-                            (name (next 'glbtype))
-                            (glb (make-ltype :name name :glbp t)))
-                        (create-mark-field glb)
-                        (set-type-entry name glb)   
-                        (push name *ordered-glbtype-list*)
-                        (push name *type-names*)
-                        (when *display-glb-messages*
-                           (format t "~%Fixing ~A and ~A with ~A" (car t1) (car t2) glb))
-                        (setf (ltype-bit-code glb) code)
-                        (push code (get-type-bit-code code code-table))
-                        (push glb glbtypes)
-                        (unless #-:baseglb (bit-code-two-1-bits-p code) #+:baseglb nil
-                           ;; glb has >2 active descendants so it can contribute to a new glb
-                           (push glb new))))))
-            (setq types new new nil)))))
+(defun compute-glbtypes-from-bit-codes (types ntypes)
+   ;; for every pair of types check if they have any common subtypes (is the
+   ;; AND of the two types' codes non-zero?), and if so, if they already have
+   ;; a glb type (is there a type with a code equal to the AND of the codes?).
+   ;; If not, a glb type is created with this code. Process iterates with new
+   ;; types until no more are constructed 
+   (let* ((temp (make-bit-code ntypes))
+          (new nil) (glbtypes nil))
+      (loop
+         (unless (cdr types) (return glbtypes))
+         (do* ((t1 types (cdr t1)))
+              ((null t1))
+            (do* ((t2 (cdr t1) (cdr t2))
+                  (code-zero-p nil))
+                 ((null t2))
+               (setq code-zero-p
+                  (bit-code-and-zero-p
+                     (ltype-bit-code (car t1)) (ltype-bit-code (car t2)) temp))
+               (when (and (not code-zero-p)
+                          (not (lookup-type-from-bits temp)))
+                  (let* ((name (make-glb-name nil))
+                         (new-type-entry (make-ltype :name name :glbp t)))
+                     (when *display-glb-messages*
+	                (format t "~%Fixing ~A and ~A with ~A" 
+		           (car t1) (car t2) new-type-entry))
+                     (setf (ltype-bit-code new-type-entry) temp)
+                     (push new-type-entry
+                        (get-bit-coded-type *bit-coded-type-table* temp))
+                     (push new-type-entry glbtypes)
+                     (push new-type-entry new)
+                     (setq temp (make-bit-code ntypes))))))
+         (setq types new new nil))))
 
 
-(defun insert-glbtypes-into-hierarchy (auth glbs)
-  ;; Compute the parents and daughters of each existing (authored) active type and each
-  ;; new glb type
-  (setq glbs
-    ;; sort to allow more efficient computation of reachability between pairs of glbs
-    (sort-types-increasing-start-decreasing-end (copy-list glbs)))
-  (let* ((nauth (length auth))
-         (ntypes (+ nauth (length glbs)))
-         (int-to-type (make-array ntypes :initial-contents (append auth glbs)))
-         (auth-names (make-hash-table :test #'eq :size nauth))
-         (path-table (make-array ntypes :initial-element nil)))
-    (declare (list auth glbs) (fixnum nauth ntypes) (simple-vector int-to-type path-table))
-    ;;
-    ;; fill adjacency matrix
-    (insert-glbtypes-descendant-relations nauth ntypes int-to-type path-table)
-    ;;
-    ;; delete this partition's active types from parent lists and from daughter lists (after
-    ;; saving previous contents), then read out parent/daughter links from adjacency matrix
-    ;; and record them
-    (loop for i from 0 below nauth
-      do
-      (setf (gethash (ltype-name (svref int-to-type i)) auth-names) t))
-    (loop for ty in auth
-      do
-      (setf (ltype-parents ty)
-        (remove-if #'(lambda (pn) (gethash pn auth-names)) (ltype-parents ty))))
-    (loop for pj from 0 below ntypes
-      for p = (svref int-to-type pj)
-      for dns = (ltype-daughters p)
-      when (svref path-table pj)
-      do
-      (when (< pj nauth)
-        (setf (ltype-daughters p)
-          (remove-if #'(lambda (dn) (gethash dn auth-names)) (ltype-daughters p))))
-      (loop-across-bit-vector-1-bits (di (svref path-table pj)) ; M(pj,di)=1
-        (when (= di pj)
-          (error "Inconsistency - glb processing created circularity involving type ~A"
-            (ltype-name p)))
-        (let ((d (svref int-to-type di)))
-          ;; for auth types, don't add a link to another auth type when it wasn't
-          ;; previously linked - avoids creating redundant links bypassing inactive types
-          (when (or (>= pj nauth) (>= di nauth) (member (ltype-name d) dns :test #'eq))
-            (push (ltype-name d) (ltype-daughters p))
-            (push (ltype-name p) (ltype-parents d))))))))
-
-#-:baseglb
-(defun insert-glbtypes-descendant-relations (nauth ntypes int-to-type path-table)
-  (let* ((glb-index-max
-           (reduce #'max int-to-type :key #'(lambda (x) (bit-code-end (ltype-bit-code x)))
-             :initial-value 0))
-         (glb-index
-           (make-array (1+ glb-index-max) :initial-element ntypes)))
-    (declare (fixnum nauth ntypes) (simple-vector int-to-type path-table glb-index))
-    ;;
-    ;; initialise adjacency / reachability matrix, omitting row vector if type has no active
-    ;; descendants
-    (loop for i from 0 below ntypes
-      unless (bit-code-zero/one-1-bit-p (ltype-bit-code (svref int-to-type i)))
-      do
-      (setf (svref path-table i) (make-array ntypes :element-type 'bit :initial-element 0)))
-    ;;
-    ;; glb-index is used to improve efficiency of auth -> glb reachability computation: element
-    ;; i holds index of first glb whose start is at least i
-    (loop
-      for n from nauth below ntypes
-      for s = (bit-code-start (ltype-bit-code (svref int-to-type n)))
-      with sprev = -1
-      do
-      (when (> s sprev)
-        (loop for j from (1+ sprev) to s do (setf (svref glb-index j) n))
-        (setq sprev s)))
-    ;;
-    ;; add reachability relations for auth/glb -> auth [0.057]
-    (loop for ai from 0 below ntypes
-      when (svref path-table ai) ; any active descendants?
-      do
-      (loop-across-bit-code-1-bits (dj (ltype-bit-code (svref int-to-type ai)))
-        (unless (= dj ai)
-          (setf (sbit (svref path-table ai) dj) 1))))
-    ;;
-    ;; add reachability relations for auth (splits only) -> glb - only considers glb types
-    ;; satisfying auth-start <= glb-start <= auth-end [0.516]
-    (loop for i from 0 below nauth
-      for ti = (svref int-to-type i)
-      for ci = (ltype-bit-code ti)
-      when (cdr (ltype-daughters ti)) ; a split type?
-      do
-      (loop for j fixnum from (svref glb-index (bit-code-start ci)) below ntypes 
-        for cj = (ltype-bit-code (svref int-to-type j))
-        until (> (bit-code-start cj) (bit-code-end ci)) ; will also hold for rest of j
-        do
-        (when (bit-code-subsume-p ci cj)
-          (setf (sbit (svref path-table i) j) 1))))
-    ;;
-    ;; add reachability relations between pairs of glbs - separated into the cases where glb1
-    ;; potentially subsumes glb2, and vice-versa. The first inner loop considers only glb2s
-    ;; satisfying glb1-start <= glb2-start <= glb1-end. The second considers only glb2s
-    ;; satisfying glb2-start = glb1-start and glb2-end >= glb1-end (note that the situation
-    ;; glb2-start < glb1-start is impossible due to the initial sorting of glbs) [1.348]
-    (loop for i from nauth below ntypes
-      for ci = (ltype-bit-code (svref int-to-type i))
-      do
-      (unless (bit-code-two-1-bits-p ci) ; can't actually subsume other glbs if <=2 bits set
-        (loop for j from (1+ i) below ntypes
-          for cj = (ltype-bit-code (svref int-to-type j))
-          until (> (bit-code-start cj) (bit-code-end ci)) ; will also hold for rest of j
-          do
-          (when (bit-code-subsume-p ci cj)
-            (setf (sbit (svref path-table i) j) 1))))
-      (loop for j from (1+ i) below ntypes
-        for cj = (ltype-bit-code (svref int-to-type j))
-        until (or (/= (bit-code-start cj) (bit-code-start ci))
-                  (< (bit-code-end cj) (bit-code-end ci))) ; will also hold for rest of j
-        do
-        (when (bit-code-subsume-p cj ci)
-          (setf (sbit (svref path-table j) i) 1))))
-    ;;
-    ;; transitive closure to fill in remaining reachability relations - at this point
-    ;; all such relations are correct except that the non-split auth type -> glb type
-    ;; entries (which occupy one quadrant of the reachability matrix) are missing. We thus
-    ;; need to scan only the auth -> auth quadrant, which shares the same rows [0.014]
-    (insert-glbtypes-transitive-closure path-table nauth)
-    ;;
-    ;; transitive reduction to convert reachability relations to adjacency [0.104]
-    (insert-glbtypes-transitive-reduction path-table)))
-
-#+:baseglb
-(defun insert-glbtypes-descendant-relations (nauth ntypes int-to-type path-table)
-    (declare (fixnum nauth ntypes) (simple-vector int-to-type path-table))
-    ;;
-    ;; initialise adjacency / reachability matrix
-    (loop for i from 0 below ntypes
-      do
-      (setf (svref path-table i) (make-array ntypes :element-type 'bit :initial-element 0)))
-    ;;
-    ;; add reachability relations for each authored and glb type
-    (loop for i from 0 below ntypes
-      for ci = (ltype-bit-code (svref int-to-type i))
-      do
-      (loop-across-bit-code-1-bits (j ci) ; -> auths
-        (unless (= j i)
-          (setf (sbit (svref path-table i) j) 1)))
-      (loop for j fixnum from nauth below ntypes ; -> glbs
-        for cj = (ltype-bit-code (svref int-to-type j))
-        unless (= j i)
-        do
-        (when (bit-code-subsume-p ci cj)
-          (setf (sbit (svref path-table i) j) 1))))
-    ;;
-    ;; transitive reduction to convert reachability relations to adjacency
-    (insert-glbtypes-transitive-reduction path-table))
+(defun insert-glbtypes-into-hierarchy (types glbtypes
+                                       &aux (all-types (append glbtypes types)))
+   ;; work out the parents and daughters of each glb type and insert it into
+   ;; the standard linked type node representation of the hierarchy
+   (dolist (glbtype-entry glbtypes)
+      (let ((parents nil) (daughters nil))
+         (dolist (entry all-types)
+            (unless (eq entry glbtype-entry)
+               (cond
+                  ((bit-code-subsume-p (ltype-bit-code glbtype-entry) (ltype-bit-code entry))
+                     ;; entry is a descendent of glbtype - try and add it to the current
+                     ;; highest disjoint set of descendants. If it subsumes any elements
+                     ;; of the set, replace one of them and delete rest. If it's subsumed
+                     ;; by any, then don't consider this entry further
+                     (do ((tail daughters (cdr tail))
+                          (replacedp nil))
+                         ((null tail)
+                          (setq daughters (delete nil daughters))
+                          (unless replacedp (push entry daughters)))
+                        (cond
+                           ((bit-code-subsume-p
+                               (ltype-bit-code entry) (ltype-bit-code (car tail)))
+                              (setf (car tail) (if replacedp nil entry))
+                              (setq replacedp t))
+                           ((and (not replacedp)
+                               (bit-code-subsume-p
+                                  (ltype-bit-code (car tail)) (ltype-bit-code entry)))
+                              (return)))))
+                  ((bit-code-subsume-p (ltype-bit-code entry) (ltype-bit-code glbtype-entry))
+                     ;; entry is an ancestor of glbtype - try and add it to lowest
+                     ;; disjoint set of ancestors
+                     (do ((tail parents (cdr tail))
+                          (replacedp nil))
+                         ((null tail)
+                          (setq parents (delete nil parents))
+                          (unless replacedp (push entry parents)))
+                        (cond
+                           ((bit-code-subsume-p
+                               (ltype-bit-code (car tail)) (ltype-bit-code entry))
+                              (setf (car tail) (if replacedp nil entry))
+                              (setq replacedp t))
+                           ((and (not replacedp)
+                               (bit-code-subsume-p
+                                  (ltype-bit-code entry) (ltype-bit-code (car tail))))
+                              (return))))))))
+         (insert-new-type-into-hierarchy
+            (ltype-name glbtype-entry) glbtype-entry parents daughters))))
 
 
-(macrolet
-  ((create-matrix-function (fn bit-vector-op)
-    `(defun ,fn (table &optional (max (length table)))
-       ;; process rows and columns 0-max, which might be less than the full table size. NB the
-       ;; 'when' tests below deal with rows that were omitted since they would have been all-zero
-       (declare (simple-vector table) (fixnum max))
-       (loop for i fixnum from 1 below max
-         when (svref table i)
-         do
-         (loop-across-bit-vector-1-bits (j (svref table i) :end i) ; i>j, M(i,j)=1
-           (when (svref table j)
-             (setf (svref table i) ; row(i) = row(i) <op> row(j)
-               (,bit-vector-op (the simple-bit-vector (svref table i))
-                 (the simple-bit-vector (svref table j)) t)))))
-       (loop for i fixnum from 0 below (1- max)
-         when (svref table i)
-         do
-         (loop-across-bit-vector-1-bits (j (svref table i) :start (1+ i) :end max) ; i<j, M(i,j)=1
-           (when (svref table j)
-             (setf (svref table i) ; row(i) = row(i) <op> row(j)
-               (,bit-vector-op (the simple-bit-vector (svref table i))
-                 (the simple-bit-vector (svref table j)) t))))))))
-  ;; These transitive closure and reduction functions are based on the following paper:
-  ;; Henry Warren (1975) A modification of Warshall's algorithm for the transitive closure of
-  ;; binary relations. CACM 18(4), 218-220. Warshall's algorithm iterates across matrix columns,
-  ;; whereas Warren's iterates over rows. The latter property makes it possible to skip
-  ;; within-row subsequences of 0-bits, and moreover long runs of zeros can be skipped a word
-  ;; at a time. Since the matrix is stored row-wise, Warren's algorithm is much more CPU 
-  ;; cache-friendly. Also, this implementation allows rows that would have been all-zero to
-  ;; be omitted. Transitive reduction is an adaptation of the transitive closure algorithm.
-  ;;
-  (create-matrix-function insert-glbtypes-transitive-closure bit-ior)
-  (create-matrix-function insert-glbtypes-transitive-reduction bit-andc2))
+(defun insert-new-type-into-hierarchy (new-type new-type-entry parents daughters)
+   ;; ancestors and descendants are updated later in a single pass
+   (let ((daughter-names (mapcar #'ltype-name daughters))
+         (parent-names (mapcar #'ltype-name parents)))
+      (create-mark-field new-type-entry)
+      (set-type-entry new-type new-type-entry)   
+      (setf (ltype-daughters new-type-entry) daughter-names)
+      (setf (ltype-parents new-type-entry) parent-names)
+      (dolist (daughter daughters)
+         (setf (ltype-parents daughter)
+            (set-difference (ltype-parents daughter) parent-names :test #'eq))
+         (pushnew new-type (ltype-parents daughter) :test #'eq))
+      (dolist (parent parents)
+         (setf (ltype-daughters parent)
+            (set-difference (ltype-daughters parent) daughter-names :test #'eq))
+         (pushnew new-type (ltype-daughters parent) :test #'eq))
+      (push new-type *ordered-glbtype-list*)
+      (push new-type *type-names*)
+      new-type-entry))
+
+
+(defun make-glb-name (dtrs)
+  (declare (ignore dtrs))
+  (next 'glbtype))
+
+#|
+  (let* ((true-dtrs (remove-duplicates 
+                     (loop for dtr in dtrs
+                         append
+                         (let ((dtr-entry (get-type-entry dtr)))
+                           (if (ltype-glbp dtr-entry)
+                             (find-other-daughters dtr-entry)
+                             (list dtr))))))                         
+         (new-name-str
+          (format nil "+~{~A+~}"
+                  (mapcar #'abbrev-type-name true-dtrs)))
+         (existing (find-symbol new-name-str)))
+    (if existing (next existing) (intern new-name-str))))
+
+(defun abbrev-type-name (dtr)
+  (let ((strname (string dtr)))
+    (if (> (length strname) 3)
+      (subseq strname 0 3)
+      strname)))
+|#
 
 
 ;;; Constraint stuff
@@ -1374,23 +830,20 @@
          
 
 (defun determine-atomic-types nil 
-  (let ((inherit-constraint
-          (make-hash-table :test #'eq :size (length *type-names*))))
-    (dolist (tn *type-names*)
-      (let ((ty (get-type-entry tn)))
-        (setf (gethash ty inherit-constraint) ; has any ancestor of this type got a constraint?
-          (some #'ltype-constraint-spec (ltype-ancestors ty)))))
-    (dolist (node *type-names*)
-      (let ((ty (get-type-entry node)))
-        (unless (leaf-type-p ty)
-          (setf (ltype-atomic-p ty)
-            (not 
-              (or (ltype-constraint-spec ty)
-                  (gethash ty inherit-constraint)
-                  (some #'(lambda (desc)
-                            (or (ltype-constraint-spec desc)
-                                (gethash desc inherit-constraint)))
-                    (ltype-descendants ty))))))))))
+  (dolist (node *type-names*)
+    (let ((type-entry (get-type-entry node)))
+      (let ((constraint-spec (ltype-constraint-spec type-entry)))
+	(unless (leaf-type-p type-entry)
+	  (setf (ltype-atomic-p type-entry)
+	    (not 
+	     (or constraint-spec
+		 (some #'ltype-constraint-spec
+		       (ltype-ancestors type-entry))
+		 (some #'(lambda (daughter)
+			   (or (ltype-constraint-spec daughter)
+			       (some #'ltype-constraint-spec
+				     (ltype-ancestors daughter))))
+		       (ltype-descendants type-entry))))))))))
 
 
 (defun expand-constraint (node type-entry)
@@ -1506,6 +959,7 @@
                       (wf-constraint-of type-name))
 	     (setf ok nil))))
     (setf *well-formed-trace* nil)
+    (unmark-type-table)
     ;; !!! can't create cyclic dags so don't check for them
     ok))
 
@@ -1522,23 +976,22 @@
         (if (ltype-appfeats type-entry)
           (let ((new-dag (ltype-inherited-constraint type-entry)))
             ;; !!! outside here must stay within current generation
-            ;; *unify-generation* is declared global, so save and reset it instead of rebinding 
-            (let ((old-unify-generation *unify-generation*)
+            (let ((*unify-generation* *unify-generation*)
                   (*within-unification-context-p* t))
               ;; establish new unification generation now, and also at
               ;; end (the usual place)
               (invalidate-marks)
               (prog1
-                (if (really-make-features-well-formed new-dag nil type-name)
-                    (let ((res (copy-dag new-dag)))
-                      (if res
-                        (setf (ltype-constraint type-entry) res)
-                        (format t "~%Warning: cycle in well-formed constraint for ~A" type-name)))
-                    ;; warning msg is excessive
-                    ;; (format t "~%Warning: cannot make constraint for ~A well-formed" type-name)
+                  (if (really-make-features-well-formed new-dag nil type-name)
+                      (let ((res (copy-dag new-dag)))
+                        (if res
+                            (setf (ltype-constraint type-entry) res)
+                          (format t "~%Warning: cycle in well-formed constraint for ~A" type-name)))
                     nil)
+                    ;; (format t "~%Warning: cannot make constraint for ~A well-formed" type-name))
+                    ;; warning msg is excessive
                 (invalidate-marks)
-                (setq *unify-generation* old-unify-generation))))
+                )))
           (setf (ltype-constraint type-entry)
             (ltype-inherited-constraint type-entry)))
         (mark-node-seen type-entry))

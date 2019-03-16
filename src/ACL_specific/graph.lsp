@@ -1,16 +1,12 @@
-;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
-;;; In McCLIM, the :tree graph type is adequate for parse trees. But in other CLIM
-;;; implementations, define :parse-tree, a new graph type for use with format-graph-from-root
+;;; Define :parse-tree, a new graph type for use with format-graph-from-root,
 ;;; that draws things that look more like traditional parse trees than what's
 ;;; produced by the :tree graph type.
 
 (in-package :clim-internals)
-
-#-:mcclim
-(progn
 
 (defclass parse-tree-graph-output-record (tree-graph-output-record) ())
 
@@ -63,17 +59,16 @@
 	      (layout-node child x1 y1 dx dy)
 	      (incf x1 (+ (graph-node-generation child) dx))))
 	  (setf (graph-node-x node) 
-	    (- (floor
-	          (+ (lkb::bounding-rectangle-center-x (car node-children))
-                     (lkb::bounding-rectangle-center-x (car (last node-children))))
-		  2)
+	    (- (floor (+ (point-x (bounding-rectangle-center 
+				   (car node-children)))
+			 (point-x (bounding-rectangle-center 
+				   (car (last node-children)))))
+		      2)
 	       (floor (bounding-rectangle-width node) 2))))
       ;; Leaf node
       (setf (graph-node-x node) 
 	(+ x (- (floor (graph-node-generation node) 2)
 		(floor (bounding-rectangle-width node) 2)))))))
-)
-
 
 #|  
 (defclass parse-chart-graph-output-record (directed-graph-output-record) ())

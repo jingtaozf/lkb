@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
@@ -304,7 +304,6 @@
   (with-slots (stream) fsout
     (format stream ")")))
 
-
 ;;; ***** simple print operations ************
 ;;; used by tty display
 
@@ -387,7 +386,7 @@
 (defmethod fs-output-reentrant-value-fn ((fsout edit) reentrant-pointer)
   (with-slots (stream indentation max-width type-label-list) fsout
     (move-to-x-y stream indentation (current-position-y stream))
-    (with-text-style-bold-face (stream)
+    (with-bold-output stream 
       (let ((start-pos (current-position stream)))
 	(add-active-pointer stream start-pos reentrant-pointer 
 			    type-label-list t))) 
@@ -397,7 +396,7 @@
 (defmethod fs-output-reentrant-fn ((fsout edit) reentrant-pointer)
   (with-slots (stream indentation type-label-list max-width) fsout
     (move-to-x-y stream indentation (current-position-y stream))
-    (with-text-style-bold-face (stream)
+    (with-bold-output stream
       (let ((start-pos (current-position stream)))
 	(add-active-pointer stream start-pos reentrant-pointer 
 			    type-label-list nil))) 
@@ -489,73 +488,6 @@
 (defmethod fs-output-record-end ((fsout edit) rpath)
    (with-slots (stream) fsout
         (store-fs-record-data-end stream rpath)))
-
-
-;;; ***** `display' is like 'edit', only with no bold text or active areas ************
-;;; used by type hierarchy display
-
-(defclass display (edit) 
-  ())
-
-(defmethod fs-output-reentrant-value-fn ((fsout display) reentrant-pointer)
-  (with-slots (stream indentation max-width type-label-list) fsout
-    (move-to-x-y stream indentation (current-position-y stream))
-    (let ((start-pos (current-position stream)))
-      (write-string (concatenate 'string 
-		       "<" (write-to-string reentrant-pointer) "> = ")
-        stream))
-    (setf indentation (current-position-x stream))
-    (setf max-width (max indentation max-width))))
-
-(defmethod fs-output-reentrant-fn ((fsout display) reentrant-pointer)
-  (with-slots (stream indentation type-label-list max-width) fsout
-    (move-to-x-y stream indentation (current-position-y stream))
-    (let ((start-pos (current-position stream)))
-      (write-string (concatenate 'string 
-		       "<" (write-to-string reentrant-pointer) ">")
-        stream))
-    (setf max-width (max (current-position-x stream) max-width))
-    (pop type-label-list)))
-
-(defmethod fs-output-atomic-fn ((fsout display) atomic-value)
-  (with-slots (stream indentation type-label-list max-width) fsout
-    (let ((y-pos (current-position-y stream)))
-       (move-to-x-y stream indentation y-pos) 
-       ; make start-pos the actual place where the type label starts!!
-       (let ((start-pos (current-position stream)))
-	  (write-string (string-downcase atomic-value) stream))
-          (setf max-width (max (current-position-x stream) max-width))
-          (pop type-label-list))))
-
-(defmethod fs-output-start-fs ((fsout display) type depth labels)
-  (declare (ignore labels) (special *type-print-fn*))
-  (with-slots (stream indentation indentation-vector type-label-list
-                max-width) fsout
-    (let ((y-pos (current-position-y stream)))
-       (move-to-x-y stream indentation y-pos)
-       (write-char #\[ stream)
-       (let ((start-pos (current-position stream)))   
-	  (funcall *type-print-fn* (string-downcase type) depth stream)
-          (setf max-width (max (current-position-x stream) max-width))
-          (setf (aref indentation-vector depth) 
-                (+ indentation (stream-string-width stream "[")))))))
-
-(defmethod fs-output-shrunk-fn ((fsout display) type) 
-   (with-slots (stream indentation type-label-list max-width) fsout
-     (let ((y-pos (current-position-y stream))
-           (start-pos (current-position stream)))
-        (move-to-x-y stream indentation y-pos)             
-	(write-string (string-downcase type) stream)
-        (frame-text-box stream start-pos (current-position stream))
-        (setf max-width (max (current-position-x stream) max-width))
-        (pop type-label-list))))
-
-#+:mcclim
-(defmethod fs-output-record-end ((fsout display) rpath)
-  ;; !!! see comments at clim:stream-set-cursor-position in ACL_specific/graphics.lsp
-  (declare (special *last-cursor-position-y*))
-  (unless rpath (setq *last-cursor-position-y* 0)))
-
 
 ;;; ********* outputting Antonio's TeX macros  ***********
 

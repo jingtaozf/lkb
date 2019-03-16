@@ -1,7 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 
-;;; Copyright (c) 2000--2018
+;;; Copyright (c) 2000--2002
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -34,7 +34,9 @@
 ;;; can obtain precise profiles without interference.  the conditionals make
 ;;; the code awkward to read, though, and should ultimately disappear.
 ;;;
-(defparameter *retroactivity-p* t)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :retroactivity *features*))
 
 (defparameter *hyper-activity-p* t)
 
@@ -52,7 +54,7 @@
 ;;;     to be excluded (solved --- 23-oct-99 -- oe).
 ;;;
 
-(defparameter *chart-packing-p* t) ; JAC 2-Aug-17: changed to t, having fixed a few issues
+(defparameter *chart-packing-p* nil)
 
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
@@ -72,7 +74,7 @@
   (when (> (abs *active-edge-id*) 
            (or *maximum-number-of-active-edges* *maximum-number-of-edges*))
      (error "next-active-edge(): ~
-             edge limit exhausted (see documentation for ~a)"
+             edge limit exhausted (see `~a')"
             (if *maximum-number-of-active-edges*
               "*maximum-number-of-active-edges*"
               "*maximum-number-of-edges*")))
@@ -350,23 +352,10 @@
       for rhs = (rule-rhs rule)
       for open = (rest rhs)
       for key = (first rhs)
-      unless (or
-               (and
-                 (cond
-                   ((null open) ; unary rule
-                      (or (/= begin *minimal-vertex*) (/= end *maximal-vertex*)))
-                   ((< key (first open)) ; all siblings follow key daughter
-                      (/= begin *minimal-vertex*))
-                   ((null (cdr open)) ; single sibling which precedes key daughter
-                      (/= end *maximal-vertex*))
-                   (t nil)) ; more complex arrangement of siblings
-                 (member (rule-id rule) *spanning-only-rules* :test #'eq)
-                 #+:adebug
-                 (progn (print-trace :filter-spanning-only rule passive) t))
-               (and open 
-                 (if (< (first open) key)
-                     (= begin *minimal-vertex*) 
-                     (= end *maximal-vertex*))))
+      unless (and open 
+                  (if (< (first open) key)
+                    (= begin *minimal-vertex*) 
+                    (= end *maximal-vertex*)))
       do
         (if (and (check-rule-filter rule (edge-rule edge) key)
                  (restrictors-compatible-p
@@ -429,19 +418,15 @@
          (preceding (actives-by-end begin))
          (following (actives-by-start end)))
     ;;
-    ;; if the edge's rule is spanning-only, check it covers the whole input.
+    ;; add .passive. to chart (indexed by start and end vertex); array handling
+    ;; is somewhat awkward here.
     ;;
-    (when (and
-            (rule-p prule)
-            (not (and (= begin *minimal-vertex*) (= end *maximal-vertex*)))
-            (member (rule-id prule) *spanning-only-rules* :test #'eq))
-        #+:adebug (print-trace :discard-spanning-only passive)
-        (return-from fundamental4passive))
-    ;;
-    ;; add .passive. to chart (indexed by start and end vertex).
-    ;;
-    (push passive (aref *chart* end 0))
-    (push passive (aref *chart* begin 1))
+    (if (aref *chart* end 0)
+      (push passive (aref *chart* end 0))
+      (setf (aref *chart* end 0) (list passive)))
+    (if (aref *chart* begin 1)
+      (push passive (aref *chart* begin 1))
+      (setf (aref *chart* begin 1) (list passive)))
     ;;
     ;; check to see whether .passive. is a complete parsing result; trigger
     ;; non-local exit when the maximal number of readings (to compute) has
@@ -449,10 +434,11 @@
     ;;
     (when (and *first-only-p*
                (= begin *minimal-vertex*) (= end *maximal-vertex*))
-      (let ((results (parses-from-spanning-edges (list pedge))))
-        (when results
-          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
-          (when (<= (decf *first-only-p* (length results)) 0)
+      (let ((result (find-spanning-edge passive begin end)))
+        (when result
+          (push (get-internal-run-time) *parse-times*)
+          (setf *parse-record* (nconc result *parse-record*))
+          (when (zerop (decf *first-only-p*))
             (throw :best-first t)))))
     ;;
     ;; create new tasks through postulation of rules over .passive.
@@ -527,11 +513,11 @@
 (defun packed-edge-p (start end edge)
   (labels (#+:pdebug
            (edge-label (edge)
-             (format
-              nil
-              "<~(~a~) ~d>"
+             (format 
+              nil 
+              "<~(~a~) ~d>" 
               (if (rule-p (edge-rule edge))
-                (rule-id (edge-rule edge))
+                (rule-id (edge-rule edge)) 
                 (edge-rule edge))
               (edge-id edge)))
            (freeze (edge id &optional recursivep)
@@ -550,61 +536,58 @@
                ;; freezings here.                           (29-jan-03; oe)
                ;;
                (when (minusp id) (incf (statistics-frozen *statistics*))))
-             (loop
+             (loop 
                  with id = (if recursivep id (- id))
                  for parent in (edge-parents edge) do
                    (freeze parent id t))))
-    (if (edge-partial-tree edge) ; JAC 3-Aug-2017: additional check to avoid error
-      nil
-      (loop
+    (loop
+        with dag = (tdfs-indef (edge-dag edge))
         for configuration in (passives-by-start start)
-        for oedge = (chart-configuration-edge configuration)
-        when (and (= (chart-configuration-end configuration) end)
-                  (null (edge-partial-tree oedge)) ; JAC 3-Aug-2017: additional check
-                  (restrictors-subsuming-p
-                    (edge-dag-restricted oedge) (edge-dag-restricted edge)))
-        do
-          (multiple-value-bind (forwardp backwardp)
-              (dag-subsumes-p (tdfs-indef (edge-dag oedge)) (tdfs-indef (edge-dag edge)))
-            (when (and forwardp (null (edge-frozen oedge)))
-              #+:pdebug
-              (format
-               t
-               "~&packed-edge-p(): ~
-                [~d:~d] packing ~a ~:[-->~;==~] ~a.~%"
-               start end (edge-label edge) backwardp (edge-label oedge))
-              (cond
-               (backwardp
-                (push edge (edge-equivalent oedge))
-                (incf (statistics-equivalent *statistics*)))
-               (t
-                (push edge (edge-packed oedge))
-                (incf (statistics-proactive *statistics*))))
-              (return configuration))
-            (when (and *retroactivity-p* backwardp)
-              #+:pdebug
-              (format
-               t
-               "~&packed-edge-p(): ~
-                [~d:~d] ~:[~;(re)~]packing ~a <-- ~a.~%"
-               start end (edge-frozen oedge)
-               (edge-label edge) (edge-label oedge))
-              ;;
-              ;; use nconc() here since .edge. can collect packings from more
-              ;; than one existing .oedge. in this loop()
-              ;;
-              (setf (edge-packed edge)
-                (nconc (edge-packed edge) (edge-packed oedge)))
-              (setf (edge-equivalent edge)
-                (nconc (edge-equivalent edge) (edge-equivalent oedge)))
-              (setf (edge-packed oedge) nil)
-              (setf (edge-equivalent oedge) nil)
-              (passives-delete configuration)
-              (unless (edge-frozen oedge)
-                (push oedge (edge-packed edge))
-                (incf (statistics-retroactive *statistics*)))
-              (freeze oedge (edge-id edge))))
-        finally (return nil)))))
+        when (= (chart-configuration-end configuration) end) do
+          (let* ((oedge (chart-configuration-edge configuration))
+                 (odag  (tdfs-indef (edge-dag oedge))))
+            (multiple-value-bind (forwardp backwardp)
+                (dag-subsumes-p odag dag)
+              (when (and forwardp (null (edge-frozen oedge)))
+                #+:pdebug
+                (format 
+                 t 
+                 "~&packed-edge-p(): ~
+                  [~d:~d] packing ~a ~:[-->~;==~] ~a.~%"
+                 start end (edge-label edge) backwardp (edge-label oedge))
+                (cond 
+                 (backwardp
+                  (push edge (edge-equivalent oedge))
+                  (incf (statistics-equivalent *statistics*)))
+                 (t
+                  (push edge (edge-packed oedge))
+                  (incf (statistics-proactive *statistics*))))
+                (return configuration))
+              #+:retroactivity
+              (when backwardp
+                #+:pdebug
+                (format 
+                 t 
+                 "~&packed-edge-p(): ~
+                  [~d:~d] ~:[~;(re)~]packing ~a <-- ~a.~%"
+                 start end (edge-frozen oedge) 
+                 (edge-label edge) (edge-label oedge))
+                ;;
+                ;; use nconc() here since .edge. can collect packings from more
+                ;; than one existing .oedge. in this loop()
+                ;;
+                (setf (edge-packed edge) 
+                  (nconc (edge-packed edge) (edge-packed oedge)))
+                (setf (edge-equivalent edge) 
+                  (nconc (edge-equivalent edge) (edge-equivalent oedge)))
+                (setf (edge-packed oedge) nil)
+                (setf (edge-equivalent oedge) nil)
+                (passives-delete configuration)
+                (unless (edge-frozen oedge)
+                  (push oedge (edge-packed edge))
+                  (incf (statistics-retroactive *statistics*)))
+                (freeze oedge (edge-id edge)))))
+        finally (return nil))))
 
 (defun process-rule-and-passive (task)
 
@@ -794,36 +777,30 @@
            (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
 (defun restrict-and-copy-tdfs (tdfs &key cfrom cto)
-  ;; delete arcs just holding constituents' feature structures -
-  ;; before copying otherwise their copies would be thrown away
-  ;; immediately we have to check whether any of the deleted dags
-  ;; contain a cycle - if so then the whole rule application should
-  ;; fail
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
          (new (clone-dag dag))
-         (restricted nil))
-    (flet ((remove-restricted-arcs (arcs)
-             (loop for arc in arcs
-                if (member (dag-arc-attribute arc) *deleted-daughter-features* :test #'eq)
-                do (push arc restricted)
-                else collect arc)))
-      (declare (dynamic-extent remove-restricted-arcs)) ; closure on stack
+         restricted)
+    (incf (statistics-copies *statistics*))
+    (flet ((remove-restricted-arcs (arcs &aux rest)
+             (dolist (arc arcs (nreverse rest))
+               (if (smember (dag-arc-attribute arc) 
+                            *deleted-daughter-features*)
+                 (push arc restricted)
+                 (push arc rest)))))
       (setf (dag-arcs new)
         (remove-restricted-arcs (dag-arcs new)))
       (setf (dag-comp-arcs new)
         (remove-restricted-arcs (dag-comp-arcs new)))
-      (when (and *characterize-p* (or cfrom cto))
-        (set-characterization-indef-within-unification-context new cfrom cto))
-      (let ((copy (copy-dag new)))
-        (if (and copy
-                 (not (cyclic-dag-p (make-dag :type *toptype* :arcs restricted))))
-            (progn
-              (incf (statistics-copies *statistics*))
-              (make-tdfs :indef copy :tail (copy-tdfs-tails tdfs))) ; c.f. copy-tdfs-elements
-            (progn
-              ;; charge copy failure to last successful unification
-              (decf (statistics-stasks *statistics*)) ; JAC - was incf but should surely be decf
-              nil))))))
+      (let ((result
+             (unless (cyclic-dag-p (make-dag :type *toptype* :arcs restricted))
+	       (if *characterize-p*
+		   (set-characterization-indef-within-unification-context new cfrom cto))
+               (let ((copy (copy-dag new)))
+                 (and copy 
+                      (make-tdfs :indef copy 
+                                 :tail (copy-list (tdfs-tail tdfs))))))))
+        (unless result (incf (statistics-stasks *statistics*)))
+        result))))
 
 (defun tdfs-qc-vector (tdfs &optional path)
   (let* ((dag (x-existing-dag-at-end-of (deref-dag (tdfs-indef tdfs)) path))

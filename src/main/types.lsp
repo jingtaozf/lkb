@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2018 
+;;; Copyright (c) 1991--2004 
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -75,7 +75,7 @@
       (call-next-method)
     ;; usual case
     (progn 
-      (write-string "#<Type " stream)
+      (write-string "#Type<" stream)
       (write-string (string (ltype-name instance)) stream)
       (write-char #\> stream))))
 
@@ -84,7 +84,6 @@
   (expanded-p nil))
         
 (defvar *types* (make-hash-table :test #'eq))
-#+:sbcl (declaim (sb-ext:always-bound *types* *toptype*))
 
 (defparameter *ordered-type-list* nil)
 
@@ -134,11 +133,9 @@
 (defmacro get-type-entry (name)
    `(gethash ,name *types*))
 
-(defun is-valid-type (x)
-   (typecase x
-      (null nil)
-      (symbol (get-type-entry x))
-      (string t)))
+(defun is-valid-type (name)
+   (or (get-type-entry name)
+      (stringp name)))
 
 (defun string-type-p (type-name)
   ;; AAC 30/12/94
@@ -216,24 +213,16 @@
       (error "~%~A is not a valid type" type-name))))
 
 (defun subtype-p (type1 type2)
-  ;; is type1 a strict subtype of type2?
-  ;; robust on invalid type names: if either of the args is not a type, the function
-  ;; returns nil and does not signal an error
-  (cond
-    ((not (symbolp type2)) nil)
-    ((symbolp type1)
-      ;; an alternative using the type unification machinery would be
-      ;; (and (not (eq type1 type2)) (eq (greatest-common-subtype type1 type2) type1))
-      ;; but that assumes the args are actually types, and can end up polluting the cache
-      ;; with lots of lexical types
-      (let ((t2 (get-type-entry type2)))
-        (and t2
-             (ltype-descendants t2) ; chance to return immediately
-             (let ((t1 (get-type-entry type1)))
-               (and t1
-                    (member t2 (ltype-ancestors t1) :test #'eq))))))
-    ((stringp type1)
-      (string-type-p type2))))
+  (if (stringp type1) 
+      (string-type-p type2)
+    (member (get-type-entry type2) (retrieve-ancestors type1)
+		:test #'eq)))
+
+(defun safe-subtype-p (type1 type2)
+  ;;
+  ;; be robust on invalid type names and fail gracefully (i.e. no error())
+  ;;
+  (ignore-errors (subtype-p type1 type2)))
 
 (defun atomic-type-p (type-name)
   (or (stringp type-name)
@@ -246,136 +235,129 @@
 
 ;;; Type unification performed by lookup in a global vector. Index is
 ;;; numeric combination of sxhash values of the two type names
-;;; (symbols): sxhash(t1) ^ sxhash(t2) mod 49157 where the two
+;;; (symbols): (sxhash(t1)&&1023)<<10 + sxhash(t2)&&1023 where the two
 ;;; types are ordered on their sxhash values - so that either order results
 ;;; in the same table entry being retrieved. Must also test the types
-;;; themselves in case another pair of types has the same key
+;;; themselves in case another pair of types has the same key. So a vector
+;;; entry is (type1 type2 . (subype . constraintp))
 
-(defconstant +type-cache-size+ (expt 2 16))
-
-(#+:sbcl sb-ext:defglobal #-:sbcl defvar *type-cache*
-  (make-array +type-cache-size+ :initial-element nil))
-
-(defstruct type-cache-entry t1 t2 sub con)
+(defparameter *type-cache* (make-array (* 1024 1024) :initial-element nil))
 
 (defun clear-type-cache nil
-   ;; For consistency this cache must be cleared before (re-)loading a grammar. It's
-   ;; probably best also to clear it after loading a grammar and before batch parsing
-   ;; since different pairs of types will be exercised
-   (fill *type-cache* nil)
-   nil)
+   ;; it's probably best to clear this out occasionally - definitely after
+   ;; loading a grammar and before parsing since different pairs of types will
+   ;; be exercised
+   (let ((arr *type-cache*))
+      (declare (simple-vector arr))
+      (dotimes (x (* 1024 1024)) (setf (svref arr x) nil))))
 
-(defun greatest-common-subtype (type1 type2)
-  ;; The args should be symbols or strings. For non-string types the results are cached.
-  ;; In practice we encounter only a very small proportion of the possible combinations
-  ;; of types, so it would be a bad idea to precompute all results
-  (flet
-     ((greatest-common-subtype-symbols (t1 t2)
-        (declare (symbol t1 t2))
-        (cond
-           ((eq t1 *toptype*) t2) ; don't cache on top type - result is always the other type
-           ((eq t2 *toptype*) t1)
-           (t
-              (let* ((h1 (sxhash t1))
-                     (h2 (sxhash t2))
-                     (index (logand (logxor h1 h2) (1- +type-cache-size+))) ; xor commutative
-                     (cache *type-cache*))
-                 (declare (fixnum h1 h2 index) (simple-vector cache) (optimize (safety 0)))
-                 (when (> h1 h2) (rotatef t1 t2)) ; impose a canonical ordering
-                 (loop
-                    with entries = (svref cache index)
-                    for e of-type type-cache-entry in entries
-                    when (and (eq (type-cache-entry-t1 e) t1) (eq (type-cache-entry-t2 e) t2))
-                    return (values (type-cache-entry-sub e) (type-cache-entry-con e))
-                    finally
-                    (multiple-value-bind (subtype constraintp)
-                         (full-greatest-common-subtype t1 t2)
-                       (setf (svref cache index)
-                          (cons
-                             (make-type-cache-entry :t1 t1 :t2 t2 :sub subtype :con constraintp)
-                             entries))
-                       (return (values subtype constraintp)))))))))
-     (cond
-        ((eq type1 type2) type1)
-        ((and (symbolp type1) (symbolp type2))
-           (greatest-common-subtype-symbols type1 type2))
-        ((stringp type1)
-           (when (or (and (stringp type2) (string= type1 type2))
-                     (string-type-p type2))
-              type1))
-        ((stringp type2)
-           (when (string-type-p type1) type2))
-        (t
-           (error "Inconsistency - unexpected arguments ~A and ~A to ~S"
-              type1 type2 'greatest-common-subtype)))))
+
+(defmacro sxhash-one-symbol (x)
+   ;; Hash values may change after a GC in MCL, but this is safe -- just
+   ;; results in cache misses
+   `(#+mcl ccl::%%eqhash #-mcl sxhash (the symbol ,x)))
+
+(defmacro type-cache-index (x)
+   ;; least significant 10 bits of sxhash(x)
+   `(logand (the fixnum (sxhash-one-symbol ,x)) 1023))
+
+(defmacro type-cache-entry (x y)
+   `(svref *type-cache*
+       (the fixnum (+ (the fixnum (ash (the fixnum ,x) 10)) (the fixnum ,y)))))
+
+(defmacro cached-greatest-common-subtype (type1 type2)
+  `(let ((t1 ,type1)
+         (t2 ,type2))
+      (if (eq t1 *toptype*)
+         ;; avoid caching on top type - result will always be other type
+         t2
+         (if (eq t2 *toptype*)
+            t1
+            (let* ((i1 (type-cache-index t1))
+                   (i2 (type-cache-index t2)))
+               (when (> (the fixnum i2) (the fixnum i1))
+                  (rotatef i1 i2) (rotatef t1 t2))
+               (let* ((entry (type-cache-entry i1 i2))
+                      (found
+                         (dolist (e entry)
+                            (when (and (eq (car e) t1) (eq (cadr e) t2))
+                               (return (cddr e))))))
+                   (if found
+                      (values (car found) (cdr found))
+                      (multiple-value-bind (subtype constraintp)
+                           (full-greatest-common-subtype t1 t2)
+                         (setf (type-cache-entry i1 i2)
+                            (nconc entry
+                              (list (list* t1 t2 (cons subtype constraintp)))))
+                         (values subtype constraintp)))))))))
+
 
 #|
 ;;; investigate effectiveness of greatest common subtype cache
-(loop for entries across *type-cache*
-   for len = (length entries)
-   with stats = nil
-   do (let ((x (assoc len stats))) (if x (incf (cdr x)) (push (cons len 1) stats)))
-   finally (return (sort stats #'> :key #'car)))
-(loop for n from 0 below (length *type-cache*)
-   for entries = (svref *type-cache* n)
-   when (= (length entries) 4)
-   do
-   (print n)
-   (print (loop for e in entries
-                collect (cons (type-cache-entry-t1 e) (type-cache-entry-t2 e)))))
-(clear-type-cache)
+(let ((max 0) (longest nil))
+   (dotimes (x (* 1024 1024))
+      (let ((entry (svref *type-cache* x)))
+         (when (> (length entry) max)
+            (setq max (length entry) longest entry))))
+   (values max longest))
 |#
 
 
+(defun greatest-common-subtype (type1 type2)
+  ;; implemented as a memo function. In practice we won't see anything
+  ;; like all possible combinations of arguments so best not to
+  ;; attempt to pre-compute the cache contents
+  ;;
+  ;; we expect both args to be lisp atoms, but either or both could be
+  ;; strings/string type.  String types are not cached
+  (cond 
+   ((eq type1 type2) type1)
+   ((arrayp type1)			; a string?
+    (when (or (equal type1 type2) (string-type-p type2))
+      type1))
+   ((arrayp type2) 
+    (when (string-type-p type1) type2))
+   (t
+    (cached-greatest-common-subtype type1 type2))))
+
 (defun full-greatest-common-subtype (type1 type2)
-  (flet ((intersection-eq (set1 set2)
-           (and set1 set2
-             (let ((set1-len (length set1)) (set2-len (length set2)))
-               (when (> set2-len set1-len)
-                 (rotatef set1 set2) ; make set1 be the larger one
-                 (rotatef set1-len set2-len))
-               (if (> set2-len 20) ; avoid poor performance if both contain >20 elements
-                   (let ((table (make-hash-table :test #'eq :size set2-len)) ; the smaller one
-                         (res nil))
-                     (dolist (e2 set2) (setf (gethash e2 table) t))
-                     (dolist (e1 set1 res) (when (gethash e1 table) (push e1 res))))
-                   (loop for e2 in set2 ; the smaller one
-                     when (member e2 set1 :test #'eq)
-                     collect e2))))))
-    (let ((t1 (get-type-entry type1))
-          (t2 (get-type-entry type2)))
-      (cond
-        ((eq type1 type2) type1)
-        ((member t2 (ltype-ancestors t1) :test #'eq)
-           type1)
-        ((member t1 (ltype-ancestors t2) :test #'eq)
-           type2)
-        (t
-          (let ((common-subtypes
-                  (intersection-eq (ltype-descendants t1) (ltype-descendants t2))))
-            (when common-subtypes
-              (let
-                ((gcsubtype-entries
-                   ;; find subtype whose own descendant list is shorter by just 1 (itself)
-                   (loop for ty in common-subtypes
-                     with sub-len = (1- (length common-subtypes))
-                     when (= (length (ltype-descendants ty)) sub-len)
-                     collect ty)))
-                (cond
-                  ((null gcsubtype-entries)
-                    (error
-"Type hierarchy inconsistent: ~A and ~A have common subtypes but descendant lists are contradictory"
-                      type1 type2))
-                  ((cdr gcsubtype-entries)
-                    (error
-"Type hierarchy inconsistent: ~A and ~A have common subtypes but no unique greatest common subtype"
-                      type1 type2))
-                  (t
-                    ;; return true as the second value if there is a constraint that may
-                    ;; have to be unified in
-                    (values (ltype-name (car gcsubtype-entries))
-                            (if (extra-constraint-p (car gcsubtype-entries) t1 t2)
-                                t))))))))))))
+  (let ((t1 (get-type-entry type1))
+	(t2 (get-type-entry type2)))
+    (cond 
+     ((eq type1 type2) type1)
+     ((member t2 (ltype-ancestors t1) :test #'eq)
+      type1)
+     ((member t1 (ltype-ancestors t2) :test #'eq)
+      type2)
+     (t (let* ((type1-desc (ltype-descendants t1))
+               (type2-desc (ltype-descendants t2))
+               (common-subtypes 
+                (intersection type1-desc type2-desc :test #'eq)))
+	  (when common-subtypes
+	    (let ((greatest-common-subtype-list
+		   (intersection
+		    common-subtypes 
+		    (reduce #'intersection 
+			    (mapcar #'(lambda (subtype)
+					(cons subtype 
+					      (ltype-ancestors subtype)))
+				    common-subtypes))
+                    :test #'eq)))
+	      (cond ((not (cdr greatest-common-subtype-list))
+		     (let ((gcsubtype-entry (car greatest-common-subtype-list)))
+		       (values (ltype-name gcsubtype-entry)
+                               (if (extra-constraint-p 
+                                    gcsubtype-entry
+                                    t1 t2) t))))
+		    ;; return true as the second value if there is a
+		    ;; constraint that may have to be unified in
+		    (greatest-common-subtype-list
+		     (error "~%~A and ~A have multiple common subtypes ~A"
+			    type1 type2
+                            (mapcar #'(lambda (x) (ltype-name x)) 
+                                    greatest-common-subtype-list)))
+		    (t (error 
+			"~%Error found in type hierarchy"))))))))))
 
 (defun extra-constraint-p (gcsubtype t1 t2)
   ;;; test is whether any ancestor of the gcsubtype which

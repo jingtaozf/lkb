@@ -1,7 +1,3 @@
-;;; Copyright (c) 1998--2018
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
-;;;   see `LICENSE' for conditions.
-
 (in-package :mrs)
 
 ;;;
@@ -86,11 +82,7 @@
 (defun unserialize-semantics-indices
     (&optional (forward lkb::*predicates-temp-file*)
                (backward lkb::*semantics-temp-file*))
-  ;; JAC 29-Oct-2018: rebind *read-eval* to t so we can read cdb datum items that
-  ;; contain forms for which there is no faithful printed representation, such as
-  ;; #.(COERCE "event" (QUOTE BASE-STRING))
-  (let ((*read-eval* t))
-    (loop
+  (loop
       with *package* = (find-package :lkb)
       with cdb = (cdb::open-read forward)
       for (key . datum) in (cdb::all-records cdb)
@@ -115,8 +107,8 @@
                    for (string . ids) in values
                    do (setf (gethash string table) ids))
                (push (cons role table) (gethash pred *relation-index*))))
-    (clrhash *semantic-table*)
-    (loop
+  (clrhash *semantic-table*)
+  (loop
       with *package* = (find-package :lkb)
       with cdb = (cdb::open-read backward)
       for (key . datum) in (cdb::all-records cdb)
@@ -124,9 +116,9 @@
       for record = (read-from-string datum)
       do
         (setf (gethash id *semantic-table*) record))
-    (cons
-      (hash-table-count *relation-index*)
-      (hash-table-count *semantic-table*))))
+  (cons
+   (hash-table-count *relation-index*)
+   (hash-table-count *semantic-table*)))
 
 (defun restore-semantic-indices ()
   (when (and (typep lkb::*lexicon* 'lkb::cdb-lex-database)
@@ -150,5 +142,5 @@
             (when (probe-file lkb::*predicates-temp-file*)
               (delete-file lkb::*predicates-temp-file*))
             (when (probe-file lkb::*predicates-temp-file*)
-              (delete-file lkb::*predicates-temp-file*))
+              (delete-file (delete-file lkb::*predicates-temp-file*)))
             nil))))))

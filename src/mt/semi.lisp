@@ -1,7 +1,7 @@
 (in-package :mt)
 
 ;;;
-;;; Copyright (c) 2004 -- 2018 Stephan Oepen (oe@ifi.uio.no)
+;;; Copyright (c) 2004 -- 2016 Stephan Oepen (oe@ifi.uio.no)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -141,20 +141,20 @@
   (let ((stream (make-string-input-stream line offset)))
     (labels ((read-role ()
                (let ((c (peek-char t stream nil nil)))
-                 (when (eql c #\.) (return-from read-role))
-                 (when (eql c #\,) (read-char stream nil nil)))
+                 (when (char= c #\.) (return-from read-role))
+                 (when (char= c #\,) (read-char stream nil nil)))
                (let* ((*package* (find-package mrs:*mrs-package*))
                       (c (peek-char t stream nil nil))
-                      (optionality (and (eql c #\[) (read-char stream)))
+                      (optionality (and (char= c #\[) (read-char stream)))
                       (name (ignore-errors (read stream nil nil)))
                       (type (ignore-errors (read stream nil nil)))
                       properties)
-                 (when (eql (peek-char t stream nil nil) #\{)
+                 (when (char= (peek-char t stream nil nil) #\{)
                    (read-char stream nil nil)
                    (loop
                        for c = (peek-char t stream nil nil)
-                       while (and c (not (eql c #\})))
-                       when (eql c #\,) do (read-char stream nil nil)
+                       while (and c (not (char= c #\})))
+                       when (char= c #\,) do (read-char stream nil nil)
                        else do
                          (let ((name (read stream nil nil))
                                (value (read stream nil nil)))
@@ -165,10 +165,10 @@
                        finally
                          (loop
                              for c = (read-char stream nil nil)
-                             while (and c (not (eql c #\}))))))
+                             while (and c (not (char= c #\}))))))
                  (unless (or (null optionality)
                              (let ((c (read-char stream nil nil)))
-                               (and c (eql c #\]))))
+                               (and c (char= c #\]))))
                    (return-from read-synopsis))
                  (when (and name type)
                    (let ((variable (make-variable

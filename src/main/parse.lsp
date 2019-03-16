@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2018
+;;; Copyright (c) 1991-2006
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,Ben Waldron
 ;;;   see `LICENSE' for conditions.
 
@@ -432,15 +432,15 @@
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
 
-#+(or :allegro :lispworks :ccl :sbcl)
+#+(or :allegro :lispworks)
 (defvar *parser-lock* (mp:make-process-lock))
 
 (defmacro with-parser-lock ((&optional foo) &body body)
   (declare (ignore foo))
-  #+(or :allegro :lispworks :ccl :sbcl)
+  #+(or :allegro :lispworks)
   `(mp:with-process-lock (*parser-lock*)
      ,@body)
-  #-(or :allegro :lispworks :ccl :sbcl)
+  #-(or :allegro :lispworks)
   `(progn ,@body))
 
 ;;;
@@ -608,12 +608,12 @@
                           t 
                           "~&Passive best-first mode only available for ~
                            unary and binary rules.~%~
-                           Disabling best-first mode: binding ~
+                           Disabling best-first mode: setting ~
                            *first-only-p* to `nil'.~%")
                          first-only-p))
-	 ;; (input (if (xml-p input) ; JAC 2019-03-09 - removed since already done above
-	 ;;	       (smaf::xml-to-saf-object input) 
-	 ;;	       input))
+	 (input (if (xml-p input)
+		    (smaf::xml-to-saf-object input);; extract object from maf xml
+		    input))
 	 (maf-p (smaf::saf-p input))
 	 (*maf-p* maf-p)
          ;;
@@ -711,14 +711,14 @@
                 (loop 
                     until (empty-heap *agenda*)
                     do (funcall (heap-extract-max *agenda*)))))
-            ;; record time for parse forest construction, before attempting to extract parses
-            (push (get-internal-run-time) *parse-times*)
-            ;; in first-only parsing (passive or active mode) the parse loop will already
-            ;; have found a complete parse - if there is one
             (unless first-only-p
-              (setq *parse-record* 
-                (parses-from-spanning-edges
-                  (find-spanning-edges *minimal-vertex* *maximal-vertex*))))))
+              ;;
+              ;; best-first (passive or active mode) has already done this
+              ;; incrementally in the parse loop
+              ;;
+              (setf *parse-record* 
+                (find-spanning-edges *minimal-vertex* *maximal-vertex*))))
+          (push (get-internal-run-time) *parse-times*))
         (when show-parse-p (show-parse))
         (values
          (statistics-etasks *statistics*)
@@ -737,36 +737,14 @@
    (statistics-mtasks *statistics*)))
 
 (defun file-xml-p (filename)
-  #+:xml ;; [bmw] return false if :xml not compiled in
+  #+:xml ;; [bmw] fail if :xml not compiled in
   (xml-p
-    (with-open-file (istream filename :direction :input)
-      (read-line istream nil "")))
-  #-:xml nil)
+   (read-file-to-string filename :numchars 5)))
 
 (defun xml-p (input)
   (and (stringp input) 
        (> (length input) 4)
-       (string= "<?xml" input :end2 5)))
-
-(defun parses-from-spanning-edges (edges)
-  ;; to avoid futile work in unpacking, apply start symbol filter before as well as
-  ;; after - it's safe to test packed edges against the start symbols using unification,
-  ;; but we can only check the additional root condition on unpacked parses because a
-  ;; check that goes beyond just unification could potentially return false on a parse
-  ;; forest root but true on a (more specific) analysis packed into that root
-  (declare (special *chart-packing-p*))
-  (let ((start-symbols
-            (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
-    (if *chart-packing-p*
-        (let ((mrs:*lnkp* nil))
-          (declare (special mrs:*lnkp*))
-          ;; turn off *lnkp* in unpacking otherwise during extract-mrs, extract-lnk-from-rel-fs
-          ;; may succeed but retrieve an incomplete span specification, e.g. (:characters 39) 
-          (compute-root-edges
-            (unpack-edges
-              (loop for edge in edges nconc (filter-root-edges edge start-symbols nil)))
-            start-symbols))
-        (compute-root-edges edges start-symbols))))
+       (string= "<?xml" (subseq input 0 5))))
 
 ;;; *****************************************************
 ;;;
@@ -803,17 +781,17 @@
 
 (defun set-characterization-indef-within-unification-context (indef-dag cfrom cto)
   (let ((*safe-not-to-copy* nil))
-    (setf *safe-not-to-copy* *safe-not-to-copy*) ; avoid compiler warning
-    (let ((replace-alist
-            `(,@(if cfrom `((cfrom . ,(princ-to-string cfrom))))
-              ,@(if cto `((cto . ,(princ-to-string cto)))))))
-      (if replace-alist
-          ;; need to restrict replacement to the RELS list, otherwise get MSG clashes
-          (replace-dag-types indef-dag
-                             (append mrs::*initial-semantics-path*
-                                     mrs::*psoa-liszt-path*)
-                             replace-alist)
-          indef-dag))))
+    (setf *safe-not-to-copy* *safe-not-to-copy*) ;; to avoid compiler warning
+    (let* ((replace-alist (list (cons 'cfrom  
+				      (format nil "~A" cfrom))
+				(cons 'cto  
+				      (format nil "~A" cto)))))
+	     ;;; need to restrict replacement to the RELS list
+	     ;;; otherwise get MSG clashes
+      (replace-dag-types indef-dag 
+			 (append mrs::*initial-semantics-path*
+				 mrs::*psoa-liszt-path*) 
+			 replace-alist))))
 
 (defun instantiate-chart-with-tokens (preprocessed-input)
   ;;; this is for the trivial case where the
@@ -2068,15 +2046,16 @@ an unknown word, treat the gap as filled and go on from there.
     (push config (aref *chart* right 0))
     ;; index chart edges by the start vertex too
     (push config (aref *chart* left 1))
-    ;; are we in best-first mode and did we just find a spanning config?
+    ;; Did we just find a parse?
     (when (and f (eql left (car f))
-	       (eql right (cdr f))
-               (not (edge-partial-tree edge)))
-      (let ((results (parses-from-spanning-edges (list edge))))
-        (when results
-          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
-          (when (<= (decf *first-only-p* (length results)) 0)
-            (throw :best-first t)))))))
+	       (eql right (cdr f)))
+      (let ((result (find-spanning-edge config (car f) (cdr f))))
+        (when result
+          (push (get-internal-run-time) *parse-times*)
+          (setf *parse-record* (nconc result *parse-record*))
+          (when *first-only-p*
+            (when (zerop (decf *first-only-p*))
+              (throw :best-first t))))))))
 
 
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
@@ -2235,57 +2214,92 @@ an unknown word, treat the gap as filled and go on from there.
             (if first-failed-p nil t))))))))
 
 
-(defun evaluate-unifications (rule child-fs-list
-                              &optional nu-orth child-edge-list backwardp cfrom cto)
-  ;; nu-orth is the new orthography if the unifications relate to a morphological
-  ;; process - to be inserted into the result fs
-  (let ((current-tdfs (rule-full-fs rule))
-        (rule-daughter-order
-          (if backwardp
-              (rule-daughters-order-reversed rule)
-              (cdr (rule-order rule))))
-        (n -1)
-        (new-orth-fs
-          ;; shouldn't really make a new tdfs here because we won't need it if a unification
-          ;; fails, but we must do it outside the unification context since they cannot nest
-          (when nu-orth
-            (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth)))))
+(defun evaluate-unifications (rule child-fs-list 
+			      &optional nu-orth child-edge-list backwardp cfrom cto)
+  ;; An additional optional argument is given. This is the new orthography if
+  ;; the unification relates to a morphological process. If it is present, it
+  ;; is inserted in the resulting fs
+  (let*
+      ((current-tdfs (rule-full-fs rule))
+       (rule-daughter-order
+	(if backwardp 
+	    (rule-daughters-order-reversed rule) 
+	  (cdr (rule-order rule))))
+       (n -1)
+       (new-orth-fs (when nu-orth
+                      (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth)))))
+    ;; shouldn't strictly do this here because we may not need it but
+    ;; otherwise we get a nested unification context error - cache the values
+    ;; for an edge
     (declare (type fixnum n))
     (with-unification-context (ignore)
       (dolist (rule-feat rule-daughter-order)
-        (incf n)
-        (let ((child-edge (pop child-edge-list)))
-          (cond
-            ((zerop n))
-            ((x-restrict-and-compatible-p
-               (if (listp rule-feat)
-                   (x-existing-dag-at-end-of
-                     (deref-dag (tdfs-indef current-tdfs)) rule-feat)
-                   (x-get-dag-value
-                     (deref-dag (tdfs-indef current-tdfs)) rule-feat))
-               (edge-dag-restricted child-edge)))
-            (t
-               (incf (statistics-ftasks *statistics*))
-               (return-from evaluate-unifications nil))))
-        (incf (statistics-etasks *statistics*))
-        (let ((child (pop child-fs-list)))
-          ;; if two daughters are eq, avoid the possibility of the unifier's subgraph
-          ;; sharing code creating spurious coreferences in the result
-          (when (member child child-fs-list :test #'eq)
-            (setq child (copy-tdfs-completely child)))
-          (if (setq current-tdfs
-                (yadu current-tdfs
-                      (create-temp-parsing-tdfs child rule-feat)))
-              (incf (statistics-stasks *statistics*))
-              (return-from
-                evaluate-unifications (values nil (zerop n)))))) ; first attempt failed?
-      ;; if (car (rule-order rule)) is nil then tdfs-at-end-of will return the
+	(incf n)
+	(let ((child-edge (pop child-edge-list)))
+	  (cond
+	   ((zerop n))
+	   ((x-restrict-and-compatible-p
+	     (if (listp rule-feat)
+	       (x-existing-dag-at-end-of 
+                (deref-dag (tdfs-indef current-tdfs)) rule-feat)
+	       (x-get-dag-value 
+                (deref-dag (tdfs-indef current-tdfs)) rule-feat))
+	     (edge-dag-restricted child-edge)))
+	   (t (incf (statistics-ftasks *statistics*))
+	      (return-from evaluate-unifications nil))))
+	(incf (statistics-etasks *statistics*))
+	(let ((child (pop child-fs-list)))
+	  ;; If two daughters are eq, the unifier's subgraph sharing code may
+	  ;; cause spurious coreferences in the result
+	  (when (member child child-fs-list :test #'eq)
+	    (setq child (copy-tdfs-completely child)))
+	  (if (setq current-tdfs
+		(yadu current-tdfs
+		      (create-temp-parsing-tdfs child rule-feat)))
+	      (incf (statistics-stasks *statistics*))
+	    (return-from
+		evaluate-unifications 
+	      (values nil (eql n 0))))))	; first attempt failed?
+      ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
-        (when new-orth-fs
-          (setq result (yadu result new-orth-fs)))
-        (when result
-          (restrict-and-copy-tdfs result :cfrom cfrom :cto cto))))))
+	(when new-orth-fs
+	  (setq result (yadu result new-orth-fs))) 
+	(when result
+	  ;; delete arcs just holding constituents' feature structures -
+	  ;; before copying otherwise their copies would be thrown away
+	  ;; immediately we have to check whether any of the deleted dags
+	  ;; contain a cycle - if so then the whole rule application should
+	  ;; fail
+	  (let* ((real-dag (deref-dag (tdfs-indef result)))
+		 (new (clone-dag real-dag))
+		 (arcs-to-check nil))
+	    (flet ((member-with-cyclic-check (arc)
+		     (when (member (dag-arc-attribute arc) 
+				   *deleted-daughter-features* :test #'eq)
+		       (push arc arcs-to-check)
+		       t)))
+	      (setf (dag-arcs new)
+		(remove-if #'member-with-cyclic-check (dag-arcs new)))
+	      (setf (dag-comp-arcs new)
+		(remove-if #'member-with-cyclic-check (dag-comp-arcs new)))
+	      ;; take advantage of the fact that removed arcs might share
+	      ;; structure by checking them all at once
+	      (let ((res
+		     (and
+		      (not (cyclic-dag-p
+			    (make-dag :type *toptype* 
+				      :arcs arcs-to-check)))
+		      (setf (dag-forward real-dag) new)
+;		      (copy-tdfs-elements result)
+		      (progn
+			(if *characterize-p*
+			    (set-characterization-indef-within-unification-context 
+			     (tdfs-indef result) cfrom cto))
+			(copy-tdfs-elements result)))))
+		(or res
+		    ;; charge copy failure to last successful unification
+		    (progn (incf (statistics-stasks *statistics*)) nil))))))))))
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
@@ -2310,74 +2324,95 @@ an unknown word, treat the gap as filled and go on from there.
 ;;; **********************************************************
 
 (defun find-spanning-edges (start-vertex end-vertex)
-  ;; return all edges between start and end vertices
-  (loop
-    for item in (aref *chart* end-vertex 0)
-    when 
-      (and (eql (chart-configuration-begin item) start-vertex)
-	   (not (edge-partial-tree (chart-configuration-edge item))))
-    collect (chart-configuration-edge item)))
+  ;; Returns all edges between two vertices and checks for root conditions -
+  ;; used to see if a parse has been found.
+  (let ((start-symbols (if (listp *start-symbol*)
+			   *start-symbol*
+			 (list *start-symbol*)))
+	(configs (aref *chart* end-vertex 0)))
+      (loop for item in configs
+	   append
+	    (when 
+		(and (eql (chart-configuration-begin item) start-vertex)
+		     (not (edge-partial-tree (chart-configuration-edge item))))
+	     ;; root may be a list of (td)fs with the interpretation that
+	     ;; if any of them match the parse is OK
+	     (if (null start-symbols)
+		 (list (chart-configuration-edge item))
+	       (if *substantive-roots-p*
+		   (create-new-root-edges item start-symbols
+					  start-vertex end-vertex)
+		 (filter-root-edges item start-symbols)))))))
 
-(defun compute-root-edges (edges roots)
-  ;; for any edges that satisfy the root condition(s) return their corresponding
-  ;; complete parses
-  ;; roots may be a list of (td)fs with the interpretation that if any of them
-  ;; match then this is OK as a parse
-  (if roots
-      (loop
-         for edge in edges
-         nconc
-         (if *substantive-roots-p*
-	     (create-new-root-edges edge roots)
-             (filter-root-edges edge roots t)))
-      edges))
+;; Decide if a single edge is a successful parse (when looking for the
+;; first parse only).
+
+(defun find-spanning-edge (item start-vertex end-vertex)
+  (when (and (eql (chart-configuration-begin item) start-vertex)
+	     (not (edge-partial-tree (chart-configuration-edge item))))
+    (let ((start-symbols (if (listp *start-symbol*)
+                           *start-symbol*
+                           (list *start-symbol*))))
+      (if (null start-symbols)
+        (list (chart-configuration-edge item))
+        (if *substantive-roots-p*
+	  (create-new-root-edges item start-symbols start-vertex end-vertex)
+          (filter-root-edges item start-symbols))))))
 
 (defparameter *additional-root-condition* nil
   "defined in mrs/idioms.lisp")
 
-(defun filter-root-edges (edge roots &optional (full-check-p t))
-  ;; NB despite the name of the function, the 1st arg is definitely a single edge
-  ;; if full-check-p is nil, skip any additional root condition test
-  ;; adding a quick check here tends to filter out very few candidates
-  (and
-    (loop
-       for root in roots
-       for rtdfs = (get-tdfs-given-id root) ; might be a type or a root entry
-       thereis
-       (and rtdfs (yaduablep rtdfs (edge-dag edge))))
-    (if (and full-check-p *additional-root-condition*)
-        (funcall *additional-root-condition* (edge-dag edge))
-        t)
-    (list edge)))
+(defun filter-root-edges (item roots)
+  (loop
+      with edge = (if (edge-p item) item (chart-configuration-edge item))
+      with tdfs = (edge-dag edge)
+      for root in roots
+      for rtdfs = (get-tdfs-given-id root) 
+		  ;; might be a type
+		  ;; or a root entry
+      thereis (when 
+                  (and tdfs rtdfs 
+                       (yaduablep rtdfs tdfs)
+                       (if *additional-root-condition*
+                           (funcall *additional-root-condition* tdfs)
+                         t))
+                (list edge))))
 
 ;;; FIX - can't really have substantive-roots-p and idioms
 ;;; need to stop it being set if idioms are loaded
 
-(defun create-new-root-edges (edge roots)
-  (loop
-      with tdfs = (edge-dag edge)
-      for root in roots
-      for rtdfs = (get-tdfs-given-id root) ; might be a type or a root entry
-      nconc
-      (when rtdfs
-         (let ((unif (yadu rtdfs tdfs)))
-            (when unif
-                 (let ((new-edge
-                         (make-edge :dag (copy-tdfs-elements unif)
-                                    :id (next-edge)
-                                    :category (indef-type-of-tdfs unif)
-                                    :rule root
-                                    :children (list edge)
-                                    :lex-ids (edge-lex-ids edge)
-                                    :leaves (edge-leaves edge)
-                                    :from (edge-from edge)
-                                    :to (edge-to edge))))
-                   (add-to-chart (edge-from edge)
-                                 new-edge
-                                 (edge-to edge)
-			         ;; Don't (recursively) check for success
-			         nil)
-                   (list new-edge)))))))
+(defun create-new-root-edges (item start-symbols start-vertex end-vertex)
+  (loop for start-symbol in start-symbols        
+       nconc
+       (let ((rtdfs (get-tdfs-given-id 
+                    start-symbol)))
+         (if rtdfs
+            (let ((unif
+                    (yadu rtdfs
+                          (edge-dag 
+                            (chart-configuration-edge item)))))
+               (if unif
+                   (let ((new-edge
+                          (make-edge :dag (copy-tdfs-elements unif)
+                                     :id (next-edge)
+                                     :category
+                                     (indef-type-of-tdfs unif)
+                                     :rule start-symbol
+                                     :children 
+                                     (list (chart-configuration-edge item))
+                                     :lex-ids (edge-lex-ids
+                                               (chart-configuration-edge item))
+                                     :leaves
+                                     (edge-leaves 
+                                      (chart-configuration-edge item))
+                                     :from start-vertex
+                                     :to end-vertex)))
+                     (add-to-chart start-vertex
+                                   new-edge
+                                   end-vertex
+				   ;; Don't (recursively) check for success
+				   nil)
+                     (list new-edge))))))))
 
 ;;; ***************************************************************
 ;;;
@@ -2512,47 +2547,39 @@ an unknown word, treat the gap as filled and go on from there.
 ;;;
 ;;; **************************************************************
 
-(defun parse-sentences (&optional input-file (output-file nil output-file-p)
-                        &rest rest)
-  ;; if output-file is nil or t, then output is suppressed or goes to standard-output,
-  ;; respectively
-  (unless input-file
-    (setq input-file
-      (or (ask-user-for-existing-pathname "Sentence file?")
-          (return-from parse-sentences))))
-  (cond
-     ((not (probe-file input-file))
-        (show-message-window
-          (format nil "Input file `~a' does not exist" input-file))
-        (return-from parse-sentences))
-     ((file-xml-p input-file) ; if xml input, assume SAF XML
-        (return-from parse-sentences
-          (apply #'process-saf-file-sentences input-file rest)))
-     (t (setq input-file (truename input-file))))
-  ;;
-  (unless output-file-p
-    (setq output-file
-      (or (ask-user-for-new-pathname "Output file?" input-file)
-          (return-from parse-sentences))))
-  (setq output-file
-    (cond
-      ((member output-file '(nil t)) output-file)
-      ((probe-file output-file))
-      (t (merge-pathnames output-file))))
-  (when (equal output-file input-file)
-    (show-message-window
-      (format nil "Not permitted to overwrite the input file `~a'" input-file))
-    (return-from parse-sentences))
-  ;;
-  (with-open-file (istream input-file :direction :input)
-    (let ((line (read-line istream nil 'eof)))
-      (if (member output-file '(nil t))
-          (batch-parse-sentences
-            istream output-file line #'extract-fine-system-sentence)
-          (with-open-file (ostream output-file :direction :output
-                           :if-exists :supersede :if-does-not-exist :create)
-            (batch-parse-sentences
-              istream ostream line #'extract-fine-system-sentence))))))
+(defun parse-sentences (&optional input-file (output-file 'unspec) &key rest)
+   (unless input-file 
+      (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
+   ;; if xml input assume SAF XML
+   (when (file-xml-p input-file)
+     (return-from parse-sentences
+       (apply #'process-saf-file-sentences (cons input-file rest))))
+   (when
+      (and input-file
+           (or (probe-file input-file)
+               (progn
+                 (show-message-window 
+                  (format nil "Input file `~a' does not exist" input-file))
+                 (return-from parse-sentences))))
+      (with-open-file (istream input-file :direction :input)
+         (if (eq output-file 'unspec)
+           (setq output-file 
+             (ask-user-for-new-pathname "Output file?" input-file))
+           (if (equal input-file output-file)
+               (progn
+                 (show-message-window 
+                  (format nil "Attempt to overwrite input file `~a'"input-file))
+                 (return-from parse-sentences))))
+         (unless output-file (return-from parse-sentences))
+         (let ((line (read-line istream nil 'eof)))
+            (if (and output-file (not (eq output-file t)))
+               (with-open-file (ostream output-file :direction :output
+                                :if-exists :supersede 
+                                :if-does-not-exist :create)
+		 (batch-parse-sentences istream ostream line 
+					#'extract-fine-system-sentence))
+	      (batch-parse-sentences istream t line
+				     #'extract-fine-system-sentence))))))
 
 
 (defparameter *do-something-with-parse* nil)
@@ -2564,89 +2591,98 @@ an unknown word, treat the gap as filled and go on from there.
 (defparameter *ostream* nil)
 
 (defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
-   ;; if *do-something-with-parse* is bound to a function, then this is called after parsing
-   ;; each sentence; otherwise the value of ostream determines what is output: either
-   ;; nil (no progress info or final summary), t (progress and summary to standard output),
-   ;; or a stream (ditto to the stream)
-   (setf *unanalysed-tokens* nil)
+  (setf *lex-ids-used* nil)
+  (setf *unanalysed-tokens* nil)
    (clear-type-cache)
-   (format t "~%;;; Parsing test file~%") (force-output)
+   (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)
          (edge-total 0)
          (parse-total 0)
+         ;; ask for recycling of safe dags
+         ;; NB lexical entries must not contain safe dags - so expand-psort-entry
+         ;; and friends must rebind *safe-not-to-copy-p* to nil
          (*print-right-margin* 300)
-         (start-time (get-internal-run-time))
-         #+:sbcl (gc-bytes (sb-ext:bytes-consed-between-gcs)))
-     #+:sbcl
-     (setf (sb-ext:bytes-consed-between-gcs)
-        (truncate (* #+:x86-64 1.5 #-:x86-64 0.75 (expt 2 30)))) ; 1.5 GB
+         (start-time (get-internal-run-time)))
      (unwind-protect
        (loop
-         (when (eq raw-sentence 'eof)
+         (when (eql raw-sentence 'eof)
+           (format t "~%;;; Finished test file")
            (unless (fboundp *do-something-with-parse*)
              (when ostream
-               (format ostream "~&~%;;; Total CPU time: ~A msecs~%"
-                       (round (* (- (get-internal-run-time) start-time) 1000)
-                              internal-time-units-per-second))
-               (format ostream ";;; Mean edges: ~,2F~%" (/ edge-total nsent))
-               (format ostream ";;; Mean parses: ~,2F~%" (/ parse-total nsent))))
-           (format t "~%;;; Finished test file~%") (finish-output)
+               (format ostream "~%;;; Total CPU time: ~A msecs~%" 
+                       (- (get-internal-run-time) start-time))
+               (format ostream "~%;;; Mean edges: ~,2F~%" 
+                       (/ edge-total nsent))
+               (format ostream "~%;;; Mean parses: ~,2F~%" 
+                       (/ parse-total nsent))))
            (lkb-beep)
            (return))
-        (let ((sentence
-                (string-trim '(#\Space #\Tab)
-                  (if access-fn (funcall access-fn raw-sentence) raw-sentence))))
-          (unless (or (zerop (length sentence)) (char= (char sentence 0) #\;))
-            (incf nsent)
-            (unless (fboundp *do-something-with-parse*)
-              ;; if we're doing something else, let that function control output
-              (when ostream
-                (format ostream "~&~A ~A " nsent sentence)
-                (force-output (if (eq ostream t) nil ostream))))
-            (let ((parse-input
-                    (split-into-words
-                      (if (fboundp 'preprocess-sentence-string)
-                          (funcall (symbol-function 'preprocess-sentence-string) sentence)
-                          sentence)))
-                   ;; ask for recycling of safe dags from the pool
-                   ;; NB lexical entries must not contain safe dags - so expand-psort-entry
-                   ;; and friends must rebind *safe-not-to-copy-p* to nil
-                   #+:pooling (*dag-recycling-p* t))
-              (#-:gdebug handler-case #+:gdebug progn
-                (progn
-                  #+:pooling (reset-pools #+:gdebug :forcep #+:gdebug t)
-                  (parse parse-input nil)
-                  (setf *sentence-number* nsent)
-                  (setf *sentence* sentence)
-                  (setf *parse-input* parse-input)
-                  (setf *ostream* ostream)
-                  (if (fboundp *do-something-with-parse*)
-                    (funcall *do-something-with-parse*)
-                    (when ostream
-                      (let ((n (length *parse-record*)))
-                        (incf parse-total n)
-                        (incf edge-total *edge-id*)
-                        (format ostream "~A ~A~%" n *edge-id*)))))
-                #-:gdebug
-                (storage-condition (condition)
-                  (format t "~&Memory allocation problem: ~A caused by ~A~%"
-                            condition raw-sentence))
-                #+(and (not :gdebug) (or :allegro :sbcl :ccl))
-                (#+:allegro excl:interrupt-signal
-                 #+:sbcl sb-sys:interactive-interrupt
-                 #+:ccl ccl:interrupt-signal-condition
-                  () (error "Interrupt signalled"))
-                #-:gdebug
-                (error (condition)
-                  (format t "~&Error: ~A caused by `~A'~%" condition raw-sentence))))))
-         (setq raw-sentence (read-line istream nil 'eof)))
-       (setq *lex-ids-used*
-         (collect-expanded-lex-ids *lexicon*))
-       (clear-chart) ; prevent access to any recycled dags
-       #+:sbcl (setf (sb-ext:bytes-consed-between-gcs) gc-bytes)
-       #+:sbcl (sb-ext:gc :full t) ; shrink process size back to normal
-       )))
-       
+#|
+         (when (eql (rem nsent 50) 49)
+            (clear-expanded-lex))      ; try and avoid image increasing
+					; at some speed cost
+					;
+					; duh - this now also clears
+					; generator indices - could fix
+					; but not important enough to
+					; worry about
+					|#
+         (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
+                                     raw-sentence)))
+            (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
+              (unless (or (equal sentence "") (char= (elt sentence 0) #\;))
+                (incf nsent)
+                (unless (fboundp *do-something-with-parse*)
+                  ;; if we're doing something else, 
+                  ;; let that function control the output
+                  (when ostream
+                    (format ostream "~A ~A " nsent interim-sentence)
+                    (finish-output ostream)))
+                 (let* ((munged-string 
+                         (if (fboundp 'preprocess-sentence-string)
+                             (preprocess-sentence-string sentence)
+                           sentence))
+                        (user-input (split-into-words munged-string))
+                        (*dag-recycling-p* t))
+                   (#-:gdebug 
+                    handler-case
+                    #+:gdebug
+                    progn
+                       (progn
+                         #+:pooling
+                         (reset-pools #+:gdebug t)
+                         (parse user-input nil)
+			 (setf *sentence-number* nsent)
+                         (setf *sentence* sentence)
+                         (setf *parse-input* user-input)
+                         (setf *ostream* ostream)
+                         (when (fboundp *do-something-with-parse*)
+                           (funcall *do-something-with-parse*)))
+                       #-:gdebug
+                       (storage-condition (condition)
+					  (format t "Memory allocation problem: ~A caused by ~A~%" condition raw-sentence))
+                       #+(and (not :gdebug) :allegro)
+		       (EXCL:INTERRUPT-SIGNAL () (error "interrupt-signal"))
+                       #-:gdebug
+                       (error (condition)
+                              (format t  "Error: ~A caused by ~A~%" condition raw-sentence)))
+                   (unless (fboundp *do-something-with-parse*)
+                     ;; if we're doing something else, 
+                     ;; let that function control the output
+                     (when ostream
+                       (let ((n (length *parse-record*)))
+                         (setf parse-total (+ parse-total n))
+                         (setf edge-total (+ edge-total *edge-id*))
+                         (format ostream "~A ~A~%" n 
+            ;;                     (edge-count)
+                                 *edge-id*))
+                       (finish-output ostream))))))
+            (loop for lex-id in (collect-expanded-lex-ids *lexicon*)
+               do
+               (pushnew lex-id *lex-ids-used*))
+            (setq raw-sentence (read-line istream nil 'eof))))
+       (clear-chart)))) ; prevent any recycled dags from hanging around
+
 (defun edge-count nil
   (let ((distinct-parse-edges nil))
     (dolist (p *parse-record*)

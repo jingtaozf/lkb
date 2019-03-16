@@ -1,59 +1,33 @@
-;;; Copyright (c) 1991-2017 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
 (in-package :lkb)
 
 ;;; Record source locations for things, and provide an interface to
-;;; display sources in emacs. In allegro, use built-in source recording
-;;; and lep facility. Otherwise, code it from scratch and assume we have
-;;; SWANK available (although possibly not currently running).
+;;; display sources in emacs
 
 (defun record-source (type stream position)
    (declare (ignore position))
-   #+:allegro
-   (setf (excl:source-file type :lkb) (excl::filename stream))
-   #-:allegro
-   (when (typep stream 'file-stream)
-     (setf (get type 'type-source-file) (pathname stream))))
+   (setf (excl:source-file type :lkb) (excl::filename stream)))
 
 (defun edit-source (thing)
-  (let ((source
-          #+:allegro (ignore-errors (excl:source-file thing :lkb))
-          #-:allegro (get thing 'type-source-file)))
+  (let ((source (ignore-errors (excl:source-file thing :lkb))))
     (when source
       (edit-file thing source))))
 
 (defun source-available-p (thing)
-  #+:allegro
   (and (lep:lep-is-running)
-       (ignore-errors (excl:source-file thing :lkb)))
-  #-:allegro
-  (and (or swank::*emacs-connection* (swank::default-connection))
-       (get thing 'type-source-file)))
+       (ignore-errors (excl:source-file thing :lkb))))
 
 (defun edit-file (thing file)
-  #+:allegro
   (when (lep:lep-is-running)
     (lep::eval-in-emacs (format nil "(find-tdl-definition \"~a\" \"~a\")"
 				thing 
 				#+:mswindows
 				(convert-backslashes-in-filename
 				 (format nil "~A" file))
-				#-:mswindows file)))
-  ;; eval-in-emacs requires (setq slime-enable-evaluate-in-emacs t) on the emacs side
-  #-:allegro
-  (flet
-    ((edit-fn ()
-      (swank:eval-in-emacs
-        `(find-tdl-definition
-           ,(string thing) ,(namestring (get thing 'type-source-file))))))
-    (cond
-      (swank::*emacs-connection* (funcall #'edit-fn))
-      ((swank::default-connection)
-        (swank::with-connection ((swank::default-connection))
-          (funcall #'edit-fn))))))
-
+				#-:mswindows file))))
 
 (defun convert-backslashes-in-filename (str)
   ;;; apparently needed for Windoze because the emacs interface
@@ -81,33 +55,31 @@
 ;; Redefine a single type
 
 (defun redefine-type (definition)
-  (setq *syntax-error* nil)
-  (let ((*readtable* (make-tdl-break-table)))
-    (with-input-from-string (istream definition)
-      (read-tdl-type-stream istream t)))
-  (unless *syntax-error* 
-    (if *amend-error*
-      (setq *amend-error* nil)
-      (when (patch-type-table) 
-	(canonicalise-feature-order)           
-	(set-up-type-interactions)
-	(format t "~%Done")
-	t))))
+  (setf *syntax-error* nil)
+  (with-output-to-top ()
+    (let ((*readtable* (make-tdl-break-table)))
+      (with-input-from-string (istream definition)
+	(read-tdl-type-stream istream t)))
+    (unless *syntax-error* 
+      (if *amend-error*
+          (setf *amend-error* nil)
+	(when (patch-type-table) 
+	  (canonicalise-feature-order)           
+	  (set-up-type-interactions)
+	  (format t "~%Done.")
+	  t)))))
 
 ;; Functions to manipulate emacs menu bar
 
 (defun add-lkb-menu (menu)
-  #+:allegro
   (lep::eval-in-emacs-query :string (format nil "(fi::install-menubar '~A)"
-					    menu))
-  #-:allegro
-  (error "~S not implemented" 'add-lkb-menu))
+					    menu)))
 
 
 #|
 
 ;; Use an emacs buffer as top-level window
-
+b
 (defun make-lkb-stream ()
   (let ((s nil))
     (flet ((foo (stream)

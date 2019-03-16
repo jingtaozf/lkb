@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003--2018
+;;; Copyright (c) 2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -38,9 +38,7 @@
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
   ;;; so we just need to find this
-  (let ((raw-xml
-          #+:pxml (net.xml.parser:parse-xml istream) ; JAC 2-Oct-2016
-          #-:pxml (xml:parse-xml istream)))
+  (let ((raw-xml (net.xml.parser:parse-xml istream)))
     (dolist (xml-el raw-xml)
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))

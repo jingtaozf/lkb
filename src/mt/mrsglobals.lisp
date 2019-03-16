@@ -31,7 +31,7 @@
 (setf *sem-relation-suffix* "_rel")
 
 (setf *ignored-extra-features* 
-  (union
+  (append
    (list (vsym "SORT") (vsym "INSTLOC"))
    *ignored-extra-features*))
 

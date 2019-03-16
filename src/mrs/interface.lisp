@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2017
+;;; Copyright (c) 1998--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -107,9 +107,7 @@
     (if fol-exp
 	(dolist (exp fol-exp)
 	  (if exp
-	    (progn
-	      (terpri stream)
-	      (write exp :stream stream :escape nil :pretty t))
+	      (format stream "~%~A" exp)
 	    (format stream "~%Expression cannot be converted"))))))
 
 

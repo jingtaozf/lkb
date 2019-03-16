@@ -140,7 +140,7 @@
 
 ;;; BOLD AND UNDERLINED OUTPUT
 
-(defmacro with-text-style-bold-face ((ostream) &rest body)
+(defmacro with-bold-output (ostream &rest body)
   `(let ((.current-codes. (multiple-value-list (view-font-codes ,ostream))))
      (set-stream-font-spec ,ostream '(:bold))
      ,@body

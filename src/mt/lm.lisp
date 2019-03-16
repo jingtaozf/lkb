@@ -2,7 +2,7 @@
 
 ;;;
 ;;; Copyright (c) 2004 -- 2006 Erik Velldal (erikve@ifi.uio.no)
-;;; Copyright (c) 2004 -- 2018 Stephan Oepen (oe@csli.stanford.edu)
+;;; Copyright (c) 2004 -- 2006 Stephan Oepen (oe@csli.stanford.edu)
 ;;;
 ;;; This program is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -282,13 +282,11 @@
          (setf *scrub-stream* nil)))
       (when *scrub-pid*
         (ignore-errors
-         ;; JAC 29-Oct-2018: first 2 args in each of the following 3 calls were incorrect so
-         ;; they would always have failed
-         (run-process (format nil "kill -HUP ~d" *scrub-pid*)
+         (run-process "kill -HUP ~d" *scrub-pid* 
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process (format nil "kill -TERM ~d" *scrub-pid*)
+         (run-process "kill -TERM ~d" *scrub-pid* 
                       :wait t :output "/dev/null" :error-output "/dev/null")
-         (run-process (format nil "kill -QUIT ~d" *scrub-pid*)
+         (run-process "(when kill -QUIT ~d" *scrub-pid* 
                       :wait t :output "/dev/null" :error-output "/dev/null"))
         (sys:os-wait nil *scrub-pid*)
         (setf *scrub-pid* nil))))

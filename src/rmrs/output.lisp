@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003--2018
+;;; Copyright (c) 2003--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -390,7 +390,7 @@ for gram.dtd and tag.dtd
                                  &optional surface ident)
   (declare (ignore cfrom cto surface ident))
   (with-slots (stream) rmrsout
-    (format stream " ~%"))) ; initial space otherwise bounding box could be incorrect
+    (format stream "~%")))
 
 (defmethod rmrs-output-end-fn ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -657,7 +657,7 @@ for gram.dtd and tag.dtd
   (declare (ignore cfrom cto surface ident))
   (with-slots (stream indentation xpos) rmrsout
     (setf indentation (+ indentation 70))
-    (format stream " ~%~VT" indentation)
+    (format stream "~%~VT" indentation)
     (setf xpos (lkb::current-position-x stream))))
 
 #+:lkb

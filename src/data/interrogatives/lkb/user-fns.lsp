@@ -56,6 +56,26 @@
 
 ;;; LinGO big grammar specific functions
 
+(defun do-parse nil
+  (let* ((sentence
+            (ask-for-strings-movable "Current Interaction"
+               `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
+    (when sentence
+      (setf *sentence* (car sentence))
+      (close-existing-chart-windows)
+      (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
+        (setq *last-parses*
+          (butlast
+           (cons str (remove str *last-parses* :test #'equal))
+           (max 0 (- (length *last-parses*) 25))))
+                                        ; limit number of sentences retained
+
+        (with-output-to-top ()
+          (parse
+           (split-into-words
+            (preprocess-sentence-string str))))))))
+
+
 
             
 (defun establish-linear-precedence (rule-fs)

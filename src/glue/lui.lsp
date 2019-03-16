@@ -1,6 +1,6 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
-;;; Copyright (c) 2003--2018
+;;; Copyright (c) 2003--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `LICENSE' for conditions.
 
@@ -25,13 +25,15 @@
   (format
    nil 
    "exec ~a -p"
-   #-:lkb-fos
+   #-(or :darwin :macosx)
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
                               :name "yzlui"))
-   #+:lkb-fos
+   #+(or :darwin :macosx)
    (namestring
     (make-pathname 
-     :directory '(:relative) ; JAC - assume yzlui is in path, as in yzlui-for-osx/INSTALL
+     :directory (pathname-directory
+		 (dir-append
+		  make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS")))
      :name "yzlui"))))
    
 (defparameter *lui-autonomy-p* t)
@@ -52,7 +54,7 @@
 
 (defun lui-initialize (&key runtimep port lui)
   (declare (ignore runtimep))
-
+  
   (lui-shutdown)
   #+:linux
   (let ((display (getenv "DISPLAY")))
@@ -60,13 +62,14 @@
       (return-from lui-initialize)))
   (setf *lui-application*
     (let* ((directory 
-            #-:lkb-fos
+            #-(or :darwin :macosx)
             (pathname-directory (pathname make::bin-dir))
-            #+:lkb-fos
-            '(:relative)) ; JAC - see duplicate code above
+            #+(or :darwin :macosx)
+            (pathname-directory
+             (dir-append
+              make::bin-dir '(:relative "yzlui.app" "Contents" "MacOS"))))
            (lui
-            (and (stringp lui) (> (length lui) 0)
-              (make-pathname :directory directory :name lui)))
+            (and (stringp lui) (make-pathname :directory directory :name lui)))
            (binary
             (if (and lui (probe-file lui))
               (namestring lui)
@@ -93,8 +96,8 @@
         (run-process *lui-application*
                      :wait nil
                      :output :stream :input :stream 
-                     #-:openmcl :error-output 
-                     #-:openmcl nil)
+                     #-(or :sbcl :openmcl) :error-output 
+                     #-(or :sbcl :openmcl) nil)
         #+:clisp
         (ext:make-pipe-io-stream *lui-application* :buffered nil))
       (setf foo foo)))
@@ -136,16 +139,16 @@
     (ignore-errors
      (run-process (format nil "kill -HUP ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null")
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
      (run-process (format nil "kill -TERM ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null")
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
      (run-process (format nil "kill -QUIT ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:openmcl :error-output
-		  #-:openmcl "/dev/null"))
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null"))
     #+:allegro
     (sys:os-wait nil %lui-pid%)
     (setf %lui-pid% nil))

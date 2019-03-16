@@ -83,7 +83,7 @@
                                  (chart-node-text-string node)
                (let ((start-pos (current-position str)))
                   (if bold-p
-                     (with-text-style-bold-face (str)
+                     (with-bold-output str
                         (stream-write-string str s 0 (length (the string s))))
                      (stream-write-string str s 0 (length (the string s))))
                   (add-active-chart-region

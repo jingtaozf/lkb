@@ -1,4 +1,4 @@
-;;; Copyright (c) 1997-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Frederik Fouvry
+;;; Copyright (c) 1997-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Frederik Fouvry
 ;;; see LICENSE for conditions
 
 (in-package :lkb)
@@ -32,29 +32,40 @@
 		  :accessor chart-window-selected-edge))	       
   :info-bar t
   :display-function 'draw-chart-window
-  :text-style (lkb-parse-tree-font)
-  ;; JAC 22-Nov-18: width and height were :compute, but then the window almost always fills
-  ;; the screen, which is not user-friendly...
-  :width 500
-  :height 500)
+  :width :compute 
+  :height :compute
+  :text-style (lkb-parse-tree-font))
 
 (clim:define-presentation-type word ())
-(clim:define-presentation-type edge ())
 
 (defun draw-chart-lattice (node title &key (horizontalp t) (subframe-p nil))
   (declare (ignore horizontalp))
   (when (and *main-chart-frame* (not subframe-p))
     (clim:execute-frame-command *main-chart-frame* 
 				'(clim-user::com-close-to-replace)))
+  ;; Initialize fonts
+  (setq *parse-tree-font* (clim:parse-text-style (lkb-parse-tree-font)))
   (mp:run-function "CHART" #'draw-chart-lattice-really
                    node title subframe-p))
                            
 (defun draw-chart-lattice-really (node title subframe-p)                    
-  (let ((chart-window (clim:make-application-frame 'chart-window)))
+  (let* ((chart-window (clim:make-application-frame 'chart-window))
+	 (yield-pane 
+	  (find :path (clim:frame-current-panes chart-window)
+		:test #'eq :key #'clim:pane-name)))
+    ;; Set up yield display
+    (setf (lkb-window-doc-pane chart-window) yield-pane)
+    #+:allegro
+    (clim:change-space-requirements 
+     yield-pane
+     :resize-frame t
+     :height (clim:text-style-height *parse-tree-font* yield-pane)
+     :max-height (clim:text-style-height *parse-tree-font* yield-pane))
     ;;
     (if subframe-p
-        (push chart-window *sub-chart-window-frames*)
-        (setf *main-chart-frame* chart-window))
+        (push chart-window
+              *sub-chart-window-frames*)
+      (setf *main-chart-frame* chart-window))
     (setf (chart-window-root chart-window) node)
     (setf (clim:frame-pretty-name chart-window) title)
     (clim:run-frame-top-level chart-window)))
@@ -62,48 +73,45 @@
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((chart-edges nil)
-        (root (chart-window-root window)))
+  (let ((*chart-edges* nil))
+    (declare (special *chart-edges*))
     ;; Don't bother if there's no chart
-    (when (get (chart-window-root window) 'chart-edge-descendents)
+    (unless (null (get (chart-window-root window) 'chart-edge-descendents))
       (clim:format-graph-from-root
-        root
-        #'(lambda (node stream)
-	    (unless (eq node root)
-              (multiple-value-bind (s lex-p) 
-	          (chart-node-text-string node)
-                (if lex-p
-                  (with-text-style-bold-face (stream)
-                    (clim:with-output-as-presentation (stream (symbol-name node) 'word)
-		      (write-string s stream)))
-                  (let ((cont (get node 'chart-edge-contents)))
-                    (push cont chart-edges)
-                    (clim:with-output-as-presentation (stream cont 'edge)
-                      (write-string s stream)))))))
-        #'(lambda (node) 
-            (get node 'chart-edge-descendents))
-        ;; Prevent connections being drawn from the dummy root node to the lexical edges.
-        ;; The CLIM spec omits to say what the `from' and `to' args are: nodes or
-        ;; graph-node-output-records
-        :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
-                        (declare (ignore to args))
-                        (unless
-                          (eq #-:mcclim from #+:mcclim (clim:graph-node-object from) root)
-		          ;; Allegro CLIM version used to call clim-internals::draw-linear-arc
-		          (clim:draw-line* stream x1 y1 x2 y2)))
-        :stream stream 
-        :graph-type :dag
-        :merge-duplicates t
-        :orientation :horizontal
-        :maximize-generations t
-        :generation-separation *tree-level-sep*
-        :within-generation-separation *tree-node-sep*
-        :center-nodes nil)
-      (setf (chart-window-edges window) chart-edges)
-      #+:mcclim
-      (setf (clim:frame-properties window 'finished) t) ; tested in wait-until-chart-ready
-      #-:mcclim
-      (setf (getf (clim:frame-properties window) 'finished) t))))
+       (chart-window-root window) 
+       #'(lambda (node stream)
+           (multiple-value-bind (s bold-p)
+               (chart-node-text-string node)
+             (clim:with-text-face (stream (if bold-p :bold :roman))
+               (let ((cont (get node 'chart-edge-contents)))
+                 (if cont
+                     (progn
+                       (push cont *chart-edges*)
+                       (clim:with-output-as-presentation 
+                           (stream cont 'edge)
+                         (write-string s stream)))
+		   (clim:with-output-as-presentation 
+		       (stream (symbol-name node) 'word)
+		     (write-string s stream)))))))
+       #'(lambda (node) 
+           (get node 'chart-edge-descendents))
+       ;; This trickery is to avoid drawing the connections from the dummy
+       ;; root node to the lexical edges
+       :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
+                       (when (or (not (symbolp to))
+                                 (not (get from 'root)))
+			 (apply #'clim-internals::draw-linear-arc
+			        (append (list stream from to x1 y1 x2 y2)
+			                args))))   
+       :stream stream 
+       :graph-type :dag
+       :merge-duplicates t
+       :orientation :horizontal
+       :maximize-generations t
+       :generation-separation *tree-level-sep*
+       :within-generation-separation *tree-node-sep*
+       :center-nodes nil)
+      (setf (chart-window-edges window) *chart-edges*))))
 
 (defun chart-node-text-string (node)
   (let ((edge (get node 'chart-edge-contents)))
@@ -118,7 +126,7 @@
 						(t (edge-category edge)))))
 	   nil))
       (if (get node 'root)
-	(values "" t)
+	  ""
 	(values (format nil "~a~a"
 			(if (and *characterize-p* (get node 'chart-lex-edge))
 			    (with-slots (from to)
@@ -127,14 +135,15 @@
 			  "")
 			(tree-node-text-string node)) t)))))
 
-;; Update the yield pane when we are over an edge
+;; Update the yield window when we are over an edge
 
 (define-info-bar edge (edge-record stream)
   (let ((yield (when edge-record (edge-leaves edge-record))))
     (when yield
-      (dolist (word yield)
-	(write-string (string-downcase word) stream)
-	(write-char #\space stream)))))
+      (clim:with-text-style (stream *parse-tree-font*)
+	(dolist (word yield)
+	  (write-string (string-downcase word) stream)
+	  (write-char #\space stream))))))
 
 ;; Click on background to clear selection
 
@@ -228,14 +237,15 @@
          (path1 *path1*)
          (result nil))
     (when (and fs1 (listp path1))
-      (setq result
-        (unify-paths-with-fail-messages 
-          (create-path-from-feature-list path1)
-            fs1
-            (create-path-from-feature-list nil)
-            (tdfs-indef fs)
-            :selected1 path1 :selected2 nil))
-      (terpri)
+      (with-output-to-top ()
+        (setf result
+          (unify-paths-with-fail-messages 
+           (create-path-from-feature-list path1)
+           fs1
+           (create-path-from-feature-list nil)
+           (tdfs-indef fs)
+           :selected1 path1 :selected2 nil))
+        (terpri))
       (when result
         (display-fs result "Unification result")))
     (setq *fs1* nil)))            

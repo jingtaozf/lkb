@@ -1,137 +1,70 @@
-;;; Copyright (c) 1991-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see LICENSE for conditions
 
 ;;; Functions moved from io-paths/typeinput.lsp
 
 (in-package :lkb)
 
-(defparameter *brief-format-messages-p* nil
-  "controls whether the TDL reader outputs error and warning messages with a brief filename:line:column location or with a longer textual description")
+(defun check-for (character istream name)
+   (let ((next-char (peek-with-comments istream)))
+     (if (char= next-char character)
+         (read-char istream)
+       (progn 
+         (setf *syntax-error* t)
+         (format t 
+                 "~%Syntax error: ~A expected and not found in ~A at position ~A" 
+                 character name (file-position istream))
+         (format t 
+                 "~%Inserting ~A" character)
+         character))))
 
-
-(defun check-for (expected istream name)
-  (let ((next-char (peek-with-comments istream)))
-    (if (eql next-char expected)
-        (read-char istream)
-        (progn 
-          (lkb-read-cerror istream "~A expected but not found in ~A" expected name)
-          (format t "~%Proceeding assuming ~A" expected)
-          (force-output)
-          expected))))
-
-(defun check-for-string (str istream name)
-  (loop
-    with errorp = nil
-    for found = (peek-with-comments istream)
-      then (peek-char nil istream nil 'eof)
-    for expected across str
-    do
-    (if (eql found expected)
-      (read-char istream)
-      (setq errorp t))
-    finally
-    (when errorp 
-      (lkb-read-cerror istream "~A expected but not found in ~A" str name)
-      (format t "~%Proceeding assuming ~A" str)
-      (force-output))
-    (return str)))
-
-
-;;; Reporting input file syntax errors
-
-(defun lkb-read-line/char-numbers (str)
-  ;; locate current file position on stream str in terms of lines and characters
-  ;; NB It's tempting to think that all we need is read-sequence or read-char with call
-  ;; counting, but that won't work since the file position is in units of bytes not
-  ;; characters. Nor can a character's integer code help us determine the number of bytes
-  ;; it occupied in the original file (unless we know the file's encoding e.g. UTF-8)
-  (let ((target (ignore-errors (file-position str))))
-    (unless (and target
-                 (ignore-errors (file-position str :start)))
-      (return-from lkb-read-line/char-numbers (values 0 0))) ; invalid line/char
-    (let* ((char-pos (lkb-read-character-count str target))
-           (s (make-string char-pos)))
-      (file-position str :start)
-      (read-sequence s str)
-      (file-position str target) ; we should be exactly there already, but let's play safe
-      (values
-        (1+ (loop for c character across s ; in sbcl, much faster than calling count
-                  count (char= c #\Newline)))
-        (- char-pos (or (position #\Newline s :from-end t) 0))))))
-
-(defun lkb-read-character-count (str target)
-  ;; compute character index corresponding to target byte position in a file stream:
-  ;; starting at the beginning, repeatedly consume n/4 characters, where n is the
-  ;; difference between the target byte position and the current byte position (there
-  ;; cannot be more characters than this since each unicode character occupies a maximum
-  ;; of 4 bytes in any file encoding) - finally reading character-by-character once we
-  ;; are within 20 bytes
-  (loop
-    with byte-pos = 0
-    with s = (make-string (truncate target 4))
-    with nchars = 0
-    initially (file-position str :start)
-    for bytes-left = target then (- target byte-pos)
-    do
-    (incf nchars (read-sequence s str :end (truncate bytes-left 4)))
-    (setq byte-pos (file-position str))
-    until (>= byte-pos (- target 20))
-    finally
-    (loop
-      until (>= (file-position str) target) ; checking > in case target (wrongly) inside a char
+(defun check-for-string (str istream)
+  (loop for character in (coerce str 'list)
       do
-      (when (eql (read-char str nil 'eof) 'eof) (loop-finish)) ; eof if target > file-length
-      (incf nchars)
-      finally (return-from lkb-read-character-count nchars))))
+	(let ((next-char (peek-char t istream nil 'eof)))
+	  (if (char= next-char character)
+	      (read-char istream)
+	      (error 
+                 "~%Syntax error: ~A expected and not found at position ~A" 
+                 character (file-position istream))))))
 
 
-(defun lkb-read-cerror (istream control &rest args)
-  (setq *syntax-error* t)
-  (multiple-value-bind (l c) (lkb-read-line/char-numbers istream)
-    (format t "~%~:[~*Syntax error at line ~A, character ~A:~;~A:~A:~A: Error:~] ~?"
-      *brief-format-messages-p*
-      (if (typep istream 'file-stream)
-        (enough-namestring ; relative to parent directory of script file
-          (pathname istream) (parent-directory))
-        "tdl-fragment")
-      l c control args))
-  (force-output))
+(defun lkb-read-cerror (istream string &rest rest)
+  (setf *syntax-error* t)
+  (apply #'format 
+         (append (list t 
+                       (concatenate 'string "~%Syntax error at position ~A: " string)  
+                       (file-position istream))
+                 rest)))
 
 (defun morph-read-cerror (string)
   ;;; variant of above for morphology rules
   (setf *syntax-error* t)
   (format t "~A" string)
-  (force-output)
   nil)
   
 
 (defun ignore-rest-of-entry (istream name)
-  ;; called after a syntax error when reading a grammar etc file
-  ;; looks for . followed by whitespace that includes 2 newlines
-  ;; JAC 18-Oct-2018 - changed from 1 newline since otherwise many misleading
-  ;; false positives from .'s inside comments and docstrings, which are now
-  ;; allowed within entries not just between them
-  (flet
-    ((space*-newline-p ()
-       (loop
-          for c = (peek-char nil istream nil 'eof)
-          do
-          (cond
-            ((member c '(eof #\page #\newline #\linefeed #\return))
-              (read-char istream nil 'eof)
-              (return t))
-            ((whitespacep c) (read-char istream))
-            (t
-              (return nil))))))
-    (format t "~%Ignoring (part of) entry~@[ for ~A~]~%" name)
-    (finish-output)
-    (loop 
-      (let ((next-char (peek-char #\. istream nil 'eof)))
-        (if (eql next-char 'eof) (return))
-        (read-char istream)
-        (when (and (space*-newline-p) (space*-newline-p))
-          (return))))
-    (throw 'syntax-error nil)))
+  ;;; called after a continuable error
+  ;;; looks for . followed by a newline etc, 
+  ;;; possibly with intervening blank space between the . and newline
+  (format t "~%Ignoring (part of) entry for ~A" name)
+  (loop 
+    (let ((next-char
+           (peek-char #\. istream nil 'eof)))
+      (when (eql next-char 'eof) (return))
+      (read-char istream)
+      (when
+          (loop
+            (let ((possible-newline
+                   (read-char istream nil 'eof)))
+              (when (member possible-newline 
+                            '(eof #'\page #\newline #\linefeed #\return))
+                (return t))
+              (when (not (whitespacep possible-newline))
+                (return nil))))
+        (return))))
+  (throw 'syntax-error nil))
   
 
 (defun define-break-characters (char-list)
@@ -143,43 +76,16 @@
             temporary-readtable))
       temporary-readtable))
 
-
-;;; Reading and writing
-
 (defun lkb-read (istream &optional strings-allowed)
-  ;; read a DQString or Identifier
-  (if (eql (peek-char t istream nil 'eof) #\") ; !!! skip any leading whitespace - too lax?
-      (if strings-allowed
-        (handler-case (read istream)
-          (error (c) (lkb-read-cerror istream "~A" c)))
-        (progn
-          (lkb-read-cerror istream "Double quoted string found but not expected")
-          (ignore-rest-of-entry istream nil)))
-      (loop
-        with chars = nil
-        for c = (peek-char nil istream nil 'eof)
-        while
-        (and (not (eql c 'eof))
-          ;; whitelist approach that didn't quite work out
-          ;; NB alphanumericp + #\_ is not fully equivalent to /\w/ in a unicode environment,
-          ;; since it does not cover the further 9 connector punctuation characters
-          ;; (or (alphanumericp c)
-          ;;     (find c "_+*?-" :test #'char=))
-          ;;
-          ;; blacklist approach
-          ;; [^\s!"#$%&'(),.\/:;<=>[\]^|]+
-          (and (not (whitespacep c))
-               (not (find c "!\"#$%&'(),./:;<=>[]^|" :test #'char=))))
-        do
-        (push (read-char istream) chars)
-        finally
-        (unless chars
-          (lkb-read-cerror istream "Expected an identifier but found ~A"
-            (if (eql c 'eof) "end of file" c))
-          (unless (eql c 'eof) (ignore-rest-of-entry istream nil)))
-        (return
-          (intern (nstring-upcase (coerce (nreverse chars) 'string)) :lkb)))))
-
+  (with-package (:lkb)
+    (let ((item (read istream)))
+      (if (stringp item)
+        (if strings-allowed 
+          item 
+          (error "~%~S should not be a string" item))
+        (if (symbolp item)
+          item
+          (convert-to-lkb-symbol item))))))
 
 (defun convert-to-lkb-symbol (item)
   (intern (format nil "~S" item) :lkb))
@@ -195,13 +101,12 @@
   (multiple-value-bind
       (sec min hour date month year)
       (get-decoded-time)
-    (format (or stream t) "~%~2,'0D:~2,'0D:~2,'0D ~A ~A ~A~%" hour min sec date 
+    (format (or stream t) "~%~A:~A:~A ~A ~A ~A~%" hour min sec date 
             (ecase month
                 (1 "Jan") (2 "Feb") (3 "Mar") (4 "Apr") (5 "May") 
                 (6 "Jun") (7 "Jul") (8 "Aug") (9 "Sep") (10 "Oct")
                 (11 "Nov") (12 "Dec"))
             year)))
-
 
 ;;; moved from toplevel.lsp because they are needed for the tty version
 
@@ -358,24 +263,25 @@
 (defun read-script-file-aux (file-name)
   (with-package (:lkb)
     (when file-name
-      (let (#+:allegro (excl:*redefinition-warnings* nil)
-            #+(or :mcl :ccl) (ccl:*warn-if-redefine* nil)
-            #+(or :mcl :ccl) (ccl::*suppress-compiler-warnings* t)
-            #+:sbcl (sb-ext:*muffled-warnings* t)
-            #+:sbcl (*trace-output* *standard-output*) ; interleave any output from time macro
+      (let (#+allegro (excl:*redefinition-warnings* nil)
+            #+mcl (*warn-if-redefine* nil)
+            #+mcl (ccl::*suppress-compiler-warnings* t)
             (*syntax-error* nil))
         (setf *current-grammar-load-file* file-name)
-        #-:tty (enable-grammar-reload-interactions)
-        (clear-almost-everything)
-        (load file-name)
-        (build-rule-filter)
-        (build-lrfsm)
-        #+:lui (when (lui-status-p) (lui-parameters))
-        (mt:activate-transfer)
-        (lkb-beep)
-        (if *syntax-error*
-          (format t "~%WARNING: There were one or more errors - check messages~%")
-          (format t "~%Grammar input complete~%"))))))
+        #-:tty
+        (enable-grammar-reload-interactions)
+      (clear-almost-everything)
+      (load file-name)
+      (build-rule-filter)
+      (build-lrfsm)
+      #+:lui
+      (when (lui-status-p) (lui-parameters))
+      (mt:activate-transfer)
+      (lkb-beep)
+      (if *syntax-error*
+        (format t "~%WARNING: error(s) - check messages")
+        (format t "~%Grammar input complete~%"))))))
+
 
 
 (defun clear-almost-everything nil
@@ -401,18 +307,17 @@
     (smaf:reset-conf)
     (mt:initialize-transfer))
 
-
 (defun reload-script-file nil
   (if (and *current-grammar-load-file* 
            (probe-file *current-grammar-load-file*))
-    (read-script-file-aux *current-grammar-load-file*)
+      (read-script-file-aux *current-grammar-load-file*)
     (progn
       (if *current-grammar-load-file*
-        (format t  "~%Error: existing script file ~A cannot be found~%"
+        (format t  "~%Error - existing script file ~A cannot be found"
                 *current-grammar-load-file*)
-        (format t  "~%Error: no existing script file~%")) 
-      #-:tty (format t "~%Use Load Complete Grammar instead~%")
-      #+:tty (format t "~%Use (read-script-file-aux file-name) instead~%"))))
+        (format t  "~%Error - no existing script file")) 
+     #-:tty(format t "~%Use Load Complete Grammar instead")
+     #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
 
 
 ;;; Utilities to simplify script file
@@ -487,7 +392,7 @@
   #-(or :allegro :lispworks)
   (declare (ignore compile))
   
-  (let ((file (merge-pathnames (pathname name) ; `name' could also include a type
+  (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (if (probe-file file)
       ;;
@@ -515,12 +420,12 @@
       (load 
        (if compile (compile-file file :load t :print nil :verbose nil) file))
       #-(or :allegro :lispworks)
-      (load file :print nil)
+      (load file)
       (unless optional
         (cerror "Continue loading script" "~%File ~A not found" file)))))
 
 (defun load-lkb-preferences (directory name)
-  (let ((file (merge-pathnames (pathname name) 
+  (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (when (probe-file file)
       (load file))
@@ -904,26 +809,7 @@
       ;:jis
       ;:shiftjis
       )
-    #+:ccl
-    '(
-      (:iso8859-1 . :iso-8859-1)
-      (:iso8859-2 . :iso-8859-2)
-      (:iso8859-3 . :iso-8859-3)
-      (:iso8859-4 . :iso-8859-4)
-      (:iso8859-5 . :iso-8859-5)
-      (:iso8859-6 . :iso-8859-6)
-      (:iso8859-7 . :iso-8859-7)
-      (:iso8859-8 . :iso-8859-8)
-      (:iso8859-9 . :iso-8859-9)
-      (:iso8859-14 . :iso-8859-14)
-      (:iso8859-15 . :iso-8859-15)
-      (:utf8 . :utf-8)
-      :gb2312
-      (:euc . :euc-jp)
-      (:|932| . :windows-31j)
-      (:|936| . :cp936)
-      )
-    #-(or :allegro :sbcl :ccl)
+    #-(or :allegro :sbcl)
     NIL
     )
 
@@ -956,9 +842,7 @@
 	(setf coding
 	  (canonical-coding-system-name coding))
       (error "set-coding-system(): invalid coding system `~a'.~%~%~
-valid coding systems are~%~a"
-        raw
-        (write-to-string %coding-system-names% :length nil)))
+valid coding systems are~%~a" raw %coding-system-names%))
     (setf internal-coding-name (internal-coding-system-name coding))
     (if (not internal-coding-name)
 	(format t
@@ -976,15 +860,7 @@ valid coding systems are~%~a"
 	    internal-coding-name))
 	  (format t "~&set-coding-system(): activated ~a." coding)
 	(format t "~&set-coding-system(): mysterious problem activating ~a." coding))
-      #+:ccl
-      (if (ignore-errors (ccl:make-external-format :character-encoding internal-coding-name))
-	(progn
-	  (setq ccl:*default-file-character-encoding* internal-coding-name
-	        ccl:*default-socket-character-encoding* internal-coding-name
-	        ccl:*terminal-character-encoding-name* internal-coding-name)
-	  (format t "~&set-coding-system(): activated ~a." coding))
-	(format t "~&set-coding-system(): mysterious problem activating ~a." coding))
-      #-(or :allegro :sbcl :ccl)
+      #-(or :allegro :sbcl)
       (format
        t
        "~&set-coding-system(): ignoring request for ~a on this Lisp implementation."

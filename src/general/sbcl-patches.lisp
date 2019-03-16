@@ -2,8 +2,6 @@
 
 (in-package "COMMON-LISP-USER")
 
-(setf *load-verbose* t)
-
 ;;;
 ;;; make the SBCL compiler just a little less verbose
 ;;;
@@ -11,14 +9,18 @@
 (declaim (sb-ext:muffle-conditions style-warning))
 
 ;;;
-;;; we have a modern eval-when()
+;;; chances are we have a modern eval-when() ...
 ;;;
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (pushnew :ansi-eval-when *features*))
 
 ;;;
-;;; JAC 22-Nov-2018: commented out the following dangerous call
-;;; (sb-ext:unlock-package :common-lisp)
+;;;
+(sb-ext:unlock-package :common-lisp)
+
+;;
+;; we don't want gc to fire too frequently
+(setf (sb-ext:BYTES-CONSED-BETWEEN-GCS) 200000000)
 
 ;;;
 ;;; load the portable defsystem() from CMU
@@ -26,8 +28,6 @@
 #-:mk-defsystem
 (load (make-pathname :directory general-dir :name "defsystem"))
 
-#|
-;; ***
 ;; also load "another system definition facility"
 (require :asdf)
 
@@ -40,15 +40,11 @@
    (merge-pathnames (pathname "asdf/source/cl-ppcre/") src-home)
    (merge-pathnames (pathname "asdf/source/acl-compat/") src-home)
    ))
-|#
 
-(ql:quickload :cl-ppcre)
-(pushnew :ppcre *features*) ; as in systems/ppcre.system
-(ql:quickload :puri)
-(ql:quickload :acl-compat)
+(require :cl-ppcre)
+(require :puri)
+(require :acl-compat)
 
-#|
-;; ***
 ;; this hack ensures sbcl automatically recompiles any out-of-date
 ;; fasl files (rather than choking, which is the default behaviour)
 (defmethod asdf:perform :around ((o asdf:load-op) (c asdf:cl-source-file))
@@ -56,15 +52,13 @@
     (sb-ext:invalid-fasl ()
       (asdf:perform (make-instance 'asdf:compile-op) c)
       (call-next-method))))
-|#
 
 (in-package "MAKE")
 
 (defvar %binary-dir-name% 
   (or
    #+(and :x86 :linux) ".luf"
-   #+(and :x86-64 :darwin) ".duf"
-   #+:win32 ".wuf"
+   #+(and :x86 (not :linux)) ".wuf"
    ".cuf"))
    
 ;;;
@@ -74,111 +68,41 @@
 ;;;
 
 (defvar %system-binaries%
-  (or
-   #+(and :x86 :linux) "linux.x86.32"
-   #+(and :x86-64 :linux) "linux.x86.64"
-   #+(and :x86-64 :darwin) "darwin.x86.64"
-   #+:win32 "windows"
-   (error "~&loadup: unable to determine system type; see file ~
-           `sbcl-patches.lisp'.~%")))
+  #+(and :x86 :linux) "linux.x86.32"
+  #+(and :x86-64 :linux) "linux.x86.64"
+  #+:win32 "windows"
+  #-(or (and :x86 :linux) (and :x86-64 :linux) :win32)
+  (error "~&loadup: unable to determine system type; see file ~
+          `sbcl-patches.lisp'.~%"))
 
 ;;;
 ;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
 ;;;
-
+;; [bmw] broken: &rest swallows up ALL ARGUMENTS
 (defun run-process (command &rest args 
-                    &key (wait t) &allow-other-keys)
-  (let* ((shell "/bin/sh")
-         (sbcl-args
-           (loop for (key val) on args by #'cddr
-             do
-             (setq key
-               (case key
-                 (:error-output :error)
-                 (:if-error-output-exists :if-error-exists)
-                 (t key)))
-             (when (equal val "/dev/null") (setq val nil))
-             unless (eq key :if-error-output-does-not-exist)
-             nconc (list key val)))
+                    ;;&key (wait t) (error-output :output)
+                    ;;&allow-other-keys
+		    )
+  (let* ((wait (second (member :wait args)))
+	 (shell "/bin/sh")
          (process (apply #'sb-ext:run-program
                          shell (list "-c" command) 
-                         :wait wait sbcl-args)))
+                         args)))
     (when (sb-ext:process-p process)
       (if wait 
         (sb-ext:process-exit-code process)
-        (let ((stdout (make-two-way-stream 
-                       (sb-ext:process-output process)
-                       (sb-ext:process-input process)))
+        (let ((stdout 
+	       (if (sb-ext:process-input process)
+		   (make-two-way-stream 
+		    (sb-ext:process-output process)
+		    (sb-ext:process-input process))
+		 (sb-ext:process-output process)))
               (stderr (sb-ext:process-error process))
               (pid (sb-ext:process-pid process)))
           (values stdout stderr pid))))))
 
 (defun getenv (name) 
   (sb-ext:posix-getenv name))
-
-;;;
-;;; Customise memory management for typical LKB grammar development
-;;;
-
-(setf (sb-ext:bytes-consed-between-gcs) 150000000) ; don't GC too often
-
-(defun set-lkb-memory-management-parameters ()
-  ;; These parameters assume a generous maximum memory size: either specified via a large
-  ;; value for --dynamic-space-size (e.g. 32000 for 64 bit and 2500 for 32 bit) on LKB
-  ;; startup, or hardwired into a binary through
-  ;; (sb-ext:save-lisp-and-die ... :save-runtime-options t)
-  ;;
-  ;; Run with only a single generation; although unconventional this works well in practice.
-  ;; When parsing/generating with quasi-destructive unification there are many pointers from
-  ;; essentially static objects (grammar / lexicon / their associated indexes / dag pool) to
-  ;; newly created objects. Since new objects will move frequently, most GCs will need to fix
-  ;; up the many pointers from this static data, so there's no sense in letting it get
-  ;; promoted to older generations. Therefore, prevent any object being promoted out of the
-  ;; youngest generation
-  (setf (sb-ext:generation-number-of-gcs-before-promotion 0) 1000000)
-  ;;
-  ;; don't GC too often - only after 500MB/250MB of new allocation; this setting is
-  ;; appropriate for a machine with 8GB memory, but could be revised downwards if there is
-  ;; memory pressure
-  (setf (sb-ext:bytes-consed-between-gcs) (* #+:x86-64 500 #-:x86-64 250 (expt 2 20))))
-
-
-;;; Turn off the option for the Lisp reader to normalize symbols to Normalization Form KC
-;;; (NFKC) - otherwise trouble with grammars such as Zhong
-
-(setf (sb-ext:readtable-normalization *readtable*) nil)
-
-
-;;; A variant toplevel read function that avoids unexpected exits by requiring 3 Control-D's
-;;; in a row (like Clozure CL's default behaviour)
-
-(let ((eof-count 0))
-  (defun sbcl-repl-read-form (in out)
-    (declare (type stream in out) (ignore out))
-    ;; Based on repl-read-form-fun in SBCL src/code/toplevel.lisp
-    (when *read-suppress*
-      (warn "Setting *READ-SUPPRESS* to NIL to restore toplevel usability.")
-      (setf *read-suppress* nil))
-    (let* ((eof-marker (cons nil nil))
-           (form (read in nil eof-marker)))
-      (cond
-        ((not (eq form eof-marker))
-          (setq eof-count 0)
-          form)
-        ((>= eof-count 2)
-          (sb-ext:exit))
-        (t
-          (incf eof-count)
-          (funcall sb-int:*repl-prompt-fun* *standard-output*)
-          (force-output *standard-output*)
-          (sbcl-repl-read-form in out))))))
-
-;;; Make entry to the Lisp debugger a bit less verbose - users will either already know
-;;; "Type HELP for debugger help, or (SB-EXT:EXIT) to exit from SBCL."
-;;; or not find this information relevant
-
-(setq sb-debug:*debug-beginner-help-p* nil)
-
 
 ;;
 ;; set up :multiprocessing package
@@ -259,27 +183,6 @@
    #:fixnump
    ))
 
-;; Fake definitions for unimplemented functions / packages
-
-(defpackage :silica (:use :common-lisp)
-  (:export "INHIBIT-UPDATING-SCROLL-BARS"))
-(in-package :silica)
-
-(defmacro inhibit-updating-scroll-bars (&body body)
-  `(clim:changing-space-requirements () ,@body))
-
-(defpackage :lep (:use :common-lisp)
-  (:export "LEP-IS-RUNNING"))
-(in-package :lep)
-
-(eval-when (:execute :load-toplevel :compile-toplevel)
-  (defun lep-is-running () nil)
-  (defun eval-in-emacs (str)
-    (declare (ignore str))
-    nil))
-
-;; Below is also in ppcre/PATCHES.lisp, but would not get loaded since we require cl-ppcre above
-
 ;; PPCRE sets ppcre:*regex-char-code-limit* to the constant CHAR-CODE-LIMIT
 ;; under SBCL, CHAR-CODE-LIMIT is 1114112
 ;;  - this is way too high for almost any application
@@ -288,4 +191,3 @@
 ;;  - still excessively high, but usable
 ;; SO we set ppcre:*regex-char-code-limit* to 65536 for now...
 (setf ppcre:*regex-char-code-limit* 65536)
-

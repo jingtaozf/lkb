@@ -54,7 +54,7 @@
               (let ((start-pos (current-position str)))
                 ;; display word nodes in bold
                 (if bold-p
-                   (with-text-style-bold-face (str)
+                   (with-bold-output str
                       (cg::device-write-string str s 0 (length (the string s))))
                    ;;; FIX - device-write-string is no longer external
                    (cg::device-write-string str s 0 (length (the string s))))

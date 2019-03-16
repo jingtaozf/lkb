@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see LICENSE for conditions
 
 
@@ -38,38 +38,59 @@
   (read-tdl-lex-or-grammar-rule-file file-name t))   
       
 (defun read-tdl-lex-or-grammar-rule-file (file-name lexical)
-  (with-open-file (istream file-name :direction :input)
-    (format t "~%Reading in ~Arules file ~A" 
-            (if lexical "lexical " "")
-            (pathname-name file-name))
-    (read-tdl-rule-stream istream lexical)))
+   (let ((*readtable*
+            (make-tdl-break-table)))
+      (with-open-file 
+         (istream file-name :direction :input)
+        (format t "~%Reading in ~Arules file ~A" 
+                (if lexical "lexical " "")
+                (pathname-name file-name))
+        (read-tdl-rule-stream istream lexical))))
 
 
 (defun read-tdl-rule-stream (istream lexical) 
-  (loop
-    (let ((next-char (peek-with-comments istream)))
-      (cond
-        ((eql next-char 'eof)
-          (return))
-        ((eql next-char #\%) ; Bernie morphology
-	  (read-morphology-letter-set istream))
-        (t 
-          (catch 'syntax-error
-            (read-tdl-rule-entry istream lexical)))))))
+   (loop
+      (let ((next-char (peek-char t istream nil 'eof)))
+         (when (eql next-char 'eof) (return))
+         (cond ((eql next-char #\;) 
+                 (read-line istream))
+               ; one line comments
+               ((eql next-char #\%) 
+		(read-morphology-letter-set
+                 istream))
+               ; Bernie morphology
+               ((eql next-char #\#) (read-tdl-comment istream))
+               (t 
+                (catch 'syntax-error
+                  (read-tdl-rule-entry istream lexical)))))))
 
 
 (defun read-tdl-rule-entry (istream lexical)
-  (let* (#+(or :allegro :mcclim)
-         (position nil) ; JAC - unused, was (1+ (file-position istream))
-	 (id (lkb-read istream nil)))
-    #+(or :allegro :mcclim) (record-source id istream position)
-    (check-for-string ":=" istream id)
-    (let ((orthographemicp
-            (eql (peek-with-comments istream) #\%)))
-      (when orthographemicp
-        (read-morphology-affix id istream))
-      (multiple-value-bind (non-def def)
-          (read-tdl-lex-avm-def istream id)
-        (check-for #\. istream id)
-        (add-grammar-rule
-          id non-def def *description-persistence* lexical orthographemicp)))))
+  (let* (#+:allegro
+         (position (1+ (file-position istream)))
+	 (id (lkb-read istream nil))
+	 (next-char (peek-char t istream nil 'eof)))
+    (unless (eql next-char #\:)
+      (lkb-read-cerror 
+       istream 
+       "~%Incorrect syntax following rule name ~A" id)
+      (ignore-rest-of-entry istream id))
+     #+allegro (record-source id istream position)
+     (read-char istream)
+     (let ((next-char2 (peek-char t istream nil 'eof)))
+       (unless (eql next-char2 #\=)
+         (lkb-read-cerror 
+          istream 
+          "~%Incorrect syntax following rule name ~A" id)
+         (ignore-rest-of-entry istream id))
+       (read-char istream)
+       (let* ((next-char3 (peek-char t istream nil 'eof))
+              (orthographemicp (eql next-char3 #\%)))
+         (when orthographemicp
+           (read-morphology-affix id istream))
+         (multiple-value-bind (non-def def)
+             (read-tdl-lex-avm-def istream id)
+           (check-for #\. istream id)
+           (add-grammar-rule
+            id non-def def *description-persistence*
+            lexical orthographemicp))))))
