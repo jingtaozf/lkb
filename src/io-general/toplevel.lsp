@@ -103,8 +103,7 @@ Do you really want to view it?"
 		   (get-lex-entry (car orth-list))))
 	     (if lex-entries
 		 (return lex-entries)
-	       (setf prompt 
-		 (format nil "~a is not defined." (string-upcase word-string)))))
+	       (setf prompt "Not defined - try again.")))
       do
 	(when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
 		     orth-list)
@@ -195,7 +194,7 @@ Do you really want to view it?"
               (setq *last-type-name* type)
               (return (values type check-1-p check-2-p)))
             (t
-              (setq prompt (format nil "~A is not defined." type)
+              (setq prompt "Not defined - try again."
                     possible-name type))))))))
 
 
@@ -220,7 +219,7 @@ Do you really want to view it?"
             (setq *last-lex-id* lex)
             (return (values lex lex-entry)))
           (t 
-            (setq prompt (format nil "~A is not defined." lex)
+            (setq prompt "Not defined - try again."
                   possible-name lex)))))))
 
 
@@ -245,7 +244,7 @@ Do you really want to view it?"
             (setq *last-other-id* id)
             (return (values id id-entry)))
           (t 
-            (setq prompt (format nil "~A is not defined." id)
+            (setq prompt "Not defined - try again."
                   possible-name id)))))))
 
 
@@ -276,7 +275,7 @@ Do you really want to view it?"
             (setq *last-rule-id* name)
             (return rule-entry))
           (t 
-            (setq prompt (format nil "~A is not defined." name)
+            (setq prompt "Not defined - try again."
                   possible-name name)))))))
 
 (defun rules-sorted-on-name (ht)
@@ -316,7 +315,7 @@ Do you really want to view it?"
             (setq *last-lex-rule-id* name)
             (return rule-entry))
           (t 
-            (setq prompt (format nil "~A is not defined." name)
+            (setq prompt "Not defined - try again."
                   possible-name name)))))))
 
 

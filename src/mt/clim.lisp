@@ -40,7 +40,7 @@
         :text-cursor nil
         :end-of-line-action :allow
         :end-of-page-action :allow
-        :borders nil
+        ;; *** :borders nil
         :text-style (mrs-transfer-font)
         :background clim:+white+
         :foreground clim:+black+
@@ -610,7 +610,7 @@
                "~&interactively-browse-mtr(): `~a' undefined.~%"
                id)
               (return-from interactively-browse-mtr
-                (interactively-browse-mtr frame (format nil "~A is not defined." id))))
+                (interactively-browse-mtr frame "Not defined - try again.")))
             (browse-mrss mtr)
             (setf previous id)))))))
 

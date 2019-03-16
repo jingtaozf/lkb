@@ -276,29 +276,23 @@
       (= constant1 constant2))
      (t (compare-types constant1 constant2 :type type))))
 
-(let ((compare-cache (make-hash-table :test #'equalp)))
 (defun compare-types (type1 type2 &key internp type)
-  ;; the string->symbol conversion is memoised since may be called a lot
-  ;; *mrs-package* is a constant - since it can't change we don't need to worry about
-  ;; the cache contents ever becoming invalid 
   (or (eq type1 type2)
-      (and (stringp type1) (stringp type2) (string-equal type1 type2))
-      (ignore-errors
-       (let ((type1 (if internp
-                      (or (gethash type1 compare-cache)
-                          (setf (gethash type1 compare-cache)
-                                (intern (string-upcase type1) mrs:*mrs-package*)))
-                      type1))
-             (type2 (if internp
-                      (or (gethash type2 compare-cache)
-                          (setf (gethash type2 compare-cache)
-                                (intern (string-upcase type2) mrs:*mrs-package*)))
-                      type2)))
-         (when (and (mrs:is-valid-type type1) (mrs:is-valid-type type2))
-           (if (eq type :subsumption)
-             (mrs:equal-or-subtype type1 type2)
-             (eq type1 type2)))))))
-)
+      (and (stringp type1) (stringp type2)
+           ;; string= stronger than original string-equal but faster, and function
+           ;; still correct
+           (string= type1 type2))
+      ;; in the LKB, something is badly wrong if the code below signals an error, so don't
+      ;; stop it being reported
+      (#+:lkb progn #-:lkb ignore-errors
+       (let ((type1 (if internp (mrs:vsym type1) type1))
+             (type2 (if internp (mrs:vsym type2) type2)))
+          (and
+            ;; LKB subtype test does not require its arguments to be valid type names
+            #-:lkb (mrs:is-valid-type type1) #-:lkb (mrs:is-valid-type type2)
+            (if (eq type :subsumption)
+                (mrs:equal-or-subtype type1 type2)
+                (eq type1 type2)))))))
 
 (defun lookup-variable (variable solution)
   (getf (solution-variables solution) variable))

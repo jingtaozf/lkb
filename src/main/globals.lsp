@@ -206,6 +206,9 @@
 (def-lkb-parameter *rule-keys* nil
   "assoc() list mapping rule identifier to position of key daughter")
     
+(def-lkb-parameter *spanning-only-rules* nil
+  "list of rules constrained to only apply over the entire string")
+
 ;;; Display 
 
 (def-lkb-parameter *comparison-dependencies-font-size* 12
@@ -235,12 +238,8 @@
 (def-lkb-parameter *fs-title-font-size* 12
   "no longer used: AVM window titles now use *fs-type-font-size*")
 
-(def-lkb-parameter *list-item-font-size* 12
-  "size of font in list windows, such as generator output"
-  :user)
-
 (def-lkb-parameter *parse-tree-font-size* 12
-  "size of font in parse trees"
+  "size of font in parse trees and generator output"
   :user)
 
 (def-lkb-parameter *show-lex-rules* t

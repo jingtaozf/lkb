@@ -84,6 +84,7 @@
   (expanded-p nil))
         
 (defvar *types* (make-hash-table :test #'eq))
+#+:sbcl (declaim (sb-ext:always-bound *types* *toptype*))
 
 (defparameter *ordered-type-list* nil)
 
@@ -133,9 +134,11 @@
 (defmacro get-type-entry (name)
    `(gethash ,name *types*))
 
-(defun is-valid-type (name)
-   (or (get-type-entry name)
-      (stringp name)))
+(defun is-valid-type (x)
+   (typecase x
+      (null nil)
+      (symbol (get-type-entry x))
+      (string t)))
 
 (defun string-type-p (type-name)
   ;; AAC 30/12/94
@@ -213,17 +216,24 @@
       (error "~%~A is not a valid type" type-name))))
 
 (defun subtype-p (type1 type2)
+  ;; is type1 a strict subtype of type2?
+  ;; robust on invalid type names: if either of the args is not a type, the function
+  ;; returns nil and does not signal an error
   (cond
-    ((and (symbolp type1) (symbolp type2))
-      (member (get-type-entry type2) (retrieve-ancestors type1) :test #'eq))
-    ((stringp type1) 
+    ((not (symbolp type2)) nil)
+    ((symbolp type1)
+      ;; an alternative using the type unification machinery would be
+      ;; (and (not (eq type1 type2)) (eq (greatest-common-subtype type1 type2) type1))
+      ;; but that assumes the args are actually types, and can end up polluting the cache
+      ;; with lots of lexical types
+      (let ((t2 (get-type-entry type2)))
+        (and t2
+             (ltype-descendants t2) ; chance to return immediately
+             (let ((t1 (get-type-entry type1)))
+               (and t1
+                    (member t2 (ltype-ancestors t1) :test #'eq))))))
+    ((stringp type1)
       (string-type-p type2))))
-
-(defun safe-subtype-p (type1 type2)
-  ;;
-  ;; be robust on invalid type names and fail gracefully (i.e. no error())
-  ;;
-  (ignore-errors (subtype-p type1 type2)))
 
 (defun atomic-type-p (type-name)
   (or (stringp type-name)
@@ -241,7 +251,7 @@
 ;;; in the same table entry being retrieved. Must also test the types
 ;;; themselves in case another pair of types has the same key
 
-(defconstant +type-cache-size+ 49157) ; a prime that's a long way from a power of 2
+(defconstant +type-cache-size+ (expt 2 16))
 
 (#+:sbcl sb-ext:defglobal #-:sbcl defvar *type-cache*
   (make-array +type-cache-size+ :initial-element nil))
@@ -256,9 +266,9 @@
    nil)
 
 (defun greatest-common-subtype (type1 type2)
-  ;; Both args should be symbols or strings. For non-string types the results are
-  ;; cached. In practice we don't see anything like all possible combinations of
-  ;; types, so it would be a bad idea to precompute the cache contents
+  ;; The args should be symbols or strings. For non-string types the results are cached.
+  ;; In practice we encounter only a very small proportion of the possible combinations
+  ;; of types, so it would be a bad idea to precompute all results
   (flet
      ((greatest-common-subtype-symbols (t1 t2)
         (declare (symbol t1 t2))
@@ -268,13 +278,13 @@
            (t
               (let* ((h1 (sxhash t1))
                      (h2 (sxhash t2))
-                     (index (rem (logxor h1 h2) +type-cache-size+)) ; commutative, + similar
+                     (index (logand (logxor h1 h2) (1- +type-cache-size+))) ; xor commutative
                      (cache *type-cache*))
-                 (declare (fixnum h1 h2 index) (simple-vector cache))
+                 (declare (fixnum h1 h2 index) (simple-vector cache) (optimize (safety 0)))
                  (when (> h1 h2) (rotatef t1 t2)) ; impose a canonical ordering
                  (loop
                     with entries = (svref cache index)
-                    for e in entries
+                    for e of-type type-cache-entry in entries
                     when (and (eq (type-cache-entry-t1 e) t1) (eq (type-cache-entry-t2 e) t2))
                     return (values (type-cache-entry-sub e) (type-cache-entry-con e))
                     finally
@@ -285,7 +295,7 @@
                              (make-type-cache-entry :t1 t1 :t2 t2 :sub subtype :con constraintp)
                              entries))
                        (return (values subtype constraintp)))))))))
-     (cond 
+     (cond
         ((eq type1 type2) type1)
         ((and (symbolp type1) (symbolp type2))
            (greatest-common-subtype-symbols type1 type2))
@@ -293,7 +303,7 @@
            (when (or (and (stringp type2) (string= type1 type2))
                      (string-type-p type2))
               type1))
-        ((stringp type2) 
+        ((stringp type2)
            (when (string-type-p type1) type2))
         (t
            (error "Inconsistency - unexpected arguments ~A and ~A to ~S"
@@ -306,9 +316,11 @@
    with stats = nil
    do (let ((x (assoc len stats))) (if x (incf (cdr x)) (push (cons len 1) stats)))
    finally (return (sort stats #'> :key #'car)))
-(loop for entries across *type-cache*
-   when (= (length entries) 3)
+(loop for n from 0 below (length *type-cache*)
+   for entries = (svref *type-cache* n)
+   when (= (length entries) 4)
    do
+   (print n)
    (print (loop for e in entries
                 collect (cons (type-cache-entry-t1 e) (type-cache-entry-t2 e)))))
 (clear-type-cache)
@@ -317,44 +329,52 @@
 
 (defun full-greatest-common-subtype (type1 type2)
   (flet ((intersection-eq (set1 set2)
-           (let ((set1-len (length set1)))
-             (if (> set1-len 20) ; avoid poor performance if set1 is large
-                 (let ((table (make-hash-table :test #'eq :size set1-len))
-                       (res nil))
-                   (dolist (e1 set1) (setf (gethash e1 table) t))
-                   (dolist (e2 set2 res) (when (gethash e2 table) (push e2 res))))
-                 (loop for e1 in set1
-                   when (member e1 set2 :test #'eq)
-                   collect e1)))))
+           (and set1 set2
+             (let ((set1-len (length set1)) (set2-len (length set2)))
+               (when (> set2-len set1-len)
+                 (rotatef set1 set2) ; make set1 be the larger one
+                 (rotatef set1-len set2-len))
+               (if (> set2-len 20) ; avoid poor performance if both contain >20 elements
+                   (let ((table (make-hash-table :test #'eq :size set2-len)) ; the smaller one
+                         (res nil))
+                     (dolist (e2 set2) (setf (gethash e2 table) t))
+                     (dolist (e1 set1 res) (when (gethash e1 table) (push e1 res))))
+                   (loop for e2 in set2 ; the smaller one
+                     when (member e2 set1 :test #'eq)
+                     collect e2))))))
     (let ((t1 (get-type-entry type1))
           (t2 (get-type-entry type2)))
-      (cond 
+      (cond
         ((eq type1 type2) type1)
         ((member t2 (ltype-ancestors t1) :test #'eq)
            type1)
         ((member t1 (ltype-ancestors t2) :test #'eq)
            type2)
         (t
-          (let ((common-subtypes 
+          (let ((common-subtypes
                   (intersection-eq (ltype-descendants t1) (ltype-descendants t2))))
             (when common-subtypes
               (let
-                ((gcsubtype-entry
+                ((gcsubtype-entries
                    ;; find subtype whose own descendant list is shorter by just 1 (itself)
                    (loop for ty in common-subtypes
                      with sub-len = (1- (length common-subtypes))
                      when (= (length (ltype-descendants ty)) sub-len)
-                     return ty)))
+                     collect ty)))
                 (cond
-                  ((null gcsubtype-entry)
+                  ((null gcsubtype-entries)
                     (error
-"Type hierarchy inconsistent: ~A and ~A have common subtypes but no greatest common subtype"
-                           type1 type2))
+"Type hierarchy inconsistent: ~A and ~A have common subtypes but descendant lists are contradictory"
+                      type1 type2))
+                  ((cdr gcsubtype-entries)
+                    (error
+"Type hierarchy inconsistent: ~A and ~A have common subtypes but no unique greatest common subtype"
+                      type1 type2))
                   (t
                     ;; return true as the second value if there is a constraint that may
                     ;; have to be unified in
-                    (values (ltype-name gcsubtype-entry)
-                            (if (extra-constraint-p gcsubtype-entry t1 t2)
+                    (values (ltype-name (car gcsubtype-entries))
+                            (if (extra-constraint-p (car gcsubtype-entries) t1 t2)
                                 t))))))))))))
 
 (defun extra-constraint-p (gcsubtype t1 t2)

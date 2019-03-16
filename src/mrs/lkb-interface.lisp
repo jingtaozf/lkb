@@ -42,12 +42,14 @@
 
 (defconstant *mrs-package* :lkb)
 
-(let ((vsym-cache (make-hash-table :test #'equalp)))
-(defun vsym (str) 
+(let ((vsym-cache (make-hash-table :test #'equal)))
+(defun vsym (str)
   ;; allow mrsglobals files to be system independent
   ;; implemented as a memo function since it is called a lot
+  ;; use an equal test rather than the weaker case-insensitive equalp, since it is faster
+  ;; and the overall behaviour is no different
   ;; *mrs-package* is a constant - since it can't change we don't need to worry about
-  ;; the cache contents ever becoming invalid 
+  ;; the cache contents ever becoming invalid
   (or (gethash str vsym-cache)
     (setf (gethash str vsym-cache) (intern (string-upcase str) *mrs-package*))))
 )
@@ -88,7 +90,7 @@
   ;;
   ;; given a feature structure, test its validity.
   ;;
-  (and fs (dag-p fs)))
+  (dag-p fs))
 
 (defun fs-arcs (fs)
   ;;
@@ -103,27 +105,29 @@
   ;;
   (dag-arcs fs))
 
+(let ((specialist-user-p :unset))
 (defun fs-type (fs)
   ;;
   ;; given a feature structure, extract its type.
   ;;
-  (let* ((real-type (type-of-fs fs)))
-    (when (and #+allegro 
-               (let ((user (system:getenv "USER")))
-                 (member user '("aac" "dan" "danf") :test #'string-equal))
-               #-allegro 
-               nil
-               (search "GLBTYPE" (if (stringp real-type)
-                                   real-type
-                                   (symbol-name real-type))))
-      ;;; if there's a glbtype, and the user is expected to care, be annoying
+  (when (eq specialist-user-p :unset)
+    ;; memo-ise specialist-user-p, since we shouldn't be calling getenv repeatedly
+    (let ((user (make:getenv "USER")))
+      (setq specialist-user-p
+        (member user '("aac" "dan" "danf") :test #'equal))))
+  (let ((fs-type (type-of-fs fs)))
+    (when (and specialist-user-p
+               (> (length (string fs-type)) (length "GLBTYPE"))
+               (string= (string fs-type) "GLBTYPE" :end1 (length "GLBTYPE")))
+      ;; this is a glbtype and the user is expected to care, so be annoying
       (dotimes (n 5)
         (lkb::lkb-beep)
-        (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type))
-      (format t "~%GLBTYPE ~A in MRS" real-type)
+        (format t "~%!!!!!!!!!!!!!!!!!!!!!!"))
+      (format t "~%GLBTYPE ~A in MRS" fs-type)
       (dotimes (n 5)
-        (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type)))
-    real-type))
+        (format t "~%!!!!!!!!!!!!!!!!!!!!!!")))
+    fs-type))
+)
 
 (defun is-valid-type (type)
   ;;
@@ -141,11 +145,10 @@
 
 (defun equal-or-subtype (type1 type2)
   ;;
-  ;; given two types, return true if .type1. is equal to .type2. or one of its
-  ;; descendants.
+  ;; given two types, return true if .type1. is equal to .type2. or is one of
+  ;; its descendants.
   ;;
-  (or (equal type1 type2)
-      (subtype-p type1 type2)))
+  (lkb::subtype-or-equal type1 type2))
 
 (defun compatible-types (type1 type2)
   ;;
@@ -153,7 +156,7 @@
   ;; or have a greatest lower bound (common descendant).
   ;;
   (and type1 type2
-       (or (eq type1 type2) (lkb::greatest-common-subtype type1 type2))))
+       (lkb::greatest-common-subtype type1 type2)))
 
 ;;;
 ;;; convert PSOA to LKB dag representation; enables use of DAG browsing tools

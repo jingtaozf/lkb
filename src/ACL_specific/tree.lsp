@@ -14,6 +14,10 @@
 ;;; This version uses built in Allegro graph drawer rather than JAC's
 ;;; and is based on Rob's parse tree drawing code
 
+;;; *** temporary test, to allow this file to be loaded into an old LOGON LKB session
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (boundp '*window-width*)
 (defparameter *window-width* 500
   "Initial width of tree window")
 
@@ -25,6 +29,7 @@
 
 (defparameter *tree-level-sep* #+:mcclim 20 #-:mcclim 12
   "Spacing between levels in the tree.")
+  ))
 
 (defun make-tree-text-style ()
   (clim:make-text-style :sans-serif :roman (or *type-tree-font-size* 12)))

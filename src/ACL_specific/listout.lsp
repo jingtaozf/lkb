@@ -15,7 +15,7 @@
 ;;; Appearance parameters
 
 (defun active-list-item-font ()
-  (clim:make-text-style :sans-serif :roman (or *list-item-font-size* 12)))
+  (clim:make-text-style :sans-serif :roman (or *parse-tree-font-size* 12)))
 
 (declaim (notinline active-list-item-font))
 

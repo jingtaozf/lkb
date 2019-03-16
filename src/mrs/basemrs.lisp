@@ -1679,14 +1679,14 @@ higher and lower are handle-variables
 ;;; Utility fns
 
 (defun remove-right-sequence (remove-seq existing-seq)
-  ;;; if existing-seq terminates in the string given by remove-seq
-  ;;; return the existing-sequence without it
+  ;; if existing-seq terminates in the string remove-seq then return the existing-seq
+  ;; without it
   (let ((sl (length existing-seq))
         (rl (length remove-seq)))
     (if (and (> sl rl)
-             (equal remove-seq (subseq existing-seq (- sl rl))))
-      (subseq existing-seq 0 (- sl rl))
-      existing-seq)))
+             (string= remove-seq existing-seq :start2 (- sl rl)))
+        (subseq existing-seq 0 (- sl rl))
+        existing-seq)))
     
 (defun remove-variable-junk (var)
   (if (stringp var)

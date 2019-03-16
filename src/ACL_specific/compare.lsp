@@ -542,100 +542,99 @@
    (ids :initform nil :accessor compare-frame-ids)
    (controller :initform nil :accessor compare-frame-controller))
   (:panes
-   (top
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 2 :background clim:+white+)  
-        (clim:make-pane 'lkb-pane ; JAC 10-Dec-2018 - was clim:application-pane, and also below
-                        :display-function 'draw-top-window
-                        :text-cursor nil
-                        :text-style (comparison-top-font)
-			:height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                        :end-of-line-action :allow
-                        :end-of-page-action :allow
-                        :borders nil
-                        :incremental-redisplay nil
-                        :display-time nil
-                        :background clim:+white+
-                        :foreground clim:+black+))))
-   (trees  
-    (clim:outlining (:thickness 1)
-	(clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
-	 		 :x-spacing 3
-                         ;; !!! in McCLIM the scroller seems to restrain its contained pane
-                         #+:mcclim :suggested-width #+:mcclim *tree-display-trees-width*
-	 		 #+:mcclim :suggested-height #+:mcclim *tree-display-height*)
-	  (clim:make-pane 'lkb-pane
-			  :display-function 'draw-trees-window
-			  :text-cursor nil
-			  #-:mcclim :width #-:mcclim *tree-display-trees-width*
-			  #-:mcclim :height #-:mcclim *tree-display-height*
-			  :text-style (comparison-tree-font)
-			  :end-of-line-action :allow
-			  :end-of-page-action :allow
-			  :borders nil
-			  :incremental-redisplay nil
-			  :display-time nil
-			  :background clim:+white+
-			  :foreground clim:+black+))))
-   (comment 
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1 :background clim:+white+)  
-        (clim:make-pane 'lkb-pane
-                        :display-function 'draw-comment-window
-                        :text-cursor nil
-                        :text-style (comparison-comment-font)
-			:height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                        :end-of-line-action :allow
-                        :end-of-page-action :allow
-                        :borders nil
-                        :incremental-redisplay nil
-                        :display-time nil
-                        :background clim:+white+
-                        :foreground clim:+black+))))
-   (status 
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1 :background clim:+white+)  
-        (clim:make-pane 'lkb-pane
-                        :display-function 'draw-status-window
-                        :text-cursor nil
-                        :text-style (comparison-status-font)
-			:height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-			:max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-                        :end-of-line-action :allow
-                        :end-of-page-action :allow
-                        :borders nil
-                        :incremental-redisplay nil
-                        :display-time nil
-                        :background clim:+white+
-                        :foreground clim:+black+))))
-   (discriminants  
-    (clim:outlining (:thickness 1)
-	(clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
-	 		 :x-spacing 3
-                         ;; !!! McCLIM scroller problem as above
+    (top
+      (clim:outlining (:thickness 1)
+        (clim:spacing (:thickness 2 :background clim:+white+)  
+          (clim:make-pane 'lkb-pane ; JAC 10-Dec-2018 - was clim:application-pane, and also below
+                          :display-function 'draw-top-window
+                          :text-cursor nil
+                          :text-style (comparison-top-font)
+                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :end-of-line-action :allow
+                          :end-of-page-action :allow
+                          :incremental-redisplay nil
+                          :display-time nil
+                          :background clim:+white+
+                          :foreground clim:+black+))))
+    (trees  
+      (clim:outlining (:thickness 1)
+        (clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
+                          ;; !!! in McCLIM the scroller seems to restrain its contained pane
+                          #+:mcclim :suggested-width #+:mcclim *tree-display-trees-width*
+                          #+:mcclim :suggested-height #+:mcclim *tree-display-height*)
+          #+:mcclim
+          (clim:spacing (:thickness 3 :background clim:+white+)
+            #1=(clim:make-pane 'lkb-pane
+                               :display-function 'draw-trees-window
+                               :text-cursor nil
+                               #-:mcclim :width #-:mcclim *tree-display-trees-width*
+                               #-:mcclim :height #-:mcclim *tree-display-height*
+                               :text-style (comparison-tree-font)
+                               :end-of-line-action :allow
+                               :end-of-page-action :allow
+                               :incremental-redisplay nil
+                               :display-time nil
+                               :background clim:+white+
+                               :foreground clim:+black+))
+          #-:mcclim #1#))) ; !!! in Allegro CLIM, spacing would stop the scroller working
+    (comment 
+      (clim:outlining (:thickness 1)
+        (clim:spacing (:thickness 1 :background clim:+white+)  
+          (clim:make-pane 'lkb-pane
+                          :display-function 'draw-comment-window
+                          :text-cursor nil
+                          :text-style (comparison-comment-font)
+                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :end-of-line-action :allow
+                          :end-of-page-action :allow
+                          :incremental-redisplay nil
+                          :display-time nil
+                          :background clim:+white+
+                          :foreground clim:+black+))))
+    (status 
+      (clim:outlining (:thickness 1)
+        (clim:spacing (:thickness 1 :background clim:+white+)  
+          (clim:make-pane 'lkb-pane
+                          :display-function 'draw-status-window
+                          :text-cursor nil
+                          :text-style (comparison-status-font)
+                          :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
+                          :end-of-line-action :allow
+                          :end-of-page-action :allow
+                          :incremental-redisplay nil
+                          :display-time nil
+                          :background clim:+white+
+                          :foreground clim:+black+))))
+    (discriminants  
+      (clim:outlining (:thickness 1)
+        (clim:scrolling (:scroll-bar :both :scroll-bars :both ; CLIM spec ambiguous
+                         ;; McCLIM scroller problem as above
                          #+:mcclim :suggested-width #+:mcclim *tree-display-discriminants-width*)
-	  (clim:make-pane 'lkb-pane
-			  :display-function 'draw-discriminants-window
-			  :text-cursor nil
-			  #-:mcclim :width #-:mcclim *tree-display-discriminants-width*
-			  :text-style (comparison-discriminant-font)
-			  :end-of-line-action :allow
-			  :end-of-page-action :allow
-			  :borders nil
-			  :incremental-redisplay t
-			  :background clim:+white+
-			  :foreground clim:+black+)))))
+          #+:mcclim
+          (clim:spacing (:thickness 3 :background clim:+white+)
+            #2=(clim:make-pane 'lkb-pane
+                               :display-function 'draw-discriminants-window
+                               :text-cursor nil
+                               #-:mcclim :width #-:mcclim *tree-display-discriminants-width*
+                               :text-style (comparison-discriminant-font)
+                               :end-of-line-action :allow
+                               :end-of-page-action :allow
+                               :incremental-redisplay t
+                               :background clim:+white+
+                               :foreground clim:+black+))
+          #-:mcclim #2#)))) ; Allegro CLIM problem as above
   (:layouts
-   (:default (clim:vertically ()
-               top
-               (clim:horizontally () 
-                 trees 
-                 (clim:vertically () comment status discriminants))))))
+    (:default (clim:vertically ()
+                top
+                (clim:horizontally () 
+                  trees 
+                  (clim:vertically () comment status discriminants))))))
 
 (defmethod initialize-instance :around ((frame compare-frame) &rest initargs)
   (if *manage-window-placement*
@@ -837,9 +836,7 @@
                   (clim:formatting-row (stream)
                     (clim:formatting-cell 
                         (stream :align-x :center :align-y :top)
-                      (clim:with-text-style 
-                          (stream 
-                            (text-style-bold-face (comparison-dependencies-font)))
+                      (with-text-style-bold-face (stream (comparison-dependencies-font))
                         (format stream "~%[~a]" (ctree-id tree))))
                     (clim:formatting-cell 
                         (stream :align-x :left :align-y :center)
@@ -1031,10 +1028,8 @@
                    (clim:formatting-row (stream)
                      (clim:formatting-cell 
                          (stream :align-x :center :align-y :top)
-                       (clim:with-text-style 
-                           (stream 
-                             (text-style-bold-face (comparison-dependencies-font)))
-                         (format stream "[~a]" (ctree-id tree))))
+                       (with-text-style-bold-face (stream (comparison-dependencies-font))
+                         (format stream "~%[~a]" (ctree-id tree))))
                      (clim:formatting-cell (stream :align-x :left)
                        (clim:formatting-column (stream)
                          (clim:formatting-cell (stream :align-x :left)

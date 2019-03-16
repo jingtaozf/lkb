@@ -229,7 +229,6 @@
 ;;; specified by the path chain.
 
 (defun unify-paths-dag-at-end-of (path-or-value dag-instance &optional expandp)
-   #+:mclprofile (decf ff (ccl::%heap-bytes-allocated))
    (prog1
      (cond 
       ((path-p path-or-value)
@@ -249,10 +248,7 @@
                   (may-copy-constraint-of type)
                   (create-typed-dag type))))))
       (t (error "~%Invalid path specification ~A"
-            path-or-value)))
-     #+:mclprofile (incf ff (ccl::%heap-bytes-allocated))))
-
-
+            path-or-value)))))
 
 (defun unify-paths-dag-at-end-of1 (dag-instance labels-chain)
    (let ((real-dag
@@ -264,9 +260,9 @@
           (t
            (let* ((next-feature (car labels-chain))
                  (found
-                   (unify-arcs-find-arc next-feature
-                                        (dag-arcs real-dag)
-                                        (dag-comp-arcs real-dag))))
+                   (find-attribute-in-arcs-lists next-feature
+                      (dag-arcs real-dag)
+                      (dag-comp-arcs real-dag))))
               (if found
                   (unify-paths-dag-at-end-of1
                    (dag-arc-value found) (cdr labels-chain))
@@ -297,7 +293,7 @@
                      (when gcs 
                         (setf (dag-new-type real-dag) gcs)
                         (let ((found
-                                 (unify-arcs-find-arc next-feature
+                                 (find-attribute-in-arcs-lists next-feature
                                     (dag-arcs real-dag)
                                     (dag-comp-arcs real-dag))))
                            (if found
@@ -371,8 +367,8 @@
      ((null path) dag)
      ((atomic-type-p (unify-get-type dag)) nil)
      (t
-      (let ((match (unify-arcs-find-arc
-                    (first path) (dag-arcs dag) (dag-comp-arcs dag))))
+      (let ((match (find-attribute-in-arcs-lists
+                     (first path) (dag-arcs dag) (dag-comp-arcs dag))))
         (when match
           (unify-existing-dag-at-end-of
            (dag-arc-value match) (rest path))))))))

@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2017-2018 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; Author: John Carroll
-;;; Version: 11-Dec-2018
+;;; Version: 12-Dec-2018
 ;;; Distributed as part of the LKB System, under the MIT License
 ;;; see LICENSE file and http://moin.delph-in.net/LkbCopyright for conditions
 
@@ -181,7 +181,7 @@
 	:foreground +black+
 	:background +white+
 	:text-cursor nil
- 	:borders nil
+ 	;; *** :borders nil
  	:max-width 150 ; in Allegro CLIM, this is completely overridden by the hbox-pane spec
  	:display-time nil
 	:display-function #'display-places-devices))
@@ -190,7 +190,7 @@
 	:foreground +black+
 	:background +white+
 	:text-cursor nil
-	:borders nil
+	;; *** :borders nil
  	:display-time nil
 	:display-function #'display-files-dirs))
     (prompt-pane
@@ -208,9 +208,7 @@
 	#'(lambda (gadget new-value)
 	    (declare (ignore gadget))
 	    (with-application-frame (frame) (update-ok-button frame new-value)))
-	:end-of-line-action :scroll
-	:scroll-bars nil
-	:borders nil
+	;; *** :borders nil
 	:max-width +fill+))
     (ok-button
       (make-pane 'push-button
@@ -233,19 +231,15 @@
         (vertically (:y-spacing 15)
           (horizontally (:x-spacing 10 :equalize-height t)
             (1/4
-	      (clim:outlining (:thickness 1)
+	      (clim:outlining (:thickness 1 #+:mcclim :background #+:mcclim +outline-gray+)
+                ;; in Allegro CLIM, outlining is grey by default - and indeed if we specify
+                ;; the colour then the scroll bar also picks it up, which we don't want
 	        (scrolling (:scroll-bar :vertical :scroll-bars :vertical) ; CLIM spec ambiguous
-                  ;; outlining the scroller-pane means that the scroll bar picks up the outline
-                  ;; colour; in Allegro CLIM if the child pane is outlined then it won't scroll
-                  #+:mcclim (outlining (:thickness 1 :background +outline-gray+)
-                              places-devices-pane)
-                  #-:mcclim places-devices-pane)))
+                  places-devices-pane)))
             (3/4
-	      (clim:outlining (:thickness 1)
+	      (clim:outlining (:thickness 1 #+:mcclim :background #+:mcclim +outline-gray+)
 	        (scrolling (:scroll-bar :vertical :scroll-bars :vertical)
-                  #+:mcclim (outlining (:thickness 1 :background +outline-gray+)
-                              files-dirs-pane)
-                  #-:mcclim files-dirs-pane))))
+                  files-dirs-pane))))
           (horizontally (:x-spacing 10 :align-y :center :equalize-height nil)
             prompt-pane
             ;; in McCLIM only, wrap whitespace and outline around text-field gadget, otherwise
@@ -329,11 +323,12 @@
 
 (defmethod allocate-space :after ((pane files-dirs-application-pane) width height)
   (declare (ignore width height))
-  ;; in McCLIM, a horizontal resize of a scroller pane which does not have a horizontal
-  ;; scroll bar does not update the scrolled pane's text-margin - I think it should
+  ;; in McCLIM, a horizontal resize of an application / scroll pane combo updates the
+  ;; application pane's text-margin if the scroll pane has a horizontal scroll bar,
+  ;; but not otherwise - I think it should always
   #+:mcclim
   (setf (stream-text-margin pane)
-    (bounding-rectangle-width (pane-viewport-region (sheet-parent pane))))
+    (bounding-rectangle-width (pane-viewport-region pane)))
   (let ((margin (stream-text-margin pane)))
     (with-application-frame (frame)
       (with-slots (last-margin) frame

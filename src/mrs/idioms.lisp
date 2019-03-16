@@ -92,14 +92,14 @@ the phrase to be checked minus the LISZT (leave this for now)
                   (not (idiom-rel-p set-el)))))))
 
 (defun idiom-rel-p (rel)
-  ;;; FIX
-  ;;; relation name ends with _i_rel - this won't quite do because
-  ;;; we want to allow for different senses and anyway this should use the
-  ;;; standard pred parsing code
+  ;; FIX
+  ;; relation name ends with _i_rel - this won't quite do because
+  ;; we want to allow for different senses and anyway this should use the
+  ;; standard pred parsing code
   (let* ((relpred (mrs::rel-pred rel))
          (relname (when relpred (string relpred))))
     (and relname
-         (eql (mismatch "_i_rel" relname :from-end t) 0))))
+         (string-equal "_i_rel" relname :start2 (max 1 (- (length relname) 6))))))
 
 #|
 old definition was leading i_

@@ -26,6 +26,8 @@
 #-:mk-defsystem
 (load (make-pathname :directory general-dir :name "defsystem"))
 
+#|
+;; ***
 ;; also load "another system definition facility"
 (require :asdf)
 
@@ -38,12 +40,15 @@
    (merge-pathnames (pathname "asdf/source/cl-ppcre/") src-home)
    (merge-pathnames (pathname "asdf/source/acl-compat/") src-home)
    ))
+|#
 
-(require :cl-ppcre)
+(ql:quickload :cl-ppcre)
 (pushnew :ppcre *features*) ; as in systems/ppcre.system
-(require :puri)
-(require :acl-compat)
+(ql:quickload :puri)
+(ql:quickload :acl-compat)
 
+#|
+;; ***
 ;; this hack ensures sbcl automatically recompiles any out-of-date
 ;; fasl files (rather than choking, which is the default behaviour)
 (defmethod asdf:perform :around ((o asdf:load-op) (c asdf:cl-source-file))
@@ -51,6 +56,7 @@
     (sb-ext:invalid-fasl ()
       (asdf:perform (make-instance 'asdf:compile-op) c)
       (call-next-method))))
+|#
 
 (in-package "MAKE")
 
@@ -117,23 +123,24 @@
 (setf (sb-ext:bytes-consed-between-gcs) 150000000) ; don't GC too often
 
 (defun set-lkb-memory-management-parameters ()
-  ;; These parameters assume a generous maximum memory size: it doesn't seem unreasonable
-  ;; to specify large values for --dynamic-space-size (32000 for 64 bit and 2540 for 32 bit)
-  ;; on LKB startup, or hardwired into a binary through (sb-ext:save-lisp-and-die ...
-  ;; :save-runtime-options t)
+  ;; These parameters assume a generous maximum memory size: either specified via a large
+  ;; value for --dynamic-space-size (e.g. 32000 for 64 bit and 2500 for 32 bit) on LKB
+  ;; startup, or hardwired into a binary through
+  ;; (sb-ext:save-lisp-and-die ... :save-runtime-options t)
   ;;
-  ;; In the LKB there are essentially two distinct lifecycles for Lisp data: short-lived
-  ;; (e.g. produced during the parse of a single sentence and then discarded), and long-lived
-  ;; (e.g. the grammar and lexicon and their associated indexes). Use generations 0 and 1
-  ;; for the former, and generation 2 (only) for the latter - do this by preventing promotion
-  ;; out of generation 2
-  (setf (sb-ext:generation-number-of-gcs-before-promotion 2) (1- (expt 2 31)))
-  ;; ensure generation 2 is GCed as soon as any significant amount of new data is promoted
-  ;; to it: for example in the case where the grammar is reloaded, we want the old grammar
-  ;; to be GCed asap
-  (setf (sb-ext:generation-minimum-age-before-gc 2) 0.1D0)
-  ;; don't GC too often - after 300MB/150MB of new allocation
-  (setf (sb-ext:bytes-consed-between-gcs) #+:x86-64 300000000 #-:x86-64 150000000))
+  ;; Run with only a single generation; although unconventional this works well in practice.
+  ;; When parsing/generating with quasi-destructive unification there are many pointers from
+  ;; essentially static objects (grammar / lexicon / their associated indexes / dag pool) to
+  ;; newly created objects. Since new objects will move frequently, most GCs will need to fix
+  ;; up the many pointers from this static data, so there's no sense in letting it get
+  ;; promoted to older generations. Therefore, prevent any object being promoted out of the
+  ;; youngest generation
+  (setf (sb-ext:generation-number-of-gcs-before-promotion 0) 1000000)
+  ;;
+  ;; don't GC too often - only after 500MB/250MB of new allocation; this setting is
+  ;; appropriate for a machine with 8GB memory, but could be revised downwards if there is
+  ;; memory pressure
+  (setf (sb-ext:bytes-consed-between-gcs) (* #+:x86-64 500 #-:x86-64 250 (expt 2 20))))
 
 
 ;;; Turn off the option for the Lisp reader to normalize symbols to Normalization Form KC

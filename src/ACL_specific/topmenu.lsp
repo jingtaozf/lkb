@@ -217,16 +217,17 @@
 		 :text-cursor nil
 		 :end-of-line-action :wrap
 		 :end-of-page-action :scroll
-		 :borders nil
+		 ;; *** :borders nil
 		 :background +white+
 		 :foreground +black+
                  :text-style (lkb::lkb-dialog-font)
 		 :display-time t)))
   (:layouts
     (default
-      (scrolling (#+:mcclim :scroll-bar #-:mcclim :scroll-bars ; CLIM spec ambiguous
-	 	  :both
-	          :x-spacing 3)
+      (scrolling (#+:mcclim :scroll-bar #-:mcclim :scroll-bars :both) ; CLIM spec ambiguous
+        #+:mcclim
+        (clim:spacing (:thickness 3 :background clim:+white+) lkb-top-pane)
+        #-:mcclim
         lkb-top-pane)))
   (:command-table #+:mcclim (lkb-top-command-table) #-:mcclim lkb-top-command-table))
 

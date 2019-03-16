@@ -168,29 +168,33 @@
 (declaim (notinline lkb-dialog-font))
 
 
-;;; Output in a variant text style or size. Allows for both the case where the pane's text
+;;; Output in bold / at a different size. Allows for both the case where the pane's text
 ;;; style follows the CLIM 2.0 font protocol, as well as when it is based on the McCLIM
-;;; extended text styles protocol (in which case the variant style may not exist or not be
-;;; possible to determine).
+;;; extended text styles protocol (in which case it is not possible to determine the bold
+;;; font variant, nor may it be possible to get exactly the size requested).
 
-(defmacro with-text-style-bold-face ((stream) &body body) 
+(defmacro with-text-style-bold-face ((stream . rest) &body body) 
   #+:mcclim
-  `(clim:with-text-style
-       (,stream (text-style-bold-face (clim:pane-text-style ,stream)))
-     ,@body)
+  (let ((s (gensym)) (bold-style (gensym)) (x (gensym)) (y (gensym)))
+    `(let* ((,s ,stream)
+            (,bold-style (text-style-bold-face ,(if rest (car rest) `(clim:pane-text-style ,s)))))
+       (if (eq ,bold-style (clim:pane-text-style ,s))
+         ;; a distinct bold face was not found so produce faux bold
+         (multiple-value-bind (,x ,y)
+             (clim:stream-cursor-position ,s)
+           (progn ,@body)
+           (clim:stream-set-cursor-position ,s (+ ,x 0.1) (+ ,y 0.1))
+           ,@body)
+         (clim:with-text-style (,s ,bold-style) ,@body)))
    #-:mcclim
-   `(clim:with-text-face (,stream :bold) ,@body))
+   `(clim:with-text-face (,stream :bold) ,@body)))
 
+#+:mcclim 
 (defun text-style-bold-face (style)
-  ;; if :bold face is plausible then return the style in :bold - this might not be
-  ;; straightforward, since McCLIM extended text styles only support a small subset of
-  ;; the standard text style functions
-  #+:mcclim 
+  ;; return the style in :bold - except in the case of an extended text style
   (if (member (clim:text-style-face style) '(:roman :italic (:bold :italic) nil) :test #'equal)
     (clim:merge-text-styles (clim:make-text-style nil :bold nil) style)
-    style)
-  #-:mcclim 
-  (clim:merge-text-styles (clim:make-text-style nil :bold nil) style))
+    style))
   
 
 (defmacro with-text-style-new-size ((stream size) &body body)
@@ -208,21 +212,26 @@
   #+:mcclim
   (if (member (clim:text-style-family style) '(:fix :serif :sans-serif nil) :test #'eq)
     (clim:merge-text-styles (clim:make-text-style nil nil size) style)
+    ;; this is a McCLIM extended text style, which is only available in a limited range
+    ;; of sizes
     (progn
       (unless *cached-extended-text-style-sizes*
         (setq *cached-extended-text-style-sizes* ; something like (8 10 12 14 18 24 48 72)
-          (clim-extensions:font-face-all-sizes
-            (find (clim:text-style-face style)
-              (clim-extensions:font-family-all-faces
-                (find (clim:text-style-family style)
-                  (clim-extensions:port-all-font-families (clim:find-port))
-                  :key #'clim-extensions:font-family-name
-                  :test #'equal))
-              :key #'clim-extensions:font-face-name
-              :test #'equal))))
+          (sort
+            (copy-list
+              (clim-extensions:font-face-all-sizes
+                (find (clim:text-style-face style)
+                  (clim-extensions:font-family-all-faces
+                    (find (clim:text-style-family style)
+                      (clim-extensions:port-all-font-families (clim:find-port))
+                      :key #'clim-extensions:font-family-name
+                      :test #'equal))
+                  :key #'clim-extensions:font-face-name
+                  :test #'equal)))
+            #'<)))
       (let*
         ((nsize
-           (if (symbolp size) (or (getf clim-clx::*clx-text-sizes* size) 12) size)) ; !!!
+           (if (symbolp size) (getf clim-clx::*clx-text-sizes* size 12) size)) ; !!!
          (new-size ; find nearest cached size from those available
            (loop for (a b) on *cached-extended-text-style-sizes*
              unless b return a
@@ -469,24 +478,28 @@
                             &rest pane-options 
 			    &key (info-bar nil) &allow-other-keys)
   (let ((sc-options nil))
-    ;; !!! in McCLIM, :width and :height options to an application-pane inside a scroller-pane
-    ;; are not respected - fixed by copying them to the scroller - or in the case of :compute
-    ;; values, changing them to :max- options and increasing the default (undocumented)
-    ;; :suggested- options in the scroller
+    ;; !!! in McCLIM, :width and :height values to an application-pane inside a scroller-pane
+    ;; are not respected - fixed by giving them to the scroller instead; or in the case of
+    ;; :compute values, changing them to :max- options and increasing the default
+    ;; (undocumented) :suggested- options in the scroller
     #+:mcclim
-    (if (eq (getf pane-options :width) :compute)
-      (progn
+    (cond
+      ((eq (getf pane-options :width) :compute)
         (setf (getf sc-options :suggested-width) 800)
         (setf (getf pane-options :max-width) :compute)
         (remf pane-options :width))
-      (setf (getf sc-options :width) (getf pane-options :width)))
+      (t
+        (setf (getf sc-options :width) (getf pane-options :width))
+        (remf pane-options :width)))
     #+:mcclim
-    (if (eq (getf pane-options :height) :compute)
-      (progn
+    (cond
+      ((eq (getf pane-options :height) :compute)
         (setf (getf sc-options :suggested-height) 600)
         (setf (getf pane-options :max-height) :compute)
         (remf pane-options :height))
-      (setf (getf sc-options :height) (getf pane-options :height)))
+      (t
+        (setf (getf sc-options :height) (getf pane-options :height))
+        (remf pane-options :height)))
     (remf pane-options :info-bar)
     `(progn
        (clim:define-application-frame ,frame-class (lkb-frame)
@@ -500,7 +513,7 @@
 			     :text-cursor nil
 			     :end-of-line-action :allow
 			     :end-of-page-action :allow
-			     :borders nil
+			     ;; *** :borders nil
 			     :background clim:+white+
 			     :foreground clim:+black+
 			     :display-time nil
@@ -511,26 +524,27 @@
 				   :text-cursor nil
 				   :end-of-line-action :allow
 				   :end-of-page-action :allow
-				   :borders nil
+				   ;; *** :borders nil
 				   #+:mcclim :background #+:mcclim climi::*3d-normal-color*
-				   ;; in Allegro CLIM, 1.1 lines avoids clipping - and yes,
-				   ;; all 3 height specs are needed
+				   ;; in Allegro CLIM, specifying 1.1 lines avoids clipping
+				   ;; - and yes, all 3 height specs are needed
 				   :height '(#+:mcclim 1 #-:mcclim 1.1 :line)
 				   :min-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
 				   :max-height '(#+:mcclim 1 #-:mcclim 1.1 :line)
-				   :record nil
+				   ;; *** :record nil
 				   :scroll-bars nil
                                    ,@(when (getf pane-options :text-style)
                                        `(:text-style ,(getf pane-options :text-style))))))))
          (:layouts
            (default
              (clim:vertically ()
-	       (clim:outlining (:thickness 1)
-	         (clim:scrolling (:x-spacing 3 ; lkb-pane left margin, ignored by Allegro CLIM
-                                  . #+:mcclim ,sc-options #-:mcclim nil)
-	           lkb-pane))
+	       (clim:scrolling (#+:mcclim ,@sc-options)
+                 #+:mcclim
+                 (clim:spacing (:thickness 3 :background clim:+white+) lkb-pane)
+                 #-:mcclim
+                 lkb-pane) ; in Allegro CLIM, spacing would stop the scroller working
 	       ,@(when info-bar
-	          '(#+:mcclim (clim:spacing (:thickness 1) doc-pane) ; ties in with :height above
+	          '(#+:mcclim (clim:spacing (:thickness 1) doc-pane) ; c.f. doc-pane :height
                     #-:mcclim doc-pane))))))
       ;; in McCLIM, add the lkb-frame menu commands (Close, Close all, Print) to the
       ;; command menu for this kind of frame - not clear why this is necessary, but on
@@ -544,7 +558,7 @@
         'lkb-frame))))
 
 (defmethod clim:frame-standard-output ((frame lkb-frame))
-  ;; identify the main lkb-pane, otherwise the path pane could get picked up since it's
+  ;; identify the main lkb-pane, otherwise the doc-pane could get picked up since it's
   ;; also an application pane
   (clim:find-pane-named frame 'lkb-pane))
 
@@ -631,7 +645,7 @@
   (multiple-value-bind (dest size orient multi file)
       (get-print-options)
     (case dest
-      (:printer (lkb::show-message-window "Direct printing not yet implemented"))
+      (:printer (show-message-window "Direct printing not yet implemented"))
       (:file	
 	  (when (cond
 	           ((null (pathname-name file))
@@ -639,7 +653,7 @@
 	           ((not (probe-file file)) t)
 		   (t
 		     (lkb-y-or-n-p
-		       (format nil "File `~a' exists.~%Overwrite it?" file))))
+		       (format nil "File `~a' already exists.~%Overwrite it?" file))))
 	     (execute-menu-command
 		(with-open-file (ps-stream file 
 				  :direction :output 
@@ -683,6 +697,11 @@
   ;; do nothing
   )
 
+#+:mcclim 
+(defmethod clim:pane-text-style ((stream clim-postscript::postscript-stream))
+  ;; !!! this should really use the text-style of the pane to be printed
+  clim:*default-text-style*)
+
 
 ;;; Highlight a list of objects, making the first one red
 
@@ -707,7 +726,10 @@
 ;;; NB These flipping inks cannot be constants since clim:make-flipping-ink
 ;;; does not guarantee EQ compile and load time results given the same arguments.
 ;;; Also, both args must be colors not inks themselves
+;;; *** temporary test, to allow this file to be loaded into an old LOGON LKB session
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (boundp '+magenta-flipping-ink+)
 (defparameter +magenta-flipping-ink+ 
     (clim:make-flipping-ink clim:+green+ clim:+white+))
 
@@ -725,6 +747,7 @@
 
 (defparameter +yellow-flipping-ink+ 
     (clim:make-flipping-ink clim:+blue+ clim:+white+))
+  ))
 
 (defun highlight-objects-mark (things frame)
   (let ((stream (clim:frame-standard-output frame)))
@@ -790,6 +813,7 @@
   #+:mcclim
   (when (typep stream 'clim-postscript::postscript-stream) ; are we printing?
     (return-from scroll-to nil))
+  #+:mcclim (setq stream (clim:sheet-parent stream)) ; !!! skip 1 level up to actual scrollee
   (let* ((vp-width (clim:bounding-rectangle-width 
 		    (clim:pane-viewport-region stream)))
          (vp-height (clim:bounding-rectangle-height
@@ -802,8 +826,7 @@
 			(max 0 (min (- x-pos (floor vp-width 2))
 				    (- x-max vp-width)))
 			(max 0 (min (- y-pos (floor vp-height 2))
-				    (- y-max vp-height))))
-    (force-output stream)))
+				    (- y-max vp-height))))))
 
 (defun bounding-rectangle-center-x (br)
    ;; unfortunately the CLIM 2 spec does not include bounding-rectangle-center
@@ -854,8 +877,7 @@
                 (notification-window-string clim:*application-frame*))
               '(""))))
         #-:mcclim :fill ; in Allegro CLIM, can't prevent horizontal stretch so make it here
-        (clim:make-pane 'clim:vbox-pane
-          :equalize-width t
+        (clim:make-pane #+:mcclim 'clim:vrack-pane #-:mcclim 'clim:vbox-pane
           :y-spacing 10
           :contents
           (cons 

@@ -150,5 +150,5 @@
             (when (probe-file lkb::*predicates-temp-file*)
               (delete-file lkb::*predicates-temp-file*))
             (when (probe-file lkb::*predicates-temp-file*)
-              (delete-file (delete-file lkb::*predicates-temp-file*)))
+              (delete-file lkb::*predicates-temp-file*))
             nil))))))

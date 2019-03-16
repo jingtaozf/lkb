@@ -57,7 +57,7 @@
 		(not (probe-file filename))
                 (when (y-or-n-p-general
                         (format nil 
-                          "File `~a' exists.~%Overwrite it?" 
+                          "File `~a' already exists.~%Overwrite it?" 
                           filename))
                   (delete-file filename)))
       finally (return filename)))
@@ -196,7 +196,7 @@
      (clim:outlining (:thickness 3 :background clim:+white+) ,pane)))
 
 (defmacro horizontally-equal-widths (p1 p2)
-  ;; lay out horizontally 2 panes with equal widths, and then pad on right
+  ;; lay out horizontally 2 panes with equal widths with 10 pixel separation, padded on right
   `(clim:horizontally ()
      #+:mcclim
      (clim:make-pane 'clim:grid-pane
@@ -263,14 +263,13 @@
                         :name-key #'(lambda (name) (format nil " ~A " name)))
                       :fill)))
                 (t
-                  (clim:make-pane 'clim:hbox-pane
+                  (clim:make-pane #+:mcclim 'clim:hrack-pane #-:mcclim 'clim:hbox-pane
                     :x-spacing 0
-                    :equalize-height t
                     #+:mcclim :min-width #+:mcclim 300 ; Allegro CLIM would take as default width
                     :contents
                     (cons
                       (text-field-spacing
-                        (clim:make-pane 'clim:text-field ; in McCLIM doesn't work if subclassed
+                        (clim:make-pane 'clim:text-field ; in McCLIM, wouldn't work if subclassed
                           :name name
                           :value
                           (or (if (and (consp (cdr p-i-p))
@@ -279,12 +278,11 @@
                                  (cdr p-i-p))
                               "")
                           :editable-p t
-                          :end-of-line-action :scroll
                           :max-width clim:+fill+
                           :background clim:+white+
                           :text-style (lkb-dialog-font)
-                          :scroll-bars nil
-                          :borders nil))
+                          ;; *** :borders nil
+                          ))
                       ;; optionally a pop up menu of alternatives for its sister text field
                       (if (and (consp (cdr p-i-p)) (eq (second p-i-p) :typein-menu) (cddr p-i-p))
                         (list
@@ -292,7 +290,7 @@
                             :min-width 23 :width 23 :max-width 23 ; fix its width
                             :height 23 ; prevent it stretching its sister vertically
                             :scroll-bars nil
-                            :borders nil
+                            ;; *** :borders nil
                             :display-function
                             (let ((name name) (p-i-p p-i-p)) ; capture vars for closure
                               #'(lambda (frame pane)
@@ -360,17 +358,16 @@
         (setf (clim:gadget-value (get-pane-by-name frame (car sister-and-alts)))
 	  val)))))
 
-(defmethod choose-from-strings-dialog-alts (items &rest keys &key y-spacing text-style)
-   (apply #'clim:menu-choose
-          ;; not enough horizontal padding around menu items in McCLIM
-  	  #+:mcclim
-  	  (mapcar
-  	     #'(lambda (item) (cons (format nil " ~A " item) item))
-  	     items)
-          #-:mcclim items
+(defmethod choose-from-strings-dialog-alts (items &rest keys &key text-style y-spacing)
+   (apply #'clim:menu-choose items
+          :printer
+          #'(lambda (item stream)
+             (clim:with-text-style (stream (or text-style (lkb-dialog-font)))
+               ;; not enough horizontal padding around menu items in McCLIM
+               #+:mcclim (format stream " ~A " item)
+               #-:mcclim (format stream "~A" item)))
           :scroll-bars nil
           :y-spacing (or y-spacing '(4 :point))
-          :text-style (or text-style (lkb-dialog-font))
           keys))
 
 (defun display-prev-alternatives (pane sister-and-alts)
@@ -503,21 +500,21 @@
           (clim:make-pane 'clim:table-pane :x-spacing 30 :align-y :center
             :contents
 	    (list
-	      ;; spacing-pane around each gadget since Allegro CLIM table-pane ignores y-spacing
+	      ;; wrap with spacing since Allegro CLIM table-pane does not implement x/y-spacing
 	      (list (clim:make-pane 'clim:label-pane :label "Destination:  ")
-                    (clim:horizontally (:x-spacing 50)
-                      (clim:spacing (:thickness 3) destination-choices)
-                      destination-file
-                      (clim:make-pane 'clim:label-pane :label "")))
+                    (clim:spacing (:thickness 3)
+                      (clim:horizontally (:x-spacing 60 :equalize-height nil)
+                        destination-choices destination-file
+                        (clim:make-pane 'clim:label-pane :label ""))))
 	      #+:mcclim
               (list (clim:make-pane 'clim:label-pane :label "Paper size:  ")
-	            (clim:horizontally () (clim:spacing (:thickness 3) paper-size-choices) :fill))
+	            (clim:spacing (:thickness 3) (clim:horizontally () paper-size-choices :fill)))
 	      #-:mcclim
               (list (clim:make-pane 'clim:label-pane :label "Orientation:  ")
-	            (clim:horizontally () (clim:spacing (:thickness 3) orientation-choices) :fill))
+	            (clim:spacing (:thickness 3) (clim:horizontally () orientation-choices :fill)))
 	      #-:mcclim
 	      (list (clim:make-pane 'clim:label-pane :label "Use multiple pages?  ")
-	            (clim:horizontally () (clim:spacing (:thickness 3) pages-choices) :fill)))))
+	            (clim:spacing (:thickness 3) (clim:horizontally () pages-choices :fill))))))
         #-:mcclim :fill ; in Allegro CLIM, can't prevent vertical stretch so make it here
         (clim:spacing (:thickness 15)
           (horizontally-equal-widths ok-button cancel-button))))))

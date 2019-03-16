@@ -53,7 +53,9 @@
   :info-bar t
   :display-function 'draw-parse-tree
   :text-style (lkb-parse-tree-font)
-  :width :compute
+  ;; in McCLIM, the hack for :compute inside a scroll-pane gives a max width, which
+  ;; prevents horizontal resizing - avoid this by specifying a standard preferred width
+  :width #+:mcclim *parse-window-width* #-:mcclim :compute
   :height :compute)
 
 (define-info-bar node (node stream)
@@ -280,7 +282,7 @@
                  (clim:pane-text-style lkb-pane)
                  (clim:text-style-size (lkb-parse-tree-font))))
              (text-height
-               (clim:text-style-height new-style doc-pane)))
+               (+ (clim:text-style-height new-style doc-pane) 2))) ; = spacing :thickness 1
         (setf (clim:medium-text-style doc-pane) new-style)
         (clim:change-space-requirements 
           doc-pane
@@ -350,12 +352,11 @@
 (defun draw-parse-summary-window (frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let* ((trees (parse-summary-trees frame))
-         (node-style (clim:pane-text-style stream))
          (max-tree-width-approx
            (loop
               for tree in trees
               repeat 10 ; a sample, otherwise a trivial window resize could be expensive
-              maximize (compute-parse-tree-width (parsum-top tree) stream node-style)))
+              maximize (compute-parse-tree-width (parsum-top tree) stream)))
          (window-width (clim:stream-text-margin stream))
          (ncolumns (max 1 (floor window-width (+ max-tree-width-approx 15)))))
     (unless (eql ncolumns (parse-summary-last-ncolumns frame))
@@ -381,20 +382,21 @@
           (clim:bounding-rectangle-size (clim:stream-output-history stream))
         (clim:change-space-requirements stream :width w :height h)))))
 
-(defun compute-parse-tree-width (node stream node-style)
-  (let ((lex-style (text-style-bold-face node-style)))
-    (labels
-      ((node/daughters-max-width (node)
-        (multiple-value-bind (s lex-p) 
-            (get-string-for-edge node)
-          (max 
-            (+ (clim:stream-string-width stream s
-                 :text-style (if lex-p lex-style node-style))
-               *parsum-node-sep*)
-            (loop
-              for d in (find-children node)
-              sum (node/daughters-max-width d))))))
-      (node/daughters-max-width node))))
+(defun compute-parse-tree-width (node stream)
+  (labels
+    ((node/daughters-max-width (node)
+      (multiple-value-bind (s lex-p) 
+          (get-string-for-edge node)
+        (max 
+          (+
+            (if lex-p
+              (with-text-style-bold-face (stream) (clim:stream-string-width stream s))
+              (clim:stream-string-width stream s))
+            *parsum-node-sep*)
+          (loop
+            for d in (find-children node)
+            sum (node/daughters-max-width d))))))
+    (node/daughters-max-width node)))
 
 (defun draw-single-res-tree (tree stream)
   (setf (parsum-output-record tree)
