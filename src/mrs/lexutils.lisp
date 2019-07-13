@@ -40,12 +40,12 @@
             "~%No *top-semantics-type* defined" *toptype*)
     (setf mrs::*top-semantics-entry* (get-type-entry *toptype*))))
   (unless (eq (check-generator-environment) :error)
-    (format t "~%Indexing starting...") (force-output)
+    (format t "~&Indexing starting...") (force-output)
     (index-lexicon *lexicon*)
     (index-lexical-rules)
     (index-grammar-rules)
     (index-generics)
-    (format t "~%Indexing complete~%")
+    (format t "~&Indexing complete~%")
     nil))
 
 ;; move to: lex-database method in lex.lsp ???

@@ -291,28 +291,45 @@
 	            ,@cases))
             (format t "~%While attempting to execute menu command ~A" ,command-var))))))
 
+
+(defun menu-command-error (msg condition)
+  (format *error-output* "~%~A: ~A~%" msg condition)
+  #+:sbcl
+  (let ((sb-ext:*debug-print-variable-alist*
+           (cons '(*print-length* . 3) sb-ext:*debug-print-variable-alist*)))
+    (format *error-output* "~&Backtrace:~%")
+    (sb-debug:print-backtrace
+      :stream *error-output* :count 3 :method-frame-style :minimal :print-thread nil))
+  (throw 'execute-menu-command nil))
+
 (defmacro execute-menu-command (form context-msg)
   `(with-output-to-top ()
-     (handler-case
+     (catch 'execute-menu-command
+       ;; using handler-bind means that cerrors are treated the same as errors - this
+       ;; is reasonable since when executing a menu command we're not guaranteed to
+       ;; have *debug-io* available to interact with user
+       (handler-bind
+         (;; we can cause an excl:interrupt-signal when executing from the command loop,
+          ;; but is there actually a way for the user to direct an interrupt at menu
+          ;; command execution?
+          #+:allegro
+          (excl:interrupt-signal
+            #'(lambda (condition)
+                (menu-command-error "Interrupted" condition)))
+          (storage-condition
+            #'(lambda (condition)
+                ,context-msg
+                (menu-command-error "Memory allocation problem" condition)))
+          (error
+            #'(lambda (condition)
+                ,context-msg
+                (menu-command-error "Error" condition)))
+          (serious-condition ; parent of storage-condition and of error
+            #'(lambda (condition)
+                ,context-msg
+                (menu-command-error "Unexpected problem" condition))))
          (prog1 ,form
-           (force-output *lkb-background-stream*)) ; flush any diagnostic messages
-       ;; placeholder - we need a way of generating an interrupt which will
-       ;; affect these processes
-       #+:allegro
-       (excl:interrupt-signal (condition)
-         (format t "~%Interrupted: ~A~%" condition))
-       #+:ccl
-       (ccl:interrupt-signal-condition (condition)
-         (format t "~%Interrupted: ~A~%" condition))
-       (storage-condition (condition)
-         ,context-msg
-         (format t "~%Memory allocation problem: ~A~%" condition))
-       (error (condition)
-         ,context-msg
-         (format t "~%Error: ~A~%" condition))
-       (serious-condition (condition)
-         ,context-msg
-         (format t "~%Unexpected problem: ~A~%" condition)))))
+           (force-output *lkb-background-stream*)))))) ; flush any diagnostic messages
 
 
 ;;; ========================================================================

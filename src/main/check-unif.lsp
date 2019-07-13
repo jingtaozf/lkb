@@ -357,21 +357,32 @@
             (greatest-common-subtype dt ct)))))
 
 (defun restrictors-subsuming-p (restricted1 restricted2)
-  ;; succeed if there is subsumption in either direction
+  ;; succeed if there is subsumption consistently in one direction and/or the other
   (loop
       for dt in restricted1
       for ct in restricted2
+      with forwardp = t ; dt subsumes or is equal to ct
+      and backwardp = t ; the converse
       always
         (cond
-          ((or (eq dt ct) (null dt) (null ct)))
+          ((eq dt ct))
+          ((null dt)
+            (setq backwardp nil) forwardp)
+          ((null ct)
+            (setq forwardp nil) backwardp)
           ((and (type-bit-representation-p dt) (type-bit-representation-p ct))
             ;; fixnum (bit) encodings
-            (let ((gcs (logand dt ct)))
-              (or (= gcs dt) (= gcs ct))))
+            (or (= dt ct) ; in case = but not eq
+                (let ((gcs (logand dt ct)))
+                  (cond
+                    ((= gcs ct) (setq backwardp nil) forwardp)
+                    ((= gcs dt) (setq forwardp nil) backwardp)))))
           (t
             ;; type name symbol encodings
             (let ((gcs (greatest-common-subtype dt ct)))
-              (or (eq gcs dt) (eq gcs ct)))))))
+              (cond
+                ((eq gcs ct) (setq backwardp nil) forwardp)
+                ((eq gcs dt) (setq forwardp nil) backwardp)))))))
 
 
 ;;; Versions called dynamically inside the scope of a set of unifications

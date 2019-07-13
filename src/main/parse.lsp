@@ -663,8 +663,8 @@
              (*first-only-p*
               (cond
                ((null first-only-p) nil)
-               ((and (numberp first-only-p) (zerop first-only-p)) nil)
-               ((numberp first-only-p) first-only-p)
+               ((and (numberp first-only-p) (<= first-only-p 0)) nil)
+               ((numberp first-only-p) (ceiling first-only-p))
                (t 1))))
         (declare (special *minimal-vertex* *maximal-vertex*))
         (with-parser-lock ()
@@ -704,7 +704,7 @@
 	    (when *abort-parse-after-lexical-lookup*
 	      (return-from parse (get-parse-return-values)))
             (catch :best-first
-              (add-words-to-chart (and first-only-p (null *active-parsing-p*)
+              (add-words-to-chart (and *first-only-p* (null *active-parsing-p*)
                                        (cons *minimal-vertex* *maximal-vertex*)))
               (if *active-parsing-p*
                 (complete-chart)
@@ -715,10 +715,10 @@
             (push (get-internal-run-time) *parse-times*)
             ;; in first-only parsing (passive or active mode) the parse loop will already
             ;; have found a complete parse - if there is one
-            (unless first-only-p
+            (unless *first-only-p*
               (setq *parse-record* 
                 (parses-from-spanning-edges
-                  (find-spanning-edges *minimal-vertex* *maximal-vertex*))))))
+                  (find-spanning-edges *minimal-vertex* *maximal-vertex*) nil)))))
         (when show-parse-p (show-parse))
         (values
          (statistics-etasks *statistics*)
@@ -748,7 +748,7 @@
        (> (length input) 4)
        (string= "<?xml" input :end2 5)))
 
-(defun parses-from-spanning-edges (edges)
+(defun parses-from-spanning-edges (edges n)
   ;; to avoid futile work in unpacking, apply start symbol filter before as well as
   ;; after - it's safe to test packed edges against the start symbols using unification,
   ;; but we can only check the additional root condition on unpacked parses because a
@@ -765,8 +765,9 @@
           (compute-root-edges
             (unpack-edges
               (loop for edge in edges nconc (filter-root-edges edge start-symbols nil)))
-            start-symbols))
-        (compute-root-edges edges start-symbols))))
+            start-symbols
+            n))
+        (compute-root-edges edges start-symbols n))))
 
 ;;; *****************************************************
 ;;;
@@ -1645,7 +1646,12 @@ relatively limited.
             (setf *chart-max* to))
           (cond
            (*active-parsing-p*
-            (lexical-task (lex-priority new-edge) cc))
+            (lexical-task
+              (if *first-only-p*
+                ;; combine priority with one-vertex span information, the former predominating
+                (+ (* (lex-priority new-edge) 1000) 1)
+                1)
+              cc))
            (t
             (push cc (aref *chart* from 1))
             (push cc (aref *chart* to 0))))))))
@@ -2072,9 +2078,9 @@ an unknown word, treat the gap as filled and go on from there.
     (when (and f (eql left (car f))
 	       (eql right (cdr f))
                (not (edge-partial-tree edge)))
-      (let ((results (parses-from-spanning-edges (list edge))))
+      (let ((results (parses-from-spanning-edges (list edge) *first-only-p*)))
         (when results
-          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
+          (setq *parse-record* (append *parse-record* results))
           (when (<= (decf *first-only-p* (length results)) 0)
             (throw :best-first t)))))))
 
@@ -2318,19 +2324,27 @@ an unknown word, treat the gap as filled and go on from there.
 	   (not (edge-partial-tree (chart-configuration-edge item))))
     collect (chart-configuration-edge item)))
 
-(defun compute-root-edges (edges roots)
+(defun compute-root-edges (edges roots n)
   ;; for any edges that satisfy the root condition(s) return their corresponding
   ;; complete parses
   ;; roots may be a list of (td)fs with the interpretation that if any of them
   ;; match then this is OK as a parse
+  ;; return up to n results (or all results if n is nil)
   (if roots
       (loop
          for edge in edges
+         until (and (numberp n) (<= n 0))
          nconc
-         (if *substantive-roots-p*
-	     (create-new-root-edges edge roots)
-             (filter-root-edges edge roots t)))
-      edges))
+         (let ((results
+                 (if *substantive-roots-p*
+	             (create-new-root-edges edge roots)
+                     (filter-root-edges edge roots t))))
+           (if (numberp n)
+             (prog1
+               (last results n)
+               (decf n (length results)))
+             results)))
+      (if (numberp n) (last edges n) edges)))
 
 (defparameter *additional-root-condition* nil
   "defined in mrs/idioms.lisp")
@@ -2338,7 +2352,7 @@ an unknown word, treat the gap as filled and go on from there.
 (defun filter-root-edges (edge roots &optional (full-check-p t))
   ;; NB despite the name of the function, the 1st arg is definitely a single edge
   ;; if full-check-p is nil, skip any additional root condition test
-  ;; adding a quick check here tends to filter out very few candidates
+  ;; adding a quick check here would filter out very few candidates
   (and
     (loop
        for root in roots
@@ -2566,7 +2580,7 @@ an unknown word, treat the gap as filled and go on from there.
 (defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
    ;; if *do-something-with-parse* is bound to a function, then this is called after parsing
    ;; each sentence; otherwise the value of ostream determines what is output: either
-   ;; nil (no progress info or final summary), t (progress and summary to standard output),
+   ;; nil (only final summary, to standard output), t (progress and summary to standard output),
    ;; or a stream (ditto to the stream)
    (setf *unanalysed-tokens* nil)
    (clear-type-cache)
@@ -2584,12 +2598,12 @@ an unknown word, treat the gap as filled and go on from there.
        (loop
          (when (eq raw-sentence 'eof)
            (unless (fboundp *do-something-with-parse*)
-             (when ostream
-               (format ostream "~&~%;;; Total CPU time: ~A msecs~%"
+             (let ((out (or ostream t)))
+               (format out "~&~%;;; Total CPU time: ~A msecs~%"
                        (round (* (- (get-internal-run-time) start-time) 1000)
                               internal-time-units-per-second))
-               (format ostream ";;; Mean edges: ~,2F~%" (/ edge-total nsent))
-               (format ostream ";;; Mean parses: ~,2F~%" (/ parse-total nsent))))
+               (format out ";;; Mean edges: ~,2F~%" (/ edge-total nsent))
+               (format out ";;; Mean parses: ~,2F~%" (/ parse-total nsent))))
            (format t "~%;;; Finished test file~%") (finish-output)
            (lkb-beep)
            (return))
@@ -2620,13 +2634,12 @@ an unknown word, treat the gap as filled and go on from there.
                   (setf *sentence* sentence)
                   (setf *parse-input* parse-input)
                   (setf *ostream* ostream)
-                  (if (fboundp *do-something-with-parse*)
-                    (funcall *do-something-with-parse*)
-                    (when ostream
-                      (let ((n (length *parse-record*)))
-                        (incf parse-total n)
-                        (incf edge-total *edge-id*)
-                        (format ostream "~A ~A~%" n *edge-id*)))))
+                  (let ((n (length *parse-record*)))
+                    (incf parse-total n)
+                    (incf edge-total *edge-id*)
+                    (if (fboundp *do-something-with-parse*)
+                      (funcall *do-something-with-parse*)
+                      (when ostream (format ostream "~A ~A~%" n *edge-id*)))))
                 #-:gdebug
                 (storage-condition (condition)
                   (format t "~&Memory allocation problem: ~A caused by ~A~%"

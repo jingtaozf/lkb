@@ -245,10 +245,10 @@
         (nconc (unpack-edge!! edge t)
                (loop
                    for edge in (edge-packed edge)
-                   nconc (unpack-edge! edge))
+                   append (unpack-edge! edge)) ; JAC 14-05-2018 - was nconc
                (loop
                    for edge in (edge-equivalent edge)
-                   nconc (unpack-edge! edge))))
+                   append (unpack-edge! edge)))) ; ditto
        ;;
        ;; the (default) recursive case: for each daughter, unfold it and build
        ;; list of unfolding results, one per daughter.  then compute all ways

@@ -598,19 +598,10 @@
   `(or (dag-new-type ,fs) (dag-type ,fs)))
 
 (defun unify1 (dag1 dag2 path)
-  (setq dag1 (deref-dag dag1))
-  (setq dag2 (deref-dag dag2))
-  (cond
-    ((eq (dag-copy dag1) :inside)
-      (when (or *unify-debug* *unify-debug-cycles*)
-        (setq path (reverse path))
-        (if (eq *unify-debug* :return)
-            (setf %failure% (list :cycle path))
-            (format t "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" path)))
-      (throw '*fail* nil))
-    ((eq dag1 dag2) dag1)
-    (t
-      (unify2 dag1 dag2 path))))
+  (if (or (eq (setq dag1 (deref-dag dag1)) dag2)
+          (eq (setq dag2 (deref-dag dag2)) dag1))
+      dag1
+      (unify2 dag1 dag2 path)))
 
 ;;; (defparameter *recording-constraints-p* nil
 ;;;  "needed for LilFes conversion")
@@ -642,7 +633,8 @@
               ;; (when *recording-constraints-p*
               ;;   (pushnew new-type *type-constraint-list* :test #'eq))
               (if *unify-debug*
-                (unless (catch '*fail* (unify1 dag1 constraint path))
+                (unless (catch '*fail*
+                          (setq dag1 (unify2 dag1 constraint path)))
                   (if (eq *unify-debug* :return)
                       (setq %failure%
                         (list :constraints (reverse path) new-type nil nil))
@@ -653,7 +645,7 @@
 "~%Unification with constraint of type ~A failed at path < ~{~A ~^: ~}>"
                           new-type (reverse path))))
                   (throw '*fail* nil))
-                (setq dag1 (unify1 dag1 constraint path)))))
+                (setq dag1 (unify2 dag1 constraint path)))))
 
           ;; cases for each of dag1 and dag2 where they have no arcs just
           ;; considering straightforward use of unify1: if we've
@@ -661,13 +653,20 @@
           ;; forwarded then so we won't ever visit it again - so no need
           ;; to test for presence of any comp-arcs BUT:
           ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
-          ;; we do need the additional tests
+          ;; we do need the additional tests for comp-arcs
           (cond
             ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
               (unless (eq new-type t2) (setf (dag-new-type dag2) new-type))
               (setf (dag-forward dag1) dag2))
             ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
               (setf (dag-forward dag2) dag1))
+            ((eq (dag-copy dag1) :inside)
+              (when (or *unify-debug* *unify-debug-cycles*)
+                (if (eq *unify-debug* :return)
+                    (setq %failure% (list :cycle (reverse path)))
+                    (format t "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>"
+                      (reverse path))))
+              (throw '*fail* nil))
             (t
               (setf (dag-forward dag2) dag1)
               (setf (dag-copy dag1) :inside)
@@ -686,8 +685,8 @@
                           t1 t2 (reverse path))))
                   (when (eq *unify-debug* :window)
                     (show-message-window msg))
-                  ;; deliberately also show in the LKB top as before, since some
-                  ;; people may have got used to it there
+                  ;; deliberately also show in Lkb Top window, since some users may
+                  ;; have got used to seeing it there
                   (format t "~%~A" msg))))
           (throw '*fail* nil))))))
 
@@ -807,66 +806,67 @@
 ;;; through the copy functions; we cannot consider putting it in the copy slot since
 ;;; then it would hang around afterwards, which is bad news for stack allocated conses
 
-(defun copy-dag1 (dag path &aux copy (comp-arcs-inserted-p nil))
+(defun copy-dag1 (dag path &aux copy)
   ;; JAC 21-Jan-2019: numbers of edges and parses are sensitive to this function's precise
-  ;; workings at grammar load time (but not at parse time) - needs investigating
-  ;; the number of parses can differ if comp-arcs are prepended to arcs and not to shared
-  ;; tail, and the number of edges can differ if comp-arcs is not reversed
-  (labels
-    ((copy-dag1-arcs (arcs comp-arcs)
-       ;; we can share arcs and the tail below the last arc that is copied, but we must
-       ;; not actually modify any of the list structure
-       ;; we recurse on the arcs tail instead of iterating across the arcs so we can
-       ;; build the new arcs list starting from the end
-       (if arcs
-           (let* ((arc (car arcs))
-                  (new-path (cons (dag-arc-attribute arc) path))
-                  (v (copy-dag1 (dag-arc-value arc) new-path))
-                  (tail (copy-dag1-arcs (cdr arcs) comp-arcs)))
-             (declare (dynamic-extent new-path))
-             (cond
-               ((not (eq v (dag-arc-value arc)))
-                 (unless comp-arcs-inserted-p
-                   (setq comp-arcs-inserted-p t)
-                   (setq tail (nreconc comp-arcs tail)))
-                 (cons
-                   (make-dag-arc :attribute (dag-arc-attribute arc) :value v)
-                   tail))
-               ((not (eq tail (cdr arcs)))
-                 (cons arc tail))
-               (t arcs)))))) ; good, we are able to return 'arcs' as sharable
-    (declare (dynamic-extent copy-dag1-arcs)) ; closure on stack
-    (setq dag (deref-dag dag))
-    (setq copy (dag-copy dag))
-    (cond
-      ((eq copy :inside)
-        (when (or *unify-debug* *unify-debug-cycles*)
-          (setq path (reverse path))
-          (if (eq *unify-debug* :return)
-              (setq %failure% (list :cycle path))
-              (format t "~%Copy found cycle at < ~{~A ~^: ~}>" path)))
-        (throw '*cyclic* nil))
-      ((not (symbolp copy)) ; already copied?
-        copy)
-      (t
-        (setf (dag-copy dag) :inside)
-        (let ((new-type (dag-new-type dag))
-              (arcs (dag-arcs dag))
-              (comp-arcs (dag-comp-arcs dag)))
-          ;; in comp-arcs we can share arcs and modify any of the list structure
-          (loop for tail on comp-arcs
-            do
-            (let ((new-path (cons (dag-arc-attribute (car tail)) path)))
-              (declare (dynamic-extent new-path))
-              (let ((v (copy-dag1 (dag-arc-value (car tail)) new-path)))
-                (unless (eq v (dag-arc-value (car tail)))
-                  (setf (car tail)
-                    (make-dag-arc
-                      :attribute (dag-arc-attribute (car tail))
-                      :value v))))))
-          (setq arcs (copy-dag1-arcs arcs comp-arcs))
-          (when (and comp-arcs (not comp-arcs-inserted-p))
-            (setq arcs (nreconc comp-arcs arcs)))
+  ;; workings at grammar load time (but not at parse time): the number of parses can differ
+  ;; if comp-arcs are prepended to arcs and not to shared tail, and the number of edges can
+  ;; differ if comp-arcs is not reversed - needs investigating
+  (setq dag (deref-dag dag))
+  (setq copy (dag-copy dag))
+  (cond
+    ((eq copy :inside)
+      (when (or *unify-debug* *unify-debug-cycles*)
+        (setq path (reverse path))
+        (if (eq *unify-debug* :return)
+            (setq %failure% (list :cycle path))
+            (format t "~%Copy found cycle at < ~{~A ~^: ~}>" path)))
+      (throw '*cyclic* nil))
+    ((not (symbolp copy)) ; already copied?
+      copy)
+    (t
+      (let ((new-type (dag-new-type dag))
+            (arcs (dag-arcs dag))
+            (comp-arcs (dag-comp-arcs dag)))
+        (labels
+          ((copy-dag1-arcs (arcs)
+             ;; we can share arcs and the tail below the last arc that is copied, but we must
+             ;; not actually modify any of the list structure
+             ;; we recurse on the arcs tail instead of iterating across the arcs so we can
+             ;; build the new arcs list starting from the end
+             (if arcs
+                 (let* ((arc (car arcs))
+                        (new-path (cons (dag-arc-attribute arc) path))
+                        (v (copy-dag1 (dag-arc-value arc) new-path))
+                        (tail (copy-dag1-arcs (cdr arcs))))
+                   (declare (dynamic-extent new-path))
+                   (cond
+                     ((not (eq v (dag-arc-value arc)))
+                       (when comp-arcs
+                         (setq tail (nreconc comp-arcs tail))
+                         (setq comp-arcs nil)) ; we've merged them now 
+                       (cons
+                         (make-dag-arc :attribute (dag-arc-attribute arc) :value v)
+                         tail))
+                     ((not (eq tail (cdr arcs)))
+                       (cons arc tail))
+                     (t arcs)))))) ; good, we are able to return 'arcs' as sharable
+          (declare (dynamic-extent copy-dag1-arcs)) ; closure on stack
+          (setf (dag-copy dag) :inside)
+          ;; in comp-arcs we can share arcs and modify any of the arc list structure but
+          ;; we must not modify any arc
+          (loop
+              for tail on comp-arcs
+              for arc = (car tail)
+              do
+              (let ((new-path (cons (dag-arc-attribute arc) path)))
+                (declare (dynamic-extent new-path))
+                (let ((v (copy-dag1 (dag-arc-value arc) new-path)))
+                  (unless (eq v (dag-arc-value arc))
+                    (setf (car tail)
+                      (make-dag-arc :attribute (dag-arc-attribute arc) :value v))))))
+          (setq arcs (copy-dag1-arcs arcs))
+          (when comp-arcs
+            (setq arcs (nreconc comp-arcs arcs))) ; didn't merge them before so do it now
           (setf (dag-copy dag)
             (if (or (not (dag-safe-p dag))
                     new-type
@@ -876,8 +876,10 @@
 
 
 #|
-;;; Basic version - does not reuse any of the existing list or arc structure, nor does it
-;;; record path for circularity message
+;;; Basic version - does not reuse any of the existing list or arc structure, nor does
+;;; it record path for circularity message or implement :return value for *unify-debug*.
+;;; With it, main parsing procedure takes similar cpu time but allocates around 20%
+;;; more storage, increasing gc time
 
 (defun copy-dag1 (dag &optional path)
   (let* ((dag (deref-dag dag))

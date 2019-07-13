@@ -235,6 +235,14 @@
     ((stringp type1)
       (string-type-p type2))))
 
+(defun subtype-or-equal (type1 type2)
+  ;; is type1 equal to type2 or a subtype of it?
+  (cond
+    ((eq type1 type2))
+    ((stringp type2)
+       (and (stringp type1) (string= type1 type2)))
+    (t (subtype-p type1 type2))))
+
 (defun atomic-type-p (type-name)
   (or (stringp type-name)
       (let ((type-record (get-type-entry type-name)))
@@ -256,7 +264,7 @@
 (#+:sbcl sb-ext:defglobal #-:sbcl defvar *type-cache*
   (make-array +type-cache-size+ :initial-element nil))
 
-(defstruct type-cache-entry t1 t2 sub con)
+(defstruct type-cache-entry t1 t2 sub con next)
 
 (defun clear-type-cache nil
    ;; For consistency this cache must be cleared before (re-)loading a grammar. It's
@@ -278,23 +286,26 @@
            (t
               (let* ((h1 (sxhash t1))
                      (h2 (sxhash t2))
-                     (index (logand (logxor h1 h2) (1- +type-cache-size+))) ; xor commutative
+                     (hash (logand (logxor h1 h2) (1- +type-cache-size+))) ; xor commutative
                      (cache *type-cache*))
-                 (declare (fixnum h1 h2 index) (simple-vector cache) (optimize (safety 0)))
+                 (declare (fixnum h1 h2 hash) (simple-vector cache)
+                          (optimize (safety 0))) ; what could possibly go wrong...?
                  (when (> h1 h2) (rotatef t1 t2)) ; impose a canonical ordering
                  (loop
-                    with entries = (svref cache index)
-                    for e of-type type-cache-entry in entries
-                    when (and (eq (type-cache-entry-t1 e) t1) (eq (type-cache-entry-t2 e) t2))
-                    return (values (type-cache-entry-sub e) (type-cache-entry-con e))
-                    finally
-                    (multiple-value-bind (subtype constraintp)
-                         (full-greatest-common-subtype t1 t2)
-                       (setf (svref cache index)
-                          (cons
-                             (make-type-cache-entry :t1 t1 :t2 t2 :sub subtype :con constraintp)
-                             entries))
-                       (return (values subtype constraintp)))))))))
+                     for e of-type (or null type-cache-entry)
+                       = (svref cache hash) then (type-cache-entry-next e)
+                     unless e
+                     return
+                       (multiple-value-bind (subtype constraintp)
+                           (full-greatest-common-subtype t1 t2)
+                         (setf (svref cache hash)
+                           (make-type-cache-entry
+                             :t1 t1 :t2 t2 :sub subtype :con constraintp
+                             :next (svref cache hash)))
+                         (values subtype constraintp))
+                     when (and (eq (type-cache-entry-t1 e) t1) (eq (type-cache-entry-t2 e) t2))
+                     return
+                       (values (type-cache-entry-sub e) (type-cache-entry-con e))))))))
      (cond
         ((eq type1 type2) type1)
         ((and (symbolp type1) (symbolp type2))
@@ -311,18 +322,24 @@
 
 #|
 ;;; investigate effectiveness of greatest common subtype cache
-(loop for entries across *type-cache*
-   for len = (length entries)
-   with stats = nil
-   do (let ((x (assoc len stats))) (if x (incf (cdr x)) (push (cons len 1) stats)))
-   finally (return (sort stats #'> :key #'car)))
+(loop for entry across *type-cache*
+      for len = (loop for e = entry then (type-cache-entry-next e)
+                      while e
+                      sum 1)
+      with stats = nil
+      do (let ((x (assoc len stats))) (if x (incf (cdr x)) (push (cons len 1) stats)))
+      finally (return (sort stats #'> :key #'car)))
 (loop for n from 0 below (length *type-cache*)
-   for entries = (svref *type-cache* n)
-   when (= (length entries) 4)
-   do
-   (print n)
-   (print (loop for e in entries
-                collect (cons (type-cache-entry-t1 e) (type-cache-entry-t2 e)))))
+      for entry = (svref *type-cache* n)
+      for len = (loop for e = entry then (type-cache-entry-next e)
+                      while e
+                      sum 1)
+      when (= len 4)
+      do
+      (print n)
+      (print (loop for e = entry then (type-cache-entry-next e)
+                   while e
+                   collect (cons (type-cache-entry-t1 e) (type-cache-entry-t2 e)))))
 (clear-type-cache)
 |#
 

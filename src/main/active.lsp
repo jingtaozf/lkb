@@ -188,22 +188,6 @@
 
 (defmacro actives-by-end (position)
   `(aref *achart* ,position 0))
-
-(defmacro passives-delete (configuration)
-  `(let* ((start (chart-configuration-begin ,configuration))
-          (end (chart-configuration-end ,configuration))
-          (by-start (aref *chart* start 1))
-          (by-end (aref *chart* end 0)))
-     (when by-start
-       (setf (aref *chart* start 1)
-         (delete ,configuration 
-                 by-start
-                 :test #'eq :count 1)))
-     (when by-end
-       (setf (aref *chart* end 0)
-         (delete ,configuration 
-                 by-end
-                 :test #'eq :count 1)))))
 
 (defmacro inapplicablep (rule arule position)
   `(unless (check-rule-filter ,rule ,arule ,position)
@@ -253,39 +237,40 @@
    (t
     (fundamental4passive passive))))
 
-(defmacro rule-and-passive-task (rule passive)
-  `(cond
-    (*first-only-p*
-     (let* ((task (cons ,rule ,passive))
-            (priority (if *scoring-hook*
-                        (funcall *scoring-hook* task)
-                        (rule-priority ,rule))))
-       (heap-insert *agenda* priority task)))
-    (*chart-packing-p*
-     (let* ((end (chart-configuration-end ,passive))
-            (start (chart-configuration-begin ,passive))
-            (priority (- end (/ start *maximal-vertex*))))
-       (heap-insert 
-        *agenda* priority (cons ,rule ,passive))))
-    (t
-     (process-rule-and-passive (cons ,rule ,passive)))))
+(defun rule-and-passive-task (rule passive)
+  (declare (special *maximal-vertex*))
+  (let ((task (cons rule passive)))
+    (if (or *first-only-p* *chart-packing-p*)
+        (let ((priority
+                (if (and *first-only-p* *scoring-hook*)
+                  (funcall *scoring-hook* task)
+                  (let* ((end (chart-configuration-end passive))
+                         (start (chart-configuration-begin passive))
+                         (span (- end (/ start *maximal-vertex*))))
+                    (if *first-only-p*
+                      ;; combine priority with span information, the former predominating
+                      (+ (* (rule-priority rule) 1000) span)
+                      span)))))
+          (heap-insert *agenda* priority task))
+        (process-rule-and-passive task))))
 
-(defmacro active-and-passive-task (active passive arule)
-  `(cond
-    (*first-only-p*
-     (let* ((task (cons ,active ,passive))
-            (priority (if *scoring-hook*
-                        (funcall *scoring-hook* task)
-                        (rule-priority ,arule))))
-       (heap-insert *agenda* priority task)))
-    (*chart-packing-p*
-     (let* ((forwardp (active-chart-configuration-forwardp ,active))
-            (end (chart-configuration-end (if forwardp ,passive ,active)))
-            (start (chart-configuration-begin (if forwardp ,active ,passive)))
-            (priority (- end (/ start *maximal-vertex*))))
-       (heap-insert *agenda* priority (cons ,active ,passive))))
-    (t
-     (process-active-and-passive (cons ,active ,passive)))))
+(defun active-and-passive-task (active passive arule)
+  (declare (special *maximal-vertex*))
+  (let ((task (cons active passive)))
+    (if (or *first-only-p* *chart-packing-p*)
+        (let ((priority
+                (if (and *first-only-p* *scoring-hook*)
+                  (funcall *scoring-hook* task)
+                  (let* ((forwardp (active-chart-configuration-forwardp active))
+                         (end (chart-configuration-end (if forwardp passive active)))
+                         (start (chart-configuration-begin (if forwardp active passive)))
+                         (span (- end (/ start *maximal-vertex*))))
+                    (if *first-only-p*
+                      ;; combine priority with span information, the former predominating
+                      (+ (* (rule-priority arule) 1000) span)
+                      span)))))
+          (heap-insert *agenda* priority task))
+        (process-active-and-passive task))))
 
 (defun complete-chart ()
 
@@ -350,23 +335,10 @@
       for rhs = (rule-rhs rule)
       for open = (rest rhs)
       for key = (first rhs)
-      unless (or
-               (and
-                 (cond
-                   ((null open) ; unary rule
-                      (or (/= begin *minimal-vertex*) (/= end *maximal-vertex*)))
-                   ((< key (first open)) ; all siblings follow key daughter
-                      (/= begin *minimal-vertex*))
-                   ((null (cdr open)) ; single sibling which precedes key daughter
-                      (/= end *maximal-vertex*))
-                   (t nil)) ; more complex arrangement of siblings
-                 (member (rule-id rule) *spanning-only-rules* :test #'eq)
-                 #+:adebug
-                 (progn (print-trace :filter-spanning-only rule passive) t))
-               (and open 
-                 (if (< (first open) key)
-                     (= begin *minimal-vertex*) 
-                     (= end *maximal-vertex*))))
+      unless (and open 
+                  (if (< (first open) key)
+                      (= begin *minimal-vertex*) 
+                      (= end *maximal-vertex*)))
       do
         (if (and (check-rule-filter rule (edge-rule edge) key)
                  (restrictors-compatible-p
@@ -376,7 +348,6 @@
           (incf (statistics-ftasks *statistics*)))))
 
 (defun fundamental4active (active)
-  (declare (special *maximal-vertex*))
   
   #+:adebug
   (print-trace :fundamental4active active)
@@ -395,7 +366,7 @@
     (loop
         with aedge = (chart-configuration-edge active)
         with arule = (edge-rule aedge)
-        with key = (first (active-chart-configuration-open active))
+        with dtr = (first (active-chart-configuration-open active))
         with avector = (edge-dag-restricted aedge)
         for passive in (if (active-chart-configuration-forwardp active)
                          (passives-by-start end)
@@ -404,7 +375,7 @@
         unless (edge-frozen pedge) do
           (if (and (not (edge-partial-tree pedge))
 		   (not (edge-partial-tree aedge))
-		   (check-rule-filter arule (edge-rule pedge) key)
+		   (check-rule-filter arule (edge-rule pedge) dtr)
                    (restrictors-compatible-p
                     avector
                     (edge-dag-restricted pedge)))
@@ -429,15 +400,6 @@
          (preceding (actives-by-end begin))
          (following (actives-by-start end)))
     ;;
-    ;; if the edge's rule is spanning-only, check it covers the whole input.
-    ;;
-    (when (and
-            (rule-p prule)
-            (not (and (= begin *minimal-vertex*) (= end *maximal-vertex*)))
-            (member (rule-id prule) *spanning-only-rules* :test #'eq))
-        #+:adebug (print-trace :discard-spanning-only passive)
-        (return-from fundamental4passive))
-    ;;
     ;; add .passive. to chart (indexed by start and end vertex).
     ;;
     (push passive (aref *chart* end 0))
@@ -449,9 +411,9 @@
     ;;
     (when (and *first-only-p*
                (= begin *minimal-vertex*) (= end *maximal-vertex*))
-      (let ((results (parses-from-spanning-edges (list pedge))))
+      (let ((results (parses-from-spanning-edges (list pedge) *first-only-p*)))
         (when results
-          (setf *parse-record* (append (last results *first-only-p*) *parse-record*))
+          (setq *parse-record* (append *parse-record* results))
           (when (<= (decf *first-only-p* (length results)) 0)
             (throw :best-first t)))))
     ;;
@@ -561,6 +523,8 @@
         for oedge = (chart-configuration-edge configuration)
         when (and (= (chart-configuration-end configuration) end)
                   (null (edge-partial-tree oedge)) ; JAC 3-Aug-2017: additional check
+                  (not (edge-foo oedge)) ; avoid previously unpacked part of forest
+                  (eq (edge-rule oedge) (edge-rule edge)) ; otherwise chart output confusing
                   (restrictors-subsuming-p
                     (edge-dag-restricted oedge) (edge-dag-restricted edge)))
         do
@@ -605,6 +569,22 @@
                 (incf (statistics-retroactive *statistics*)))
               (freeze oedge (edge-id edge))))
         finally (return nil)))))
+
+(defun passives-delete (configuration)
+  (flet
+    ((delete-eq-count-1 (item lst) ; = (delete item lst :test #'eq :count 1)
+      (loop
+        for tail on lst
+        and prev-tail = nil then tail
+        if (eq (car tail) item)
+          return (if prev-tail (progn (setf (cdr prev-tail) (cdr tail)) lst) (cdr lst))
+        finally (return lst))))
+    (let ((start (chart-configuration-begin configuration))
+          (end (chart-configuration-end configuration)))
+      (setf (aref *chart* start 1)
+        (delete-eq-count-1 configuration (aref *chart* start 1)))
+      (setf (aref *chart* end 0)
+        (delete-eq-count-1 configuration (aref *chart* end 0))))))
 
 (defun process-rule-and-passive (task)
 
@@ -794,18 +774,17 @@
            (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
 (defun restrict-and-copy-tdfs (tdfs &key cfrom cto)
-  ;; delete arcs just holding constituents' feature structures -
-  ;; before copying otherwise their copies would be thrown away
-  ;; immediately we have to check whether any of the deleted dags
-  ;; contain a cycle - if so then the whole rule application should
-  ;; fail
+  ;; delete arcs just holding constituents' feature structures - before
+  ;; copying otherwise their copies would be thrown away immediately;
+  ;; also have to check whether any of the deleted dags contain a cycle - in
+  ;; which case the whole rule application should fail
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
          (new (clone-dag dag))
          (restricted nil))
     (flet ((remove-restricted-arcs (arcs)
              (loop for arc in arcs
                 if (member (dag-arc-attribute arc) *deleted-daughter-features* :test #'eq)
-                do (push arc restricted)
+                do (push (dag-arc-value arc) restricted)
                 else collect arc)))
       (declare (dynamic-extent remove-restricted-arcs)) ; closure on stack
       (setf (dag-arcs new)
@@ -816,7 +795,7 @@
         (set-characterization-indef-within-unification-context new cfrom cto))
       (let ((copy (copy-dag new)))
         (if (and copy
-                 (not (cyclic-dag-p (make-dag :type *toptype* :arcs restricted))))
+                 (loop for rdag in restricted never (cyclic-dag-p rdag)))
             (progn
               (incf (statistics-copies *statistics*))
               (make-tdfs :indef copy :tail (copy-tdfs-tails tdfs))) ; c.f. copy-tdfs-elements

@@ -188,112 +188,70 @@
 ;;; course check for type subsumption on each node
 
 (defun dag-subsumes-p (dag1 dag2)
-  ;; assume not circular, and not called within a unification context
+  ;; cannot be called within a unification context - and since it's outside, we know
+  ;; the dags cannot be cyclic (so no need to check) and we don't need to take account
+  ;; of any existing contents of forward, new-type or comp-arcs slots
   (incf (statistics-subsumptions *statistics*))
   (with-unification-context (dag1)
-    (catch '*fail* (subsume-wffs-p dag1 dag2 t t))))
+    (subsume-wffs-p dag1 dag2 t t)))
 
 (defun dag-equal-p (dag1 dag2)
-  ;; assume not circular, and not called within a unification context
-  (multiple-value-bind (sub1 sub2)
-      (with-unification-context (dag1)
-        (catch '*fail* (subsume-wffs-p dag1 dag2 t t)))
-    (and sub1 sub2)))
+  ;; as dag-subsumes-p
+  (with-unification-context (dag1)
+    (multiple-value-bind (forwardp backwardp)
+        (subsume-wffs-p dag1 dag2 t t)
+      (and forwardp backwardp))))
 
 
 (defun subsume-wffs-p (real-dag1 real-dag2 forwardp backwardp)
   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
   ;; and vice-versa respectively. When the possibility has been ruled out the
-  ;; appropriate variable is set to false. Fail as soon as they are both false
-  (when forwardp
-    (cond
-     ((null (dag-copy real-dag1))
-      (setf (dag-copy real-dag1) real-dag2))
-     ((not (eq (dag-copy real-dag1) real-dag2))
-      (setq forwardp nil))
-     ;; ((eq real-dag1 real-dag2)
-     ;;    (return-from subsume-wffs-p t))
-     ;; There isn't much equality of structures between different edges, so
-     ;; not worth testing for it since it involves extra complication: if we
-     ;; stop here and don't perform full processing inside the structure
-     ;; (since all nodes inside it will be eq between dag1 and dag2, and any
-     ;; strictly internal reentrancies will necessarily be the same) we would
-     ;; still need to assign pointers inside it so that any external
-     ;; reentrancies into the structure would be treated correctly
-     ))
-  (when backwardp
-    (cond
-     ((null (dag-copy real-dag2))
-      (setf (dag-copy real-dag2) real-dag1))
-     ((not (eq (dag-copy real-dag2) real-dag1))
-      (setq backwardp nil))))
-  (unless (or forwardp backwardp) (throw '*fail* nil))
-  (let ((type1 (type-of-fs real-dag1))
-        (type2 (type-of-fs real-dag2)))
-    (unless (eq type1 type2)
-      (when (and forwardp (not (subtype-or-equal type2 type1)))
-        (setq forwardp nil))
-      (when (and backwardp (not (subtype-or-equal type1 type2)))
-        (setq backwardp nil))
-      (unless (or forwardp backwardp) (throw '*fail* nil)))
-    (dolist (arc1 (dag-arcs real-dag1))
-      (let* ((label (dag-arc-attribute arc1))
-             (existing-dag2 (get-dag-value real-dag2 label)))
-        (when existing-dag2
-          (multiple-value-setq (forwardp backwardp)
-            (subsume-wffs-p
-             (dag-arc-value arc1) existing-dag2 forwardp backwardp)))))
+  ;; appropriate variable is set to false. Fail as soon as they are both false.
+  (labels
+    ((subsume-wffs-p-aux (dag1 dag2 &aux donep)
+      ;; donep improves on the original algorithm, avoiding repeated processing below
+      ;; a pair of nodes we've visited previously due to reentrancies
+      (when forwardp
+        (let ((c1 (dag-copy dag1)))
+          (cond
+            ((null c1)
+              (setf (dag-copy dag1) dag2))
+            ((eq c1 dag2)
+              (setq donep t))
+            (t (setq forwardp nil)))))
+      (when backwardp
+        (let ((c2 (dag-comp-arcs dag2))) ; can't use same -copy slot in case dags share nodes
+          (cond
+            ((null c2)
+              (setf (dag-comp-arcs dag2) dag1))
+            ((eq c2 dag1)
+              (setq donep t))
+            (t (setq backwardp nil)))))
+      (unless (or forwardp backwardp) (return-from subsume-wffs-p nil))
+      (unless donep
+        ;; when the dags are eq we still need to traverse them to check reentrancies,
+        ;; but other processing can be bypassed
+        (if (eq dag1 dag2)
+          (dolist (arc (dag-arcs dag1))
+            (subsume-wffs-p-aux (dag-arc-value arc) (dag-arc-value arc)))
+          (let ((type1 (dag-type dag1))
+                (type2 (dag-type dag2)))
+            (unless (or (eq type1 type2)
+                        (and (stringp type1) (stringp type2) (string= type1 type2)))
+              (let ((gcs (greatest-common-subtype type1 type2)))
+                (cond
+                  ((eq gcs type1) (setq forwardp nil))
+                  ((eq gcs type2) (setq backwardp nil))
+                  (t (return-from subsume-wffs-p nil)))
+                (unless (or forwardp backwardp) (return-from subsume-wffs-p nil))))
+            (dolist (arc1 (dag-arcs dag1))
+              (let ((dag2-value
+                      (get-dag-value dag2 (dag-arc-attribute arc1))))
+                (when dag2-value
+                  (subsume-wffs-p-aux (dag-arc-value arc1) dag2-value)))))))))
+    (declare (dynamic-extent subsume-wffs-p-aux)) ; closure on stack
+    (subsume-wffs-p-aux real-dag1 real-dag2)
     (values forwardp backwardp)))
-
-;;;
-;;; test for forward subsumption only, return failure path
-;;;
-(defun dag-subsumes-debug (dag1 dag2)
-  (with-unification-context (dag1)
-    (let ((result (catch '*fail* (subsume-wffs-debug dag1 dag2 t nil nil))))
-      (when (and (consp result) (eq (first result) :path))
-        (nreverse (rest result))))))
-
-(defun subsume-wffs-debug (dag1 dag2 forwardp backwardp path)
-  (when forwardp
-    (cond
-     ((null (dag-copy dag1))
-      (setf (dag-copy dag1) dag2))
-     ((not (eq (dag-copy dag1) dag2))
-      (setq forwardp nil))))
-  (when backwardp
-    (cond
-     ((null (dag-copy dag2))
-      (setf (dag-copy dag2) dag1))
-     ((not (eq (dag-copy dag2) dag1))
-      (setq backwardp nil))))
-  (unless (or forwardp backwardp) (throw '*fail* (cons :path path)))
-  (let ((type1 (type-of-fs dag1))
-        (type2 (type-of-fs dag2)))
-    (unless (eq type1 type2)
-      (when (and forwardp (not (subtype-or-equal type2 type1)))
-        (setq forwardp nil))
-      (when (and backwardp (not (subtype-or-equal type1 type2)))
-        (setq backwardp nil))
-      (unless (or forwardp backwardp) (throw '*fail* (cons :path path))))
-    (dolist (arc1 (dag-arcs dag1))
-      (let* ((label (dag-arc-attribute arc1))
-             (existing-dag2 (get-dag-value dag2 label)))
-        (when existing-dag2
-          (multiple-value-setq (forwardp backwardp)
-            (subsume-wffs-debug
-             (dag-arc-value arc1) existing-dag2 
-             forwardp backwardp
-             (cons label path))))))
-    (values forwardp backwardp)))
-
-(defun subtype-or-equal (type1 type2)
-  ;; is type1 equal to type2 or a subtype of it?
-  (cond
-    ((eq type1 type2))
-    ((stringp type2)
-       (and (stringp type1) (string= type1 type2)))
-    (t (subtype-p type1 type2))))
 
 
 #|

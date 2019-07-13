@@ -662,10 +662,10 @@
 
 (define-file-selector-command com-select-place-device-namestring
     ((data 'place-device-namestring :gesture :select))
-  (select-file-dir data t)
   (display-places-devices
     *application-frame*
-    (find-pane-named *application-frame* 'places-devices-pane)))
+    (find-pane-named *application-frame* 'places-devices-pane))
+  (select-file-dir data t))
 
 (defun display-places-devices (frame stream)
   (display-fs-items
@@ -693,7 +693,7 @@
       ((and dev
          (or (stringp dev) (symbolp dev) (characterp dev))
          (not (member dev '(:unspecific :unc))))
-        (concatenate 'string (string dev) ":" (or dir "")))
+        (concatenate 'string (string dev) ":" dir))
       (dir)
       (t (directory-namestring x)))))
 

@@ -622,91 +622,89 @@ base fs plus rule (except the type itself, of course)
 
 ;;; eg. see paper http://www.aclweb.org/anthology/P99-1061
 
-;;; the rule-filter is implemented by associating an array with each rule with 
-;;; - the first dimension corresponding to an index for each rule
-;;; - the second dimension corresponding to an index for each daughter
+;;; the rule-filter is implemented by associating an array with each rule, in which 
+;;; each element contains a list of the rule daughters (numbered left to right from 0)
+;;; that can unify with the rule corresponding to that index
 
 (defun build-rule-filter nil
   (format t "~%Building rule filter")
   (unless (find :vanilla *features*)
-    (let ((max-arity 0)
-          (nrules 0)
+    (let ((nrules 0)
           (rule-list nil))
       (flet ((process-rule (name rule)
                (declare (ignore name))
-               (setq max-arity (max max-arity (1- (length (rule-order rule)))))
                (push rule rule-list)
                (setf (rule-apply-index rule) nrules)
                (incf nrules)))
         (maphash #'process-rule *rules*)
         (maphash #'process-rule *lexical-rules*)
         (dolist (rule rule-list)
-          (let ((filter
-                 (make-array (list nrules max-arity) :initial-element nil)))
-            (setf (rule-apply-filter rule)
-              (fill-rule-filter rule filter rule-list))))
+          (setf (rule-apply-filter rule) (make-array nrules :initial-element nil)))
+        (dolist (rule rule-list)
+          (fill-rule-filter rule rule-list))
         t))))
 
 
-(defun fill-rule-filter (rule filter test-list)
+(defun fill-rule-filter (rule test-list)
   (let ((rule-tdfs (rule-rtdfs rule))
-        (rule-daughters (cdr (rule-order rule))))
-    (loop for test in test-list
+        (rule-daughters (cdr (rule-order rule)))
+        (rule-index (rule-apply-index rule)))
+    (loop
+        for test in test-list
         do
-          (let ((test-tdfs (rule-rtdfs test))
-                (test-index (rule-apply-index test)))
-            (loop for arg from 0 to (1- (length rule-daughters))
-                for dtr in rule-daughters
-                do
-                  (with-unification-context (ignore)
-                    (when
-			;;test-tdfs in dtr posn compatible with rule-tdfs
-                        (yadu rule-tdfs
-                              (create-temp-parsing-tdfs
-                               (if (eq test-tdfs rule-tdfs)
-				   (copy-tdfs-completely test-tdfs)
-                                 test-tdfs)
-                               dtr))
-                      (setf (aref filter test-index arg) t))))))
-    filter))
+        (loop
+            with test-tdfs = (rule-rtdfs test)
+            for dtr in rule-daughters
+            for arg from 0
+            do
+            (with-unification-context (ignore)
+              (when
+                ;; is test-tdfs compatible with arg-th dtr of rule-tdfs?
+                (yadu rule-tdfs
+                      (create-temp-parsing-tdfs
+                        (if (eq test-tdfs rule-tdfs)
+                            (copy-tdfs-completely test-tdfs)
+                            test-tdfs)
+                        dtr))
+                (push arg
+                  (svref (rule-apply-filter test) rule-index))))))))
 
 
 (defun check-rule-filter (rule test arg)
-  ;; can test fill argth daughter of rule?
-  ;; argth starting at 0 
-  (let ((filter (rule-apply-filter rule)))
-    (if (and filter (not (stringp test)))
-	(aref (the (simple-array t (* *)) filter) 
-	      (rule-apply-index test)
-	      arg)
-      t)))
+  ;; can test fill arg-th daughter of rule?
+  ;; leftmost daughter is 0 
+  (or (stringp test)
+      (let ((filter (rule-apply-filter test)))
+        (if filter
+            (member arg (svref filter (rule-apply-index rule)))
+            t))))
 
 
 (defun dump-rule-filter (&optional (file t))
   (declare (special common-lisp-user::*grammar-version*))
+  (unless file (setq file t))
   (let* ((stream (if (stringp file)
-                   (open file :direction :output
-                         :if-does-not-exist :create :if-exists :supersede)
-                   file))
+                     (open file :direction :output
+                           :if-does-not-exist :create :if-exists :supersede)
+                     file))
          (rules (append (get-indexed-lrules nil) (get-indexed-rules nil)))
          (rules (sort rules #'< :key #'rule-apply-index)))
     (format
-     stream ";;;~%;;; rule filter for grammar ~a~%;;;~%~%"
-     common-lisp-user::*grammar-version*)
+      stream ";;;~%;;; rule filter for grammar ~a~%;;;~%~%"
+      common-lisp-user::*grammar-version*)
     (loop
         for rule in rules
-        for filter = (rule-apply-filter rule)
         do
-          (format stream "~%~(~a~)::~%" (rule-id rule))
-          (loop
-              for i from 0 to (- (length (rule-order rule)) 2)
-              do
-                (format stream "  ~a:" i)
-                (loop
-                    for argument in rules
-                    when (aref filter (rule-apply-index argument) i)
-                    do (format stream " ~(~a~)" (rule-id argument)))
-                (terpri stream)))
+        (format stream "~%~(~a~)::~%" (rule-id rule))
+        (loop
+            for i from 0 below (1- (length (rule-order rule)))
+            do
+            (format stream "  ~a:" i)
+            (loop
+                for test in rules
+                when (check-rule-filter rule test i)
+                do (format stream " ~(~a~)" (rule-id test)))
+            (format stream "~%")))
     (when (stringp file) (close stream))
     rules))
   
@@ -792,15 +790,15 @@ Thanks to John Bowler for help with this.
 (defun build-lrfsm nil
   (format t "~%Building lr connections table")
   (let ((lrlist nil) 
-	(revindex-lrules nil)
-	(revindex-rules nil)
-	(nosprules nil)
-	(sprules nil)
-	(nrules nil)
-	(fedrules nil)
-	(unfedrules nil)
-	(nospfedrules nil)
-	(nospunfedrules nil))
+        (revindex-lrules nil)
+        (revindex-rules nil)
+        (nosprules nil)
+        (sprules nil)
+        (nrules nil)
+        (fedrules nil)
+        (unfedrules nil)
+        (nospfedrules nil)
+        (nospunfedrules nil))
     (setf *spelling-rule-feed-cache* nil)
     (setf *cyclic-lr-list* nil)
     (setf *check-nosp-feeding-cache* nil)
@@ -808,54 +806,56 @@ Thanks to John Bowler for help with this.
     (setf *spstruct-list* nil)
     (setf *nospstruct-list* nil)
     (maphash #'(lambda (k v)
-		 (declare (ignore k))
-		 (unless nrules
-		   (setf nrules (array-dimension (rule-apply-filter v) 0)))
-		 (setf (rule-feeders v) nil)
-		 (setf (rule-nospfeeders v) nil)
-		 (setf (rule-nospfsm v) 
-		   (make-array (list nrules) :initial-element :unk))
-		 (setf (rule-lrfsm v) 
-		   (make-array (list nrules) :initial-element :unk))
-		 (setf (rule-allfed v) nil)
-		 (push v lrlist)
-		 (push (cons (rule-apply-index v) v) revindex-lrules)
-		 (if (spelling-change-rule-p v)
-		     (push v sprules)
-		   (push v nosprules)))
-	     *lexical-rules*)
+                 (declare (ignore k))
+                 (unless nrules
+                   (setf nrules (array-dimension (rule-apply-filter v) 0)))
+                 (setf (rule-feeders v) nil)
+                 (setf (rule-nospfeeders v) nil)
+                 (setf (rule-nospfsm v) 
+                   (make-array nrules :initial-element :unk))
+                 (setf (rule-lrfsm v) 
+                   (make-array nrules :initial-element :unk))
+                 (setf (rule-allfed v) nil)
+                 (push v lrlist)
+                 (push (cons (rule-apply-index v) v) revindex-lrules)
+                 (if (spelling-change-rule-p v)
+                     (push v sprules)
+                     (push v nosprules)))
+             *lexical-rules*)
     (dolist (sprule sprules)
       (when (coindexed-orth-paths sprule)
-	(setf *syntax-error* t)
-	(format t "~%Error: ~A is being treated as a spelling rule but has ORTH values coindexed~%this may crash the parser" (rule-id sprule))))
+        (setf *syntax-error* t)
+        (format t "~%Error: ~A is being treated as a spelling rule but has ORTH values coindexed~%this may crash the parser" (rule-id sprule))))
     (maphash #'(lambda (k v)
-		 (declare (ignore k))
-		 (push (cons (rule-apply-index v) v) revindex-rules))
-	     *rules*)
-    (maphash #'(lambda (k v)
-		 (declare (ignore k))
-		 ;;; looking at rule v, rules which feed it can be
-		 ;;; found
-		 (dotimes (i nrules)
-		   (when (aref (rule-apply-filter v) i 0)
-		     ;; lex/morph rules have single daughter
-		     (let ((feeder (cdr (assoc i revindex-lrules))))
-		       (when feeder
-			 (when (and
-				(member v nosprules)
-				(member feeder nosprules))
-			   (push feeder (rule-nospfeeders v)))
-			 (push feeder (rule-feeders v))
-			     )))))
-	     *lexical-rules*)
+                 (declare (ignore k))
+                 (push (cons (rule-apply-index v) v) revindex-rules))
+             *rules*)
+    (maphash
+      #'(lambda (k hi)
+          (declare (ignore k))
+          (maphash
+            #'(lambda (k lo)
+                (declare (ignore k))
+                ;; does lo feed hi through its 0-th daughter?
+                ;; lex/morph rules have single daughter
+                (when (check-rule-filter hi lo 0)
+                      (let ((feeder (cdr (assoc (rule-apply-index lo) revindex-lrules))))
+                        (when feeder
+                          (when (and
+                                  (member hi nosprules)
+                                  (member feeder nosprules))
+                            (push feeder (rule-nospfeeders hi)))
+                          (push feeder (rule-feeders hi))))))
+            *lexical-rules*))
+      *lexical-rules*)
     (dolist (v lrlist)
       (if (rule-feeders v)
-	  (push v fedrules)
-	(push v unfedrules)))
+          (push v fedrules)
+          (push v unfedrules)))
     (dolist (v nosprules)
       (if (rule-nospfeeders v)
-	  (push v nospfedrules)
-	(push v nospunfedrules)))
+          (push v nospfedrules)
+          (push v nospunfedrules)))
 ;;; e.g., A can feed B, B can feed C, C can feed D, A can feed C
 ;;; rule-feeders of A - nil
 ;;;                 B - (A)
@@ -871,21 +871,21 @@ Thanks to John Bowler for help with this.
       ;; lrfsm and constructing it is slow in some cases
       (format t "~%Constructing main lr table")
       (dolist (rule (append unfedrules fedrules))
-	(dolist (feeder (rule-feeders rule))
-	  (build-lrfsm-aux 
-	   feeder nrules (list rule) 'feeders 'lrfsm)))
+        (dolist (feeder (rule-feeders rule))
+          (build-lrfsm-aux 
+            feeder nrules (list rule) 'feeders 'lrfsm)))
       (dolist (lr lrlist)
-	(setf (rule-allfed lr) nil)
-	(complete-lrfsm lr nrules 'lrfsm))
-	|#
+        (setf (rule-allfed lr) nil)
+        (complete-lrfsm lr nrules 'lrfsm))
+      |#
       (when nosprules
-	(format t "~%Constructing lr table for non-morphological rules")
-	(dolist (rule (append nospunfedrules nospfedrules))
-	  (dolist (feeder (rule-nospfeeders rule))
-	    (build-lrfsm-aux 
-	     feeder nrules (list rule) 'nospfeeders 'nospfsm)))
-	(dolist (lr nosprules)
-	  (complete-lrfsm lr nrules 'nospfsm))))))
+        (format t "~%Constructing lr table for non-morphological rules")
+        (dolist (rule (append nospunfedrules nospfedrules))
+          (dolist (feeder (rule-nospfeeders rule))
+            (build-lrfsm-aux 
+              feeder nrules (list rule) 'nospfeeders 'nospfsm)))
+        (dolist (lr nosprules)
+          (complete-lrfsm lr nrules 'nospfsm))))))
 
 #|
 suppose A can feed B, B can feed C, C can feed D

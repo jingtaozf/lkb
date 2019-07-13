@@ -95,26 +95,23 @@
 
 (defmethod sf:list-places ((frame lkb-file-selector))
   ;; add places that the user has visited last in their LKB interactions
-  (labels
-    ((stable-remove-duplicates-equal (lst) ; guaranteed to keep 1st occurrence of a duplicate
-       (if lst
-         (cons (car lst)
-           (stable-remove-duplicates-equal (remove (car lst) (cdr lst) :test #'equal))))))
-    (stable-remove-duplicates-equal
-      (append (call-next-method)
-        (let* ((home (make:getenv "DELPHINHOME"))
-               (home-path
-                 (when home
-                   (parse-namestring home nil *default-pathname-defaults* :junk-allowed t))))
-          (when home-path
-            (list (cl-fad:pathname-as-directory home-path))))
-        (loop
+  (remove-duplicates
+    (append (call-next-method)
+      (let* ((home (make:getenv "DELPHINHOME"))
+             (home-path
+               (when home
+                 (parse-namestring home nil *default-pathname-defaults* :junk-allowed t))))
+        (when home-path
+          (list (cl-fad:pathname-as-directory home-path))))
+      (loop
           for x in (list (locally (declare (special *print-filename*)) *print-filename*)
                          *current-grammar-load-file*
                          *grammar-directory*
                          clim-user:*last-directory*)
           when (or (stringp x) (pathnamep x))
-          collect (make-pathname :name nil :type nil :defaults (pathname x)))))))
+          collect (make-pathname :name nil :type nil :defaults (pathname x))))
+    :from-end t ; remove 2nd and subsequent occurrences of a duplicate
+    :test #'equal))
 )
 
 

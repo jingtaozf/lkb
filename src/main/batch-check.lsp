@@ -40,7 +40,7 @@
     (display-tdl-duplicates lexicon))
 ;  (format t "~%(emptying cache)")
   (empty-cache lexicon)
-  (format t "~&;;; lexicon checked"))
+  (format t "~&;;; lexicon checked~%"))
 
 (defvar *x-recs-dup*)
 (defun display-tdl-duplicates (lex)

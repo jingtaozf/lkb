@@ -142,6 +142,7 @@
            (paths (fs-display-record-paths fs-record))
            (fudge 20)
 	   (max-width 0))
+      (clim:window-clear stream) ; in case shrink/expand on an FS already there
       (silica:inhibit-updating-scroll-bars #+:allegro (stream)
         (clim:with-output-recording-options (stream :draw #+:mcclim t #-:mcclim nil
                                                     :record t)
@@ -408,11 +409,11 @@
      `(("Output TeX..." :value tex)
        ("Apply lex rule..." :value lexrule
                             :active ,(and id
-                                          (active-fs-lexical-id-p id)
+                                          (ignore-errors (active-fs-lexical-id-p id))
                                           *ordered-lrule-list*))
        ("Apply all lex rules" :value allrules
                               :active ,(and id
-                                            (active-fs-lexical-id-p id)
+                                            (ignore-errors (active-fs-lexical-id-p id))
                                             *ordered-lrule-list*))
        #|
        ("Show spelling change rule" :value spelling-rule
