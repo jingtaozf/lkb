@@ -69,7 +69,7 @@
     #+:drakma :initially-do #+:drakma (require :aserve)
 
     :finally-do
-    (let ((display (system:getenv "DISPLAY")))
+    (let ((display (#+allegro system:getenv #+sbcl sb-posix:getenv "DISPLAY")))
       (funcall (intern "INITIALIZE-TSDB" :tsdb))
       #+(and :allegro (or :linux :sparc :alpha :macosx) (not :slave))
       (when (and display (not (equal display "")))

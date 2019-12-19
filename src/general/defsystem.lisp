@@ -1266,9 +1266,9 @@
     ;; Same for Allegro.
     #+(and :lispworks (not :lispworks4))
     ,(multiple-value-bind (major minor)
-			  #-:lispworks-personal-edition
+			  #-(or :lispworks7 :lispworks-personal-edition)
 			  (system::lispworks-version)
-			  #+:lispworks-personal-edition
+			  #+(or :lispworks7 :lispworks-personal-edition)
 			  (values system::*major-version-number*
 				  system::*minor-version-number*)
        (if (or (> major 3)
@@ -1697,6 +1697,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (compiler-type-translation "lispworks 3.2.1"         "lispworks")
 (compiler-type-translation "lispworks 3.2.60 beta 6" "lispworks")
 (compiler-type-translation "lispworks 4.2.0"         "lispworks")
+(compiler-type-translation "lispworks 7.0"         "lispworks")
 
 #+allegro
 (eval-when (:compile-toplevel :load-toplevel :execute)

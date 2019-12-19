@@ -11,19 +11,19 @@
 ;;; apparently this function may have been there in earlier versions but is no
 ;;; longer defined in 4.1                                    (8-jun-00  -  oe)
 ;;;
-#+:lispworks4.1
+#+:lispworks7.0
 (defun system::lispworks-version ()
   (values 4 1))
 
-#+:lispworks4.1
+#+:lispworks7.0
 (defparameter system::*current-working-directory* *load-truename*)
 
-#+:lispworks4.1
+#+:lispworks7.0
 (unintern 'lw::hardcopy-system :lw)
 
-#+:lispworks4.1
+#+:lispworks7.0
 (import 'system:call-system-showing-output :foreign)
-#+:lispworks4.1
+#+:lispworks7.0
 (export 'foreign::call-system-showing-output :foreign)
  
 ;;;
