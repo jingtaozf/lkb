@@ -4,6 +4,7 @@
 ;;; Distributed as part of the LKB System, under the MIT License
 ;;; see LICENSE file and http://moin.delph-in.net/LkbCopyright for conditions
 
+#-lispworks
 (require
   #+(and :allegro (not :mswindows)) :climxm
   #+(and :allegro :mswindows) :climnt

@@ -55,7 +55,7 @@
       (read-sequence s str)
       (file-position str target) ; we should be exactly there already, but let's play safe
       (values
-        (1+ (loop for c character across s ; in sbcl, much faster than calling count
+        (1+ (loop for c of-type character across s ; in sbcl, much faster than calling count
                   count (char= c #\Newline)))
         (- char-pos (or (position #\Newline s :from-end t) 0))))))
 

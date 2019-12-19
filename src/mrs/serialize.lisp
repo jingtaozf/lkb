@@ -32,8 +32,8 @@
 	  (loop
 	      with *package* = (find-package :lkb)
 	      with cdb = (cdb::open-write forward)
-	      for pred being each hash-key
-	      using (hash-value entry) in *relation-index*
+	      for pred being each hash-key in *relation-index*
+	      using (hash-value entry)
 	      for key = (with-standard-io-syntax (write-to-string pred))
 	      for value
 	      = (with-standard-io-syntax
@@ -52,8 +52,8 @@
 			    (cons
 			     role
 			     (loop
-				 for string being each hash-key
-				 using (hash-value ids) in values
+				 for string being each hash-key in values
+				 using (hash-value ids)
 				 collect (cons string ids))))))))
 	      do (cdb:write-record cdb key value)
 	      finally (cdb::close-cdb cdb))
@@ -61,8 +61,8 @@
 	      with *package* = (find-package :lkb)
 	      with *mrs-raw-output-p* = t
 	      with cdb = (cdb::open-write backward)
-	      for id being each hash-key
-	      using (hash-value record) in *semantic-table*
+	      for id being each hash-key in *semantic-table*
+	      using (hash-value record)
 	      for key = (with-standard-io-syntax (write-to-string id))
 	      for value = (with-standard-io-syntax
 			    (write-to-string record))

@@ -28,7 +28,7 @@
      (if (eql ,type :user) 
          (pushnew (quote ,var) *lkb-user-params*)
          (pushnew (quote ,var) *lkb-params*))
-     (defparameter ,var ,val ,doc)))
+     (defparameter ,var ,val ,(or doc ""))))
 
 ;;; Strings
 

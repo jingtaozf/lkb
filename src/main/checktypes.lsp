@@ -378,8 +378,8 @@
   ;; similar to dotimes, except that x is set to the index of successive 1 bits of bv
   (let ((s (gensym)) (v (gensym)))
     `(loop
-       with ,v simple-bit-vector = ,bv
-       with ,s fixnum = ,(getf keys :start 0)
+       with ,v of-type simple-bit-vector = ,bv
+       with ,s of-type fixnum = ,(getf keys :start 0)
        for ,x = (position 1 ,v :start ,s
                   ,@(if (getf keys :end) `(:end ,(getf keys :end))))
        while ,x
@@ -754,8 +754,8 @@
    (when (> +bc-nsum+ 0) ; summary words to be computed?
       (loop
          initially (fill c 0 :end +bc-nsum+)
-         for n fixnum from (bit-code-start c) to (bit-code-end c)
-         for nc fixnum from (bit-code-first c)
+         for n of-type fixnum from (bit-code-start c) to (bit-code-end c)
+         for nc of-type fixnum from (bit-code-first c)
          unless (zerop (the fixnum (svref c nc)))
          do
          (multiple-value-bind (sw-elt sw-bit)
@@ -789,14 +789,14 @@
    (declare (simple-vector c1 c2 c3))
    ;; NB not used as a predicate so summary words are irrelevant
    (loop
-      with start fixnum = (min (bit-code-start c1) (bit-code-start c2))
-      with end fixnum = (max (bit-code-end c1) (bit-code-end c2))
-      with nc1 fixnum = (bit-code-first c1)
-      with nc2 fixnum = (bit-code-first c2)
-      for n fixnum from start to end
-      for c1e fixnum =
+      with start of-type fixnum = (min (bit-code-start c1) (bit-code-start c2))
+      with end of-type fixnum = (max (bit-code-end c1) (bit-code-end c2))
+      with nc1 of-type fixnum = (bit-code-first c1)
+      with nc2 of-type fixnum = (bit-code-first c2)
+      for n of-type fixnum from start to end
+      for c1e of-type fixnum =
         (if (<= (bit-code-start c1) n (bit-code-end c1)) (prog1 (svref c1 nc1) (incf nc1)) 0)
-      for c2e fixnum =
+      for c2e of-type fixnum =
         (if (<= (bit-code-start c2) n (bit-code-end c2)) (prog1 (svref c2 nc2) (incf nc2)) 0)
       do
       (setf (svref c3 n) (logior c1e c2e))
@@ -822,7 +822,7 @@
        (let ((s
                ,(if (and start end)
                    `(and (= ,start ,end) ,start)
-                   `(loop for n fixnum from (bit-code-start ,c) to (bit-code-end ,c)
+                   `(loop for n of-type fixnum from (bit-code-start ,c) to (bit-code-end ,c)
                        with nz = nil ; index of first non-zero word
                        do
                        (unless (zerop (the fixnum (svref ,c n))) (if nz (return nil) (setq nz n)))
@@ -848,18 +848,18 @@
 (defun bit-code-and-zero/one-p-1 (c1 c2 c3) ; assumes c3 is uncompressed and large enough
    (declare (simple-vector c1 c2 c3))
    (loop
-      with first-poss-nz fixnum = (max (bit-code-start c1) (bit-code-start c2))
-      with last-poss-nz fixnum = (min (bit-code-end c1) (bit-code-end c2))
-      with o1 fixnum = (- (bit-code-start c1) (bit-code-first c1)) ; no. of omitted leading 0 words
-      with o2 fixnum = (- (bit-code-start c2) (bit-code-first c2))
-      for n fixnum from first-poss-nz to last-poss-nz
+      with first-poss-nz of-type fixnum = (max (bit-code-start c1) (bit-code-start c2))
+      with last-poss-nz of-type fixnum = (min (bit-code-end c1) (bit-code-end c2))
+      with o1 of-type fixnum = (- (bit-code-start c1) (bit-code-first c1)) ; no. of omitted leading 0 words
+      with o2 of-type fixnum = (- (bit-code-start c2) (bit-code-first c2))
+      for n of-type fixnum from first-poss-nz to last-poss-nz
       unless (zerop (logand (the fixnum (svref c1 (- n o1))) (the fixnum (svref c2 (- n o2)))))
       return
       (loop
-         with first-actual-nz fixnum = n
-         with last-actual-nz fixnum = n
-         for m fixnum from first-actual-nz to last-poss-nz
-         for res fixnum =
+         with first-actual-nz of-type fixnum = n
+         with last-actual-nz of-type fixnum = n
+         for m of-type fixnum from first-actual-nz to last-poss-nz
+         for res of-type fixnum =
             (logand (the fixnum (svref c1 (- m o1))) (the fixnum (svref c2 (- m o2))))
          do
          (setf (svref c3 m) res)
@@ -883,7 +883,7 @@
    (let*
       ((start #-:wholebc (bit-code-start c)
               #+:wholebc
-              (loop for n fixnum from (bit-code-start c) to (bit-code-end c)
+              (loop for n of-type fixnum from (bit-code-start c) to (bit-code-end c)
                     while (zerop (the fixnum (svref c n)))
                     finally (return n)))
        (e (svref c #-:wholebc (bit-code-first c) #+:wholebc start)))
@@ -905,17 +905,17 @@
 (defun bit-code-equal-p-1 (c1 c2)
    (declare (simple-vector c1 c2))
    (loop
-      for n fixnum from (bit-code-start c1) to (bit-code-end c1)
-      for nc1 fixnum from (bit-code-first c1)
-      for nc2 fixnum from (bit-code-first c2)
+      for n of-type fixnum from (bit-code-start c1) to (bit-code-end c1)
+      for nc1 of-type fixnum from (bit-code-first c1)
+      for nc2 of-type fixnum from (bit-code-first c2)
       always (= (the fixnum (svref c1 nc1)) (the fixnum (svref c2 nc2)))))
 
 (defun bit-code-two-1-bits-p (c)
    (declare (simple-vector c))
    ;; only called twice on each glb type, so not worth filtering with summary words
-   (loop for n fixnum from (bit-code-start c) to (bit-code-end c)
-      for nc fixnum from (bit-code-first c)
-      with sum fixnum = 0
+   (loop for n of-type fixnum from (bit-code-start c) to (bit-code-end c)
+      for nc of-type fixnum from (bit-code-first c)
+      with sum of-type fixnum = 0
       do (incf sum (logcount (the fixnum (svref c nc))))
       always (<= sum 2)))
 
@@ -937,23 +937,23 @@
 (defun bit-code-subsume-p-1 (c1 c2)
    (declare (simple-vector c1 c2))
    (loop
-      for n fixnum from (bit-code-start c2) to (bit-code-end c2) ; NB c1 bounds are irrelevant
-      for nc1 fixnum from (+ (bit-code-first c1) (- (bit-code-start c2) (bit-code-start c1)))
-      for nc2 fixnum from (bit-code-first c2)
+      for n of-type fixnum from (bit-code-start c2) to (bit-code-end c2) ; NB c1 bounds are irrelevant
+      for nc1 of-type fixnum from (+ (bit-code-first c1) (- (bit-code-start c2) (bit-code-start c1)))
+      for nc2 of-type fixnum from (bit-code-first c2)
       always
       (zerop (logandc1 (the fixnum (svref c1 nc1)) (the fixnum (svref c2 nc2))))))
 
 (defmacro loop-across-bit-code-1-bits ((x bc) &body body)
   (let ((n (gensym)) (nc (gensym)) (e (gensym)) (i (gensym)) (c (gensym)) (m (gensym)))
     `(loop
-       with ,c simple-vector = ,bc
-       for ,n fixnum from (bit-code-start ,c) to (bit-code-end ,c)
-       for ,nc fixnum from (bit-code-first ,c)
-       for ,e fixnum = (svref ,c ,nc)
+       with ,c of-type simple-vector = ,bc
+       for ,n of-type fixnum from (bit-code-start ,c) to (bit-code-end ,c)
+       for ,nc of-type fixnum from (bit-code-first ,c)
+       for ,e of-type fixnum = (svref ,c ,nc)
        unless (zerop ,e)
        do
-       (loop for ,i fixnum from 0 below +bc-word-len+
-         with ,m fixnum = (* (the fixnum (- ,n (+ +bc-nsum+ +bc-sef+))) ; convert to 0-based integer
+       (loop for ,i of-type fixnum from 0 below +bc-word-len+
+         with ,m of-type fixnum = (* (the fixnum (- ,n (+ +bc-nsum+ +bc-sef+))) ; convert to 0-based integer
                              +bc-word-len+)
          when (logbitp ,i ,e)
          do
@@ -1247,7 +1247,7 @@
       for ci = (ltype-bit-code ti)
       when (cdr (ltype-daughters ti)) ; a split type?
       do
-      (loop for j fixnum from (svref glb-index (bit-code-start ci)) below ntypes 
+      (loop for j of-type fixnum from (svref glb-index (bit-code-start ci)) below ntypes 
         for cj = (ltype-bit-code (svref int-to-type j))
         until (> (bit-code-start cj) (bit-code-end ci)) ; will also hold for rest of j
         do
@@ -1302,7 +1302,7 @@
       (loop-across-bit-code-1-bits (j ci) ; -> auths
         (unless (= j i)
           (setf (sbit (svref path-table i) j) 1)))
-      (loop for j fixnum from nauth below ntypes ; -> glbs
+      (loop for j of-type fixnum from nauth below ntypes ; -> glbs
         for cj = (ltype-bit-code (svref int-to-type j))
         unless (= j i)
         do
@@ -1319,7 +1319,7 @@
        ;; process rows and columns 0-max, which might be less than the full table size. NB the
        ;; 'when' tests below deal with rows that were omitted since they would have been all-zero
        (declare (simple-vector table) (fixnum max))
-       (loop for i fixnum from 1 below max
+       (loop for i of-type fixnum from 1 below max
          when (svref table i)
          do
          (loop-across-bit-vector-1-bits (j (svref table i) :end i) ; i>j, M(i,j)=1
@@ -1327,7 +1327,7 @@
              (setf (svref table i) ; row(i) = row(i) <op> row(j)
                (,bit-vector-op (the simple-bit-vector (svref table i))
                  (the simple-bit-vector (svref table j)) t)))))
-       (loop for i fixnum from 0 below (1- max)
+       (loop for i of-type fixnum from 0 below (1- max)
          when (svref table i)
          do
          (loop-across-bit-vector-1-bits (j (svref table i) :start (1+ i) :end max) ; i<j, M(i,j)=1

@@ -419,7 +419,7 @@ warnings to print. 0: no warnings,
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
-  (use-package "MAKE" "COMMON-LISP-USER")
+  (use-package #-lispworks "MAKE" "COMMON-LISP-USER")
   (export
    '(dir-and-name
      dir-append

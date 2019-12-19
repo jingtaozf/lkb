@@ -341,6 +341,7 @@
 		 :allocation :class)
    (selected :initform nil
 	     :accessor frame-selected))
+  #-lispworks
   (:layouts (default))) ; to avoid an empty ecase warning in sbcl
 
 

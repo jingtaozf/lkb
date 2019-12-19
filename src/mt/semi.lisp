@@ -421,8 +421,8 @@
 
 (defun finalize-semi (semi)
   (loop
-      for sps being each hash-value
-      using (hash-key predicate) in (semi-predicates semi)
+      for sps being each hash-value in (semi-predicates semi)
+      using (hash-key predicate)
       for parents = (sps-parents sps)
       when (and parents (not (sps-p (first parents)))) do
         (setf (sps-parents sps)

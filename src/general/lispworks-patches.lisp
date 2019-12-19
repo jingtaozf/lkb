@@ -11,19 +11,19 @@
 ;;; apparently this function may have been there in earlier versions but is no
 ;;; longer defined in 4.1                                    (8-jun-00  -  oe)
 ;;;
-#+:lispworks4.1
+#+(or lispworks4.1 lispworks7)
 (defun system::lispworks-version ()
   (values 4 1))
 
-#+:lispworks4.1
+#+(or lispworks4.1 lispworks7)
 (defparameter system::*current-working-directory* *load-truename*)
 
-#+:lispworks4.1
+#+(or lispworks4.1 lispworks7)
 (unintern 'lw::hardcopy-system :lw)
 
-#+:lispworks4.1
+#+(or lispworks4.1 lispworks7)
 (import 'system:call-system-showing-output :foreign)
-#+:lispworks4.1
+#+(or lispworks4.1 lispworks7)
 (export 'foreign::call-system-showing-output :foreign)
  
 ;;;
@@ -53,6 +53,9 @@
     #+:linux "linux"  
     #+:windows "mswindows"))
 
+(defun getenv (name) 
+  (lispworks:environment-variable name))
+
 (in-package :mp)
 
 (export '(make-process-lock with-process-lock 
@@ -72,3 +75,23 @@
 
 (defun run-function (name function &rest arguments)
   (apply #'process-run-function name nil function arguments))
+
+;; Fake definitions for unimplemented functions / packages
+
+(defpackage :silica (:use :common-lisp)
+  (:export "INHIBIT-UPDATING-SCROLL-BARS"))
+(in-package :silica)
+
+(defmacro inhibit-updating-scroll-bars (&body body)
+  `(clim:changing-space-requirements () ,@body))
+
+(defpackage :lep (:use :common-lisp)
+  (:export "LEP-IS-RUNNING"))
+(in-package :lep)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (defun lep-is-running () nil)
+  (defun eval-in-emacs (str)
+    (declare (ignore str))
+    nil))
+
